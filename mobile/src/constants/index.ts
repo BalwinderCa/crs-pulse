@@ -37,14 +37,15 @@ export const SCORE_STATUS = {
 
 export const NEAR_THRESHOLD = 10;
 
+// SecureStore keys: alphanumeric + . - _ only (no @ or /)
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: '@crs_pulse/auth_token',
-  USER_PROFILE: '@crs_pulse/user_profile',
-  DRAWS_CACHE: '@crs_pulse/draws_cache',
-  DASHBOARD_CACHE: '@crs_pulse/dashboard_cache',
-  ANALYTICS_CACHE: '@crs_pulse/analytics_cache',
-  ONBOARDING_COMPLETE: '@crs_pulse/onboarding_complete',
-  FCM_TOKEN: '@crs_pulse/fcm_token',
+  AUTH_TOKEN: 'crs_pulse.auth_token',
+  USER_PROFILE: 'crs_pulse.user_profile',
+  DRAWS_CACHE: 'crs_pulse.draws_cache',
+  DASHBOARD_CACHE: 'crs_pulse.dashboard_cache',
+  ANALYTICS_CACHE: 'crs_pulse.analytics_cache',
+  ONBOARDING_COMPLETE: 'crs_pulse.onboarding_complete',
+  FCM_TOKEN: 'crs_pulse.fcm_token',
 } as const;
 
 export const API_CACHE_KEYS = {

@@ -34,7 +34,8 @@ class DashboardController extends Controller
             $latestDraw  = $this->draws->latest($category) ?? $this->draws->latest();
 
             $recentDraws = \App\Models\Draw::published()
-                ->latest()
+                ->orderByDesc('date')
+                ->orderByDesc('draw_number')
                 ->take(10)
                 ->get();
 

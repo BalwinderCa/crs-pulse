@@ -1,7 +1,5 @@
-import { useInfiniteQuery } from '@tanstack/react-query';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { drawsApi } from '@/api';
-import { API_CACHE_KEYS, PAGINATION_LIMIT, QUERY_STALE_TIMES, STORAGE_KEYS } from '@/constants';
+import { useMemo } from 'react';
+import { useDrawsStore } from '@/store/drawsStore';
 import type { Draw, DrawFilter } from '@/types';
 
 type Params = {
@@ -9,37 +7,37 @@ type Params = {
   category?: string;
 };
 
-export function useDraws({ filter, category }: Params = {}) {
-  return useInfiniteQuery({
-    queryKey: [API_CACHE_KEYS.DRAWS, filter, category],
-    queryFn: async ({ pageParam = 1 }) => {
-      const res = await drawsApi.list({
-        filter,
-        category,
-        page: pageParam,
-        per_page: PAGINATION_LIMIT,
-      });
+const now = new Date();
 
-      // Cache first page for offline
-      if (pageParam === 1) {
-        await AsyncStorage.setItem(
-          STORAGE_KEYS.DRAWS_CACHE,
-          JSON.stringify(res.data.data),
-        );
-      }
-
-      return res.data;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const { current_page, last_page } = lastPage.meta;
-      return current_page < last_page ? current_page + 1 : undefined;
-    },
-    staleTime: QUERY_STALE_TIMES.DRAWS,
-  });
+function applyFilter(draws: Draw[], filter?: DrawFilter): Draw[] {
+  if (!filter || filter === 'all') return draws;
+  const cutoff = new Date(now);
+  if (filter === 'last_month') cutoff.setMonth(cutoff.getMonth() - 1);
+  if (filter === 'last_year')  cutoff.setFullYear(cutoff.getFullYear() - 1);
+  return draws.filter(d => new Date(d.date) >= cutoff);
 }
 
+export function useDraws({ filter, category }: Params = {}) {
+  const { draws, isLoading, isRefreshing, error, refresh } = useDrawsStore();
+
+  const filtered = useMemo(() => {
+    let result = draws;
+    if (category && category !== 'all') result = result.filter(d => d.category === category);
+    result = applyFilter(result, filter);
+    return result;
+  }, [draws, filter, category]);
+
+  return {
+    draws: filtered,
+    isLoading,
+    isRefreshing,
+    isError: !!error,
+    error: error ? { message: error } : null,
+    refetch: refresh,
+  };
+}
+
+// Alias for screens that used the old paginated hook
 export function useAllDrawItems(params: Params = {}): Draw[] {
-  const { data } = useDraws(params);
-  return data?.pages.flatMap((p) => p.data) ?? [];
+  return useDraws(params).draws;
 }

@@ -9,9 +9,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class DrawRepository implements DrawRepositoryInterface
 {
+    private function baseQuery()
+    {
+        // Use explicit orderByDesc to avoid conflict with Eloquent's built-in latest()
+        return Draw::published()->orderByDesc('date')->orderByDesc('draw_number');
+    }
+
     public function paginate(array $filters, int $perPage = 20): LengthAwarePaginator
     {
-        $query = Draw::published()->latest();
+        $query = $this->baseQuery();
 
         if (! empty($filters['category']) && $filters['category'] !== 'all') {
             $query->forCategory($filters['category']);
@@ -30,7 +36,7 @@ class DrawRepository implements DrawRepositoryInterface
 
     public function latest(?string $category = null): ?Draw
     {
-        $query = Draw::published()->latest();
+        $query = $this->baseQuery();
 
         if ($category && $category !== 'all') {
             $query->forCategory($category);
@@ -41,7 +47,7 @@ class DrawRepository implements DrawRepositoryInterface
 
     public function forAnalytics(string $category, string $period): Collection
     {
-        $query = Draw::published()->latest();
+        $query = $this->baseQuery();
 
         if ($category !== 'all') {
             $query->forCategory($category);

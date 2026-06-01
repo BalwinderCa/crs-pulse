@@ -1,32 +1,31 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useProfileStore } from '@/store/profileStore';
 import Toast from 'react-native-toast-message';
-import { profileApi } from '@/api';
-import { API_CACHE_KEYS, QUERY_STALE_TIMES } from '@/constants';
-import type { UpdateProfilePayload, UserProfile } from '@/types';
+import type { LocalProfile } from '@/store/profileStore';
 
 export function useProfile() {
-  return useQuery({
-    queryKey: [API_CACHE_KEYS.PROFILE],
-    queryFn: async () => {
-      const res = await profileApi.get();
-      return res.data.data as UserProfile;
-    },
-    staleTime: QUERY_STALE_TIMES.PROFILE,
-  });
+  const { profile } = useProfileStore();
+  return {
+    data: profile,
+    isLoading: profile === null,
+  };
 }
 
 export function useUpdateProfile() {
-  const queryClient = useQueryClient();
+  const save = useProfileStore((s) => s.save);
+  const [isPending, setIsPending] = useState(false);
 
-  return useMutation({
-    mutationFn: (payload: UpdateProfilePayload) => profileApi.update(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [API_CACHE_KEYS.PROFILE] });
-      queryClient.invalidateQueries({ queryKey: [API_CACHE_KEYS.DASHBOARD] });
-      Toast.show({ type: 'success', text1: 'Profile updated.' });
-    },
-    onError: (err: { message: string }) => {
-      Toast.show({ type: 'error', text1: 'Update failed', text2: err.message });
-    },
-  });
+  const mutate = async (payload: Partial<LocalProfile>) => {
+    setIsPending(true);
+    try {
+      await save(payload);
+      Toast.show({ type: 'success', text1: 'Settings saved.' });
+    } catch {
+      Toast.show({ type: 'error', text1: 'Save failed' });
+    } finally {
+      setIsPending(false);
+    }
+  };
+
+  return { mutate, isPending };
 }

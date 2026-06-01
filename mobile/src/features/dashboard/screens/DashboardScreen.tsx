@@ -52,7 +52,7 @@ export default function DashboardScreen() {
     );
   }
 
-  const { user_score, user_category, latest_draw, score_difference, prediction, recent_draws } = data;
+  const { user_score, user_category, latest_draw, prediction, recent_draws } = data;
 
   return (
     <SafeAreaView style={styles.safe}>

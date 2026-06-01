@@ -5,13 +5,13 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useProfile, useUpdateProfile } from '../hooks/useProfile';
-import { useLogout } from '@/features/auth/hooks/useAuth';
+import { useOnboardingStore } from '@/store/onboardingStore';
 import { Input } from '@/components/common/Input';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { CATEGORIES, CATEGORY_LABELS, CRS_MAX, CRS_MIN } from '@/constants';
+import { CATEGORIES, CRS_MAX, CRS_MIN } from '@/constants';
 import { palette, spacing, typography } from '@/theme';
 
 const schema = z.object({
@@ -27,7 +27,7 @@ type FormValues = z.infer<typeof schema>;
 export default function ProfileScreen() {
   const { data: profile, isLoading } = useProfile();
   const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
-  const { mutate: logout, isPending: loggingOut } = useLogout();
+  const { reset: resetOnboarding } = useOnboardingStore();
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -46,7 +46,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
-          <Text style={styles.title}>Profile</Text>
+          <Text style={styles.title}>Settings</Text>
         </View>
         <View style={styles.skeletons}>
           <SkeletonCard />
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
   return (
     <ScreenWrapper scrollable keyboardAvoiding>
       <View style={styles.header}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.title}>Settings</Text>
       </View>
 
       {/* CRS Settings */}
@@ -110,14 +110,27 @@ export default function ProfileScreen() {
         />
       </Card>
 
+      {/* CRS Calculator */}
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>CRS Calculator</Text>
+        <Text style={styles.hint}>
+          Re-run the step-by-step wizard to recalculate your CRS score.
+        </Text>
+        <Button
+          title="Recalculate CRS Score"
+          variant="outline"
+          onPress={() => resetOnboarding()}
+          fullWidth
+        />
+      </Card>
+
       {/* Account */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
         <Button
-          title="Sign Out"
+          title="Reset Onboarding"
           variant="danger"
-          onPress={() => logout()}
-          loading={loggingOut}
+          onPress={() => resetOnboarding()}
           fullWidth
         />
       </Card>
@@ -152,4 +165,9 @@ const styles = StyleSheet.create({
   },
   catBtn: { flex: 0 },
   saveBtn: { marginTop: spacing.sm },
+  hint: {
+    color: palette.textSecondary,
+    fontSize: typography.sm,
+    lineHeight: 20,
+  },
 });

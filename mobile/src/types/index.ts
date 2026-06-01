@@ -189,6 +189,7 @@ export type ApiResponse<T> = {
 export type RootStackParamList = {
   Splash: undefined;
   Auth: undefined;
+  Onboarding: undefined;
   Main: undefined;
 };
 
@@ -202,6 +203,5 @@ export type MainTabParamList = {
   Dashboard: undefined;
   Draws: undefined;
   Analytics: undefined;
-  Notifications: undefined;
-  Profile: undefined;
+  Settings: undefined;
 };

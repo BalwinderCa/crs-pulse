@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,25 +12,14 @@ import { DrawCard } from '../components/DrawCard';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ErrorState } from '@/components/common/ErrorState';
 import { EmptyState } from '@/components/common/EmptyState';
-import { useDraws, useAllDrawItems } from '../hooks/useDraws';
+import { useDraws } from '../hooks/useDraws';
 import { DRAW_FILTERS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import type { DrawFilter } from '@/types';
 
 export default function DrawsScreen() {
   const [activeFilter, setActiveFilter] = useState<DrawFilter>('all');
-
-  const {
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useDraws({ filter: activeFilter });
-
-  const draws = useAllDrawItems({ filter: activeFilter });
+  const { draws, isLoading, isRefreshing, isError, error, refetch } = useDraws({ filter: activeFilter });
 
   if (isLoading) {
     return (
@@ -91,19 +80,18 @@ export default function DrawsScreen() {
       ) : (
         <FlatList
           data={draws}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => String(item.draw_number)}
           renderItem={({ item }) => <DrawCard draw={item} />}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
-          onEndReachedThreshold={0.4}
-          ListFooterComponent={
-            isFetchingNextPage ? (
-              <View style={styles.footer}>
-                <ActivityIndicator size="small" color={palette.blue} />
-              </View>
-            ) : null
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={refetch}
+              tintColor={palette.blue}
+              colors={[palette.blue]}
+            />
           }
         />
       )}
@@ -141,5 +129,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     paddingBottom: spacing['4xl'],
   },
-  footer: { padding: spacing.base, alignItems: 'center' },
 });

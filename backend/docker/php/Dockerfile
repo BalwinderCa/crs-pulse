@@ -5,20 +5,25 @@ RUN apk add --no-cache \
     bash \
     curl \
     git \
+    freetype-dev \
     libpng-dev \
     libjpeg-turbo-dev \
     libwebp-dev \
     libzip-dev \
     oniguruma-dev \
     openssl-dev \
+    linux-headers \
+    icu-dev \
     zip \
     unzip \
-    nodejs \
-    npm \
     supervisor
 
 # Install PHP extensions
-RUN docker-php-ext-configure gd --with-jpeg --with-webp \
+RUN docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+        --with-webp \
+    && docker-php-ext-configure intl \
     && docker-php-ext-install \
         pdo \
         pdo_mysql \
@@ -29,7 +34,8 @@ RUN docker-php-ext-configure gd --with-jpeg --with-webp \
         gd \
         zip \
         opcache \
-        sockets
+        sockets \
+        intl
 
 # Install Redis extension
 RUN apk add --no-cache $PHPIZE_DEPS \

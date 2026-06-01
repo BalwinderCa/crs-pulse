@@ -1,9 +1,14 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import * as Device from 'expo-device';
 import { STORAGE_KEYS } from '@/constants';
 import type { ApiError } from '@/types';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://10.0.2.2:8000/api/v1';
+// Physical device uses network IP (.env); simulator uses localhost directly
+const BASE_URL = (Device.isDevice
+  ? process.env.EXPO_PUBLIC_API_URL
+  : 'http://localhost:8000/api/v1'
+) ?? 'http://localhost:8000/api/v1';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -15,11 +20,31 @@ export const apiClient: AxiosInstance = axios.create({
   },
 });
 
+const KEYCHAIN_OPTS: SecureStore.SecureStoreOptions = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED,
+};
+
+// In-memory token cache — set by authStore so interceptor doesn't
+// need SecureStore (which can fail on simulator keychain issues).
+let _memoryToken: string | null = null;
+export function setMemoryToken(token: string | null) {
+  _memoryToken = token;
+}
+
 // ─── Request interceptor ─────────────────────────────────────────────────────
 
 apiClient.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    const token = await SecureStore.getItemAsync(STORAGE_KEYS.AUTH_TOKEN);
+    // Prefer in-memory token (set by authStore on login/initialize).
+    // Fall back to SecureStore in case app was restarted and memory cleared.
+    let token = _memoryToken;
+    if (!token) {
+      try {
+        token = await SecureStore.getItemAsync(STORAGE_KEYS.AUTH_TOKEN, KEYCHAIN_OPTS);
+      } catch {
+        token = null;
+      }
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -36,8 +61,8 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
 
     if (status === 401) {
-      await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN);
-      // Auth store will detect missing token on next query
+      _memoryToken = null;
+      try { await SecureStore.deleteItemAsync(STORAGE_KEYS.AUTH_TOKEN, KEYCHAIN_OPTS); } catch {}
     }
 
     const apiError: ApiError = {

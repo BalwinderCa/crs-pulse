@@ -1,44 +1,45 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
-import { useAuthStore } from '@/store/authStore';
+import { useOnboardingStore } from '@/store/onboardingStore';
+import { useProfileStore } from '@/store/profileStore';
+import { useDrawsStore } from '@/store/drawsStore';
 import SplashScreenView from '@/features/auth/screens/SplashScreen';
+import MainNavigator from './MainNavigator';
+import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
 import type { RootStackParamList } from '@/types';
-
-// Eagerly import navigators — React.lazy inside Stack.Screen causes
-// react-native-screens Freeze to hold the screen black.
-import AuthNavigator from './AuthNavigator';
-// MainNavigator is only shown post-login; lazy is fine there (not frozen).
-const MainNavigator = React.lazy(() => import('./MainNavigator'));
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
-  const { isAuthenticated, isInitialized, initialize } = useAuthStore();
+  const { isComplete: onboardingComplete, load: loadOnboarding } = useOnboardingStore();
+  const loadProfile = useProfileStore((s) => s.load);
+  const loadDraws = useDrawsStore((s) => s.load);
 
+  // Init all local stores on mount
   useEffect(() => {
-    initialize();
-  }, [initialize]);
+    Promise.all([loadOnboarding(), loadProfile(), loadDraws()]).catch(() => {});
+  }, [loadOnboarding, loadProfile, loadDraws]);
 
-  // Hide native splash once auth state is resolved
+  // Hide splash once onboarding flag is resolved
   useEffect(() => {
-    if (isInitialized) {
+    if (onboardingComplete !== null) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [isInitialized]);
+  }, [onboardingComplete]);
 
-  if (!isInitialized) {
+  if (onboardingComplete === null) {
     return <SplashScreenView />;
   }
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        {isAuthenticated ? (
-          <Stack.Screen name="Main" component={MainNavigator as React.ComponentType} />
+        {!onboardingComplete ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         ) : (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
+          <Stack.Screen name="Main" component={MainNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
