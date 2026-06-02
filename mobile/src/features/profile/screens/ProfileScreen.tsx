@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,8 +12,9 @@ import { Card } from '@/components/common/Card';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { CATEGORIES, CRS_MAX, CRS_MIN } from '@/constants';
-import { spacing, typography } from '@/theme';
+import { palette, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useDrawNotifications } from '@/hooks/useDrawNotifications';
 import type { Colors } from '@/theme/colors';
 
 const schema = z.object({
@@ -36,6 +37,9 @@ function makeStyles(c: Colors) {
     catBtn:       { flex: 0 },
     saveBtn:      { marginTop: spacing.sm },
     hint:         { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
+    notifRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
+    notifText:    { flex: 1 },
+    notifLabel:   { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.medium },
   });
 }
 
@@ -45,6 +49,7 @@ export default function ProfileScreen() {
   const { data: profile, isLoading } = useProfile();
   const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
   const { reset: resetOnboarding } = useOnboardingStore();
+  const { enabled: notifEnabled, toggle: toggleNotif } = useDrawNotifications();
 
   const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -103,6 +108,23 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>CRS Calculator</Text>
         <Text style={styles.hint}>Re-run the step-by-step wizard to recalculate your CRS score.</Text>
         <Button title="Recalculate CRS Score" variant="outline" onPress={() => resetOnboarding()} fullWidth />
+      </Card>
+
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Notifications</Text>
+        <View style={styles.notifRow}>
+          <View style={styles.notifText}>
+            <Text style={styles.notifLabel}>New Draw Alerts</Text>
+            <Text style={styles.hint}>Banner when a new Express Entry draw is published</Text>
+          </View>
+          <Switch
+            value={notifEnabled}
+            onValueChange={toggleNotif}
+            trackColor={{ false: colors.surfaceTertiary, true: palette.blue }}
+            thumbColor={palette.white}
+            accessibilityLabel="Enable new draw notifications"
+          />
+        </View>
       </Card>
 
       <Card style={styles.section}>

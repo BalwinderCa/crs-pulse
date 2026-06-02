@@ -46,6 +46,8 @@ export const STORAGE_KEYS = {
   ANALYTICS_CACHE: 'crs_pulse.analytics_cache',
   ONBOARDING_COMPLETE: 'crs_pulse.onboarding_complete',
   FCM_TOKEN: 'crs_pulse.fcm_token',
+  DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
+  LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
 } as const;
 
 export const API_CACHE_KEYS = {

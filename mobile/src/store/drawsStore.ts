@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import type { Draw, Category } from '@/types';
+import { checkAndNotifyNewDraw } from '@/hooks/useDrawNotifications';
 
 // Official IRCC public draw data feed
 const IRCC_URL =
@@ -117,6 +118,9 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         STORAGE_KEYS.DRAWS_CACHE,
         JSON.stringify({ draws, lastFetched }),
       );
+
+      // Notify if new draw detected and user opted in
+      checkAndNotifyNewDraw(draws).catch(() => {});
     } catch (err) {
       set({
         isLoading: false,
