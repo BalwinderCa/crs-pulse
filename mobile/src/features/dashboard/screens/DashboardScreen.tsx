@@ -1,5 +1,8 @@
 import React from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+const IRCC_ROUNDS_URL =
+  'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions/residents/express-entry/rounds-invitations.html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { ScoreCard } from '../components/ScoreCard';
@@ -106,16 +109,23 @@ export default function DashboardScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.drawRow}>
-            <View>
-              <Text style={styles.drawDate}>{format(new Date(item.date), 'MMM d, yyyy')}</Text>
-              <Text style={styles.drawCategory}>{item.category}</Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(IRCC_ROUNDS_URL)}
+            activeOpacity={0.75}
+            accessibilityRole="link"
+            accessibilityLabel={`Draw #${item.draw_number} — view on IRCC website`}
+          >
+            <View style={styles.drawRow}>
+              <View>
+                <Text style={styles.drawDate}>{format(new Date(item.date), 'MMM d, yyyy')}</Text>
+                <Text style={styles.drawCategory}>{item.category}</Text>
+              </View>
+              <View style={styles.drawRight}>
+                <Text style={styles.drawCutoff}>{item.cutoff_score}</Text>
+                <Text style={styles.drawInvites}>{item.invitations_issued.toLocaleString()} ITA</Text>
+              </View>
             </View>
-            <View style={styles.drawRight}>
-              <Text style={styles.drawCutoff}>{item.cutoff_score}</Text>
-              <Text style={styles.drawInvites}>{item.invitations_issued.toLocaleString()} ITA</Text>
-            </View>
-          </View>
+          </TouchableOpacity>
         )}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
       />

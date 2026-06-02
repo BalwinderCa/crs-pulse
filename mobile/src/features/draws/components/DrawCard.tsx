@@ -1,6 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { format } from 'date-fns';
+
+const IRCC_ROUNDS_URL =
+  'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions/residents/express-entry/rounds-invitations.html';
 import { Badge } from '@/components/common/Badge';
 import { Card } from '@/components/common/Card';
 import { palette, spacing, typography } from '@/theme';
@@ -20,6 +23,8 @@ function makeStyles(c: Colors) {
   return StyleSheet.create({
     card:       { gap: spacing.sm },
     headerRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+    externalIcon: { color: c.textMuted, fontSize: typography.sm },
     numberWrap: { gap: 0 },
     drawLabel:  { color: c.textMuted,    fontSize: typography.xs },
     drawNumber: { color: c.textPrimary,  fontSize: typography.lg, fontWeight: typography.bold },
@@ -40,39 +45,49 @@ export function DrawCard({ draw, userScore }: Props) {
   const diff = userScore != null ? userScore - draw.cutoff_score : null;
 
   return (
-    <Card variant="outlined" style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={styles.numberWrap}>
-          <Text style={styles.drawLabel}>Draw</Text>
-          <Text style={styles.drawNumber}>#{draw.draw_number}</Text>
-        </View>
-        <Badge label={draw.category} variant={CATEGORY_BADGE[draw.category] ?? 'neutral'} />
-      </View>
-
-      <Text style={styles.date}>{format(new Date(draw.date), 'MMMM d, yyyy')}</Text>
-
-      <View style={styles.statsRow}>
-        <View style={styles.stat}>
-          <Text style={styles.statLabel}>Cutoff</Text>
-          <Text style={styles.cutoff}>{draw.cutoff_score}</Text>
-        </View>
-        <View style={styles.stat}>
-          <Text style={styles.statLabel}>Invitations</Text>
-          <Text style={styles.statValue}>{draw.invitations_issued.toLocaleString()}</Text>
-        </View>
-        {diff !== null && (
-          <View style={styles.stat}>
-            <Text style={styles.statLabel}>Your Gap</Text>
-            <Text style={[styles.diffValue, { color: diff >= 0 ? palette.success : diff >= -10 ? palette.warning : palette.danger }]}>
-              {diff >= 0 ? '+' : ''}{diff}
-            </Text>
+    <TouchableOpacity
+      onPress={() => Linking.openURL(IRCC_ROUNDS_URL)}
+      activeOpacity={0.75}
+      accessibilityRole="link"
+      accessibilityLabel={`Draw #${draw.draw_number} — view on IRCC website`}
+    >
+      <Card variant="outlined" style={styles.card}>
+        <View style={styles.headerRow}>
+          <View style={styles.numberWrap}>
+            <Text style={styles.drawLabel}>Draw</Text>
+            <Text style={styles.drawNumber}>#{draw.draw_number}</Text>
           </View>
-        )}
-      </View>
+          <View style={styles.headerRight}>
+            <Badge label={draw.category} variant={CATEGORY_BADGE[draw.category] ?? 'neutral'} />
+            <Text style={styles.externalIcon}>↗</Text>
+          </View>
+        </View>
 
-      {draw.tie_breaking_rule && (
-        <Text style={styles.tieBraking} numberOfLines={1}>Tie-break: {draw.tie_breaking_rule}</Text>
-      )}
-    </Card>
+        <Text style={styles.date}>{format(new Date(draw.date), 'MMMM d, yyyy')}</Text>
+
+        <View style={styles.statsRow}>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>Cutoff</Text>
+            <Text style={styles.cutoff}>{draw.cutoff_score}</Text>
+          </View>
+          <View style={styles.stat}>
+            <Text style={styles.statLabel}>Invitations</Text>
+            <Text style={styles.statValue}>{draw.invitations_issued.toLocaleString()}</Text>
+          </View>
+          {diff !== null && (
+            <View style={styles.stat}>
+              <Text style={styles.statLabel}>Your Gap</Text>
+              <Text style={[styles.diffValue, { color: diff >= 0 ? palette.success : diff >= -10 ? palette.warning : palette.danger }]}>
+                {diff >= 0 ? '+' : ''}{diff}
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {draw.tie_breaking_rule && (
+          <Text style={styles.tieBraking} numberOfLines={1}>Tie-break: {draw.tie_breaking_rule}</Text>
+        )}
+      </Card>
+    </TouchableOpacity>
   );
 }
