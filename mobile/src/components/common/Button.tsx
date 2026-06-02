@@ -8,6 +8,8 @@ import {
   View,
 } from 'react-native';
 import { palette, borderRadius, typography, spacing } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -21,19 +23,34 @@ type Props = TouchableOpacityProps & {
   fullWidth?: boolean;
 };
 
-const variantStyles = {
-  primary:   { bg: palette.blue,         text: palette.white,     border: palette.blue },
-  secondary: { bg: palette.surfaceTertiary, text: palette.white,  border: palette.surfaceTertiary },
-  outline:   { bg: 'transparent',        text: palette.blue,      border: palette.blue },
-  ghost:     { bg: 'transparent',        text: palette.textSecondary, border: 'transparent' },
-  danger:    { bg: palette.danger,       text: palette.white,     border: palette.danger },
-} as const;
+function makeVariantStyles(c: Colors) {
+  return {
+    primary:   { bg: palette.blue,         text: palette.white,         border: palette.blue },
+    secondary: { bg: c.surfaceTertiary,    text: c.textPrimary,         border: c.surfaceTertiary },
+    outline:   { bg: 'transparent',        text: palette.blue,          border: palette.blue },
+    ghost:     { bg: 'transparent',        text: c.textSecondary,       border: 'transparent' },
+    danger:    { bg: palette.danger,       text: palette.white,         border: palette.danger },
+  } as const;
+}
 
 const sizeStyles = {
   sm: { height: 36, px: spacing.md,   fontSize: typography.sm },
   md: { height: 48, px: spacing.base, fontSize: typography.base },
   lg: { height: 56, px: spacing.xl,   fontSize: typography.md },
 } as const;
+
+const styles = StyleSheet.create({
+  base: {
+    borderRadius: borderRadius.md,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  content: { flexDirection: 'row', alignItems: 'center' },
+  iconWrap: { marginRight: spacing.sm },
+  text: { fontWeight: typography.semibold, letterSpacing: 0.2 },
+});
 
 export function Button({
   title,
@@ -46,7 +63,8 @@ export function Button({
   style,
   ...rest
 }: Props) {
-  const v = variantStyles[variant];
+  const colors = useColors();
+  const v = makeVariantStyles(colors)[variant];
   const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
@@ -83,24 +101,3 @@ export function Button({
     </TouchableOpacity>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: borderRadius.md,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconWrap: {
-    marginRight: spacing.sm,
-  },
-  text: {
-    fontWeight: typography.semibold,
-    letterSpacing: 0.2,
-  },
-});

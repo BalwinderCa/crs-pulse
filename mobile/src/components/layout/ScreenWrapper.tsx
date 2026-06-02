@@ -2,6 +2,8 @@ import React from 'react';
 import { ScrollView, StyleSheet, View, ViewStyle, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, spacing } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
 
 type Props = {
   children: React.ReactNode;
@@ -14,6 +16,17 @@ type Props = {
   keyboardAvoiding?: boolean;
 };
 
+function makeStyles(c: Colors) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.surfacePrimary },
+    keyboardView: { flex: 1 },
+    scroll: { flex: 1 },
+    scrollContent: { flexGrow: 1, paddingBottom: spacing['4xl'] },
+    flat: { flex: 1 },
+    hPad: { paddingHorizontal: spacing.base },
+  });
+}
+
 export function ScreenWrapper({
   children,
   scrollable = false,
@@ -24,16 +37,15 @@ export function ScreenWrapper({
   contentStyle,
   keyboardAvoiding = false,
 }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
+
   const content = (
     <SafeAreaView style={[styles.safe, style]} edges={['top', 'left', 'right']}>
       {scrollable ? (
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.scrollContent,
-            horizontalPadding && styles.hPad,
-            contentStyle,
-          ]}
+          contentContainerStyle={[styles.scrollContent, horizontalPadding && styles.hPad, contentStyle]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           refreshControl={
@@ -59,29 +71,10 @@ export function ScreenWrapper({
 
   if (keyboardAvoiding) {
     return (
-      <KeyboardAvoidingView
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         {content}
       </KeyboardAvoidingView>
     );
   }
-
   return content;
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: palette.surfacePrimary,
-  },
-  keyboardView: { flex: 1 },
-  scroll: { flex: 1 },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: spacing['4xl'],
-  },
-  flat: { flex: 1 },
-  hPad: { paddingHorizontal: spacing.base },
-});

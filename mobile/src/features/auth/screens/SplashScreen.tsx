@@ -1,50 +1,29 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { palette, typography, spacing } from '@/theme';
+import { useColors } from '@/hooks/useColors';
 
-// This component shows while auth state is being resolved (isInitialized: false).
-// The native expo-splash-screen is visible on top, so the user sees that instead.
-// No animation needed here — it would fire warnings when unmounted before completing.
 export default function SplashScreen() {
+  const colors = useColors();
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
       <View style={styles.logoBox}>
         <Text style={styles.logo}>CRS</Text>
       </View>
-      <Text style={styles.title}>CRS Pulse</Text>
-      <Text style={styles.subtitle}>Express Entry Tracker</Text>
+      <Text style={[styles.title, { color: colors.textPrimary }]}>CRS Pulse</Text>
+      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Express Entry Tracker</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.surfacePrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing.sm,
-  },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   logoBox: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 80, height: 80, borderRadius: 20,
     backgroundColor: '#1A6DFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
-  logo: { fontSize: 26, fontWeight: '800', color: '#fff', letterSpacing: 1.5 },
-  title: {
-    color: palette.white,
-    fontSize: typography['4xl'],
-    fontWeight: typography.bold,
-    textAlign: 'center',
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: palette.textSecondary,
-    fontSize: typography.base,
-    textAlign: 'center',
-  },
+  logo:     { fontSize: 26, fontWeight: '800', color: palette.white, letterSpacing: 1.5 },
+  title:    { fontSize: typography['4xl'], fontWeight: typography.bold, textAlign: 'center', letterSpacing: -0.5 },
+  subtitle: { fontSize: typography.base, textAlign: 'center' },
 });

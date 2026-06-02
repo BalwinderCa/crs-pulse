@@ -1,6 +1,8 @@
 import React from 'react';
 import { StyleSheet, View, ViewProps, ViewStyle } from 'react-native';
-import { palette, borderRadius, spacing, shadows } from '@/theme';
+import { borderRadius, spacing, shadows } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
 
 type Props = ViewProps & {
   children: React.ReactNode;
@@ -9,7 +11,23 @@ type Props = ViewProps & {
   style?: ViewStyle;
 };
 
+function makeStyles(c: Colors) {
+  return StyleSheet.create({
+    base: {
+      backgroundColor: c.surfaceCard,
+      borderRadius: borderRadius.lg,
+    },
+    outlined: {
+      borderWidth: 1,
+      borderColor: c.border,
+    },
+  });
+}
+
 export function Card({ children, variant = 'default', padding = 'base', style, ...rest }: Props) {
+  const colors = useColors();
+  const styles = makeStyles(colors);
+
   return (
     <View
       style={[
@@ -25,14 +43,3 @@ export function Card({ children, variant = 'default', padding = 'base', style, .
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  base: {
-    backgroundColor: palette.surfaceCard,
-    borderRadius: borderRadius.lg,
-  },
-  outlined: {
-    borderWidth: 1,
-    borderColor: palette.surfaceTertiary,
-  },
-});

@@ -1,9 +1,12 @@
 import { Dimensions } from 'react-native';
+export { darkColors, lightColors, type Colors } from './colors';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Static palette — brand & semantic colours that never change between modes.
+// Surface / text tokens are intentionally omitted here; use useColors() instead.
 export const palette = {
-  // Brand - Canadian government inspired
+  // Brand
   canadaRed: '#FF0000',
   navyDark: '#0A1628',
   navy: '#0D1F3C',
@@ -21,7 +24,7 @@ export const palette = {
   danger: '#FF4D4D',
   dangerLight: '#FF4D4D20',
 
-  // Neutrals
+  // Neutrals (absolute, not mode-dependent)
   white: '#FFFFFF',
   offWhite: '#F5F7FA',
   gray50: '#F8FAFC',
@@ -35,14 +38,12 @@ export const palette = {
   gray800: '#121C2D',
   gray900: '#0A1220',
 
-  // Dark mode surfaces
+  // Kept for backward-compat; prefer useColors() for surfaces/text
   surfacePrimary: '#0A1628',
   surfaceSecondary: '#112040',
   surfaceTertiary: '#1A2F50',
   surfaceCard: '#0F1E38',
   surfaceInput: '#0D1A30',
-
-  // Text
   textPrimary: '#FFFFFF',
   textSecondary: '#9BAEC8',
   textMuted: '#4A5568',

@@ -1,6 +1,7 @@
 import React, { Component, ReactNode } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Appearance, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette, spacing, typography } from '@/theme';
+import { darkColors, lightColors } from '@/theme/colors';
 
 type Props = { children: ReactNode; fallback?: ReactNode };
 type State = { hasError: boolean; error: Error | null };
@@ -22,17 +23,14 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
 
+      const c = Appearance.getColorScheme() === 'light' ? lightColors : darkColors;
+
       return (
-        <View style={styles.container} accessibilityRole="alert">
+        <View style={[styles.container, { backgroundColor: c.surfacePrimary }]} accessibilityRole="alert">
           <Text style={styles.emoji}>⚠️</Text>
-          <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message}>{this.state.error?.message}</Text>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={this.reset}
-            accessibilityRole="button"
-            accessibilityLabel="Try again"
-          >
+          <Text style={[styles.title, { color: c.textPrimary }]}>Something went wrong</Text>
+          <Text style={[styles.message, { color: c.textSecondary }]}>{this.state.error?.message}</Text>
+          <TouchableOpacity style={styles.btn} onPress={this.reset} accessibilityRole="button" accessibilityLabel="Try again">
             <Text style={styles.btnText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -44,24 +42,10 @@ export class ErrorBoundary extends Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfacePrimary,
-    padding: spacing['2xl'],
-    gap: spacing.base,
-  },
-  emoji: { fontSize: 48 },
-  title: { color: palette.white, fontSize: typography.xl, fontWeight: typography.bold },
-  message: { color: palette.textSecondary, fontSize: typography.sm, textAlign: 'center' },
-  btn: {
-    marginTop: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: palette.blue,
-  },
-  btnText: { color: palette.blue, fontWeight: typography.semibold },
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing['2xl'], gap: spacing.base },
+  emoji:     { fontSize: 48 },
+  title:     { fontSize: typography.xl, fontWeight: typography.bold },
+  message:   { fontSize: typography.sm, textAlign: 'center' },
+  btn:       { marginTop: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: 8, borderWidth: 1.5, borderColor: palette.blue },
+  btnText:   { color: palette.blue, fontWeight: typography.semibold },
 });

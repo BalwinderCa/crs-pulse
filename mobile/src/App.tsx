@@ -5,8 +5,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
 import { StyleSheet, View, ActivityIndicator, LogBox } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
+import { palette } from '@/theme';
+import { useColors } from '@/hooks/useColors';
 
-// Suppress harmless dev-mode warnings that clutter the UI
 LogBox.ignoreLogs([
   'onAnimatedValueUpdate',
   'Sending `onAnimatedValueUpdate`',
@@ -20,33 +21,25 @@ LogBox.ignoreLogs([
   '[expo-notifications]',
   'No native splash screen',
 ]);
-// Silence ALL yellow box warnings in development
 if (__DEV__) LogBox.ignoreAllLogs();
+
 import RootNavigator from '@/navigation/RootNavigator';
-import { palette } from '@/theme';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
-// Prevent the native splash from auto-hiding.
-// RootNavigator calls SplashScreen.hideAsync() once stores are ready.
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      retry: 2,
-      refetchOnWindowFocus: false,
-      staleTime: 2 * 60 * 1000,
-    },
-    mutations: {
-      retry: 0,
-    },
+    queries:   { retry: 2, refetchOnWindowFocus: false, staleTime: 2 * 60 * 1000 },
+    mutations: { retry: 0 },
   },
 });
 
 function LoadingFallback() {
+  const colors = useColors();
   return (
-    <View style={styles.loader}>
+    <View style={[styles.loader, { backgroundColor: colors.surfacePrimary }]}>
       <ActivityIndicator size="large" color={palette.blue} />
     </View>
   );
@@ -58,8 +51,9 @@ function AppInner() {
 }
 
 export default function App() {
+  const colors = useColors();
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
           <ErrorBoundary>
@@ -75,14 +69,6 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: palette.surfacePrimary,
-  },
-  loader: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: palette.surfacePrimary,
-  },
+  root:   { flex: 1 },
+  loader: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 });

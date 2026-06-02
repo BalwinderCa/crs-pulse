@@ -12,19 +12,36 @@ import { Card } from '@/components/common/Card';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { CATEGORIES, CRS_MAX, CRS_MIN } from '@/constants';
-import { palette, spacing, typography } from '@/theme';
+import { spacing, typography } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
 
 const schema = z.object({
-  crs_score: z
-    .number({ invalid_type_error: 'CRS score must be a number' })
-    .min(CRS_MIN)
-    .max(CRS_MAX),
-  category: z.enum(CATEGORIES),
+  crs_score: z.number({ invalid_type_error: 'CRS score must be a number' }).min(CRS_MIN).max(CRS_MAX),
+  category:  z.enum(CATEGORIES),
 });
 
 type FormValues = z.infer<typeof schema>;
 
+function makeStyles(c: Colors) {
+  return StyleSheet.create({
+    safe:         { flex: 1, backgroundColor: c.surfacePrimary },
+    header:       { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.sm },
+    skeletons:    { padding: spacing.base, gap: spacing.sm },
+    title:        { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
+    section:      { gap: spacing.base, margin: spacing.base, marginTop: 0 },
+    sectionTitle: { color: c.textPrimary, fontSize: typography.lg, fontWeight: typography.semibold },
+    label:        { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
+    categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    catBtn:       { flex: 0 },
+    saveBtn:      { marginTop: spacing.sm },
+    hint:         { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
+  });
+}
+
 export default function ProfileScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const { data: profile, isLoading } = useProfile();
   const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
   const { reset: resetOnboarding } = useOnboardingStore();
@@ -35,9 +52,7 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (profile) {
-      reset({ crs_score: profile.crs_score, category: profile.category });
-    }
+    if (profile) reset({ crs_score: profile.crs_score, category: profile.category });
   }, [profile, reset]);
 
   const onSubmit = (values: FormValues) => updateProfile(values);
@@ -45,27 +60,18 @@ export default function ProfileScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
-        </View>
-        <View style={styles.skeletons}>
-          <SkeletonCard />
-          <SkeletonCard />
-        </View>
+        <View style={styles.header}><Text style={styles.title}>Settings</Text></View>
+        <View style={styles.skeletons}><SkeletonCard /><SkeletonCard /></View>
       </SafeAreaView>
     );
   }
 
   return (
     <ScreenWrapper scrollable keyboardAvoiding>
-      <View style={styles.header}>
-        <Text style={styles.title}>Settings</Text>
-      </View>
+      <View style={styles.header}><Text style={styles.title}>Settings</Text></View>
 
-      {/* CRS Settings */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Express Entry Profile</Text>
-
         <Controller
           control={control}
           name="crs_score"
@@ -80,94 +86,29 @@ export default function ProfileScreen() {
             />
           )}
         />
-
         <Text style={styles.label}>Category</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map((cat) => (
-            <Controller
-              key={cat}
-              control={control}
-              name="category"
+            <Controller key={cat} control={control} name="category"
               render={({ field: { onChange, value } }) => (
-                <Button
-                  title={cat}
-                  variant={value === cat ? 'primary' : 'outline'}
-                  size="sm"
-                  onPress={() => onChange(cat)}
-                  style={styles.catBtn}
-                />
+                <Button title={cat} variant={value === cat ? 'primary' : 'outline'} size="sm" onPress={() => onChange(cat)} style={styles.catBtn} />
               )}
             />
           ))}
         </View>
-
-        <Button
-          title="Save Profile"
-          onPress={handleSubmit(onSubmit)}
-          loading={saving}
-          fullWidth
-          style={styles.saveBtn}
-        />
+        <Button title="Save Profile" onPress={handleSubmit(onSubmit)} loading={saving} fullWidth style={styles.saveBtn} />
       </Card>
 
-      {/* CRS Calculator */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>CRS Calculator</Text>
-        <Text style={styles.hint}>
-          Re-run the step-by-step wizard to recalculate your CRS score.
-        </Text>
-        <Button
-          title="Recalculate CRS Score"
-          variant="outline"
-          onPress={() => resetOnboarding()}
-          fullWidth
-        />
+        <Text style={styles.hint}>Re-run the step-by-step wizard to recalculate your CRS score.</Text>
+        <Button title="Recalculate CRS Score" variant="outline" onPress={() => resetOnboarding()} fullWidth />
       </Card>
 
-      {/* Account */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Account</Text>
-        <Button
-          title="Reset Onboarding"
-          variant="danger"
-          onPress={() => resetOnboarding()}
-          fullWidth
-        />
+        <Button title="Reset Onboarding" variant="danger" onPress={() => resetOnboarding()} fullWidth />
       </Card>
     </ScreenWrapper>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: palette.surfacePrimary },
-  header: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.sm,
-  },
-  skeletons: { padding: spacing.base, gap: spacing.sm },
-  title: { color: palette.white, fontSize: typography['3xl'], fontWeight: typography.bold },
-  section: { gap: spacing.base, margin: spacing.base, marginTop: 0 },
-  sectionTitle: {
-    color: palette.white,
-    fontSize: typography.lg,
-    fontWeight: typography.semibold,
-  },
-  label: {
-    color: palette.textSecondary,
-    fontSize: typography.sm,
-    fontWeight: typography.medium,
-  },
-  categoryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  catBtn: { flex: 0 },
-  saveBtn: { marginTop: spacing.sm },
-  hint: {
-    color: palette.textSecondary,
-    fontSize: typography.sm,
-    lineHeight: 20,
-  },
-});

@@ -9,8 +9,39 @@ import { ErrorState } from '@/components/common/ErrorState';
 import { EmptyState } from '@/components/common/EmptyState';
 import { useDashboard } from '../hooks/useDashboard';
 import { palette, spacing, typography } from '@/theme';
+import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
+
+function makeStyles(c: Colors) {
+  return StyleSheet.create({
+    safe:       { flex: 1, backgroundColor: c.surfacePrimary },
+    content:    { paddingHorizontal: spacing.base, paddingBottom: spacing['4xl'], gap: spacing.base },
+    listHeader: { gap: spacing.base, paddingTop: spacing.base },
+    header:     { gap: 2 },
+    skeletons:  { padding: spacing.base, gap: spacing.base },
+    greeting:   { color: c.textSecondary, fontSize: typography.sm },
+    title:      { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
+    sectionTitle: { color: c.textPrimary, fontSize: typography.lg, fontWeight: typography.semibold, marginTop: spacing.sm },
+    drawRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: c.surfaceCard,
+      borderRadius: 12,
+      padding: spacing.base,
+    },
+    drawDate:     { color: c.textPrimary,   fontSize: typography.base, fontWeight: typography.medium },
+    drawCategory: { color: c.textSecondary, fontSize: typography.sm },
+    drawRight:    { alignItems: 'flex-end' },
+    drawCutoff:   { color: palette.blue, fontSize: typography.xl, fontWeight: typography.bold },
+    drawInvites:  { color: c.textMuted, fontSize: typography.xs },
+    separator:    { height: spacing.sm },
+  });
+}
 
 export default function DashboardScreen() {
+  const colors = useColors();
+  const styles = makeStyles(colors);
   const { data, isLoading, isError, error, refetch, isRefetching } = useDashboard();
 
   if (isLoading) {
@@ -21,9 +52,7 @@ export default function DashboardScreen() {
           <Text style={styles.title}>Dashboard</Text>
         </View>
         <View style={styles.skeletons}>
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
+          <SkeletonCard /><SkeletonCard /><SkeletonCard />
         </View>
       </SafeAreaView>
     );
@@ -32,10 +61,7 @@ export default function DashboardScreen() {
   if (isError) {
     return (
       <SafeAreaView style={styles.safe}>
-        <ErrorState
-          message={(error as { message: string })?.message ?? 'Failed to load dashboard.'}
-          onRetry={refetch}
-        />
+        <ErrorState message={(error as { message: string })?.message ?? 'Failed to load dashboard.'} onRetry={refetch} />
       </SafeAreaView>
     );
   }
@@ -43,11 +69,7 @@ export default function DashboardScreen() {
   if (!data) {
     return (
       <SafeAreaView style={styles.safe}>
-        <EmptyState
-          icon="stats-chart-outline"
-          title="No data yet"
-          description="Set up your profile to see your CRS dashboard."
-        />
+        <EmptyState icon="stats-chart-outline" title="No data yet" description="Set up your profile to see your CRS dashboard." />
       </SafeAreaView>
     );
   }
@@ -62,22 +84,14 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={refetch}
-            tintColor={palette.blue}
-            colors={[palette.blue]}
-          />
+          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.blue} colors={[palette.blue]} />
         }
         ListHeaderComponent={
           <View style={styles.listHeader}>
-            {/* Greeting */}
             <View style={styles.header}>
               <Text style={styles.greeting}>Express Entry</Text>
               <Text style={styles.title}>Dashboard</Text>
             </View>
-
-            {/* Score card */}
             {latest_draw && (
               <ScoreCard
                 userScore={user_score}
@@ -87,14 +101,8 @@ export default function DashboardScreen() {
                 drawDate={format(new Date(latest_draw.date), 'MMM d, yyyy')}
               />
             )}
-
-            {/* Prediction */}
             <PredictionCard prediction={prediction} />
-
-            {/* Recent draws header */}
-            {recent_draws.length > 0 && (
-              <Text style={styles.sectionTitle}>Recent Draws</Text>
-            )}
+            {recent_draws.length > 0 && <Text style={styles.sectionTitle}>Recent Draws</Text>}
           </View>
         }
         renderItem={({ item }) => (
@@ -114,37 +122,3 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: palette.surfacePrimary },
-  content: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: spacing['4xl'],
-    gap: spacing.base,
-  },
-  listHeader: { gap: spacing.base, paddingTop: spacing.base },
-  header: { gap: 2 },
-  skeletons: { padding: spacing.base, gap: spacing.base },
-  greeting: { color: palette.textSecondary, fontSize: typography.sm },
-  title: { color: palette.white, fontSize: typography['3xl'], fontWeight: typography.bold },
-  sectionTitle: {
-    color: palette.white,
-    fontSize: typography.lg,
-    fontWeight: typography.semibold,
-    marginTop: spacing.sm,
-  },
-  drawRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: palette.surfaceCard,
-    borderRadius: 12,
-    padding: spacing.base,
-  },
-  drawDate: { color: palette.white, fontSize: typography.base, fontWeight: typography.medium },
-  drawCategory: { color: palette.textSecondary, fontSize: typography.sm },
-  drawRight: { alignItems: 'flex-end' },
-  drawCutoff: { color: palette.blue, fontSize: typography.xl, fontWeight: typography.bold },
-  drawInvites: { color: palette.textMuted, fontSize: typography.xs },
-  separator: { height: spacing.sm },
-});
