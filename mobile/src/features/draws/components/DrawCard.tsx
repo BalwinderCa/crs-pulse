@@ -3,7 +3,7 @@ import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { format } from 'date-fns';
 
 const IRCC_ROUNDS_URL =
-  'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions/residents/express-entry/rounds-invitations.html';
+  'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations.html';
 import { Badge } from '@/components/common/Badge';
 import { Card } from '@/components/common/Card';
 import { palette, spacing, typography } from '@/theme';

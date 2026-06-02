@@ -2,7 +2,7 @@ import React from 'react';
 import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const IRCC_ROUNDS_URL =
-  'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions/residents/express-entry/rounds-invitations.html';
+  'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations.html';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { format } from 'date-fns';
 import { ScoreCard } from '../components/ScoreCard';
