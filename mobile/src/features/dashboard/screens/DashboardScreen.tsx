@@ -1,134 +1,777 @@
-import React from 'react';
-import { FlatList, Linking, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-const IRCC_ROUNDS_URL =
-  'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations.html';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format } from 'date-fns';
-import { ScoreCard } from '../components/ScoreCard';
-import { PredictionCard } from '../components/PredictionCard';
-import { SkeletonCard } from '@/components/common/SkeletonCard';
-import { ErrorState } from '@/components/common/ErrorState';
-import { EmptyState } from '@/components/common/EmptyState';
-import { useDashboard } from '../hooks/useDashboard';
-import { palette, spacing, typography } from '@/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useProfileStore, type CalcInputs, DEFAULT_CALC_INPUTS } from '@/store/profileStore';
+import { useDrawsStore } from '@/store/drawsStore';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
-import type { Colors } from '@/theme/colors';
+import { useAccentColor } from '@/hooks/useAccentColor';
+import {
+  calculateCRS, suggestCategory, toCLB, getClbBreakpoints, getClbBand,
+  type CRSInput, type LanguageTest, type LangScores,
+} from '@/features/onboarding/utils/crsCalculator';
+import type { Category } from '@/types';
+import { SideMenu } from '../components/SideMenu';
 
-function makeStyles(c: Colors) {
-  return StyleSheet.create({
-    safe:       { flex: 1, backgroundColor: c.surfacePrimary },
-    content:    { paddingHorizontal: spacing.base, paddingBottom: spacing['4xl'], gap: spacing.base },
-    listHeader: { gap: spacing.base, paddingTop: spacing.base },
-    header:     { gap: 2 },
-    skeletons:  { padding: spacing.base, gap: spacing.base },
-    greeting:   { color: c.textSecondary, fontSize: typography.sm },
-    title:      { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
-    sectionTitle: { color: c.textPrimary, fontSize: typography.lg, fontWeight: typography.semibold, marginTop: spacing.sm },
-    drawRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      backgroundColor: c.surfaceCard,
-      borderRadius: 12,
-      padding: spacing.base,
-    },
-    drawDate:     { color: c.textPrimary,   fontSize: typography.base, fontWeight: typography.medium },
-    drawCategory: { color: c.textSecondary, fontSize: typography.sm },
-    drawRight:    { alignItems: 'flex-end' },
-    drawCutoff:   { color: palette.blue, fontSize: typography.xl, fontWeight: typography.bold },
-    drawInvites:  { color: c.textMuted, fontSize: typography.xs },
-    separator:    { height: spacing.sm },
-  });
+const EDU_OPTIONS = [
+  { label: 'Less than high school', value: 'less_than_secondary' },
+  { label: 'High school',           value: 'secondary' },
+  { label: '1-yr diploma',          value: '1year' },
+  { label: '2-yr diploma',          value: '2year' },
+  { label: "Bachelor's",            value: 'bachelors' },
+  { label: '2+ certs (3yr+)',       value: 'two_or_more' },
+  { label: "Master's",              value: 'masters' },
+  { label: 'PhD',                   value: 'phd' },
+];
+
+const LANG_TESTS = ['IELTS', 'CELPIP', 'PTE Core'] as const;
+const SECOND_LANG_TESTS = ['TEF', 'TCF'] as const;
+const LANG_TEST_MAP: Record<string, LanguageTest> = {
+  IELTS: 'IELTS', CELPIP: 'CELPIP', 'PTE Core': 'PTE_CORE', TEF: 'TEF', TCF: 'TCF',
+};
+
+function fmtScore(test: LanguageTest, score: number): string {
+  if (score <= 0) return '—';
+  if (test === 'IELTS') return score.toFixed(1);
+  return Math.round(score).toString();
+}
+
+function buildCRSInput(d: CalcInputs): CRSInput {
+  const firstTest  = (LANG_TEST_MAP[d.firstLangTest]  ?? 'IELTS')  as LanguageTest;
+  const secondTest = (LANG_TEST_MAP[d.secondLangTest] ?? 'TEF')    as LanguageTest;
+  const clb = (v: number) => Math.min(12, Math.max(0, Math.round(v)));
+  return {
+    maritalStatus: d.maritalStatus,
+    age: d.age,
+    education: d.education as any,
+    canadianEducation: d.canadianEducation,
+    firstLangTest: firstTest,
+    firstLang: { speaking: d.firstLangSpeaking, listening: d.firstLangListening,
+                 reading:  d.firstLangReading,  writing:  d.firstLangWriting },
+    hasSecondLang: d.hasSecondLang,
+    secondLangTest: secondTest,
+    secondLang: { speaking: d.secondLangSpeaking, listening: d.secondLangListening,
+                  reading:  d.secondLangReading,  writing:  d.secondLangWriting },
+    canadianWorkExp:    Math.min(5, d.canadianWorkExp) as any,
+    foreignWorkExp:     d.foreignWorkExp as any,
+    spouseEducation:    d.spouseEducation as any,
+    // Spouse lang stored as CLB directly
+    spouseLang: { speaking: clb(d.spouseLangSpeaking), listening: clb(d.spouseLangListening),
+                  reading:  clb(d.spouseLangReading),  writing:  clb(d.spouseLangWriting) },
+    spouseCanadianWorkExp: Math.min(5, d.spouseCanadianWorkExp) as any,
+    hasProvincialNomination: d.hasProvincialNomination,
+    jobOffer:           d.jobOffer as any,
+    hasSiblingInCanada: d.hasSiblingInCanada,
+    hasTradeCert:       d.hasTradeCert,
+  };
+}
+
+// ─── Sub-components ──────────────────────────────────────────────────────────
+
+function OptionPill({ label, selected, onPress }: {
+  label: string; selected: boolean; onPress: () => void;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+  return (
+    <TouchableOpacity
+      style={[st.pill, { borderColor: c.border, backgroundColor: c.surfaceCard },
+        selected && { borderColor: accent, backgroundColor: accent + '18' }]}
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ selected }}
+    >
+      <Text style={[st.pillText, { color: c.textSecondary },
+        selected && { color: c.textPrimary, fontWeight: typography.semibold }]}>
+        {label}
+      </Text>
+      {selected && <Ionicons name="checkmark-circle" size={14} color={accent} />}
+    </TouchableOpacity>
+  );
+}
+
+function SectionHeader({ title, icon, expanded, onToggle, summaryText, score }: {
+  title: string; icon: string; expanded: boolean; onToggle: () => void;
+  summaryText?: string; score?: number | null;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+  return (
+    <TouchableOpacity
+      style={[st.secHeader, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
+      onPress={onToggle} activeOpacity={0.7}
+    >
+      <View style={[st.secIcon, { backgroundColor: accent + '18' }]}>
+        <Ionicons name={icon as any} size={15} color={accent} />
+      </View>
+      <View style={st.secMid}>
+        <Text style={[st.secTitle, { color: c.textPrimary }]}>{title}</Text>
+        {!expanded && summaryText
+          ? <Text style={[st.secSummary, { color: c.textMuted }]} numberOfLines={1}>{summaryText}</Text>
+          : null}
+      </View>
+      {score != null && !expanded && (
+        <View style={[st.secScoreBadge, { backgroundColor: palette.success + '20', borderColor: palette.success + '60' }]}>
+          <Text style={[st.secScoreText, { color: palette.success }]}>{score}</Text>
+        </View>
+      )}
+      <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={c.textMuted} />
+    </TouchableOpacity>
+  );
+}
+
+function FieldLabel({ children, top }: { children: string; top?: boolean }) {
+  const c = useColors();
+  return (
+    <Text style={[st.fieldLabel, { color: c.textMuted }, top && { marginTop: spacing.lg }]}>
+      {children}
+    </Text>
+  );
+}
+
+/** Snaps through IRCC CLB breakpoints for a given test + skill. */
+function LangInput({ label, test, skill, value, onChange }: {
+  label: string; test: LanguageTest; skill: keyof LangScores;
+  value: number; onChange: (v: number) => void;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+
+  // Breakpoints: [0 = "not set", CLB4 minimum, CLB5 minimum, ..., CLB10+]
+  // Filter to CLB ≥ 4 so the first + tap always lands on a valid EE score.
+  const bps = useMemo(() => {
+    const raw = getClbBreakpoints(test, skill);
+    const valid = raw.filter(s => toCLB(test, skill, s) >= 4);
+    return [0, ...valid];
+  }, [test, skill]);
+
+  // Index of current value in bps (largest bp <= value)
+  const idx = useMemo(() => {
+    let i = 0;
+    for (let j = 1; j < bps.length; j++) {
+      if ((bps[j] ?? Infinity) <= value + 0.001) i = j; else break;
+    }
+    return value <= 0 ? 0 : i;
+  }, [bps, value]);
+
+  const clb   = toCLB(test, skill, value);
+  const isSet = value > 0 && clb > 0;
+
+  // Band range for current CLB level (e.g. 42–50 for PTE CLB 4)
+  const scoreDisplay = useMemo(() => {
+    if (!isSet) return '';
+    const [lo, hi] = getClbBand(test, skill, value);
+    return lo < hi - 0.001
+      ? `${fmtScore(test, lo)}–${fmtScore(test, hi)}`
+      : fmtScore(test, value);
+  }, [test, skill, value, isSet]);
+
+  return (
+    <View style={[st.langRow, { backgroundColor: c.surfaceInput, borderColor: c.border }]}>
+      <Text style={[st.langLbl, { color: c.textSecondary }]}>{label}</Text>
+      <View style={st.langCtrl}>
+        <TouchableOpacity
+          style={[st.clbBtn, { backgroundColor: idx <= 0 ? c.surfaceTertiary : accent }]}
+          onPress={() => { const p = bps[idx - 1]; if (p !== undefined) onChange(p); }}
+          disabled={idx <= 0}
+        >
+          <Ionicons name="remove" size={15} color={idx <= 0 ? c.textMuted : palette.white} />
+        </TouchableOpacity>
+        <View style={[st.langVal, { backgroundColor: isSet ? accent + '15' : c.surfaceTertiary }]}>
+          {isSet ? (
+            <>
+              <Text style={[st.langScore, { color: c.textPrimary }]}>{scoreDisplay}</Text>
+              <Text style={[st.langClb, { color: accent }]}>CLB {clb}</Text>
+            </>
+          ) : (
+            <Text style={[st.langNotSet, { color: c.textMuted }]}>Not set</Text>
+          )}
+        </View>
+        <TouchableOpacity
+          style={[st.clbBtn, { backgroundColor: idx >= bps.length - 1 ? c.surfaceTertiary : accent }]}
+          onPress={() => { const n = bps[idx + 1]; if (n !== undefined) onChange(n); }}
+          disabled={idx >= bps.length - 1}
+        >
+          <Ionicons name="add" size={15} color={idx >= bps.length - 1 ? c.textMuted : palette.white} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+/** Simple CLB-only stepper (1–12) for spouse / second language. */
+function CLBStepper({ label, value, onChange }: {
+  label: string; value: number; onChange: (v: number) => void;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+  return (
+    <View style={[st.langRow, { backgroundColor: c.surfaceInput, borderColor: c.border }]}>
+      <Text style={[st.langLbl, { color: c.textSecondary }]}>{label}</Text>
+      <View style={st.langCtrl}>
+        <TouchableOpacity
+          style={[st.clbBtn, { backgroundColor: value <= 0 ? c.surfaceTertiary : accent }]}
+          onPress={() => onChange(Math.max(0, value - 1))} disabled={value <= 0}
+        >
+          <Ionicons name="remove" size={15} color={value <= 0 ? c.textMuted : palette.white} />
+        </TouchableOpacity>
+        <View style={[st.langVal, { backgroundColor: value > 0 ? accent + '15' : c.surfaceTertiary }]}>
+          {value > 0
+            ? <Text style={[st.langScore, { color: accent }]}>CLB {value}</Text>
+            : <Text style={[st.langNotSet, { color: c.textMuted }]}>Not set</Text>}
+        </View>
+        <TouchableOpacity
+          style={[st.clbBtn, { backgroundColor: value >= 12 ? c.surfaceTertiary : accent }]}
+          onPress={() => onChange(Math.min(12, value + 1))} disabled={value >= 12}
+        >
+          <Ionicons name="add" size={15} color={value >= 12 ? c.textMuted : palette.white} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function Stepper({ value, onChange, min = 0, max = 10, unit }: {
+  value: number; onChange: (v: number) => void;
+  min?: number; max?: number; unit?: string;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+  return (
+    <View style={[st.stepper, { backgroundColor: c.surfaceInput, borderColor: c.border }]}>
+      <TouchableOpacity
+        style={[st.stepBtn, { backgroundColor: value <= min ? c.surfaceTertiary : accent }]}
+        onPress={() => onChange(Math.max(min, value - 1))} disabled={value <= min}
+      >
+        <Ionicons name="remove" size={18} color={value <= min ? c.textMuted : palette.white} />
+      </TouchableOpacity>
+      <Text style={[st.stepVal, { color: c.textPrimary }]}>
+        {value}{value === max ? '+' : ''}{unit ? ` ${unit}` : ''}
+      </Text>
+      <TouchableOpacity
+        style={[st.stepBtn, { backgroundColor: value >= max ? c.surfaceTertiary : accent }]}
+        onPress={() => onChange(Math.min(max, value + 1))} disabled={value >= max}
+      >
+        <Ionicons name="add" size={18} color={value >= max ? c.textMuted : palette.white} />
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+function Toggle({ label, value, onPress, icon }: {
+  label: string; value: boolean; onPress: () => void; icon?: string;
+}) {
+  const c = useColors();
+  const accent = useAccentColor();
+  return (
+    <TouchableOpacity style={[st.toggle, { borderColor: c.border }]} onPress={onPress}>
+      <Ionicons
+        name={(value ? (icon ?? 'checkmark-circle') : 'add-circle-outline') as any}
+        size={17} color={accent}
+      />
+      <Text style={[st.toggleTxt, { color: c.textSecondary }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
+
+const SECTION_NAMES = ['personal', 'education', 'language', 'work', 'additional', 'spouse'] as const;
+type SectionName = typeof SECTION_NAMES[number];
+type SectionMap  = Record<SectionName, boolean>;
+
+const CLOSED_SECTIONS: SectionMap = {
+  personal: false, education: false, language: false,
+  work: false, additional: false, spouse: false,
+};
+
+function coerceInputs(saved: CalcInputs): CalcInputs {
+  const n = (v: any) => Number(v) || 0;
+  return {
+    ...saved,
+    firstLangSpeaking:  n(saved.firstLangSpeaking),  firstLangListening: n(saved.firstLangListening),
+    firstLangReading:   n(saved.firstLangReading),   firstLangWriting:   n(saved.firstLangWriting),
+    secondLangSpeaking: n(saved.secondLangSpeaking), secondLangListening:n(saved.secondLangListening),
+    secondLangReading:  n(saved.secondLangReading),  secondLangWriting:  n(saved.secondLangWriting),
+    spouseLangSpeaking: n(saved.spouseLangSpeaking), spouseLangListening:n(saved.spouseLangListening),
+    spouseLangReading:  n(saved.spouseLangReading),  spouseLangWriting:  n(saved.spouseLangWriting),
+  };
 }
 
 export default function DashboardScreen() {
-  const colors = useColors();
-  const styles = makeStyles(colors);
-  const { data, isLoading, isError, error, refetch, isRefetching } = useDashboard();
+  const c      = useColors();
+  const accent = useAccentColor();
+  const profile        = useProfileStore((s) => s.profile);
+  const resetKey       = useProfileStore((s) => s.resetKey);
+  const saveCalcInputs = useProfileStore((s) => s.saveCalcInputs);
+  const saveProfile    = useProfileStore((s) => s.save);
+  const { draws } = useDrawsStore();
 
-  if (isLoading) {
+  const [inputs, setInputs] = useState<CalcInputs>(() =>
+    coerceInputs(profile?.calculatorInputs ?? DEFAULT_CALC_INPUTS)
+  );
+  const [exp,      setExp]      = useState<SectionMap>({ ...CLOSED_SECTIONS });
+  // reviewed: tracks which sections the user has explicitly opened this session
+  const [reviewed, setReviewed] = useState<SectionMap>({ ...CLOSED_SECTIONS });
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Re-sync all local state when store is hard-reset
+  useEffect(() => {
+    if (resetKey === 0) return;            // skip on first mount
+    setInputs(coerceInputs(DEFAULT_CALC_INPUTS));
+    setExp({ ...CLOSED_SECTIONS });
+    setReviewed({ ...CLOSED_SECTIONS });
+  }, [resetKey]);
+
+  function upd<K extends keyof CalcInputs>(key: K, val: CalcInputs[K]) {
+    setInputs((d) => ({ ...d, [key]: val }));
+  }
+  function tog(name: SectionName) {
+    setExp((e) => ({ ...e, [name]: !e[name] }));
+    // Mark as reviewed the first time the user opens it
+    setReviewed((r) => r[name] ? r : { ...r, [name]: true });
+  }
+
+  const crsInput = useMemo(() => buildCRSInput(inputs), [inputs]);
+  const result   = useMemo(() => calculateCRS(crsInput), [crsInput]);
+  const cat = useMemo((): Category =>
+    suggestCategory(crsInput, result.firstLangClb) as Category,
+  [crsInput, result]);
+
+  // Score shown only when all 4 first-language CLB fields are ≥ CLB 4
+  const scoreReady = useMemo(() => {
+    const t = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
+    return toCLB(t, 'speaking',  inputs.firstLangSpeaking)  > 0 &&
+           toCLB(t, 'listening', inputs.firstLangListening) > 0 &&
+           toCLB(t, 'reading',   inputs.firstLangReading)   > 0 &&
+           toCLB(t, 'writing',   inputs.firstLangWriting)   > 0;
+  }, [inputs.firstLangTest, inputs.firstLangSpeaking, inputs.firstLangListening,
+      inputs.firstLangReading, inputs.firstLangWriting]);
+
+  // Autosave (debounced 800 ms)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      saveCalcInputs(inputs);
+      if (scoreReady) saveProfile({ crs_score: result.total, category: cat });
+    }, 800);
+    return () => clearTimeout(t);
+  }, [inputs, result.total, cat, scoreReady]);
+
+  // Latest draw for cutoff comparison in floating pill
+  const latestDraw = useMemo(() => {
+    if (!draws.length) return null;
+    return draws.find((d) => d.category === cat) ?? draws[0] ?? null;
+  }, [draws, cat]);
+
+  const score    = result.total;
+  const scoreClr = score >= 500 ? palette.success : score >= 450 ? palette.warning : palette.danger;
+  const married  = inputs.maritalStatus === 'married';
+
+  // Bonus point attribution (so badges add up to total)
+  const canadianEduBonus = inputs.canadianEducation === '3year_plus' ? 30
+    : inputs.canadianEducation === '1_2year' ? 15 : 0;
+  const frenchBonus = scoreReady
+    ? Math.max(0, result.additionalPoints
+        - (inputs.hasProvincialNomination ? 600 : 0)
+        - (inputs.hasSiblingInCanada ? 15 : 0)
+        - canadianEduBonus)
+    : 0;
+
+  // Section summaries (shown when collapsed)
+  const persSummary = `Age ${inputs.age} · ${inputs.maritalStatus === 'single' ? 'Single' : 'Married'}`;
+  const eduSummary  = EDU_OPTIONS.find(e => e.value === inputs.education)?.label ?? inputs.education;
+  const langSummary = useMemo(() => {
+    if (!scoreReady) return `${inputs.firstLangTest} · not set`;
+    const clbs = Object.values(result.firstLangClb);
+    return `${inputs.firstLangTest} · CLB ${Math.min(...clbs)}–${Math.max(...clbs)}`;
+  }, [scoreReady, inputs.firstLangTest, result.firstLangClb]);
+  const workSummary = `${inputs.canadianWorkExp === 0 ? 'No CA exp' : `${inputs.canadianWorkExp}yr CA`} · ${
+    inputs.foreignWorkExp === 0 ? 'No foreign exp' : inputs.foreignWorkExp === 1 ? '1–2yr foreign' : '3+yr foreign'}`;
+
+  // Completion flags — language uses score-based check; others require explicit review
+  const langComplete = scoreReady;
+
+  // ─── Section renderers ──────────────────────────────────────────────────────
+
+  function renderPersonal() {
     return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <Text style={styles.greeting}>Good day 👋</Text>
-          <Text style={styles.title}>Dashboard</Text>
+      <View style={st.secBody}>
+        <FieldLabel>MARITAL / PARTNER STATUS</FieldLabel>
+        <View style={st.pillRow}>
+          <OptionPill label="Single"
+            selected={inputs.maritalStatus === 'single'}
+            onPress={() => upd('maritalStatus', 'single')} />
+          <OptionPill label="Married (partner coming)"
+            selected={inputs.maritalStatus === 'married'}
+            onPress={() => upd('maritalStatus', 'married')} />
+          <OptionPill label="Married (partner staying)"
+            selected={inputs.maritalStatus === 'married_not_accompanying'}
+            onPress={() => upd('maritalStatus', 'married_not_accompanying')} />
         </View>
-        <View style={styles.skeletons}>
-          <SkeletonCard /><SkeletonCard /><SkeletonCard />
+        <FieldLabel top>YOUR AGE</FieldLabel>
+        <Stepper value={inputs.age} onChange={v => upd('age', v)} min={17} max={55} unit="yrs" />
+      </View>
+    );
+  }
+
+  function renderEducation() {
+    return (
+      <View style={st.secBody}>
+        <FieldLabel>HIGHEST EDUCATION</FieldLabel>
+        <View style={st.pillGrid}>
+          {EDU_OPTIONS.map(o => (
+            <OptionPill key={o.value} label={o.label}
+              selected={inputs.education === o.value}
+              onPress={() => upd('education', o.value)} />
+          ))}
         </View>
-      </SafeAreaView>
+        <FieldLabel top>CANADIAN EDUCATION</FieldLabel>
+        <View style={st.pillRow}>
+          <OptionPill label="None"     selected={inputs.canadianEducation === 'none'}       onPress={() => upd('canadianEducation', 'none')} />
+          <OptionPill label="1–2 yrs"  selected={inputs.canadianEducation === '1_2year'}    onPress={() => upd('canadianEducation', '1_2year')} />
+          <OptionPill label="3+ yrs"   selected={inputs.canadianEducation === '3year_plus'} onPress={() => upd('canadianEducation', '3year_plus')} />
+        </View>
+      </View>
     );
   }
 
-  if (isError) {
+  function renderLanguage() {
+    const firstTest = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
+    const secondTest = (LANG_TEST_MAP[inputs.secondLangTest] ?? 'TEF') as LanguageTest;
     return (
-      <SafeAreaView style={styles.safe}>
-        <ErrorState message={(error as { message: string })?.message ?? 'Failed to load dashboard.'} onRetry={refetch} />
-      </SafeAreaView>
+      <View style={st.secBody}>
+        <FieldLabel>FIRST LANGUAGE TEST</FieldLabel>
+        <View style={st.pillRow}>
+          {LANG_TESTS.map(t => (
+            <OptionPill key={t} label={t}
+              selected={inputs.firstLangTest === t}
+              onPress={() => setInputs(d => ({
+                ...d, firstLangTest: t,
+                firstLangSpeaking: 0, firstLangListening: 0,
+                firstLangReading: 0, firstLangWriting: 0,
+              }))} />
+          ))}
+        </View>
+        <FieldLabel top>SCORES</FieldLabel>
+        <LangInput label="Speaking"  test={firstTest} skill="speaking"  value={inputs.firstLangSpeaking}  onChange={v => upd('firstLangSpeaking',  v)} />
+        <LangInput label="Listening" test={firstTest} skill="listening" value={inputs.firstLangListening} onChange={v => upd('firstLangListening', v)} />
+        <LangInput label="Reading"   test={firstTest} skill="reading"   value={inputs.firstLangReading}   onChange={v => upd('firstLangReading',   v)} />
+        <LangInput label="Writing"   test={firstTest} skill="writing"   value={inputs.firstLangWriting}   onChange={v => upd('firstLangWriting',   v)} />
+
+        <Toggle
+          label={inputs.hasSecondLang ? 'Second language scores added' : 'Add second official language (optional)'}
+          value={inputs.hasSecondLang}
+          onPress={() => upd('hasSecondLang', !inputs.hasSecondLang)}
+        />
+        {inputs.hasSecondLang && (
+          <>
+            <FieldLabel top>SECOND LANGUAGE TEST</FieldLabel>
+            <View style={st.pillRow}>
+              {SECOND_LANG_TESTS.map(t => (
+                <OptionPill key={t} label={t}
+                  selected={inputs.secondLangTest === t}
+                  onPress={() => setInputs(d => ({
+                    ...d, secondLangTest: t,
+                    secondLangSpeaking: 0, secondLangListening: 0,
+                    secondLangReading: 0, secondLangWriting: 0,
+                  }))} />
+              ))}
+            </View>
+            <FieldLabel top>SCORES</FieldLabel>
+            <LangInput label="Speaking"  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} />
+            <LangInput label="Listening" test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} />
+            <LangInput label="Reading"   test={secondTest} skill="reading"   value={inputs.secondLangReading}   onChange={v => upd('secondLangReading',   v)} />
+            <LangInput label="Writing"   test={secondTest} skill="writing"   value={inputs.secondLangWriting}   onChange={v => upd('secondLangWriting',   v)} />
+          </>
+        )}
+      </View>
     );
   }
 
-  if (!data) {
+  function renderWork() {
     return (
-      <SafeAreaView style={styles.safe}>
-        <EmptyState icon="stats-chart-outline" title="No data yet" description="Set up your profile to see your CRS dashboard." />
-      </SafeAreaView>
+      <View style={st.secBody}>
+        <FieldLabel>CANADIAN WORK EXPERIENCE</FieldLabel>
+        <Stepper value={inputs.canadianWorkExp} onChange={v => upd('canadianWorkExp', v)}
+          min={0} max={5} unit={inputs.canadianWorkExp === 1 ? 'year' : 'years'} />
+        <FieldLabel top>FOREIGN WORK EXPERIENCE</FieldLabel>
+        <View style={st.pillRow}>
+          <OptionPill label="None"      selected={inputs.foreignWorkExp === 0} onPress={() => upd('foreignWorkExp', 0)} />
+          <OptionPill label="1–2 years" selected={inputs.foreignWorkExp === 1} onPress={() => upd('foreignWorkExp', 1)} />
+          <OptionPill label="3+ years"  selected={inputs.foreignWorkExp === 3} onPress={() => upd('foreignWorkExp', 3)} />
+        </View>
+        <Toggle label={inputs.hasTradeCert ? 'Certificate of qualification (trade)' : 'Add trade certificate (optional)'}
+          value={inputs.hasTradeCert} onPress={() => upd('hasTradeCert', !inputs.hasTradeCert)} icon="ribbon" />
+      </View>
     );
   }
 
-  const { user_score, user_category, latest_draw, prediction, recent_draws } = data;
+  function renderAdditional() {
+    return (
+      <View style={st.secBody}>
+        {/* Job offer notice — IRCC removed points as of Mar 25 2025 */}
+        <View style={[st.noticeRow, { backgroundColor: palette.warningLight, borderColor: palette.warning + '40' }]}>
+          <Ionicons name="information-circle" size={15} color={palette.warning} style={{ marginTop: 1 }} />
+          <Text style={[st.noticeTxt, { color: palette.warning }]}>
+            <Text style={{ fontWeight: typography.bold }}>Job offer points removed</Text>
+            {' '}— As of March 25, 2025, IRCC no longer awards CRS points for job offers (previously 50–200 pts). Job offers still affect program eligibility.
+          </Text>
+        </View>
+        <FieldLabel>PROVINCIAL NOMINATION</FieldLabel>
+        <View style={st.pillRow}>
+          <OptionPill label="No nomination"    selected={!inputs.hasProvincialNomination} onPress={() => upd('hasProvincialNomination', false)} />
+          <OptionPill label="Yes — I have one" selected={inputs.hasProvincialNomination}  onPress={() => upd('hasProvincialNomination', true)} />
+        </View>
+        {inputs.hasProvincialNomination && (
+          <View style={[st.bonusRow, { backgroundColor: palette.successLight, borderColor: palette.success + '30' }]}>
+            <Ionicons name="trending-up" size={14} color={palette.success} />
+            <Text style={[st.bonusTxt, { color: palette.success }]}>+600 pts — near-guaranteed invitation</Text>
+          </View>
+        )}
+        <Toggle label={inputs.hasSiblingInCanada ? 'Sibling in Canada (citizen/PR)' : 'Add: sibling in Canada (optional)'}
+          value={inputs.hasSiblingInCanada} onPress={() => upd('hasSiblingInCanada', !inputs.hasSiblingInCanada)} icon="people" />
+      </View>
+    );
+  }
+
+  function renderSpouse() {
+    return (
+      <View style={st.secBody}>
+        <FieldLabel>PARTNER'S EDUCATION</FieldLabel>
+        <View style={st.pillGrid}>
+          {EDU_OPTIONS.map(o => (
+            <OptionPill key={o.value} label={o.label}
+              selected={inputs.spouseEducation === o.value}
+              onPress={() => upd('spouseEducation', o.value)} />
+          ))}
+        </View>
+        <FieldLabel top>PARTNER'S LANGUAGE (CLB)</FieldLabel>
+        <CLBStepper label="Speaking"  value={inputs.spouseLangSpeaking}  onChange={v => upd('spouseLangSpeaking',  v)} />
+        <CLBStepper label="Listening" value={inputs.spouseLangListening} onChange={v => upd('spouseLangListening', v)} />
+        <CLBStepper label="Reading"   value={inputs.spouseLangReading}   onChange={v => upd('spouseLangReading',   v)} />
+        <CLBStepper label="Writing"   value={inputs.spouseLangWriting}   onChange={v => upd('spouseLangWriting',   v)} />
+        <FieldLabel top>PARTNER'S CANADIAN WORK EXP.</FieldLabel>
+        <Stepper value={inputs.spouseCanadianWorkExp} onChange={v => upd('spouseCanadianWorkExp', v)}
+          min={0} max={5} unit="years" />
+      </View>
+    );
+  }
+
+  // ─── Main render ─────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <FlatList
-        data={recent_draws}
-        keyExtractor={(item) => String(item.id)}
+    <SafeAreaView style={[st.safe, { backgroundColor: c.surfacePrimary }]}>
+      <ScrollView
+        style={st.scroll}
+        contentContainerStyle={st.content}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={palette.blue} colors={[palette.blue]} />
-        }
-        ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <View style={styles.header}>
-              <Text style={styles.greeting}>Express Entry</Text>
-              <Text style={styles.title}>Dashboard</Text>
-            </View>
-            {latest_draw && (
-              <ScoreCard
-                userScore={user_score}
-                latestCutoff={latest_draw.cutoff_score}
-                category={user_category}
-                drawNumber={latest_draw.draw_number}
-                drawDate={format(new Date(latest_draw.date), 'MMM d, yyyy')}
-              />
-            )}
-            <PredictionCard prediction={prediction} />
-            {recent_draws.length > 0 && <Text style={styles.sectionTitle}>Recent Draws</Text>}
-          </View>
-        }
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            onPress={() => Linking.openURL(IRCC_ROUNDS_URL)}
-            activeOpacity={0.75}
-            accessibilityRole="link"
-            accessibilityLabel={`Draw #${item.draw_number} — view on IRCC website`}
-          >
-            <View style={styles.drawRow}>
-              <View>
-                <Text style={styles.drawDate}>{format(new Date(item.date), 'MMM d, yyyy')}</Text>
-                <Text style={styles.drawCategory}>{item.category}</Text>
-              </View>
-              <View style={styles.drawRight}>
-                <Text style={styles.drawCutoff}>{item.cutoff_score}</Text>
-                <Text style={styles.drawInvites}>{item.invitations_issued.toLocaleString()} ITA</Text>
-              </View>
-            </View>
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={[st.appHeader, { borderBottomColor: c.border }]}>
+          <TouchableOpacity onPress={() => setMenuOpen(true)} hitSlop={12} style={st.hamburger}>
+            <Ionicons name="menu" size={26} color={c.textPrimary} />
           </TouchableOpacity>
+          <View style={{ flex: 1 }}>
+            <Text style={[st.appGreeting, { color: c.textMuted }]}>Express Entry</Text>
+            <Text style={[st.appTitle, { color: c.textPrimary }]}>CRS Pulse</Text>
+          </View>
+          {scoreReady && (
+            <View style={[st.catBadge, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
+              <Text style={[st.catTxt, { color: accent }]}>{cat}</Text>
+            </View>
+          )}
+        </View>
+
+        <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+
+        {/* Calculator */}
+        <View style={st.calcSection}>
+          <Text style={[st.calcTitle, { color: c.textPrimary }]}>CRS Calculator</Text>
+          <Text style={[st.calcSub, { color: c.textMuted }]}>
+            {scoreReady ? 'Score updates live as you edit' : 'Enter your language scores to unlock your CRS'}
+          </Text>
+
+          <SectionHeader title="Personal"        icon="person-outline"    expanded={exp.personal}
+            onToggle={() => tog('personal')}   summaryText={persSummary} score={scoreReady ? result.agePoints : null} />
+          {exp.personal && renderPersonal()}
+
+          <SectionHeader title="Education"       icon="school-outline"    expanded={exp.education}
+            onToggle={() => tog('education')}  summaryText={eduSummary}  score={scoreReady ? result.educationPoints + result.eduTransferPoints + canadianEduBonus : null} />
+          {exp.education && renderEducation()}
+
+          <SectionHeader title="Language"        icon="language-outline"  expanded={exp.language}
+            onToggle={() => tog('language')}   summaryText={langSummary} score={scoreReady ? result.firstLangPoints + result.secondLangPoints + frenchBonus : null} />
+          {exp.language && renderLanguage()}
+
+          <SectionHeader title="Work Experience" icon="briefcase-outline" expanded={exp.work}
+            onToggle={() => tog('work')}       summaryText={workSummary} score={scoreReady ? result.canadianWorkExpPoints + result.workTransferPoints : null} />
+          {exp.work && renderWork()}
+
+          <SectionHeader title="Additional"      icon="star-outline"      expanded={exp.additional}
+            onToggle={() => tog('additional')}                            score={scoreReady ? (inputs.hasProvincialNomination ? 600 : 0) + (inputs.hasSiblingInCanada ? 15 : 0) || null : null} />
+          {exp.additional && renderAdditional()}
+
+          {married && (
+            <>
+              <SectionHeader title="Spouse / Partner" icon="people-outline" expanded={exp.spouse}
+                onToggle={() => tog('spouse')} score={scoreReady ? result.spouseTotal || null : null} />
+              {exp.spouse && renderSpouse()}
+            </>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* ── Floating score pill ── */}
+      <View style={st.floatWrap} pointerEvents="none">
+        {scoreReady ? (
+          <View style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
+            shadowColor: scoreClr }]}>
+            <View style={[st.floatStripe, { backgroundColor: scoreClr }]} />
+            <View style={st.floatInner}>
+              <View style={st.floatStat}>
+                <Text style={[st.floatLbl, { color: c.textMuted }]}>CRS SCORE</Text>
+                <Text style={[st.floatScore, { color: scoreClr }]}>{score}</Text>
+              </View>
+              <View style={[st.floatRule, { backgroundColor: c.border }]} />
+              <View style={st.floatStat}>
+                <Text style={[st.floatLbl, { color: c.textMuted }]}>CATEGORY</Text>
+                <Text style={[st.floatCat, { color: accent }]} numberOfLines={1}>{cat}</Text>
+              </View>
+              {latestDraw ? (
+                <>
+                  <View style={[st.floatRule, { backgroundColor: c.border }]} />
+                  <View style={st.floatStat}>
+                    <Text style={[st.floatLbl, { color: c.textMuted }]}>VS CUTOFF</Text>
+                    <Text style={[st.floatDiff, {
+                      color: score >= latestDraw.cutoff_score ? palette.success : palette.danger }]}>
+                      {score >= latestDraw.cutoff_score ? '+' : ''}{score - latestDraw.cutoff_score}
+                    </Text>
+                  </View>
+                </>
+              ) : null}
+            </View>
+          </View>
+        ) : (
+          <View style={[st.floatHint, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            <Ionicons name="calculator-outline" size={15} color={c.textMuted} />
+            <Text style={[st.floatHintTxt, { color: c.textMuted }]}>
+              Open <Text style={{ color: accent }}>Language</Text> and set all 4 CLB scores to see your CRS
+            </Text>
+          </View>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      </View>
     </SafeAreaView>
   );
 }
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
+const st = StyleSheet.create({
+  safe:    { flex: 1 },
+  scroll:  { flex: 1 },
+  content: { paddingHorizontal: spacing.base, paddingBottom: 110 },
+
+  // Header
+  hamburger:   { marginRight: spacing.sm, paddingBottom: 2 },
+  appHeader:   { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
+                 paddingTop: spacing.base, paddingBottom: spacing.md,
+                 borderBottomWidth: 1, marginBottom: spacing.lg },
+  appGreeting: { fontSize: typography.xs, fontWeight: typography.semibold,
+                 letterSpacing: 0.8, textTransform: 'uppercase' },
+  appTitle:    { fontSize: typography['3xl'], fontWeight: typography.black, letterSpacing: -0.5 },
+  catBadge:    { borderRadius: borderRadius.full, paddingHorizontal: spacing.md,
+                 paddingVertical: spacing.xs, borderWidth: 1 },
+  catTxt:      { fontSize: typography.sm, fontWeight: typography.semibold },
+
+  // Calculator
+  calcSection: { marginBottom: spacing.lg },
+  calcTitle:   { fontSize: typography.xl, fontWeight: typography.bold, marginBottom: 2 },
+  calcSub:     { fontSize: typography.xs, marginBottom: spacing.lg },
+
+  // Section header
+  secHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg,
+               borderRadius: borderRadius.md, borderWidth: 0.3, marginBottom: 8, gap: spacing.md },
+  secIcon:   { width: 38, height: 38, borderRadius: borderRadius.md,
+               alignItems: 'center', justifyContent: 'center' },
+  secMid:    { flex: 1 },
+  secTitle:  { fontSize: typography.lg, fontWeight: typography.semibold },
+  secSummary:{ fontSize: typography.xs, marginTop: 1 },
+  secScoreBadge: { borderRadius: borderRadius.md, borderWidth: 0.5, paddingHorizontal: 7, paddingVertical: 2, marginRight: 4 },
+  secScoreText:  { fontSize: typography.xs, fontWeight: typography.bold },
+  secBody:   { paddingHorizontal: spacing.xs, paddingBottom: spacing.sm, marginBottom: spacing.sm },
+
+  // Field label
+  fieldLabel: { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8,
+                textTransform: 'uppercase', marginBottom: spacing.sm },
+
+  // Pills
+  pillRow:  { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.xs },
+  pillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.xs },
+  pill:     { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md,
+              borderWidth: 0.3, paddingHorizontal: spacing.sm, paddingVertical: 7, gap: 5 },
+  pillText: { fontSize: typography.sm, flexShrink: 1 },
+
+  // Language input row
+  langRow:    { borderRadius: borderRadius.md, borderWidth: 0.3,
+                paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+                marginBottom: spacing.xs },
+  langLbl:    { fontSize: typography.sm, marginBottom: spacing.sm },
+  langCtrl:   { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  clbBtn:     { width: 34, height: 34, borderRadius: borderRadius.md,
+                alignItems: 'center', justifyContent: 'center' },
+  langVal:    { flex: 1, borderRadius: borderRadius.md, alignItems: 'center',
+                paddingVertical: 6, gap: 1 },
+  langScore:  { fontSize: typography.base, fontWeight: typography.bold },
+  langClb:    { fontSize: typography.xs, fontWeight: typography.semibold },
+  langNotSet: { fontSize: typography.sm },
+
+  // Stepper
+  stepper: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md,
+             borderWidth: 0.3, padding: spacing.sm, gap: spacing.md, marginBottom: spacing.xs },
+  stepBtn: { width: 36, height: 36, borderRadius: borderRadius.md,
+             alignItems: 'center', justifyContent: 'center' },
+  stepVal: { flex: 1, textAlign: 'center', fontSize: typography.lg, fontWeight: typography.bold },
+
+  // Toggle
+  toggle:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+               borderRadius: borderRadius.md, borderWidth: 0.3,
+               padding: spacing.md, marginBottom: spacing.xs },
+  toggleTxt: { flex: 1, fontSize: typography.sm },
+
+  // Hint / bonus
+  hint:     { flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+              borderRadius: borderRadius.md, borderWidth: 0.3,
+              padding: spacing.sm, marginBottom: spacing.sm },
+  hintTxt:  { flex: 1, fontSize: typography.xs },
+  bonusRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
+              borderRadius: borderRadius.md, borderWidth: 0.3,
+              padding: spacing.sm, marginTop: spacing.xs, marginBottom: spacing.xs },
+  bonusTxt: { fontSize: typography.sm, fontWeight: typography.semibold },
+  noticeRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
+               borderRadius: borderRadius.md, borderWidth: 0.3,
+               padding: spacing.sm, marginBottom: spacing.md },
+  noticeTxt: { flex: 1, fontSize: typography.xs, lineHeight: 18 },
+
+  // Floating score
+  floatWrap: { position: 'absolute', bottom: 10, left: spacing.base, right: spacing.base },
+
+  floatCard:  { borderRadius: borderRadius.xl, borderWidth: 1, overflow: 'hidden',
+                shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12,
+                elevation: 8 },
+  floatStripe:{ height: 3 },
+  floatInner: { flexDirection: 'row', alignItems: 'stretch',
+                paddingHorizontal: spacing.base, paddingVertical: spacing.md, gap: 0 },
+  floatStat:  { flex: 1, alignItems: 'center', gap: 2 },
+  floatLbl:   { fontSize: 9, fontWeight: typography.semibold,
+                letterSpacing: 0.8, textTransform: 'uppercase' },
+  floatScore: { fontSize: typography['3xl'], fontWeight: typography.black, letterSpacing: -1 },
+  floatCat:   { fontSize: typography.base, fontWeight: typography.bold },
+  floatDiff:  { fontSize: typography.xl, fontWeight: typography.black },
+  floatRule:  { width: 1, marginVertical: 4, alignSelf: 'stretch' },
+
+  floatHint:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+                  borderRadius: borderRadius.xl, borderWidth: 1,
+                  paddingHorizontal: spacing.base, paddingVertical: spacing.md },
+  floatHintTxt: { flex: 1, fontSize: typography.sm },
+});

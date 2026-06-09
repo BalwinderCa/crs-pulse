@@ -36,7 +36,7 @@ function makeStyles(c: Colors) {
   return StyleSheet.create({
     card: {
       backgroundColor: c.surfaceCard,
-      borderRadius: borderRadius.lg,
+      borderRadius: borderRadius.md,
       padding: spacing.base,
       gap: spacing.xs,
     },

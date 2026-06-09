@@ -201,7 +201,8 @@ export type AuthStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  Draws: undefined;
+  Timeline:  undefined;
+  Draws:     undefined;
   Analytics: undefined;
-  Settings: undefined;
+  Settings:  undefined;
 };

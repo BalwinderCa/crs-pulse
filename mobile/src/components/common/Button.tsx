@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { palette, borderRadius, typography, spacing } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
@@ -23,20 +24,20 @@ type Props = TouchableOpacityProps & {
   fullWidth?: boolean;
 };
 
-function makeVariantStyles(c: Colors) {
+function makeVariantStyles(c: Colors, accent: string) {
   return {
-    primary:   { bg: palette.blue,         text: palette.white,         border: palette.blue },
-    secondary: { bg: c.surfaceTertiary,    text: c.textPrimary,         border: c.surfaceTertiary },
-    outline:   { bg: 'transparent',        text: palette.blue,          border: palette.blue },
-    ghost:     { bg: 'transparent',        text: c.textSecondary,       border: 'transparent' },
-    danger:    { bg: palette.danger,       text: palette.white,         border: palette.danger },
+    primary:   { bg: accent,              text: palette.white,        border: accent },
+    secondary: { bg: c.surfaceTertiary,   text: c.textPrimary,        border: c.border },
+    outline:   { bg: 'transparent',       text: accent,               border: accent },
+    ghost:     { bg: 'transparent',       text: c.textSecondary,      border: 'transparent' },
+    danger:    { bg: palette.danger,      text: palette.white,        border: palette.danger },
   } as const;
 }
 
 const sizeStyles = {
   sm: { height: 36, px: spacing.md,   fontSize: typography.sm },
-  md: { height: 48, px: spacing.base, fontSize: typography.base },
-  lg: { height: 56, px: spacing.xl,   fontSize: typography.md },
+  md: { height: 50, px: spacing.base, fontSize: typography.base },
+  lg: { height: 58, px: spacing.xl,   fontSize: typography.md },
 } as const;
 
 const styles = StyleSheet.create({
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
   },
   content: { flexDirection: 'row', alignItems: 'center' },
   iconWrap: { marginRight: spacing.sm },
-  text: { fontWeight: typography.semibold, letterSpacing: 0.2 },
+  text: { fontWeight: typography.bold, letterSpacing: 0.3 },
 });
 
 export function Button({
@@ -64,7 +65,8 @@ export function Button({
   ...rest
 }: Props) {
   const colors = useColors();
-  const v = makeVariantStyles(colors)[variant];
+  const accent = useAccentColor();
+  const v = makeVariantStyles(colors, accent)[variant];
   const s = sizeStyles[size];
   const isDisabled = disabled || loading;
 
@@ -81,7 +83,7 @@ export function Button({
           borderColor: v.border,
           height: s.height,
           paddingHorizontal: s.px,
-          opacity: isDisabled ? 0.5 : 1,
+          opacity: isDisabled ? 0.45 : 1,
           alignSelf: fullWidth ? 'stretch' : 'auto',
         },
         style,

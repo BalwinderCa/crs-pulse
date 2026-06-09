@@ -4,11 +4,12 @@ import * as Device from 'expo-device';
 import { STORAGE_KEYS } from '@/constants';
 import type { ApiError } from '@/types';
 
-// Physical device uses network IP (.env); simulator uses localhost directly
+// Physical device uses network IP (.env); simulator uses nginx proxy on :8080
+// (Laravel binds to 127.0.0.1:8000 only; nginx on 0.0.0.0:8080 is the public-facing proxy)
 const BASE_URL = (Device.isDevice
   ? process.env.EXPO_PUBLIC_API_URL
-  : 'http://localhost:8000/api/v1'
-) ?? 'http://localhost:8000/api/v1';
+  : 'http://localhost:8080/api/v1'
+) ?? 'http://localhost:8080/api/v1';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,

@@ -62,6 +62,8 @@ export type CRSBreakdown = {
   spouseTotal: number;
   // B: Skill Transferability
   skillTransferPoints: number;
+  eduTransferPoints: number;
+  workTransferPoints: number;
   // C: Additional
   additionalPoints: number;
   // Grand total
@@ -400,13 +402,12 @@ const CWE_MARRIED: Record<number, number> = { 0: 0, 1: 35, 2: 46, 3: 56, 4: 63, 
 
 function clampTo50(v: number): number { return Math.min(50, v); }
 
-function skillTransferability(input: CRSInput, firstClb: LangScores): number {
+function skillTransferability(input: CRSInput, firstClb: LangScores): { total: number; eduPts: number; workPts: number } {
   const minClb = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
   const hasDegree = ['bachelors', 'two_or_more', 'masters', 'phd'].includes(input.education);
   const hasPostSec = input.education !== 'less_than_secondary' && input.education !== 'secondary';
   const cwe = input.canadianWorkExp;
   const fwe = input.foreignWorkExp;
-  let total = 0;
 
   // 1. Education + first language
   let eduLang = 0;
@@ -419,7 +420,6 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): number {
       else if (minClb >= 7) eduLang = 13;
     }
   }
-  total += clampTo50(eduLang);
 
   // 2. Education + Canadian work experience
   let eduCWE = 0;
@@ -430,7 +430,8 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): number {
       eduCWE = cwe >= 2 ? 25 : 13;
     }
   }
-  total += clampTo50(eduCWE);
+
+  const eduPts = Math.min(50, clampTo50(eduLang) + clampTo50(eduCWE));
 
   // 3. Foreign work experience + first language
   let fweLang = 0;
@@ -442,7 +443,6 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): number {
     else if (highLang)        fweLang = 25;
     else                      fweLang = 13;
   }
-  total += clampTo50(fweLang);
 
   // 4. Foreign work experience + Canadian work experience
   let fweCWE = 0;
@@ -452,15 +452,17 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): number {
     else if (cwe >= 2)         fweCWE = 25;
     else                       fweCWE = 13;
   }
-  total += clampTo50(fweCWE);
 
   // 5. Trade cert + language
+  let tradePts = 0;
   if (input.hasTradeCert) {
-    if (minClb >= 7)       total += 50;
-    else if (minClb >= 5)  total += 25;
+    if (minClb >= 7)       tradePts = 50;
+    else if (minClb >= 5)  tradePts = 25;
   }
 
-  return Math.min(100, total);
+  const workPts = Math.min(50, clampTo50(fweLang) + clampTo50(fweCWE) + tradePts);
+
+  return { total: Math.min(100, eduPts + workPts), eduPts, workPts };
 }
 
 // ─── Spouse Points ────────────────────────────────────────────────────────────
@@ -555,7 +557,8 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
   const spouseTotal = spouseEduPts + spouseLangPts + spouseCWEPts;
 
   // ── B: Skill Transferability ──
-  const skillPts = skillTransferability(input, firstClb);
+  const skillBreakdown = skillTransferability(input, firstClb);
+  const skillPts = skillBreakdown.total;
 
   // ── C: Additional ──
   const addPts = additionalPoints(input, firstClb);
@@ -574,6 +577,8 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
     spouseWorkExpPoints: spouseCWEPts,
     spouseTotal,
     skillTransferPoints: skillPts,
+    eduTransferPoints: skillBreakdown.eduPts,
+    workTransferPoints: skillBreakdown.workPts,
     additionalPoints: addPts,
     total,
     firstLangClb: firstClb,
@@ -583,10 +588,21 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
 // ─── Category Suggestion ──────────────────────────────────────────────────────
 
 export function suggestCategory(input: CRSInput, firstClb: LangScores): string {
-  const minFrench = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
-  if (input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF') {
-    if (minFrench >= 7) return 'French';
-  }
+  const minClb = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
+
+  // Provincial Nominee Program — 600 pt boost, near-guaranteed
+  if (input.hasProvincialNomination) return 'PNP';
+
+  // French-language proficiency stream
+  const isFrenchTest = input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF';
+  if (isFrenchTest && minClb >= 7) return 'French';
+
+  // Canadian Experience Class — 1+ yr Canadian work experience
   if (input.canadianWorkExp >= 1) return 'CEC';
-  return 'General';
+
+  // Federal Skilled Trades — trade certificate + language (CLB 5+)
+  if (input.hasTradeCert && minClb >= 5) return 'FST';
+
+  // Federal Skilled Worker — foreign work experience or strong profile
+  return 'FSW';
 }

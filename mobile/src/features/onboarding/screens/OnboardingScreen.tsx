@@ -21,6 +21,7 @@ import { useProfileStore } from '@/store/profileStore';
 import type { Category } from '@/types';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import {
   calculateCRS,
@@ -104,29 +105,48 @@ function OptionPill({ label, selected, onPress, icon }: {
   label: string; selected: boolean; onPress: () => void; icon?: string;
 }) {
   const c = useColors();
+  const accent = useAccentColor();
   return (
     <TouchableOpacity
       style={[
         styles.pill,
         { borderColor: c.border, backgroundColor: c.surfaceCard },
-        selected && styles.pillSelected,
+        selected && { borderColor: accent, backgroundColor: accent + '18' },
       ]}
       onPress={onPress}
       accessibilityRole="radio"
       accessibilityState={{ selected }}
     >
-      {icon && (
-        <Ionicons
-          name={icon as React.ComponentProps<typeof Ionicons>['name']}
-          size={16}
-          color={selected ? palette.white : c.textSecondary}
-          style={{ marginRight: 6 }}
-        />
+      <View style={styles.pillInner}>
+        {icon && (
+          <Ionicons
+            name={icon as React.ComponentProps<typeof Ionicons>['name']}
+            size={16}
+            color={selected ? accent : c.textSecondary}
+            style={styles.pillIcon}
+          />
+        )}
+        <Text style={[
+          styles.pillText,
+          { color: c.textSecondary },
+          selected && { color: c.textPrimary, fontWeight: typography.semibold },
+        ]}>
+          {label}
+        </Text>
+      </View>
+      {selected && (
+        <Ionicons name="checkmark-circle" size={20} color={accent} />
       )}
-      <Text style={[styles.pillText, { color: c.textSecondary }, selected && styles.pillTextSelected]}>
-        {label}
-      </Text>
     </TouchableOpacity>
+  );
+}
+
+function SectionLabel({ children, style }: { children: string; style?: object }) {
+  const c = useColors();
+  return (
+    <Text style={[styles.sectionLabel, { color: c.textMuted }, style]}>
+      {children}
+    </Text>
   );
 }
 
@@ -134,26 +154,27 @@ function NumberStepper({ value, onChange, min = 0, max = 10, label, unit }: {
   value: number; onChange: (v: number) => void; min?: number; max?: number; label?: string; unit?: string;
 }) {
   const c = useColors();
+  const accent = useAccentColor();
   return (
-    <View style={styles.stepperRow}>
-      {label && <Text style={[styles.stepperLabel, { color: c.textPrimary }]}>{label}</Text>}
+    <View style={[styles.stepperCard, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+      {label && <Text style={[styles.stepperLabel, { color: c.textSecondary }]}>{label}</Text>}
       <View style={styles.stepper}>
         <TouchableOpacity
-          style={[styles.stepBtn, value <= min && styles.stepBtnDisabled]}
+          style={[styles.stepBtn, { backgroundColor: value <= min ? c.surfaceTertiary : accent }]}
           onPress={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
         >
-          <Ionicons name="remove" size={18} color={value <= min ? c.textMuted : palette.white} />
+          <Ionicons name="remove" size={20} color={value <= min ? c.textMuted : palette.white} />
         </TouchableOpacity>
         <Text style={[styles.stepValue, { color: c.textPrimary }]}>
           {value === max ? `${value}+` : value}{unit ? ` ${unit}` : ''}
         </Text>
         <TouchableOpacity
-          style={[styles.stepBtn, value >= max && styles.stepBtnDisabled]}
+          style={[styles.stepBtn, { backgroundColor: value >= max ? c.surfaceTertiary : accent }]}
           onPress={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
         >
-          <Ionicons name="add" size={18} color={value >= max ? c.textMuted : palette.white} />
+          <Ionicons name="add" size={20} color={value >= max ? c.textMuted : palette.white} />
         </TouchableOpacity>
       </View>
     </View>
@@ -166,8 +187,8 @@ const THUMB_SIZE = 28;
 const THUMB_HALF = THUMB_SIZE / 2;
 const DOT_SIZE   = 6;
 
-function JSSlider({ value, min, max, step, onChange, ticks = [] }: {
-  value: number; min: number; max: number; step: number; onChange: (v: number) => void; ticks?: number[];
+function JSSlider({ value, min, max, step, onChange, ticks = [], accentColor }: {
+  value: number; min: number; max: number; step: number; onChange: (v: number) => void; ticks?: number[]; accentColor: string;
 }) {
   const c = useColors();
   const trackWidthSV  = useSharedValue(0);
@@ -249,20 +270,20 @@ function JSSlider({ value, min, max, step, onChange, ticks = [] }: {
           return (
             <View key={tv} style={[styles.sliderDot, {
               left: THUMB_HALF + railW * pct - DOT_SIZE / 2,
-              backgroundColor: tv <= value ? palette.white : c.surfaceTertiary,
+              backgroundColor: tv <= value ? accentColor : c.surfaceTertiary,
             }]} />
           );
         })}
-        <Animated.View style={[styles.sliderFill, { left: THUMB_HALF }, fillStyle]} />
-        <Animated.View style={[styles.sliderThumb, thumbStyle]} />
+        <Animated.View style={[styles.sliderFill, { left: THUMB_HALF, backgroundColor: accentColor }, fillStyle]} />
+        <Animated.View style={[styles.sliderThumb, { backgroundColor: accentColor }, thumbStyle]} />
       </Animated.View>
     </GestureDetector>
   );
 }
 
-function RawScoreInput({ label, skill, test, value, onChange, step = 0.5, min = 0 }: {
+function RawScoreInput({ label, skill, test, value, onChange, step = 0.5, min = 0, accentColor }: {
   label: string; skill: keyof LangScores; test: LanguageTest; value: string; onChange: (v: string) => void;
-  step?: number; min?: number; max?: number;
+  step?: number; min?: number; max?: number; accentColor: string;
 }) {
   const c = useColors();
   const cur = parseFloat(value) || min;
@@ -276,16 +297,17 @@ function RawScoreInput({ label, skill, test, value, onChange, step = 0.5, min = 
   const idxTicks = breakpoints.map((_, i) => i);
 
   return (
-    <View style={[styles.sliderInputWrap, { backgroundColor: c.surfaceCard }]}>
+    <View style={[styles.sliderInputWrap, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
       <View style={styles.sliderHeader}>
         <Text style={[styles.scoreLabel, { color: c.textSecondary }]}>{label}</Text>
-        <View style={[styles.bandBadge, { backgroundColor: c.surfaceSecondary }]}>
-          <Text style={styles.bandBadgeText}>{badge}</Text>
+        <View style={[styles.bandBadge, { backgroundColor: accentColor + '18', borderColor: accentColor + '40' }]}>
+          <Text style={[styles.bandBadgeText, { color: accentColor }]}>CLB {badge}</Text>
         </View>
       </View>
       <JSSlider
         key={`${test}-${skill}`}
         value={curIdx} min={0} max={N - 1} step={1} ticks={idxTicks}
+        accentColor={accentColor}
         onChange={(idx) => {
           const rawScore = breakpoints[Math.round(idx)];
           if (rawScore !== undefined) onChange(step < 1 ? rawScore.toFixed(1) : String(Math.round(rawScore)));
@@ -295,16 +317,19 @@ function RawScoreInput({ label, skill, test, value, onChange, step = 0.5, min = 
   );
 }
 
-function CLBInput({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function CLBInput({ label, value, onChange, accentColor }: {
+  label: string; value: string; onChange: (v: string) => void; accentColor: string;
+}) {
   const c = useColors();
   const clb = parseInt(value, 10) || 0;
   return (
-    <View style={[styles.sliderInputWrap, { backgroundColor: c.surfaceCard }]}>
+    <View style={[styles.sliderInputWrap, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
       <View style={styles.sliderHeader}>
         <Text style={[styles.scoreLabel, { color: c.textSecondary }]}>{label}</Text>
-        <Text style={styles.sliderValue}>CLB {clb}</Text>
+        <Text style={[styles.sliderValue, { color: accentColor }]}>CLB {clb}</Text>
       </View>
-      <JSSlider value={clb} min={0} max={12} step={1} onChange={(v) => onChange(String(Math.round(v)))} />
+      <JSSlider value={clb} min={0} max={12} step={1} accentColor={accentColor}
+        onChange={(v) => onChange(String(Math.round(v)))} />
     </View>
   );
 }
@@ -318,7 +343,7 @@ const EDU_OPTIONS: { label: string; value: EducationLevel }[] = [
   { label: '2-year diploma/certificate',    value: '2year' },
   { label: "Bachelor's degree",             value: 'bachelors' },
   { label: 'Two or more certificates (3+ yr)', value: 'two_or_more' },
-  { label: "Master's / professional degree",value: 'masters' },
+  { label: "Master's / professional degree", value: 'masters' },
   { label: 'PhD (doctoral degree)',          value: 'phd' },
 ];
 
@@ -330,12 +355,24 @@ const LANG_TEST_OPTIONS: { label: string; value: LanguageTest; hint: string }[] 
   { label: 'TCF',      value: 'TCF',      hint: 'TCF Canada (French test)' },
 ];
 
+// ─── Hint box ───────────────────────────────────────────────────────────────────
+
+function HintBox({ icon, text, accent, c }: { icon: string; text: string; accent: string; c: Colors }) {
+  return (
+    <View style={[styles.hintBox, { backgroundColor: accent + '10', borderColor: accent + '30' }]}>
+      <Ionicons name={icon as React.ComponentProps<typeof Ionicons>['name']} size={14} color={accent} />
+      <Text style={[styles.hintText, { color: c.textSecondary }]}>{text}</Text>
+    </View>
+  );
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────────
 
 export default function OnboardingScreen() {
   const { setComplete } = useOnboardingStore();
   const saveProfile = useProfileStore((s) => s.save);
   const c = useColors();
+  const accent = useAccentColor();
   const [step, setStep]     = useState(0);
   const [data, setData]     = useState<WizardData>(DEFAULT_DATA);
   const [saving, setSaving] = useState(false);
@@ -418,41 +455,86 @@ export default function OnboardingScreen() {
 
   function prevStep() { setStep((s) => Math.max(0, s - 1)); }
 
-  const progress = (step / TOTAL_STEPS) * 100;
+  const isLastStep = result !== null;
+  const isBeforeResult = !result && step === LAST_CONTENT_STEP;
+
+  // ─── Step renderer ─────────────────────────────────────────────────────────
 
   function renderStep() {
+
+    // ── Welcome ──────────────────────────────────────────────────────────────
     if (step === 0) {
       return (
         <View style={styles.stepContent}>
-          <View style={[styles.welcomeIcon, { backgroundColor: c.surfaceCard }]}>
-            <Ionicons name="calculator" size={40} color={palette.blue} />
+          {/* Hero */}
+          <View style={[styles.welcomeHero, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            <View style={[styles.welcomeIconWrap, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
+              <Ionicons name="calculator" size={44} color={accent} />
+            </View>
+            <Text style={[styles.welcomeBrand, { color: c.textPrimary }]}>CRS Pulse</Text>
+            <Text style={[styles.welcomeTagline, { color: c.textSecondary }]}>
+              Your Express Entry score tracker
+            </Text>
           </View>
-          <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Calculate Your CRS Score</Text>
-          <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>
-            Answer a few questions about your profile to calculate your Comprehensive Ranking System score for Express Entry.
+
+          {/* Heading */}
+          <Text style={[styles.stepTitle, { color: c.textPrimary, marginTop: spacing.xl }]}>
+            Calculate Your CRS Score
           </Text>
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={16} color={palette.blue} />
-            <Text style={[styles.infoText, { color: c.textSecondary }]}>Takes about 3 minutes. You can update your score anytime from Profile.</Text>
-          </View>
-          <View style={styles.checkList}>
-            {['Age & marital status','Education','Language test scores','Work experience','Additional factors'].map((item) => (
-              <View key={item} style={styles.checkItem}>
-                <Ionicons name="checkmark-circle" size={16} color={palette.success} />
-                <Text style={[styles.checkText, { color: c.textSecondary }]}>{item}</Text>
+          <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>
+            Answer a few questions to get your Comprehensive Ranking System score and plan your journey to Canada.
+          </Text>
+
+          {/* Feature list */}
+          <View style={[styles.featureCard, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            {[
+              { icon: 'person-outline', label: 'Age & marital status' },
+              { icon: 'school-outline', label: 'Education level' },
+              { icon: 'language-outline', label: 'Language test scores' },
+              { icon: 'briefcase-outline', label: 'Work experience' },
+              { icon: 'star-outline', label: 'Additional factors' },
+            ].map((item, i) => (
+              <View
+                key={item.label}
+                style={[
+                  styles.featureRow,
+                  i > 0 && { borderTopWidth: 1, borderTopColor: c.border },
+                ]}
+              >
+                <View style={[styles.featureIconWrap, { backgroundColor: accent + '18' }]}>
+                  <Ionicons
+                    name={item.icon as React.ComponentProps<typeof Ionicons>['name']}
+                    size={15}
+                    color={accent}
+                  />
+                </View>
+                <Text style={[styles.featureLabel, { color: c.textSecondary }]}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={14} color={c.textMuted} />
               </View>
             ))}
+          </View>
+
+          {/* Time badge */}
+          <View style={[styles.timeBadge, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            <Ionicons name="time-outline" size={14} color={c.textMuted} />
+            <Text style={[styles.timeBadgeText, { color: c.textMuted }]}>Takes about 3 minutes</Text>
           </View>
         </View>
       );
     }
 
+    // ── Personal ─────────────────────────────────────────────────────────────
     if (step === 1) {
+      const age = parseInt(data.age, 10) || 30;
+      const ageHint = age <= 17 ? 'Under 18: 0 age points'
+        : age <= 35 ? `Age ${age}: maximum age points available`
+        : `Age ${age}: points decrease after 35`;
       return (
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Personal Information</Text>
           <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>Your age and marital status affect your CRS score</Text>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Marital / Partner Status</Text>
+
+          <SectionLabel>MARITAL / PARTNER STATUS</SectionLabel>
           {[
             { label: 'Single', value: 'single' as MaritalStatus, icon: 'person-outline' },
             { label: 'Married / Common-law (partner immigrating)', value: 'married' as MaritalStatus, icon: 'people-outline' },
@@ -460,30 +542,30 @@ export default function OnboardingScreen() {
           ].map((o) => (
             <OptionPill key={o.value} label={o.label} selected={data.maritalStatus === o.value} icon={o.icon} onPress={() => update('maritalStatus', o.value)} />
           ))}
-          <Text style={[styles.fieldLabel, { color: c.textPrimary, marginTop: spacing.xl }]}>Your Age</Text>
-          <NumberStepper value={parseInt(data.age, 10) || 30} onChange={(v) => update('age', String(v))} min={17} max={55} unit="years old" />
-          <Text style={[styles.ageHint, { color: c.textMuted }]}>
-            {(() => {
-              const a = parseInt(data.age, 10) || 30;
-              if (a <= 17) return 'Under 18: 0 points for age';
-              if (a <= 35) return `Age ${a}: maximum age points available`;
-              return `Age ${a}: points decrease after 35`;
-            })()}
-          </Text>
+
+          <SectionLabel style={{ marginTop: spacing.xl }}>YOUR AGE</SectionLabel>
+          <NumberStepper value={age} onChange={(v) => update('age', String(v))} min={17} max={55} unit="years old" />
+          <View style={[styles.ageHintRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            <Ionicons name="information-circle-outline" size={14} color={c.textMuted} />
+            <Text style={[styles.ageHint, { color: c.textMuted }]}>{ageHint}</Text>
+          </View>
         </View>
       );
     }
 
+    // ── Education ────────────────────────────────────────────────────────────
     if (step === 2) {
       return (
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Education</Text>
           <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>Your highest level of education completed</Text>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Highest Education Level</Text>
+
+          <SectionLabel>HIGHEST EDUCATION LEVEL</SectionLabel>
           {EDU_OPTIONS.map((o) => (
             <OptionPill key={o.value} label={o.label} selected={data.education === o.value} onPress={() => update('education', o.value)} />
           ))}
-          <Text style={[styles.fieldLabel, { color: c.textPrimary, marginTop: spacing.xl }]}>Canadian Education</Text>
+
+          <SectionLabel style={{ marginTop: spacing.xl }}>CANADIAN EDUCATION</SectionLabel>
           {[
             { label: 'None (did not study in Canada)',             value: 'none' as const },
             { label: '1 or 2-year program in Canada',             value: '1_2year' as const },
@@ -495,6 +577,7 @@ export default function OnboardingScreen() {
       );
     }
 
+    // ── Language ─────────────────────────────────────────────────────────────
     if (step === 3) {
       const isIELTS   = data.firstLangTest === 'IELTS';
       const isPTECore = data.firstLangTest === 'PTE_CORE';
@@ -503,7 +586,8 @@ export default function OnboardingScreen() {
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>First Official Language</Text>
           <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>English or French — enter your most recent test scores</Text>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Test Type</Text>
+
+          <SectionLabel>TEST TYPE</SectionLabel>
           <View style={styles.pillRow}>
             {LANG_TEST_OPTIONS.map((o) => (
               <OptionPill key={o.value} label={o.label} selected={data.firstLangTest === o.value}
@@ -513,11 +597,14 @@ export default function OnboardingScreen() {
                 }} />
             ))}
           </View>
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={14} color={palette.blue} />
-            <Text style={[styles.infoText, { color: c.textSecondary }]}>{LANG_TEST_OPTIONS.find(o => o.value === data.firstLangTest)?.hint}</Text>
-          </View>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Scores</Text>
+          <HintBox
+            icon="information-circle-outline"
+            text={LANG_TEST_OPTIONS.find(o => o.value === data.firstLangTest)?.hint ?? ''}
+            accent={accent}
+            c={c}
+          />
+
+          <SectionLabel>SCORES</SectionLabel>
           {useRawInput && (() => {
             const clb = scoresToCLB(data.firstLangTest, {
               speaking: parseFloat(data.firstLangSpeaking) || 0,
@@ -528,50 +615,52 @@ export default function OnboardingScreen() {
             return (
               <View style={styles.clbSummary}>
                 {(['speaking','listening','reading','writing'] as const).map((s) => (
-                  <View key={s} style={[styles.clbChip, { backgroundColor: c.surfaceCard }]}>
+                  <View key={s} style={[styles.clbChip, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
                     <Text style={[styles.clbChipLabel, { color: c.textMuted }]}>{s.slice(0,1).toUpperCase()}</Text>
-                    <Text style={styles.clbChipValue}>CLB {clb[s]}</Text>
+                    <Text style={[styles.clbChipValue, { color: accent }]}>CLB {clb[s]}</Text>
                   </View>
                 ))}
               </View>
             );
           })()}
+
           <View style={styles.slidersCol}>
             {useRawInput ? (
               <>
-                <RawScoreInput label="Speaking"  skill="speaking"  test={data.firstLangTest} value={data.firstLangSpeaking}  onChange={(v) => update('firstLangSpeaking', v)}  step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} />
-                <RawScoreInput label="Listening" skill="listening" test={data.firstLangTest} value={data.firstLangListening} onChange={(v) => update('firstLangListening', v)} step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} />
-                <RawScoreInput label="Reading"   skill="reading"   test={data.firstLangTest} value={data.firstLangReading}   onChange={(v) => update('firstLangReading', v)}   step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} />
-                <RawScoreInput label="Writing"   skill="writing"   test={data.firstLangTest} value={data.firstLangWriting}   onChange={(v) => update('firstLangWriting', v)}   step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} />
+                <RawScoreInput label="Speaking"  skill="speaking"  test={data.firstLangTest} value={data.firstLangSpeaking}  onChange={(v) => update('firstLangSpeaking', v)}  step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} accentColor={accent} />
+                <RawScoreInput label="Listening" skill="listening" test={data.firstLangTest} value={data.firstLangListening} onChange={(v) => update('firstLangListening', v)} step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} accentColor={accent} />
+                <RawScoreInput label="Reading"   skill="reading"   test={data.firstLangTest} value={data.firstLangReading}   onChange={(v) => update('firstLangReading', v)}   step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} accentColor={accent} />
+                <RawScoreInput label="Writing"   skill="writing"   test={data.firstLangTest} value={data.firstLangWriting}   onChange={(v) => update('firstLangWriting', v)}   step={isIELTS ? 0.5 : 1} min={isIELTS ? 0 : 10} accentColor={accent} />
               </>
             ) : (
               <>
-                <CLBInput label="Speaking"  value={data.firstLangSpeaking}  onChange={(v) => update('firstLangSpeaking', v)} />
-                <CLBInput label="Listening" value={data.firstLangListening} onChange={(v) => update('firstLangListening', v)} />
-                <CLBInput label="Reading"   value={data.firstLangReading}   onChange={(v) => update('firstLangReading', v)} />
-                <CLBInput label="Writing"   value={data.firstLangWriting}   onChange={(v) => update('firstLangWriting', v)} />
+                <CLBInput label="Speaking"  value={data.firstLangSpeaking}  onChange={(v) => update('firstLangSpeaking', v)}  accentColor={accent} />
+                <CLBInput label="Listening" value={data.firstLangListening} onChange={(v) => update('firstLangListening', v)} accentColor={accent} />
+                <CLBInput label="Reading"   value={data.firstLangReading}   onChange={(v) => update('firstLangReading', v)}   accentColor={accent} />
+                <CLBInput label="Writing"   value={data.firstLangWriting}   onChange={(v) => update('firstLangWriting', v)}   accentColor={accent} />
               </>
             )}
           </View>
+
           <OptionPill
-            label={data.hasSecondLang ? '✓ I have second language scores' : 'Add second official language (optional)'}
+            label={data.hasSecondLang ? 'Second language scores added' : 'Add second official language (optional)'}
             selected={data.hasSecondLang}
             icon={data.hasSecondLang ? 'checkmark-circle' : 'add-circle-outline'}
             onPress={() => update('hasSecondLang', !data.hasSecondLang)}
           />
           {data.hasSecondLang && (
             <>
-              <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Second Language Test</Text>
+              <SectionLabel>SECOND LANGUAGE TEST</SectionLabel>
               <View style={styles.pillRow}>
                 {LANG_TEST_OPTIONS.map((o) => (
                   <OptionPill key={o.value} label={o.label} selected={data.secondLangTest === o.value} onPress={() => update('secondLangTest', o.value)} />
                 ))}
               </View>
               <View style={styles.slidersCol}>
-                <CLBInput label="Speaking"  value={data.secondLangSpeaking}  onChange={(v) => update('secondLangSpeaking', v)} />
-                <CLBInput label="Listening" value={data.secondLangListening} onChange={(v) => update('secondLangListening', v)} />
-                <CLBInput label="Reading"   value={data.secondLangReading}   onChange={(v) => update('secondLangReading', v)} />
-                <CLBInput label="Writing"   value={data.secondLangWriting}   onChange={(v) => update('secondLangWriting', v)} />
+                <CLBInput label="Speaking"  value={data.secondLangSpeaking}  onChange={(v) => update('secondLangSpeaking', v)}  accentColor={accent} />
+                <CLBInput label="Listening" value={data.secondLangListening} onChange={(v) => update('secondLangListening', v)} accentColor={accent} />
+                <CLBInput label="Reading"   value={data.secondLangReading}   onChange={(v) => update('secondLangReading', v)}   accentColor={accent} />
+                <CLBInput label="Writing"   value={data.secondLangWriting}   onChange={(v) => update('secondLangWriting', v)}   accentColor={accent} />
               </View>
             </>
           )}
@@ -579,47 +668,63 @@ export default function OnboardingScreen() {
       );
     }
 
+    // ── Work Experience ───────────────────────────────────────────────────────
     if (step === 4) {
       return (
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Work Experience</Text>
           <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>Count skilled work experience (NOC TEER 0, 1, 2, or 3)</Text>
-          <NumberStepper label="Canadian Work Experience" value={data.canadianWorkExp} onChange={(v) => update('canadianWorkExp', v)} min={0} max={5} unit={data.canadianWorkExp === 1 ? 'year' : 'years'} />
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Foreign Work Experience</Text>
+
+          <SectionLabel>CANADIAN WORK EXPERIENCE</SectionLabel>
+          <NumberStepper value={data.canadianWorkExp} onChange={(v) => update('canadianWorkExp', v)} min={0} max={5} unit={data.canadianWorkExp === 1 ? 'year' : 'years'} />
+
+          <SectionLabel>FOREIGN WORK EXPERIENCE</SectionLabel>
           {[{ label: 'None', value: 0 }, { label: '1–2 years', value: 1 }, { label: '3+ years', value: 3 }].map((o) => (
             <OptionPill key={o.value} label={o.label} selected={data.foreignWorkExp === o.value} onPress={() => update('foreignWorkExp', o.value)} />
           ))}
-          <View style={styles.infoBox}>
-            <Ionicons name="bulb-outline" size={14} color={palette.warning} />
-            <Text style={[styles.infoText, { color: c.textSecondary }]}>Skilled work = NOC TEER 0, 1, 2, or 3. Part-time counts as half; 2 half-years = 1 full year.</Text>
-          </View>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Trade Certificate</Text>
+
+          <HintBox
+            icon="bulb-outline"
+            text="Skilled work = NOC TEER 0, 1, 2, or 3. Part-time counts as half; 2 half-years = 1 full year."
+            accent={palette.warning}
+            c={c}
+          />
+
+          <SectionLabel>TRADE CERTIFICATE</SectionLabel>
           <OptionPill
-            label={data.hasTradeCert ? '✓ I have a trade certificate' : 'I have a certificate of qualification (trade)'}
+            label={data.hasTradeCert ? 'I have a certificate of qualification (trade)' : 'Add trade certificate (optional)'}
             selected={data.hasTradeCert}
-            icon={data.hasTradeCert ? 'checkmark-circle' : 'ribbon-outline'}
+            icon={data.hasTradeCert ? 'ribbon' : 'ribbon-outline'}
             onPress={() => update('hasTradeCert', !data.hasTradeCert)}
           />
         </View>
       );
     }
 
+    // ── Additional Factors ────────────────────────────────────────────────────
     if (step === 5) {
       return (
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Additional Factors</Text>
-          <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>These can significantly increase your score</Text>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Provincial / Territorial Nomination</Text>
+          <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>These can significantly boost your score</Text>
+
+          <SectionLabel>PROVINCIAL / TERRITORIAL NOMINATION</SectionLabel>
           {[{ label: 'No nomination', value: false }, { label: 'Yes — I have a nomination', value: true }].map((o) => (
             <OptionPill key={String(o.value)} label={o.label} selected={data.hasProvincialNomination === o.value}
               {...(o.value ? { icon: 'star' } : {})} onPress={() => update('hasProvincialNomination', o.value)} />
           ))}
           {data.hasProvincialNomination && (
-            <View style={styles.bonusBox}><Text style={styles.bonusText}>+600 points — nearly guaranteed invitation</Text></View>
+            <View style={[styles.bonusBox, { backgroundColor: palette.successLight, borderColor: palette.success + '30' }]}>
+              <Ionicons name="trending-up" size={16} color={palette.success} />
+              <Text style={[styles.bonusText, { color: palette.success }]}>+600 points — nearly guaranteed invitation</Text>
+            </View>
           )}
-          <View style={styles.fieldLabelRow}>
-            <Text style={[styles.fieldLabel, { color: c.textPrimary, marginTop: 0, marginBottom: 0 }]}>Valid Job Offer</Text>
-            <Text style={styles.deprecatedBadge}>No longer counts (Mar 2025)</Text>
+
+          <View style={styles.labelRow}>
+            <SectionLabel>VALID JOB OFFER</SectionLabel>
+            <View style={[styles.deprecatedBadge, { backgroundColor: palette.warningLight, borderColor: palette.warning + '40' }]}>
+              <Text style={[styles.deprecatedText, { color: palette.warning }]}>No longer counts (Mar 2025)</Text>
+            </View>
           </View>
           {[
             { label: 'No job offer', value: 'none' as JobOfferType },
@@ -628,41 +733,54 @@ export default function OnboardingScreen() {
           ].map((o) => (
             <OptionPill key={o.value} label={o.label} selected={data.jobOffer === o.value} onPress={() => update('jobOffer', o.value)} />
           ))}
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Other Factors</Text>
+
+          <SectionLabel>OTHER FACTORS</SectionLabel>
           <OptionPill
-            label={data.hasSiblingInCanada ? '✓ I have a sibling in Canada (citizen/PR)' : 'Sibling in Canada (citizen or PR)'}
+            label={data.hasSiblingInCanada ? 'I have a sibling in Canada (citizen/PR)' : 'Add: sibling in Canada (optional)'}
             selected={data.hasSiblingInCanada}
-            icon={data.hasSiblingInCanada ? 'checkmark-circle' : 'people-outline'}
+            icon={data.hasSiblingInCanada ? 'people' : 'people-outline'}
             onPress={() => update('hasSiblingInCanada', !data.hasSiblingInCanada)}
           />
         </View>
       );
     }
 
+    // ── Spouse ────────────────────────────────────────────────────────────────
     if (step === 6 && married) {
       return (
         <View style={styles.stepContent}>
           <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Spouse / Partner Factors</Text>
           <Text style={[styles.stepSubtitle, { color: c.textSecondary }]}>Your spouse or common-law partner's profile (up to 40 pts)</Text>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Partner's Education</Text>
+
+          <SectionLabel>PARTNER'S EDUCATION</SectionLabel>
           {EDU_OPTIONS.map((o) => (
             <OptionPill key={o.value} label={o.label} selected={data.spouseEducation === o.value} onPress={() => update('spouseEducation', o.value)} />
           ))}
-          <Text style={[styles.fieldLabel, { color: c.textPrimary, marginTop: spacing.xl }]}>Partner's Language (CLB levels)</Text>
+
+          <SectionLabel style={{ marginTop: spacing.xl }}>PARTNER'S LANGUAGE (CLB)</SectionLabel>
           <View style={styles.slidersCol}>
-            <CLBInput label="Speaking"  value={data.spouseLangSpeaking}  onChange={(v) => update('spouseLangSpeaking', v)} />
-            <CLBInput label="Listening" value={data.spouseLangListening} onChange={(v) => update('spouseLangListening', v)} />
-            <CLBInput label="Reading"   value={data.spouseLangReading}   onChange={(v) => update('spouseLangReading', v)} />
-            <CLBInput label="Writing"   value={data.spouseLangWriting}   onChange={(v) => update('spouseLangWriting', v)} />
+            <CLBInput label="Speaking"  value={data.spouseLangSpeaking}  onChange={(v) => update('spouseLangSpeaking', v)}  accentColor={accent} />
+            <CLBInput label="Listening" value={data.spouseLangListening} onChange={(v) => update('spouseLangListening', v)} accentColor={accent} />
+            <CLBInput label="Reading"   value={data.spouseLangReading}   onChange={(v) => update('spouseLangReading', v)}   accentColor={accent} />
+            <CLBInput label="Writing"   value={data.spouseLangWriting}   onChange={(v) => update('spouseLangWriting', v)}   accentColor={accent} />
           </View>
-          <NumberStepper label="Partner's Canadian Work Experience" value={data.spouseCanadianWorkExp} onChange={(v) => update('spouseCanadianWorkExp', v)} min={0} max={5} unit="years" />
+
+          <SectionLabel>PARTNER'S CANADIAN WORK EXPERIENCE</SectionLabel>
+          <NumberStepper value={data.spouseCanadianWorkExp} onChange={(v) => update('spouseCanadianWorkExp', v)} min={0} max={5} unit="years" />
         </View>
       );
     }
 
+    // ── Result ────────────────────────────────────────────────────────────────
     if (result) {
       const score = result.total;
       const scoreColor = score >= 500 ? palette.success : score >= 450 ? palette.warning : palette.danger;
+      const scoreBg    = score >= 500 ? palette.successLight : score >= 450 ? palette.warningLight : palette.dangerLight;
+      const statusText = score >= 500 ? 'Strong profile — well above recent cut-offs'
+        : score >= 460 ? 'Good profile — near recent cut-offs'
+        : score >= 400 ? 'Moderate — work on boosting your score'
+        : 'Keep building your profile to increase your score';
+      const statusIcon = score >= 460 ? 'trending-up' : 'trending-down';
       const breakdown = [
         { label: 'Age',               pts: result.agePoints },
         { label: 'Education',         pts: result.educationPoints },
@@ -680,32 +798,52 @@ export default function OnboardingScreen() {
 
       return (
         <View style={styles.stepContent}>
-          <Text style={[styles.stepTitle, { color: c.textPrimary }]}>Your CRS Score</Text>
-          <View style={[styles.scoreCircle, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
-            <Text style={[styles.bigScore, { color: scoreColor }]}>{score}</Text>
-            <Text style={[styles.bigScoreLabel, { color: c.textMuted }]}>out of 1,200</Text>
+          {/* Score ring */}
+          <View style={styles.scoreRingSection}>
+            <Text style={[styles.crsLabel, { color: c.textMuted }]}>CRS SCORE</Text>
+            <View style={[styles.scoreCircle, {
+              borderColor: scoreColor,
+              backgroundColor: c.surfaceCard,
+              shadowColor: scoreColor,
+            }]}>
+              <Text style={[styles.bigScore, { color: scoreColor }]}>{score}</Text>
+              <Text style={[styles.bigScoreLabel, { color: c.textMuted }]}>/ 1200</Text>
+            </View>
           </View>
-          <View style={[styles.infoBox, { borderColor: scoreColor + '40', backgroundColor: scoreColor + '15' }]}>
-            <Ionicons name={score >= 470 ? 'trending-up' : 'trending-down'} size={16} color={scoreColor} />
-            <Text style={[styles.infoText, { color: scoreColor }]}>
-              {score >= 500 ? 'High chance — well above recent cut-offs' :
-               score >= 460 ? 'Good chance — near recent cut-offs' :
-               score >= 400 ? 'Moderate — work on boosting your score' :
-               'Build your profile to increase your score'}
-            </Text>
+
+          {/* Status */}
+          <View style={[styles.statusBox, { backgroundColor: scoreBg, borderColor: scoreColor + '40' }]}>
+            <Ionicons name={statusIcon as React.ComponentProps<typeof Ionicons>['name']} size={16} color={scoreColor} />
+            <Text style={[styles.statusText, { color: scoreColor }]}>{statusText}</Text>
           </View>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Score Breakdown</Text>
-          <View style={[styles.breakdownTable, { backgroundColor: c.surfaceCard }]}>
-            {breakdown.map((row) => (
-              <View key={row.label} style={[styles.breakdownRow, { borderBottomColor: c.border }]}>
+
+          {/* Breakdown */}
+          <SectionLabel>SCORE BREAKDOWN</SectionLabel>
+          <View style={[styles.breakdownTable, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+            {breakdown.map((row, i) => (
+              <View key={row.label} style={[
+                styles.breakdownRow,
+                { borderTopColor: c.border },
+                i > 0 && { borderTopWidth: 1 },
+              ]}>
                 <Text style={[styles.breakdownLabel, { color: c.textSecondary }]}>{row.label}</Text>
-                <Text style={styles.breakdownPts}>+{row.pts}</Text>
+                <View style={[styles.breakdownPtsBadge, { backgroundColor: palette.success + '18' }]}>
+                  <Text style={[styles.breakdownPts, { color: palette.success }]}>+{row.pts}</Text>
+                </View>
               </View>
             ))}
           </View>
-          <Text style={[styles.fieldLabel, { color: c.textPrimary }]}>Suggested Category</Text>
+
+          {/* Category */}
+          <SectionLabel>SUGGESTED CATEGORY</SectionLabel>
           {['CEC', 'General', 'Healthcare', 'STEM', 'Trades', 'French'].map((cat) => (
-            <OptionPill key={cat} label={cat === suggestedCat ? `★ ${cat} (recommended)` : cat} selected={suggestedCat === cat} onPress={() => setSuggestedCat(cat)} />
+            <OptionPill
+              key={cat}
+              label={cat === suggestedCat ? `${cat} — Recommended for you` : cat}
+              selected={suggestedCat === cat}
+              {...(suggestedCat === cat ? { icon: 'star' } : {})}
+              onPress={() => setSuggestedCat(cat)}
+            />
           ))}
         </View>
       );
@@ -714,60 +852,99 @@ export default function OnboardingScreen() {
     return null;
   }
 
+  // ─── Step label data ────────────────────────────────────────────────────────
+
   const stepLabels = married
     ? ['Welcome', 'Personal', 'Education', 'Language', 'Work Exp.', 'Additional', 'Spouse', 'Result']
     : ['Welcome', 'Personal', 'Education', 'Language', 'Work Exp.', 'Additional', 'Your Score'];
   const stepLabel = stepLabels[step] ?? '';
-  const isLastStep = result !== null;
-  const isBeforeResult = !result && step === LAST_CONTENT_STEP;
+
+  // ─── Layout ─────────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: c.surfacePrimary }]}>
-      <View style={styles.header}>
-        {step > 0 && !isLastStep && (
-          <TouchableOpacity onPress={prevStep} style={styles.backBtn}>
+
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: c.border }]}>
+        {step > 0 && !isLastStep ? (
+          <TouchableOpacity onPress={prevStep} style={styles.headerBtn}>
             <Ionicons name="chevron-back" size={22} color={c.textSecondary} />
           </TouchableOpacity>
+        ) : (
+          <View style={styles.headerBtn} />
         )}
         <View style={styles.headerCenter}>
-          <Text style={[styles.stepIndicator, { color: c.textMuted }]}>
-            {isLastStep ? 'Result' : `Step ${step} of ${TOTAL_STEPS - 1}`}
-          </Text>
+          {!isLastStep && step > 0 && (
+            <Text style={[styles.stepCounter, { color: c.textMuted }]}>
+              {step} / {TOTAL_STEPS - 1}
+            </Text>
+          )}
           <Text style={[styles.stepLabelText, { color: c.textSecondary }]}>{stepLabel}</Text>
         </View>
-        {step === 0 && (
-          <TouchableOpacity onPress={() => setComplete()} style={styles.skipBtn}>
+        {step === 0 ? (
+          <TouchableOpacity onPress={() => setComplete()} style={styles.headerBtn}>
             <Text style={[styles.skipText, { color: c.textMuted }]}>Skip</Text>
           </TouchableOpacity>
+        ) : (
+          <View style={styles.headerBtn} />
         )}
       </View>
 
-      {!isLastStep && (
-        <View style={[styles.progressTrack, { backgroundColor: c.surfaceTertiary }]}>
-          <View style={[styles.progressFill, { width: `${progress}%` }]} />
+      {/* Progress dots */}
+      {!isLastStep && step > 0 && (
+        <View style={styles.dotsRow}>
+          {Array.from({ length: TOTAL_STEPS - 1 }).map((_, i) => {
+            const done    = i < step - 1;
+            const current = i === step - 1;
+            return (
+              <View key={i} style={[
+                styles.dot,
+                { backgroundColor: c.surfaceTertiary },
+                done    && { backgroundColor: accent + '60', width: 8 },
+                current && { backgroundColor: accent, width: 20 },
+              ]} />
+            );
+          })}
         </View>
       )}
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      {/* Scrollable content */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {renderStep()}
       </ScrollView>
 
+      {/* Footer CTA */}
       <View style={[styles.footer, { borderTopColor: c.border }]}>
         {isLastStep ? (
-          <TouchableOpacity style={[styles.nextBtn, saving && styles.nextBtnDisabled]} onPress={handleSave} disabled={saving}>
+          <TouchableOpacity
+            style={[styles.ctaBtn, { backgroundColor: accent }, saving && styles.ctaBtnDisabled]}
+            onPress={handleSave}
+            disabled={saving}
+          >
             {saving ? (
               <ActivityIndicator size="small" color={palette.white} />
             ) : (
               <>
-                <Text style={styles.nextBtnText}>Save & Go to Dashboard</Text>
+                <Text style={styles.ctaBtnText}>Save & Go to Dashboard</Text>
                 <Ionicons name="arrow-forward" size={18} color={palette.white} />
               </>
             )}
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity style={styles.nextBtn} onPress={nextStep}>
-            <Text style={styles.nextBtnText}>{step === 0 ? 'Get Started' : isBeforeResult ? 'Calculate Score' : 'Continue'}</Text>
-            <Ionicons name={isBeforeResult ? 'calculator' : 'arrow-forward'} size={18} color={palette.white} />
+          <TouchableOpacity style={[styles.ctaBtn, { backgroundColor: accent }]} onPress={nextStep}>
+            <Text style={styles.ctaBtnText}>
+              {step === 0 ? 'Get Started' : isBeforeResult ? 'Calculate Score' : 'Continue'}
+            </Text>
+            <Ionicons
+              name={isBeforeResult ? 'calculator' : step === 0 ? 'arrow-forward' : 'chevron-forward'}
+              size={18}
+              color={palette.white}
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -779,68 +956,329 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.base, minHeight: 56 },
-  backBtn: { padding: spacing.sm, marginRight: spacing.sm },
-  skipBtn: { padding: spacing.sm },
-  skipText: { fontSize: typography.sm },
+
+  // ── Header ──
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.sm,
+    minHeight: 52,
+    borderBottomWidth: 1,
+  },
+  headerBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   headerCenter: { flex: 1, alignItems: 'center' },
-  stepIndicator: { fontSize: typography.xs, fontWeight: typography.medium },
+  stepCounter: { fontSize: typography.xs, fontWeight: typography.medium, letterSpacing: 0.5 },
   stepLabelText: { fontSize: typography.sm, marginTop: 2 },
-  progressTrack: { height: 3, marginHorizontal: spacing.base, borderRadius: 2 },
-  progressFill:  { height: 3, backgroundColor: palette.blue, borderRadius: 2 },
+  skipText: { fontSize: typography.sm },
+
+  // ── Progress dots ──
+  dotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: spacing.sm,
+  },
+  dot: {
+    height: 8,
+    width: 8,
+    borderRadius: 4,
+  },
+
+  // ── Scroll ──
   scroll: { flex: 1 },
-  scrollContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xl },
+  scrollContent: { paddingHorizontal: spacing.base, paddingBottom: spacing.xl * 2 },
   stepContent: { paddingTop: spacing.xl },
-  welcomeIcon: { alignSelf: 'center', width: 80, height: 80, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xl },
-  checkList: { marginTop: spacing.xl, gap: spacing.md },
-  checkItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  checkText: { fontSize: typography.base },
-  stepTitle:    { fontSize: typography['2xl'], fontWeight: typography.bold, marginBottom: spacing.sm },
-  stepSubtitle: { fontSize: typography.base, marginBottom: spacing.xl, lineHeight: 22 },
-  fieldLabel: { fontSize: typography.sm, fontWeight: typography.semibold, marginBottom: spacing.sm, marginTop: spacing.base, textTransform: 'uppercase', letterSpacing: 0.8 },
-  fieldLabelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.base, marginBottom: spacing.sm },
-  deprecatedBadge: { fontSize: typography.xs, color: palette.warning, backgroundColor: palette.warningLight, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
-  pill: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm, paddingHorizontal: spacing.base, borderRadius: borderRadius.md, borderWidth: 1, marginBottom: spacing.sm },
-  pillSelected: { borderColor: palette.blue, backgroundColor: palette.blueFaint },
-  pillText: { fontSize: typography.base },
-  pillTextSelected: { color: palette.white, fontWeight: typography.semibold },
+
+  // ── Welcome ──
+  welcomeHero: {
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    alignItems: 'center',
+    paddingVertical: spacing['2xl'],
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  welcomeIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 24,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.base,
+  },
+  welcomeBrand: {
+    fontSize: typography['3xl'],
+    fontWeight: typography.black,
+    letterSpacing: -0.5,
+    marginBottom: spacing.xs,
+  },
+  welcomeTagline: {
+    fontSize: typography.base,
+    textAlign: 'center',
+  },
+  featureCard: {
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginTop: spacing.sm,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
+    gap: spacing.md,
+  },
+  featureIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureLabel: {
+    flex: 1,
+    fontSize: typography.base,
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    alignSelf: 'center',
+    marginTop: spacing.base,
+  },
+  timeBadgeText: { fontSize: typography.sm },
+
+  // ── Typography ──
+  stepTitle: {
+    fontSize: typography['3xl'],
+    fontWeight: typography.black,
+    letterSpacing: -0.5,
+    marginBottom: spacing.sm,
+  },
+  stepSubtitle: {
+    fontSize: typography.base,
+    lineHeight: 22,
+    marginBottom: spacing.xl,
+  },
+  sectionLabel: {
+    fontSize: typography.xs,
+    fontWeight: typography.bold,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: spacing.sm,
+    marginTop: spacing.base,
+  },
+
+  // ── Pill option ──
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    marginBottom: spacing.sm,
+    minHeight: 52,
+  },
+  pillInner: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+  pillIcon: { marginRight: spacing.sm },
+  pillText: { fontSize: typography.base, flex: 1 },
   pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm },
-  stepperRow: { marginBottom: spacing.base },
-  stepperLabel: { fontSize: typography.base, fontWeight: typography.semibold, marginBottom: spacing.sm },
-  stepper: { flexDirection: 'row', alignItems: 'center', gap: spacing.xl },
-  stepBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: palette.blue, alignItems: 'center', justifyContent: 'center' },
-  stepBtnDisabled: { backgroundColor: palette.gray500 },
-  stepValue: { fontSize: typography.xl, fontWeight: typography.bold, minWidth: 80, textAlign: 'center' },
-  ageHint: { fontSize: typography.xs, marginTop: spacing.sm },
+
+  // ── Stepper ──
+  stepperCard: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    paddingVertical: spacing.base,
+    paddingHorizontal: spacing.base,
+    marginBottom: spacing.base,
+  },
+  stepperLabel: {
+    fontSize: typography.sm,
+    fontWeight: typography.semibold,
+    marginBottom: spacing.base,
+  },
+  stepper: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  stepBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepValue: {
+    fontSize: typography.xl,
+    fontWeight: typography.bold,
+    flex: 1,
+    textAlign: 'center',
+  },
+
+  // ── Age hint ──
+  ageHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginTop: spacing.xs,
+    marginBottom: spacing.base,
+  },
+  ageHint: { fontSize: typography.sm, flex: 1 },
+
+  // ── Hint box ──
+  hintBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginVertical: spacing.base,
+  },
+  hintText: { flex: 1, fontSize: typography.sm, lineHeight: 18 },
+
+  // ── CLB chips ──
   clbSummary: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
-  clbChip: { flex: 1, alignItems: 'center', borderRadius: borderRadius.sm, paddingVertical: spacing.xs },
+  clbChip: {
+    flex: 1,
+    alignItems: 'center',
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    paddingVertical: spacing.sm,
+  },
   clbChipLabel: { fontSize: 9, textTransform: 'uppercase', letterSpacing: 0.5 },
-  clbChipValue: { color: palette.blue, fontSize: typography.sm, fontWeight: typography.bold },
+  clbChipValue: { fontSize: typography.sm, fontWeight: typography.bold, marginTop: 2 },
+
+  // ── Sliders ──
   slidersCol: { gap: spacing.xs, marginBottom: spacing.base },
-  sliderInputWrap: { borderRadius: borderRadius.md, paddingHorizontal: spacing.base, paddingTop: spacing.sm, paddingBottom: spacing.xs },
+  sliderInputWrap: {
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    marginBottom: spacing.xs,
+  },
   sliderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 },
   scoreLabel: { fontSize: typography.xs, textTransform: 'uppercase', letterSpacing: 0.5 },
-  sliderValue: { color: palette.blue, fontSize: typography.sm, fontWeight: typography.bold },
-  bandBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1, borderColor: palette.blue + '40' },
-  bandBadgeText: { color: palette.blue, fontSize: typography.sm, fontWeight: typography.semibold },
+  sliderValue: { fontSize: typography.sm, fontWeight: typography.bold },
+  bandBadge: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2, borderWidth: 1 },
+  bandBadgeText: { fontSize: typography.sm, fontWeight: typography.semibold },
   sliderTrack: { height: 44, justifyContent: 'center', marginVertical: 2 },
   sliderRail: { position: 'absolute', left: THUMB_HALF, right: THUMB_HALF, height: 4, borderRadius: 2 },
-  sliderFill: { position: 'absolute', height: 4, borderRadius: 2, backgroundColor: palette.blue },
+  sliderFill: { position: 'absolute', height: 4, borderRadius: 2 },
   sliderDot: { position: 'absolute', width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, top: (44 - DOT_SIZE) / 2 },
-  sliderThumb: { position: 'absolute', width: THUMB_SIZE, height: THUMB_SIZE, borderRadius: THUMB_HALF, backgroundColor: palette.blue, top: (44 - THUMB_SIZE) / 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.35, shadowRadius: 3, elevation: 4, borderWidth: 3, borderColor: palette.white },
-  infoBox: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, backgroundColor: palette.blueFaint, borderRadius: borderRadius.md, borderWidth: 1, borderColor: palette.blue + '40', padding: spacing.md, marginVertical: spacing.base },
-  infoText: { flex: 1, fontSize: typography.sm, lineHeight: 18 },
-  bonusBox: { backgroundColor: palette.successLight, borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.base },
-  bonusText: { color: palette.success, fontSize: typography.sm, fontWeight: typography.semibold },
-  scoreCircle: { alignSelf: 'center', alignItems: 'center', borderRadius: 100, width: 160, height: 160, justifyContent: 'center', marginVertical: spacing.xl, borderWidth: 3 },
-  bigScore: { fontSize: 56, fontWeight: '900' },
-  bigScoreLabel: { fontSize: typography.xs },
-  breakdownTable: { borderRadius: borderRadius.md, overflow: 'hidden' },
-  breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, paddingHorizontal: spacing.base, borderBottomWidth: 1 },
+  sliderThumb: {
+    position: 'absolute',
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    borderRadius: THUMB_HALF,
+    top: (44 - THUMB_SIZE) / 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 3,
+    elevation: 4,
+    borderWidth: 3,
+    borderColor: palette.white,
+  },
+
+  // ── Labels row ──
+  labelRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.base, marginBottom: spacing.sm },
+  deprecatedBadge: { borderRadius: borderRadius.xs, borderWidth: 1, paddingHorizontal: 6, paddingVertical: 2 },
+  deprecatedText: { fontSize: typography.xs },
+
+  // ── Bonus box ──
+  bonusBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    padding: spacing.md,
+    marginBottom: spacing.base,
+  },
+  bonusText: { fontSize: typography.sm, fontWeight: typography.semibold, flex: 1 },
+
+  // ── Result: Score ring ──
+  scoreRingSection: { alignItems: 'center', marginBottom: spacing.xl },
+  crsLabel: {
+    fontSize: typography.xs,
+    fontWeight: typography.bold,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    marginBottom: spacing.base,
+  },
+  scoreCircle: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    borderWidth: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  bigScore: { fontSize: 60, fontWeight: '900', lineHeight: 66 },
+  bigScoreLabel: { fontSize: typography.xs, letterSpacing: 0.5 },
+
+  // ── Result: Status ──
+  statusBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.base,
+    marginBottom: spacing.xl,
+  },
+  statusText: { flex: 1, fontSize: typography.sm, fontWeight: typography.semibold, lineHeight: 18 },
+
+  // ── Result: Breakdown ──
+  breakdownTable: {
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    overflow: 'hidden',
+    marginBottom: spacing.base,
+  },
+  breakdownRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.base,
+  },
   breakdownLabel: { fontSize: typography.sm },
-  breakdownPts: { color: palette.success, fontSize: typography.sm, fontWeight: typography.bold },
-  footer: { paddingHorizontal: spacing.base, paddingVertical: spacing.base, borderTopWidth: 1 },
-  nextBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: palette.blue, borderRadius: borderRadius.md, height: 56, gap: spacing.sm },
-  nextBtnDisabled: { opacity: 0.6 },
-  nextBtnText: { color: palette.white, fontSize: typography.base, fontWeight: typography.bold },
+  breakdownPtsBadge: { borderRadius: borderRadius.sm, paddingHorizontal: 8, paddingVertical: 3 },
+  breakdownPts: { fontSize: typography.sm, fontWeight: typography.bold },
+
+  // ── Footer ──
+  footer: {
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing.base,
+    paddingBottom: spacing.lg,
+    borderTopWidth: 1,
+  },
+  ctaBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.xl,
+    height: 56,
+    gap: spacing.sm,
+  },
+  ctaBtnDisabled: { opacity: 0.6 },
+  ctaBtnText: { color: palette.white, fontSize: typography.base, fontWeight: typography.bold },
 });

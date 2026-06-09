@@ -1,37 +1,37 @@
 export const darkColors = {
-  // Surfaces
-  surfacePrimary:   '#0A1628',
-  surfaceSecondary: '#112040',
-  surfaceTertiary:  '#1A2F50',
-  surfaceCard:      '#0F1E38',
-  surfaceInput:     '#0D1A30',
+  // Surfaces — Deep Space palette
+  surfacePrimary:   '#060B14',
+  surfaceSecondary: '#0C1422',
+  surfaceTertiary:  '#152035',
+  surfaceCard:      '#0F1A2E',
+  surfaceInput:     '#0A1220',
   // Card gradient pair
-  gradientStart:    '#112040',
-  gradientEnd:      '#0D1F3C',
+  gradientStart:    '#101C30',
+  gradientEnd:      '#0A1220',
   // Text
-  textPrimary:   '#FFFFFF',
-  textSecondary: '#9BAEC8',
-  textMuted:     '#4A5568',
+  textPrimary:   '#F0F5FF',
+  textSecondary: '#7A94B8',
+  textMuted:     '#374D6E',
   // Border / divider
-  border: '#1A2F50',
+  border: '#1C2B45',
 } as const;
 
 export const lightColors = {
   // Surfaces
-  surfacePrimary:   '#F0F4FA',
+  surfacePrimary:   '#F2F6FF',
   surfaceSecondary: '#FFFFFF',
-  surfaceTertiary:  '#E2E8F2',
+  surfaceTertiary:  '#E4ECF8',
   surfaceCard:      '#FFFFFF',
-  surfaceInput:     '#EEF2F7',
+  surfaceInput:     '#EEF3FB',
   // Card gradient pair
-  gradientStart:    '#EEF2F7',
-  gradientEnd:      '#E8EDF5',
+  gradientStart:    '#EEF3FB',
+  gradientEnd:      '#E8EFF8',
   // Text
-  textPrimary:   '#0A1628',
-  textSecondary: '#4A5568',
-  textMuted:     '#9BAEC8',
+  textPrimary:   '#060B14',
+  textSecondary: '#4A5F80',
+  textMuted:     '#7A94B8',
   // Border / divider
-  border: '#D4DCE8',
+  border: '#C8D8EE',
 } as const;
 
 export type Colors = typeof darkColors;

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "CRS Pulse",
+    "name": "CRS Pulse – Express Entry Calculator",
     "slug": "crs-pulse",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -24,7 +24,19 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Used for profile photo",
         "NSPhotoLibraryUsageDescription": "Used for profile photo",
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": ["remote-notification"],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "canada.ca": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.0",
+              "NSExceptionRequiresForwardSecrecy": false
+            }
+          }
+        }
       }
     },
     "android": {

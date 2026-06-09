@@ -1,135 +1,399 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import React from 'react';
+import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useProfile, useUpdateProfile } from '../hooks/useProfile';
-import { useOnboardingStore } from '@/store/onboardingStore';
-import { Input } from '@/components/common/Input';
-import { Button } from '@/components/common/Button';
+import { Ionicons } from '@expo/vector-icons';
+import { useProfileStore, DEFAULT_CALC_INPUTS } from '@/store/profileStore';
+import type { LocalProfile, ThemeMode } from '@/store/profileStore';
 import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { CATEGORIES, CRS_MAX, CRS_MIN } from '@/constants';
-import { palette, spacing, typography } from '@/theme';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useAccentColor } from '@/hooks/useAccentColor';
 import { useDrawNotifications } from '@/hooks/useDrawNotifications';
+import {
+  calculateCRS,
+  suggestCategory,
+  toCLB,
+  type CRSInput,
+  type LanguageTest,
+} from '@/features/onboarding/utils/crsCalculator';
 import type { Colors } from '@/theme/colors';
+import type { CalcInputs } from '@/store/profileStore';
 
-const schema = z.object({
-  crs_score: z.number({ invalid_type_error: 'CRS score must be a number' }).min(CRS_MIN).max(CRS_MAX),
-  category:  z.enum(CATEGORIES),
-});
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const LANG_TEST_MAP: Record<string, string> = {
+  IELTS:      'IELTS',
+  CELPIP:     'CELPIP',
+  'PTE Core': 'PTE_CORE',
+  TEF:        'TEF',
+  TCF:        'TCF',
+};
 
-type FormValues = z.infer<typeof schema>;
+const EDU_LABELS: Record<string, string> = {
+  less_than_secondary: 'Less than high school',
+  secondary:           'High school diploma',
+  '1year':             '1-year post-secondary',
+  '2year':             '2-year post-secondary',
+  bachelors:           "Bachelor's degree",
+  two_or_more:         'Two or more degrees',
+  masters:             "Master's degree",
+  phd:                 'PhD / Doctorate',
+};
 
-function makeStyles(c: Colors) {
+const MARITAL_LABELS: Record<string, string> = {
+  single:                   'Single',
+  married:                  'Married / CLP',
+  married_not_accompanying: 'Married (not accompanying)',
+};
+
+function workExpLabel(years: number): string {
+  if (years === 0) return 'None';
+  if (years === 1) return '1 year';
+  return `${years}+ years`;
+}
+
+function jobOfferLabel(j: string): string {
+  if (j === 'noc_00') return 'NOC TEER 0 Major Group 00';
+  if (j === 'noc_a')  return 'NOC TEER 1/2/3';
+  return 'None';
+}
+
+function buildCRSInput(d: CalcInputs): CRSInput {
+  const firstTest  = (LANG_TEST_MAP[d.firstLangTest]  ?? 'IELTS') as LanguageTest;
+  const secondTest = (LANG_TEST_MAP[d.secondLangTest] ?? 'TEF')   as LanguageTest;
+  const clb = (v: number) => Math.min(12, Math.max(0, Math.round(Number(v) || 0)));
+  return {
+    age:                  d.age,
+    maritalStatus:        d.maritalStatus,
+    education:            d.education,
+    canadianEducation:    d.canadianEducation,
+    firstLangTest:        firstTest,
+    firstLang: {
+      speaking:  Number(d.firstLangSpeaking)  || 0,
+      listening: Number(d.firstLangListening) || 0,
+      reading:   Number(d.firstLangReading)   || 0,
+      writing:   Number(d.firstLangWriting)   || 0,
+    },
+    hasSecondLang:    d.hasSecondLang,
+    secondLangTest:   secondTest,
+    secondLang: {
+      speaking:  Number(d.secondLangSpeaking)  || 0,
+      listening: Number(d.secondLangListening) || 0,
+      reading:   Number(d.secondLangReading)   || 0,
+      writing:   Number(d.secondLangWriting)   || 0,
+    },
+    canadianWorkExp:       d.canadianWorkExp,
+    foreignWorkExp:        d.foreignWorkExp,
+    spouseEducation:       d.spouseEducation,
+    spouseLang: {
+      speaking:  clb(d.spouseLangSpeaking),
+      listening: clb(d.spouseLangListening),
+      reading:   clb(d.spouseLangReading),
+      writing:   clb(d.spouseLangWriting),
+    },
+    spouseCanadianWorkExp:   d.spouseCanadianWorkExp,
+    hasProvincialNomination: d.hasProvincialNomination,
+    jobOffer:                d.jobOffer,
+    hasSiblingInCanada:      d.hasSiblingInCanada,
+    hasTradeCert:            d.hasTradeCert,
+  } as CRSInput;
+}
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
+function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
     safe:         { flex: 1, backgroundColor: c.surfacePrimary },
-    header:       { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.sm },
+    headerWrap:   { paddingHorizontal: spacing.base, paddingTop: spacing.base, paddingBottom: spacing.md, gap: spacing.xs },
+    greeting:     { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
+    title:        { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
     skeletons:    { padding: spacing.base, gap: spacing.sm },
-    title:        { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
-    section:      { gap: spacing.base, margin: spacing.base, marginTop: 0 },
-    sectionTitle: { color: c.textPrimary, fontSize: typography.lg, fontWeight: typography.semibold },
-    label:        { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
-    categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    catBtn:       { flex: 0 },
-    saveBtn:      { marginTop: spacing.sm },
+
+    section:      { gap: spacing.sm, marginBottom: spacing.sm, borderRadius: borderRadius.md },
+    sectionTitle: { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.bold, letterSpacing: 0.1, marginBottom: spacing.xs },
     hint:         { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
-    notifRow:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
-    notifText:    { flex: 1 },
-    notifLabel:   { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.medium },
+
+    // Score hero
+    scoreHero:  { alignItems: 'center', paddingVertical: spacing.md, gap: spacing.xs },
+    scoreNum:   { fontSize: 60, fontWeight: typography.black, letterSpacing: -2, lineHeight: 68 },
+    scoreLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8, textTransform: 'uppercase' },
+    catBadge: {
+      paddingHorizontal: spacing.md,
+      paddingVertical:   spacing.xs,
+      borderRadius:      borderRadius.md,
+      borderWidth:       0.3,
+      borderColor:       c.border,
+      backgroundColor:   c.surfaceSecondary,
+    },
+    catText: { fontSize: typography.sm, fontWeight: typography.bold },
+
+    divider: { height: 1, backgroundColor: c.border, marginVertical: spacing.xs },
+
+    // Profile info rows
+    groupTitle: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: spacing.xs },
+    row:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.xs + 2 },
+    rowDivider: { height: 1, backgroundColor: c.border },
+    rowLabel:   { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium },
+    rowValue:   { color: c.textPrimary, fontSize: typography.sm, fontWeight: typography.semibold, flexShrink: 1, textAlign: 'right', marginLeft: spacing.sm },
+
+    // Score breakdown
+    breakdownGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+    breakdownItem: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: c.surfaceSecondary,
+      borderRadius:    borderRadius.md,
+      borderWidth:     0.3,
+      borderColor:     c.border,
+      padding:         spacing.sm,
+      gap:             2,
+    },
+    bLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.4, textTransform: 'uppercase' },
+    bValue: { color: c.textPrimary, fontSize: typography.xl, fontWeight: typography.black },
+
+    // Notification row
+    notifRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
+    notifText:  { flex: 1, gap: 2 },
+    notifLabel: { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.semibold },
+
+    // Appearance
+    themeRow:   { flexDirection: 'row', gap: spacing.xs },
+    themeBtn: {
+      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: spacing.xs, paddingVertical: spacing.sm,
+      borderRadius: borderRadius.md, borderWidth: 0.3,
+      borderColor: c.border, backgroundColor: c.surfaceSecondary,
+    },
+    themeBtnActive: { borderColor: accent, backgroundColor: accent + '18' },
+    themeBtnText:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
+    themeBtnTextActive: { color: c.textPrimary },
+
+    // Danger zone
+    dangerTitle: { color: palette.danger, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase' },
   });
 }
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
+  { label: 'System', value: 'system', icon: 'phone-portrait-outline' },
+  { label: 'Light',  value: 'light',  icon: 'sunny-outline'          },
+  { label: 'Dark',   value: 'dark',   icon: 'moon-outline'           },
+];
+
+const DEFAULT_PROFILE: LocalProfile = {
+  crs_score: 0,
+  category: 'CEC',
+  accent_color: '#FF6B6B',
+  theme: 'system',
+  calculatorInputs: DEFAULT_CALC_INPUTS,
+};
+
 export default function ProfileScreen() {
-  const colors = useColors();
-  const styles = makeStyles(colors);
-  const { data: profile, isLoading } = useProfile();
-  const { mutate: updateProfile, isPending: saving } = useUpdateProfile();
-  const { reset: resetOnboarding } = useOnboardingStore();
+  const colors  = useColors();
+  const accent  = useAccentColor();
+  const styles  = makeStyles(colors, accent);
+  const { profile, save, reset } = useProfileStore();
   const { enabled: notifEnabled, toggle: toggleNotif } = useDrawNotifications();
 
-  const { control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: { crs_score: 0, category: 'General' },
-  });
-
-  useEffect(() => {
-    if (profile) reset({ crs_score: profile.crs_score, category: profile.category });
-  }, [profile, reset]);
-
-  const onSubmit = (values: FormValues) => updateProfile(values);
-
-  if (isLoading) {
+  if (!profile) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}><Text style={styles.title}>Settings</Text></View>
+        <View style={styles.headerWrap}>
+          <Text style={styles.greeting}>Your Account</Text>
+          <Text style={styles.title}>Profile</Text>
+        </View>
         <View style={styles.skeletons}><SkeletonCard /><SkeletonCard /></View>
       </SafeAreaView>
     );
   }
 
+  const inp = profile.calculatorInputs;
+  const n   = (v: unknown) => Number(v) || 0;
+  const coerced: CalcInputs = {
+    ...inp,
+    firstLangSpeaking:  n(inp.firstLangSpeaking),
+    firstLangListening: n(inp.firstLangListening),
+    firstLangReading:   n(inp.firstLangReading),
+    firstLangWriting:   n(inp.firstLangWriting),
+    secondLangSpeaking:  n(inp.secondLangSpeaking),
+    secondLangListening: n(inp.secondLangListening),
+    secondLangReading:   n(inp.secondLangReading),
+    secondLangWriting:   n(inp.secondLangWriting),
+    spouseLangSpeaking:  n(inp.spouseLangSpeaking),
+    spouseLangListening: n(inp.spouseLangListening),
+    spouseLangReading:   n(inp.spouseLangReading),
+    spouseLangWriting:   n(inp.spouseLangWriting),
+  };
+
+  const crsInput = buildCRSInput(coerced);
+  const result   = calculateCRS(crsInput);
+  const score    = result.total;
+
+  const firstTest = (LANG_TEST_MAP[inp.firstLangTest] ?? 'IELTS') as LanguageTest;
+  const langSet =
+    toCLB(firstTest, 'speaking',  coerced.firstLangSpeaking)  > 0 &&
+    toCLB(firstTest, 'listening', coerced.firstLangListening) > 0 &&
+    toCLB(firstTest, 'reading',   coerced.firstLangReading)   > 0 &&
+    toCLB(firstTest, 'writing',   coerced.firstLangWriting)   > 0;
+
+  const cat = langSet
+    ? (suggestCategory(crsInput, result.firstLangClb) as string)
+    : null;
+
+  const scoreColor =
+    !langSet ? colors.textMuted :
+    score >= 490 ? palette.success :
+    score >= 450 ? palette.warning :
+    palette.danger;
+
+  // CRS breakdown (core components)
+  const breakdown = [
+    { label: 'Core / Human Capital', value: result.coreTotal           },
+    { label: 'Spouse Factors',       value: result.spouseTotal         },
+    { label: 'Skill Transferability',value: result.skillTransferPoints },
+    { label: 'Additional Points',    value: result.additionalPoints    },
+  ];
+
+  const infoGroups = [
+    {
+      title: 'Personal',
+      rows: [
+        { label: 'Age',           value: String(inp.age) },
+        { label: 'Marital Status',value: MARITAL_LABELS[inp.maritalStatus] ?? inp.maritalStatus },
+      ],
+    },
+    {
+      title: 'Education',
+      rows: [
+        { label: 'Highest Level',      value: EDU_LABELS[inp.education] ?? inp.education },
+        { label: 'Canadian Education', value: inp.canadianEducation === 'none' ? 'None' : inp.canadianEducation === '1_2year' ? '1–2 yr program' : '3+ yr program' },
+      ],
+    },
+    {
+      title: 'Language',
+      rows: [
+        { label: 'First Test',    value: inp.firstLangTest },
+        { label: 'Second Test',   value: inp.hasSecondLang ? inp.secondLangTest : 'None' },
+      ],
+    },
+    {
+      title: 'Work Experience',
+      rows: [
+        { label: 'Canadian',          value: workExpLabel(inp.canadianWorkExp) },
+        { label: 'Foreign',           value: workExpLabel(inp.foreignWorkExp) },
+        { label: 'Trade Certificate', value: inp.hasTradeCert ? 'Yes' : 'No' },
+      ],
+    },
+    {
+      title: 'Additional',
+      rows: [
+        { label: 'Provincial Nom.', value: inp.hasProvincialNomination ? 'Yes ✓' : 'No' },
+        { label: 'Job Offer',       value: jobOfferLabel(inp.jobOffer) },
+        { label: 'Sibling in Canada',value: inp.hasSiblingInCanada ? 'Yes' : 'No' },
+      ],
+    },
+  ];
+
   return (
     <ScreenWrapper scrollable keyboardAvoiding>
-      <View style={styles.header}><Text style={styles.title}>Settings</Text></View>
+      <View style={styles.headerWrap}>
+        <Text style={styles.greeting}>Your Account</Text>
+        <Text style={styles.title}>Profile</Text>
+      </View>
 
+      {/* ── CRS Score Hero ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Express Entry Profile</Text>
-        <Controller
-          control={control}
-          name="crs_score"
-          render={({ field: { onChange, value } }) => (
-            <Input
-              label="CRS Score"
-              value={String(value)}
-              onChangeText={(v) => onChange(parseInt(v, 10) || 0)}
-              error={errors.crs_score?.message}
-              keyboardType="numeric"
-              hint="Enter your current CRS score (0–1200)"
-            />
+        <Text style={styles.sectionTitle}>CRS Score</Text>
+        <View style={styles.scoreHero}>
+          <Text style={[styles.scoreNum, { color: scoreColor }]}>
+            {langSet ? score : '—'}
+          </Text>
+          <Text style={styles.scoreLabel}>Comprehensive Ranking System</Text>
+          {cat && (
+            <View style={styles.catBadge}>
+              <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
+            </View>
           )}
-        />
-        <Text style={styles.label}>Category</Text>
-        <View style={styles.categoryGrid}>
-          {CATEGORIES.map((cat) => (
-            <Controller key={cat} control={control} name="category"
-              render={({ field: { onChange, value } }) => (
-                <Button title={cat} variant={value === cat ? 'primary' : 'outline'} size="sm" onPress={() => onChange(cat)} style={styles.catBtn} />
-              )}
-            />
-          ))}
         </View>
-        <Button title="Save Profile" onPress={handleSubmit(onSubmit)} loading={saving} fullWidth style={styles.saveBtn} />
+
+        {!langSet && (
+          <Text style={styles.hint}>
+            Set your language scores in the Calculator tab to compute your CRS score.
+          </Text>
+        )}
+
+
       </Card>
 
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>CRS Calculator</Text>
-        <Text style={styles.hint}>Re-run the step-by-step wizard to recalculate your CRS score.</Text>
-        <Button title="Recalculate CRS Score" variant="outline" onPress={() => resetOnboarding()} fullWidth />
-      </Card>
+      {/* ── Profile Details (grouped) ── */}
+      {infoGroups.map((group) => (
+        <Card key={group.title} style={styles.section}>
+          <Text style={styles.groupTitle}>{group.title}</Text>
+          {group.rows.map(({ label, value }, i) => (
+            <View key={label}>
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>{label}</Text>
+                <Text style={styles.rowValue}>{value}</Text>
+              </View>
+            </View>
+          ))}
+        </Card>
+      ))}
 
+      {/* ── Notifications ── */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>Notifications</Text>
         <View style={styles.notifRow}>
           <View style={styles.notifText}>
             <Text style={styles.notifLabel}>New Draw Alerts</Text>
-            <Text style={styles.hint}>Banner when a new Express Entry draw is published</Text>
+            <Text style={styles.hint}>Get notified when a new Express Entry draw is published</Text>
           </View>
           <Switch
             value={notifEnabled}
             onValueChange={toggleNotif}
-            trackColor={{ false: colors.surfaceTertiary, true: palette.blue }}
+            trackColor={{ false: colors.surfaceTertiary, true: accent }}
             thumbColor={palette.white}
             accessibilityLabel="Enable new draw notifications"
           />
         </View>
       </Card>
 
+      {/* ── Appearance ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <Button title="Reset Onboarding" variant="danger" onPress={() => resetOnboarding()} fullWidth />
+        <Text style={styles.sectionTitle}>Appearance</Text>
+        <View style={styles.themeRow}>
+          {THEME_OPTIONS.map((t) => {
+            const selected = (profile.theme ?? 'system') === t.value;
+            return (
+              <TouchableOpacity
+                key={t.value}
+                onPress={() => save({ theme: t.value })}
+                style={[styles.themeBtn, selected && styles.themeBtnActive]}
+              >
+                <Ionicons
+                  name={t.icon as any}
+                  size={15}
+                  color={selected ? accent : colors.textSecondary}
+                />
+                <Text style={[styles.themeBtnText, selected && styles.themeBtnTextActive]}>
+                  {t.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Card>
+
+      {/* ── Danger Zone ── */}
+      <Card style={styles.section}>
+        <Text style={styles.dangerTitle}>Danger Zone</Text>
+        <Button
+          title="Reset All Data"
+          variant="danger"
+          onPress={() => reset()}
+          fullWidth
+        />
       </Card>
     </ScreenWrapper>
   );

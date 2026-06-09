@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/common/ErrorState';
 import { EmptyState } from '@/components/common/EmptyState';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import type { Category } from '@/types';
 
@@ -24,59 +25,68 @@ const PERIODS = [
 ];
 
 const CATEGORIES: Array<{ label: string; value: Category | 'all' }> = [
-  { label: 'All', value: 'all' },
-  { label: 'CEC', value: 'CEC' },
+  { label: 'All',     value: 'all' },
+  { label: 'CEC',     value: 'CEC' },
   { label: 'General', value: 'General' },
-  { label: 'STEM', value: 'STEM' },
-  { label: 'French', value: 'French' },
+  { label: 'STEM',    value: 'STEM' },
+  { label: 'French',  value: 'French' },
 ];
 
-function makeStyles(c: Colors) {
+function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
-    safe:      { flex: 1, backgroundColor: c.surfacePrimary },
-    content:   { paddingBottom: spacing['4xl'], gap: spacing.base },
-    header:    { paddingHorizontal: spacing.base, paddingTop: spacing.base },
-    title:     { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
-    skeletons: { padding: spacing.base, gap: spacing.sm },
-    filterScroll: { paddingLeft: spacing.base },
-    filterRow: { flexDirection: 'row', gap: spacing.sm, paddingRight: spacing.base },
-    filterBtn: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: borderRadius.full,
-      backgroundColor: c.surfaceTertiary,
+    safe:     { flex: 1, backgroundColor: c.surfacePrimary },
+    content:  { paddingBottom: spacing['4xl'] + spacing.xl, gap: spacing.md },
+    header:   { paddingHorizontal: spacing.base, paddingTop: spacing.base, gap: spacing.xs },
+    greeting: { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
+    title:    { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
+    skeletons:{ padding: spacing.base, gap: spacing.sm },
+
+    // Category pills (horizontal scroll)
+    catScroll:  { paddingLeft: spacing.base },
+    catRow:     { flexDirection: 'row', gap: spacing.xs, paddingRight: spacing.base },
+    catBtn:     { paddingHorizontal: spacing.md, paddingVertical: spacing.sm - 2, borderRadius: borderRadius.full, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border },
+    catBtnActive: { backgroundColor: accent, borderColor: accent },
+    catText:      { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
+    catTextActive:{ color: palette.white },
+
+    // Period selector — solid pill tabs
+    periodWrap: { paddingHorizontal: spacing.base },
+    periodRow: {
+      flexDirection: 'row',
+      backgroundColor: c.surfaceSecondary,
+      borderRadius: borderRadius.md,
+      padding: spacing.xs,
+      gap: spacing.xs,
       borderWidth: 1,
       borderColor: c.border,
     },
-    filterBtnActive:  { backgroundColor: palette.blueFaint, borderColor: palette.blue },
-    filterText:       { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
-    filterTextActive: { color: palette.blue },
-    periodRow: {
-      flexDirection: 'row',
-      paddingHorizontal: spacing.base,
-      backgroundColor: c.surfaceSecondary,
-      borderRadius: borderRadius.md,
-      marginHorizontal: spacing.base,
-      padding: spacing.xs,
-      gap: spacing.xs,
-    },
-    periodBtn:        { flex: 1, alignItems: 'center', paddingVertical: spacing.xs, borderRadius: borderRadius.sm },
-    periodBtnActive:  { backgroundColor: palette.blue },
-    periodText:       { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
+    periodBtn:        { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+    periodBtnActive:  { backgroundColor: accent },
+    periodText:       { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     periodTextActive: { color: palette.white },
-    statsGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingHorizontal: spacing.base },
-    statCard:         { flex: 1, minWidth: '45%', gap: 4 },
-    statCardLabel:    { color: c.textSecondary, fontSize: typography.xs },
-    statCardValue:    { color: c.textPrimary, fontSize: typography['2xl'], fontWeight: typography.bold },
-    trendCard:        { marginHorizontal: spacing.base, gap: spacing.sm },
-    trendLabel:       { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
-    trendRow:         { gap: spacing.sm },
-    trendDesc:        { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
-    chartCard:        { marginHorizontal: spacing.base, overflow: 'hidden', padding: spacing.base },
-    chartTitle:       { color: c.textSecondary, fontSize: typography.sm, marginBottom: spacing.sm },
-    chart:            { borderRadius: borderRadius.md },
-    bigStat:          { color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.bold },
-    statSub:          { color: c.textMuted, fontSize: typography.xs },
+
+    // Stats 2×2 grid
+    statsGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingHorizontal: spacing.base },
+    statCard:     { flex: 1, minWidth: '45%', gap: 6, backgroundColor: c.surfaceCard, borderRadius: borderRadius.md, borderWidth: 1, borderColor: c.border, padding: spacing.base },
+    statCardLabel:{ color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.5, textTransform: 'uppercase' },
+    statCardValue:{ color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.black, letterSpacing: -0.5 },
+
+    // Trend card
+    trendCard:    { marginHorizontal: spacing.base, gap: spacing.sm },
+    trendLabel:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold, letterSpacing: 0.3, textTransform: 'uppercase' },
+    trendRow:     { gap: spacing.sm },
+    trendDesc:    { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
+
+    // Chart
+    chartCard:    { marginHorizontal: spacing.base, overflow: 'hidden', padding: spacing.base, gap: spacing.sm },
+    chartTitle:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.5, textTransform: 'uppercase' },
+    chart:        { borderRadius: borderRadius.md },
+
+    // Totals
+    totalsCard:   { marginHorizontal: spacing.base },
+    bigStatLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.5, textTransform: 'uppercase' },
+    bigStat:      { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -1 },
+    statSub:      { color: c.textMuted, fontSize: typography.sm },
   });
 }
 
@@ -84,14 +94,18 @@ export default function AnalyticsScreen() {
   const [period, setPeriod]     = useState<'all' | '1y' | '6m' | '3m'>('1y');
   const [category, setCategory] = useState<Category | 'all'>('all');
   const colors = useColors();
-  const styles = makeStyles(colors);
+  const accent = useAccentColor();
+  const styles = makeStyles(colors, accent);
 
   const { data, isLoading, isError, error, refetch } = useAnalytics({ category, period });
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}><Text style={styles.title}>Analytics</Text></View>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Express Entry</Text>
+          <Text style={styles.title}>Analytics</Text>
+        </View>
         <View style={styles.skeletons}>{[1,2,3].map((k) => <SkeletonCard key={k} />)}</View>
       </SafeAreaView>
     );
@@ -108,7 +122,7 @@ export default function AnalyticsScreen() {
   if (!data || data.total_draws === 0) {
     return (
       <SafeAreaView style={styles.safe}>
-        <EmptyState icon="bar-chart-outline" title="No analytics data" description="Analytics will appear once draws are published." />
+        <EmptyState icon="pulse-outline" title="No analytics data" description="Analytics will appear once draws are published." />
       </SafeAreaView>
     );
   }
@@ -123,49 +137,70 @@ export default function AnalyticsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        <View style={styles.header}><Text style={styles.title}>Analytics</Text></View>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Express Entry</Text>
+          <Text style={styles.title}>Analytics</Text>
+        </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-          <View style={styles.filterRow}>
+        {/* Category filter */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
+          <View style={styles.catRow}>
             {CATEGORIES.map((c) => (
-              <TouchableOpacity key={c.value} onPress={() => setCategory(c.value)}
-                style={[styles.filterBtn, category === c.value && styles.filterBtnActive]} accessibilityRole="button">
-                <Text style={[styles.filterText, category === c.value && styles.filterTextActive]}>{c.label}</Text>
+              <TouchableOpacity
+                key={c.value}
+                onPress={() => setCategory(c.value)}
+                style={[styles.catBtn, category === c.value && styles.catBtnActive]}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.catText, category === c.value && styles.catTextActive]}>{c.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
         </ScrollView>
 
-        <View style={styles.periodRow}>
-          {PERIODS.map((p) => (
-            <TouchableOpacity key={p.value} onPress={() => setPeriod(p.value)}
-              style={[styles.periodBtn, period === p.value && styles.periodBtnActive]} accessibilityRole="button">
-              <Text style={[styles.periodText, period === p.value && styles.periodTextActive]}>{p.label}</Text>
-            </TouchableOpacity>
-          ))}
+        {/* Period segmented control */}
+        <View style={styles.periodWrap}>
+          <View style={styles.periodRow}>
+            {PERIODS.map((p) => (
+              <TouchableOpacity
+                key={p.value}
+                onPress={() => setPeriod(p.value)}
+                style={[styles.periodBtn, period === p.value && styles.periodBtnActive]}
+                accessibilityRole="button"
+              >
+                <Text style={[styles.periodText, period === p.value && styles.periodTextActive]}>{p.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
+        {/* Stats grid */}
         <View style={styles.statsGrid}>
-          <StatCard label="Average Cutoff" value={data.average_cutoff} styles={styles} />
-          <StatCard label="Highest Cutoff" value={data.highest_cutoff} styles={styles} />
-          <StatCard label="Lowest Cutoff"  value={data.lowest_cutoff}  styles={styles} />
-          <StatCard label="Total Draws"    value={data.total_draws}    styles={styles} />
+          <RawStatCard label="Avg Cutoff"  value={data.average_cutoff} styles={styles} />
+          <RawStatCard label="Peak Cutoff" value={data.highest_cutoff} styles={styles} />
+          <RawStatCard label="Low Cutoff"  value={data.lowest_cutoff}  styles={styles} />
+          <RawStatCard label="Total Draws" value={data.total_draws}    styles={styles} />
         </View>
 
+        {/* Trend card */}
         <Card style={styles.trendCard}>
           <Text style={styles.trendLabel}>Score Trend</Text>
           <View style={styles.trendRow}>
-            <Badge label={`${data.trend.charAt(0).toUpperCase() + data.trend.slice(1)} ${data.trend_percentage.toFixed(1)}%`} variant={trendBadge} />
+            <Badge
+              label={`${data.trend.charAt(0).toUpperCase() + data.trend.slice(1)}  ${data.trend_percentage.toFixed(1)}%`}
+              variant={trendBadge}
+            />
             <Text style={styles.trendDesc}>
               {data.trend === 'rising'
-                ? 'Cutoff scores are going up. Consider improving your profile.'
+                ? 'Cutoff scores are climbing — consider boosting your profile.'
                 : data.trend === 'falling'
-                ? 'Cutoff scores are decreasing. You may have a good chance soon.'
-                : 'Cutoff scores are stable.'}
+                ? 'Scores are easing — conditions may be improving for you.'
+                : 'Cutoff scores are holding steady.'}
             </Text>
           </View>
         </Card>
 
+        {/* Chart */}
         {chartValues.length > 1 && (
           <Card padding={0} style={styles.chartCard}>
             <Text style={styles.chartTitle}>CRS Cutoff Trend</Text>
@@ -177,10 +212,10 @@ export default function AnalyticsScreen() {
               chartConfig={{
                 backgroundGradientFrom: colors.surfaceCard,
                 backgroundGradientTo:   colors.surfaceCard,
-                color: (opacity = 1) => `rgba(26, 109, 255, ${opacity})`,
-                labelColor: () => palette.gray400,
+                color: (opacity = 1) => `${accent}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
+                labelColor: () => colors.textMuted,
                 strokeWidth: 2,
-                propsForDots: { r: '4', strokeWidth: '2', stroke: palette.blue },
+                propsForDots: { r: '4', strokeWidth: '2', stroke: accent },
                 decimalPlaces: 0,
               }}
               bezier
@@ -189,8 +224,9 @@ export default function AnalyticsScreen() {
           </Card>
         )}
 
-        <Card>
-          <Text style={styles.trendLabel}>Total Invitations Issued</Text>
+        {/* Totals */}
+        <Card style={styles.totalsCard}>
+          <Text style={styles.bigStatLabel}>Total Invitations</Text>
           <Text style={styles.bigStat}>{data.total_invitations.toLocaleString()}</Text>
           <Text style={styles.statSub}>across {data.total_draws} draws</Text>
         </Card>
@@ -199,11 +235,11 @@ export default function AnalyticsScreen() {
   );
 }
 
-function StatCard({ label, value, styles }: { label: string; value: number; styles: ReturnType<typeof makeStyles> }) {
+function RawStatCard({ label, value, styles }: { label: string; value: number; styles: ReturnType<typeof makeStyles> }) {
   return (
-    <Card style={styles.statCard}>
+    <View style={styles.statCard}>
       <Text style={styles.statCardLabel}>{label}</Text>
-      <Text style={styles.statCardValue}>{value}</Text>
-    </Card>
+      <Text style={styles.statCardValue}>{value.toLocaleString()}</Text>
+    </View>
   );
 }

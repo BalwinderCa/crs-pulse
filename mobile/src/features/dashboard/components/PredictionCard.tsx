@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/common/Card';
-import { palette, spacing, typography } from '@/theme';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
 import type { Prediction } from '@/types';
@@ -9,23 +9,24 @@ import type { Prediction } from '@/types';
 type Props = { prediction: Prediction };
 
 const strengthConfig = {
-  strong:   { color: palette.success, emoji: '🚀', bg: palette.successLight },
-  moderate: { color: palette.warning, emoji: '⚡', bg: palette.warningLight },
-  weak:     { color: palette.danger,  emoji: '⏳', bg: palette.dangerLight  },
+  strong:   { color: palette.success, emoji: '🚀', bg: palette.successLight, border: palette.success + '25' },
+  moderate: { color: palette.warning, emoji: '⚡', bg: palette.warningLight, border: palette.warning + '25' },
+  weak:     { color: palette.danger,  emoji: '⏳', bg: palette.dangerLight,  border: palette.danger  + '25' },
 } as const;
 
 function makeStyles(c: Colors) {
   return StyleSheet.create({
-    card:        { gap: spacing.sm },
+    card:        { gap: spacing.md, borderWidth: 1 },
     header:      { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-    emoji:       { fontSize: 28 },
-    headerText:  { gap: 2 },
-    title:       { color: c.textSecondary, fontSize: typography.xs, fontWeight: typography.medium },
-    label:       { fontSize: typography.lg, fontWeight: typography.bold },
+    emojiWrap:   { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.1)' },
+    emoji:       { fontSize: 22 },
+    headerText:  { gap: 2, flex: 1 },
+    predLabel:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.5, textTransform: 'uppercase' },
+    label:       { fontSize: typography.lg, fontWeight: typography.black },
     description: { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
-    statRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    statLabel:   { color: c.textMuted, fontSize: typography.sm },
-    statValue:   { fontSize: typography.base, fontWeight: typography.bold },
+    statRow:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.15)', borderRadius: borderRadius.md, padding: spacing.sm + 2 },
+    statLabel:   { color: c.textSecondary, fontSize: typography.sm },
+    statValue:   { fontSize: typography.base, fontWeight: typography.black },
   });
 }
 
@@ -35,11 +36,13 @@ export function PredictionCard({ prediction }: Props) {
   const config = strengthConfig[prediction.strength];
 
   return (
-    <Card style={[styles.card, { backgroundColor: config.bg }]}>
+    <Card style={[styles.card, { backgroundColor: config.bg, borderColor: config.border }]}>
       <View style={styles.header}>
-        <Text style={styles.emoji}>{config.emoji}</Text>
+        <View style={styles.emojiWrap}>
+          <Text style={styles.emoji}>{config.emoji}</Text>
+        </View>
         <View style={styles.headerText}>
-          <Text style={styles.title}>Prediction</Text>
+          <Text style={styles.predLabel}>Prediction</Text>
           <Text style={[styles.label, { color: config.color }]}>{prediction.label}</Text>
         </View>
       </View>
@@ -52,7 +55,7 @@ export function PredictionCard({ prediction }: Props) {
       )}
       {prediction.estimated_draws != null && (
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Estimated draws to wait:</Text>
+          <Text style={styles.statLabel}>Estimated draws:</Text>
           <Text style={[styles.statValue, { color: config.color }]}>{prediction.estimated_draws}</Text>
         </View>
       )}

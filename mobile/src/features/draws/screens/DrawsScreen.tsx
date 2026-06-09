@@ -9,42 +9,45 @@ import { useDraws } from '../hooks/useDraws';
 import { DRAW_FILTERS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import type { DrawFilter } from '@/types';
 
-function makeStyles(c: Colors) {
+function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
-    safe:      { flex: 1, backgroundColor: c.surfacePrimary },
-    header:    { paddingHorizontal: spacing.base, paddingTop: spacing.base, gap: 2 },
-    title:     { color: c.textPrimary,   fontSize: typography['3xl'], fontWeight: typography.bold },
-    subtitle:  { color: c.textSecondary, fontSize: typography.sm },
-    skeletons: { padding: spacing.base, gap: spacing.sm },
-    filterRow: { flexDirection: 'row', paddingHorizontal: spacing.base, paddingVertical: spacing.sm, gap: spacing.sm },
-    filterBtn: {
-      paddingHorizontal: spacing.md,
-      paddingVertical: spacing.xs,
-      borderRadius: borderRadius.full,
-      backgroundColor: c.surfaceTertiary,
-      borderWidth: 1,
-      borderColor: c.border,
-    },
-    filterBtnActive: { backgroundColor: palette.blueFaint, borderColor: palette.blue },
-    filterText:      { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.medium },
-    filterTextActive: { color: palette.blue },
-    listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing['4xl'] },
+    safe:       { flex: 1, backgroundColor: c.surfacePrimary },
+    header:     { paddingHorizontal: spacing.base, paddingTop: spacing.base, gap: spacing.xs },
+    greeting:   { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
+    title:      { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
+    subtitle:   { color: c.textMuted, fontSize: typography.sm, marginTop: spacing.xs },
+    skeletons:  { padding: spacing.base, gap: spacing.sm },
+
+    // Filter pills — premium segmented look
+    filterWrap:    { paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
+    filterRow:     { flexDirection: 'row', gap: spacing.xs, backgroundColor: c.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.xs, borderWidth: 1, borderColor: c.border },
+    filterBtn:     { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+    filterBtnActive: { backgroundColor: accent },
+    filterText:    { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
+    filterTextActive: { color: palette.white },
+
+    listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing['4xl'] + spacing.xl },
   });
 }
 
 export default function DrawsScreen() {
   const [activeFilter, setActiveFilter] = useState<DrawFilter>('all');
   const colors = useColors();
-  const styles = makeStyles(colors);
+  const accent = useAccentColor();
+  const styles = makeStyles(colors, accent);
   const { draws, isLoading, isRefreshing, isError, error, refetch } = useDraws({ filter: activeFilter });
 
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}><Text style={styles.title}>Draw History</Text></View>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>Express Entry</Text>
+          <Text style={styles.title}>Draw History</Text>
+        </View>
         <View style={styles.skeletons}>{[1,2,3].map((k) => <SkeletonCard key={k} />)}</View>
       </SafeAreaView>
     );
@@ -61,26 +64,30 @@ export default function DrawsScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
+        <Text style={styles.greeting}>Express Entry</Text>
         <Text style={styles.title}>Draw History</Text>
         <Text style={styles.subtitle}>{draws.length} draws found</Text>
       </View>
 
-      <View style={styles.filterRow}>
-        {DRAW_FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f.value}
-            onPress={() => setActiveFilter(f.value)}
-            style={[styles.filterBtn, activeFilter === f.value && styles.filterBtnActive]}
-            accessibilityRole="button"
-            accessibilityState={{ selected: activeFilter === f.value }}
-          >
-            <Text style={[styles.filterText, activeFilter === f.value && styles.filterTextActive]}>{f.label}</Text>
-          </TouchableOpacity>
-        ))}
+      {/* Segmented filter control */}
+      <View style={styles.filterWrap}>
+        <View style={styles.filterRow}>
+          {DRAW_FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f.value}
+              onPress={() => setActiveFilter(f.value)}
+              style={[styles.filterBtn, activeFilter === f.value && styles.filterBtnActive]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: activeFilter === f.value }}
+            >
+              <Text style={[styles.filterText, activeFilter === f.value && styles.filterTextActive]}>{f.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {draws.length === 0 ? (
-        <EmptyState icon="document-outline" title="No draws found" description="Try changing the filter or check back after a new draw is published." />
+        <EmptyState icon="flash-outline" title="No draws found" description="Try changing the filter or check back after a new draw is published." />
       ) : (
         <FlatList
           data={draws}
@@ -89,7 +96,7 @@ export default function DrawsScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} tintColor={palette.blue} colors={[palette.blue]} />}
+          refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} tintColor={accent} colors={[accent]} />}
         />
       )}
     </SafeAreaView>

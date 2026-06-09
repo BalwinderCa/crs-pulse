@@ -6,7 +6,7 @@ import type { Colors } from '@/theme/colors';
 
 type Props = ViewProps & {
   children: React.ReactNode;
-  variant?: 'default' | 'elevated' | 'outlined';
+  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
   padding?: keyof typeof spacing | 0;
   style?: ViewStyle;
 };
@@ -15,10 +15,21 @@ function makeStyles(c: Colors) {
   return StyleSheet.create({
     base: {
       backgroundColor: c.surfaceCard,
-      borderRadius: borderRadius.lg,
+      borderRadius: borderRadius.md,
+      borderWidth: 0.3,
+      borderColor: c.border,
+    },
+    elevated: {
+      borderColor: c.border,
     },
     outlined: {
-      borderWidth: 1,
+      backgroundColor: 'transparent',
+      borderWidth: 0.3,
+      borderColor: c.border,
+    },
+    glass: {
+      backgroundColor: c.surfaceCard + 'CC',
+      borderWidth: 0.3,
       borderColor: c.border,
     },
   });
@@ -32,8 +43,9 @@ export function Card({ children, variant = 'default', padding = 'base', style, .
     <View
       style={[
         styles.base,
-        variant === 'elevated' && shadows.md,
+        variant === 'elevated' && [shadows.md, styles.elevated],
         variant === 'outlined' && styles.outlined,
+        variant === 'glass' && styles.glass,
         padding !== 0 && { padding: spacing[padding as keyof typeof spacing] ?? spacing.base },
         style,
       ]}
