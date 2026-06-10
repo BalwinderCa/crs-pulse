@@ -19,4 +19,16 @@ describe('isCrsScoreReady', () => {
   it('returns true for CELPIP scores at CLB 4', () => {
     expect(isCrsScoreReady('CELPIP', { speaking: 4, listening: 4, reading: 4, writing: 4 })).toBe(true);
   });
+
+  it('supports TEF Canada as first language (current scale)', () => {
+    // Current-scale CLB 4 minima: speaking 328, listening 306, reading 306, writing 268
+    expect(isCrsScoreReady('TEF', { speaking: 328, listening: 306, reading: 306, writing: 268 }, 'current')).toBe(true);
+    expect(isCrsScoreReady('TEF', { speaking: 327, listening: 306, reading: 306, writing: 268 }, 'current')).toBe(false);
+  });
+
+  it('supports TCF Canada as first language', () => {
+    // TCF CLB 4 minima: speaking 4, listening 331, reading 342, writing 4
+    expect(isCrsScoreReady('TCF', { speaking: 4, listening: 331, reading: 342, writing: 4 })).toBe(true);
+    expect(isCrsScoreReady('TCF', { speaking: 3, listening: 331, reading: 342, writing: 4 })).toBe(false);
+  });
 });

@@ -231,6 +231,22 @@ describe('French language bonus (IRCC additional points)', () => {
     expect(result.additionalPoints).toBe(25);
   });
 
+  it('supports TEF Canada as FIRST official language with full points (current scale)', () => {
+    // Current-scale CLB 10 minima: speaking 556, listening 546, reading 546, writing 558
+    const input: CRSInput = {
+      ...BASE_INPUT,
+      firstLangTest: 'TEF',
+      firstLang: { speaking: 556, listening: 546, reading: 546, writing: 558 },
+      hasSecondLang: false,
+      tefScale: 'current',
+    };
+
+    const result = calculateCRS(input);
+    expect(result.firstLangClb).toEqual({ speaking: 10, listening: 10, reading: 10, writing: 10 });
+    expect(result.firstLangPoints).toBe(136);     // 34 x 4 (single, CLB 10+)
+    expect(result.additionalPoints).toBe(25);     // French NCLC 7+, no English test
+  });
+
   it('awards 0 pts when French CLB below 7', () => {
     const input: CRSInput = {
       ...BASE_INPUT,

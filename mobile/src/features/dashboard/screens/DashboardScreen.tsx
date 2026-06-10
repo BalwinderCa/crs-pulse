@@ -26,11 +26,19 @@ const EDU_OPTIONS = [
   { label: 'PhD',                   value: 'phd' },
 ];
 
-const LANG_TESTS = ['IELTS', 'CELPIP', 'PTE Core'] as const;
-const SECOND_LANG_TESTS = ['TEF', 'TCF'] as const;
+// IRCC accepts either official language first — English (IELTS/CELPIP/PTE
+// Core) or French (TEF Canada/TCF Canada). The second language must be the
+// other official language, so the second-test options depend on the first.
+const ENGLISH_TESTS = ['IELTS', 'CELPIP', 'PTE Core'] as const;
+const FRENCH_TESTS = ['TEF', 'TCF'] as const;
+const LANG_TESTS = [...ENGLISH_TESTS, ...FRENCH_TESTS] as const;
 const LANG_TEST_MAP: Record<string, LanguageTest> = {
   IELTS: 'IELTS', CELPIP: 'CELPIP', 'PTE Core': 'PTE_CORE', TEF: 'TEF', TCF: 'TCF',
 };
+
+function isFrenchTest(test: string): boolean {
+  return test === 'TEF' || test === 'TCF';
+}
 
 function fmtScore(test: LanguageTest, score: number): string {
   if (score <= 0) return '—';
@@ -463,11 +471,31 @@ export default function DashboardScreen() {
     );
   }
 
+  function selectFirstLangTest(t: string) {
+    setInputs(d => {
+      const next = {
+        ...d, firstLangTest: t,
+        firstLangSpeaking: 0, firstLangListening: 0,
+        firstLangReading: 0, firstLangWriting: 0,
+      };
+      // Second language must be the OTHER official language — swap its test
+      // (and clear its scores) if it now collides with the first.
+      if (isFrenchTest(t) === isFrenchTest(d.secondLangTest)) {
+        next.secondLangTest = isFrenchTest(t) ? 'IELTS' : 'TEF';
+        next.secondLangSpeaking = 0; next.secondLangListening = 0;
+        next.secondLangReading = 0; next.secondLangWriting = 0;
+      }
+      return next;
+    });
+  }
+
   function renderLanguage() {
     const firstTest = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
     const secondTest = (LANG_TEST_MAP[inputs.secondLangTest] ?? 'TEF') as LanguageTest;
     const tefScale = (inputs.tefScale ?? 'current') as TefScale;
-    const usesTef = inputs.hasSecondLang && inputs.secondLangTest === 'TEF';
+    const usesTef = inputs.firstLangTest === 'TEF'
+      || (inputs.hasSecondLang && inputs.secondLangTest === 'TEF');
+    const secondLangOptions = isFrenchTest(inputs.firstLangTest) ? ENGLISH_TESTS : FRENCH_TESTS;
     return (
       <View style={st.secBody}>
         <FieldLabel>FIRST LANGUAGE TEST</FieldLabel>
@@ -475,18 +503,30 @@ export default function DashboardScreen() {
           {LANG_TESTS.map(t => (
             <OptionPill key={t} label={t}
               selected={inputs.firstLangTest === t}
-              onPress={() => setInputs(d => ({
-                ...d, firstLangTest: t,
-                firstLangSpeaking: 0, firstLangListening: 0,
-                firstLangReading: 0, firstLangWriting: 0,
-              }))} />
+              onPress={() => selectFirstLangTest(t)} />
           ))}
         </View>
+        {usesTef && (
+          <>
+            <FieldLabel top>TEF TEST DATE</FieldLabel>
+            <View style={st.pillRow}>
+              <OptionPill label="After Dec 2023"
+                selected={tefScale === 'current'}
+                onPress={() => upd('tefScale', 'current')} />
+              <OptionPill label="Oct 2019–Dec 2023"
+                selected={tefScale === 'oct2019'}
+                onPress={() => upd('tefScale', 'oct2019')} />
+              <OptionPill label="Before Oct 2019"
+                selected={tefScale === 'legacy'}
+                onPress={() => upd('tefScale', 'legacy')} />
+            </View>
+          </>
+        )}
         <FieldLabel top>SCORES</FieldLabel>
-        <LangInput label="Speaking"  test={firstTest} skill="speaking"  value={inputs.firstLangSpeaking}  onChange={v => upd('firstLangSpeaking',  v)} />
-        <LangInput label="Listening" test={firstTest} skill="listening" value={inputs.firstLangListening} onChange={v => upd('firstLangListening', v)} />
-        <LangInput label="Reading"   test={firstTest} skill="reading"   value={inputs.firstLangReading}   onChange={v => upd('firstLangReading',   v)} />
-        <LangInput label="Writing"   test={firstTest} skill="writing"   value={inputs.firstLangWriting}   onChange={v => upd('firstLangWriting',   v)} />
+        <LangInput label="Speaking"  test={firstTest} skill="speaking"  value={inputs.firstLangSpeaking}  onChange={v => upd('firstLangSpeaking',  v)} tefScale={tefScale} />
+        <LangInput label="Listening" test={firstTest} skill="listening" value={inputs.firstLangListening} onChange={v => upd('firstLangListening', v)} tefScale={tefScale} />
+        <LangInput label="Reading"   test={firstTest} skill="reading"   value={inputs.firstLangReading}   onChange={v => upd('firstLangReading',   v)} tefScale={tefScale} />
+        <LangInput label="Writing"   test={firstTest} skill="writing"   value={inputs.firstLangWriting}   onChange={v => upd('firstLangWriting',   v)} tefScale={tefScale} />
 
         <Toggle
           label={inputs.hasSecondLang ? 'Second language scores added' : 'Add second official language (optional)'}
@@ -497,7 +537,7 @@ export default function DashboardScreen() {
           <>
             <FieldLabel top>SECOND LANGUAGE TEST</FieldLabel>
             <View style={st.pillRow}>
-              {SECOND_LANG_TESTS.map(t => (
+              {secondLangOptions.map(t => (
                 <OptionPill key={t} label={t}
                   selected={inputs.secondLangTest === t}
                   onPress={() => setInputs(d => ({
@@ -507,22 +547,6 @@ export default function DashboardScreen() {
                   }))} />
               ))}
             </View>
-            {usesTef && (
-              <>
-                <FieldLabel top>TEF TEST DATE</FieldLabel>
-                <View style={st.pillRow}>
-                  <OptionPill label="After Dec 2023"
-                    selected={tefScale === 'current'}
-                    onPress={() => upd('tefScale', 'current')} />
-                  <OptionPill label="Oct 2019–Dec 2023"
-                    selected={tefScale === 'oct2019'}
-                    onPress={() => upd('tefScale', 'oct2019')} />
-                  <OptionPill label="Before Oct 2019"
-                    selected={tefScale === 'legacy'}
-                    onPress={() => upd('tefScale', 'legacy')} />
-                </View>
-              </>
-            )}
             <FieldLabel top>SCORES</FieldLabel>
             <LangInput label="Speaking"  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} tefScale={tefScale} />
             <LangInput label="Listening" test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} tefScale={tefScale} />
