@@ -134,7 +134,13 @@ class FCMService
             throw new \InvalidArgumentException('Invalid Google ID token.');
         }
 
-        return $response->json();
+        $tokenData = $response->json();
+
+        if (($tokenData['aud'] ?? '') !== config('services.google.client_id')) {
+            throw new \InvalidArgumentException('Google token audience mismatch.');
+        }
+
+        return $tokenData;
     }
 
     public function registerToken(User $user, string $token, string $platform): void
