@@ -59,7 +59,6 @@ module.exports = () => ({
       backgroundColor: '#0A1628',
     },
     package: 'com.crspulse.app',
-    versionCode: 1,
     permissions: ['VIBRATE', 'POST_NOTIFICATIONS'],
     ...(googleServicesFile ? { googleServicesFile } : {}),
   },

@@ -37,7 +37,8 @@
       },
       "env": {
         "APP_ENV": "production",
-        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev"
+        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev",
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     }
   },
