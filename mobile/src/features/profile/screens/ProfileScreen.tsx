@@ -15,10 +15,11 @@ import { useDrawNotifications } from '@/hooks/useDrawNotifications';
 import {
   calculateCRS,
   suggestCategory,
-  toCLB,
   type CRSInput,
   type LanguageTest,
+  type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
+import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 
@@ -93,7 +94,7 @@ function buildCRSInput(d: CalcInputs): CRSInput {
       reading:   clb(d.spouseLangReading),
       writing:   clb(d.spouseLangWriting),
     },
-    spouseCanadianWorkExp:   d.spouseCanadianWorkExp,
+    spouseCanadianWorkExp: Math.min(5, d.spouseCanadianWorkExp) as CRSInput['spouseCanadianWorkExp'],
     hasProvincialNomination: d.hasProvincialNomination,
     jobOffer:                d.jobOffer,
     hasSiblingInCanada:      d.hasSiblingInCanada,
@@ -222,21 +223,26 @@ export default function ProfileScreen() {
 
   const crsInput = buildCRSInput(coerced);
   const result   = calculateCRS(crsInput);
-  const score    = result.total;
 
-  const firstTest = (LANG_TEST_MAP[inp.firstLangTest] ?? 'IELTS') as LanguageTest;
-  const langSet =
-    toCLB(firstTest, 'speaking',  coerced.firstLangSpeaking)  > 0 &&
-    toCLB(firstTest, 'listening', coerced.firstLangListening) > 0 &&
-    toCLB(firstTest, 'reading',   coerced.firstLangReading)   > 0 &&
-    toCLB(firstTest, 'writing',   coerced.firstLangWriting)   > 0;
+  const scoreReady = isCrsScoreReady(
+    inp.firstLangTest,
+    {
+      speaking: coerced.firstLangSpeaking,
+      listening: coerced.firstLangListening,
+      reading: coerced.firstLangReading,
+      writing: coerced.firstLangWriting,
+    },
+    (inp.tefScale ?? 'current') as TefScale,
+  );
 
-  const cat = langSet
+  const score = scoreReady ? result.total : 0;
+
+  const cat = scoreReady
     ? (suggestCategory(crsInput, result.firstLangClb) as string)
     : null;
 
   const scoreColor =
-    !langSet ? colors.textMuted :
+    !scoreReady ? colors.textMuted :
     score >= 490 ? palette.success :
     score >= 450 ? palette.warning :
     palette.danger;
@@ -293,7 +299,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>CRS Score</Text>
         <View style={styles.scoreHero}>
           <Text style={[styles.scoreNum, { color: scoreColor }]}>
-            {langSet ? score : '—'}
+            {scoreReady ? score : '—'}
           </Text>
           <Text style={styles.scoreLabel}>Comprehensive Ranking System</Text>
           {cat && (
@@ -303,9 +309,9 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {!langSet && (
+        {!scoreReady && (
           <Text style={styles.hint}>
-            Set your language scores in the Calculator tab to compute your CRS score.
+            Enter CLB 4+ scores in all four language skills on the Home tab to see your CRS score.
           </Text>
         )}
 

@@ -406,7 +406,10 @@ export default function DashboardScreen() {
     : 0;
 
   // Section summaries (shown when collapsed)
-  const persSummary = `Age ${inputs.age} · ${inputs.maritalStatus === 'single' ? 'Single' : 'Married'}`;
+  const persSummary = `Age ${inputs.age} · ${
+    inputs.maritalStatus === 'single' ? 'Single'
+    : inputs.maritalStatus === 'married_not_accompanying' ? 'Married (not accompanying)'
+    : 'Married'}`;
   const eduSummary  = EDU_OPTIONS.find(e => e.value === inputs.education)?.label ?? inputs.education;
   const langSummary = useMemo(() => {
     if (!scoreReady) return `${inputs.firstLangTest} · not set`;
