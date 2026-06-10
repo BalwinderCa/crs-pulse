@@ -46,11 +46,13 @@ Set in `mobile/.env.local`:
 EXPO_PUBLIC_PUSH_URL=https://crs-pulse-push.balwinderxcode.workers.dev
 ```
 
-Set your EAS project ID in `mobile/app.json`:
+Set your EAS project ID in `mobile/.env.local` (or EAS secrets):
 
-```json
-"extra": { "eas": { "projectId": "your-eas-project-id" } }
 ```
+EAS_PROJECT_ID=your-eas-project-id
+```
+
+Privacy policy: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) — host at `https://crspulse.app/privacy` for Play Store.
 
 Run on a device or simulator:
 
