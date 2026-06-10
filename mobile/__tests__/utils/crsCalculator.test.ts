@@ -280,9 +280,13 @@ describe('Core human capital points', () => {
     expect(calculateCRS({ ...base, maritalStatus: 'married' }).secondLangPoints).toBe(22);
   });
 
-  it('age 29 single = 110, age 29 married = 100, age 40 single = 83', () => {
+  it('age points match IRCC grid (modified 2025-08-21)', () => {
     expect(calculateCRS({ ...BASE_INPUT, age: 29 }).agePoints).toBe(110);
     expect(calculateCRS({ ...BASE_INPUT, maritalStatus: 'married', age: 29 }).agePoints).toBe(100);
-    expect(calculateCRS({ ...BASE_INPUT, age: 40 }).agePoints).toBe(83);
+    expect(calculateCRS({ ...BASE_INPUT, age: 30 }).agePoints).toBe(105);
+    expect(calculateCRS({ ...BASE_INPUT, age: 35 }).agePoints).toBe(77);
+    expect(calculateCRS({ ...BASE_INPUT, age: 40 }).agePoints).toBe(50);
+    expect(calculateCRS({ ...BASE_INPUT, age: 44 }).agePoints).toBe(6);
+    expect(calculateCRS({ ...BASE_INPUT, age: 45 }).agePoints).toBe(0);
   });
 });
