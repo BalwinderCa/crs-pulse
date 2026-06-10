@@ -2,12 +2,6 @@
 // this file runs in the setupFiles phase, before jest globals exist.
 
 // Mock Expo modules
-jest.mock('expo-secure-store', () => ({
-  setItemAsync:    jest.fn(),
-  deleteItemAsync: jest.fn(),
-  getItemAsync:    jest.fn().mockResolvedValue(null),
-}));
-
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
