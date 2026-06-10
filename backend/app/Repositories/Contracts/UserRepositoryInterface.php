@@ -8,8 +8,6 @@ interface UserRepositoryInterface
 {
     public function findByEmail(string $email): ?User;
 
-    public function findByGoogleId(string $googleId): ?User;
-
     public function create(array $data): User;
 
     public function createProfile(User $user, array $data): void;

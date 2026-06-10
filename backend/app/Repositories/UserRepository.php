@@ -13,11 +13,6 @@ class UserRepository implements UserRepositoryInterface
         return User::where('email', $email)->with('profile')->first();
     }
 
-    public function findByGoogleId(string $googleId): ?User
-    {
-        return User::where('google_id', $googleId)->with('profile')->first();
-    }
-
     public function create(array $data): User
     {
         return User::create($data);

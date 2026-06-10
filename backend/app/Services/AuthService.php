@@ -43,32 +43,6 @@ class AuthService
         return compact('user', 'token');
     }
 
-    public function googleLogin(string $idToken, string $deviceName): array
-    {
-        // Verify Google ID token via Firebase Admin SDK
-        $payload = app(FCMService::class)->verifyGoogleToken($idToken);
-
-        $user = $this->users->findByGoogleId($payload['sub'])
-            ?? $this->users->findByEmail($payload['email']);
-
-        if (! $user) {
-            $user = $this->users->create([
-                'name'               => $payload['name'],
-                'email'              => $payload['email'],
-                'google_id'          => $payload['sub'],
-                'avatar_url'         => $payload['picture'] ?? null,
-                'email_verified_at'  => now(),
-            ]);
-            $this->users->createProfile($user);
-        } elseif (! $user->google_id) {
-            $user->update(['google_id' => $payload['sub']]);
-        }
-
-        $token = $this->createToken($user, $deviceName);
-
-        return compact('user', 'token');
-    }
-
     public function logout(User $user): void
     {
         $user->currentAccessToken()?->delete();

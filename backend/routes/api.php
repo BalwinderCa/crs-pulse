@@ -17,7 +17,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::prefix('auth')->name('auth.')->middleware('throttle:auth')->group(function () {
         Route::post('/register', [AuthController::class, 'register'])->name('register');
         Route::post('/login',    [AuthController::class, 'login'])->name('login');
-        Route::post('/google',   [AuthController::class, 'googleLogin'])->name('google');
         Route::post('/apple',    [AuthController::class, 'appleLogin'])->name('apple');
 
         Route::middleware('auth:sanctum')->group(function () {

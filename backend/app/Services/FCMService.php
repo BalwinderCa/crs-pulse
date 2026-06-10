@@ -130,25 +130,6 @@ class FCMService
         return $response->json('access_token', '');
     }
 
-    public function verifyGoogleToken(string $idToken): array
-    {
-        $response = Http::get(
-            "https://oauth2.googleapis.com/tokeninfo?id_token={$idToken}"
-        );
-
-        if (! $response->successful()) {
-            throw new \InvalidArgumentException('Invalid Google ID token.');
-        }
-
-        $tokenData = $response->json();
-
-        if (($tokenData['aud'] ?? '') !== config('services.google.client_id')) {
-            throw new \InvalidArgumentException('Google token audience mismatch.');
-        }
-
-        return $tokenData;
-    }
-
     public function registerToken(User $user, string $token, string $platform): void
     {
         DeviceToken::updateOrCreate(

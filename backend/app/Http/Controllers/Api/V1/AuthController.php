@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\AppleLoginRequest;
-use App\Http\Requests\Auth\GoogleLoginRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\AppleAuthService;
@@ -39,22 +38,6 @@ class AuthController extends Controller
                 'token' => $result['token'],
             ],
             'message' => 'Login successful.',
-        ]);
-    }
-
-    public function googleLogin(GoogleLoginRequest $request): JsonResponse
-    {
-        $result = $this->authService->googleLogin(
-            $request->validated('id_token'),
-            $request->validated('device_name'),
-        );
-
-        return response()->json([
-            'data' => [
-                'user'  => $result['user']->load('profile'),
-                'token' => $result['token'],
-            ],
-            'message' => 'Google login successful.',
         ]);
     }
 
