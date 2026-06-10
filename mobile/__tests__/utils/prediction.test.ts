@@ -1,4 +1,4 @@
-// Unit test for prediction logic mirroring backend PredictionService rules
+// Unit test for prediction logic (local dashboard rules)
 
 const STRONG_BUFFER   = 5;
 const MODERATE_BUFFER = 10;

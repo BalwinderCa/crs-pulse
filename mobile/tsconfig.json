@@ -10,7 +10,6 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@/api/*": ["src/api/*"],
       "@/components/*": ["src/components/*"],
       "@/features/*": ["src/features/*"],
       "@/navigation/*": ["src/navigation/*"],

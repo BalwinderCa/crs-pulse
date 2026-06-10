@@ -17,10 +17,6 @@
       "bundleIdentifier": "com.crspulse.app",
       "buildNumber": "1",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "usesAppleSignIn": true,
-      "entitlements": {
-        "com.apple.developer.applesignin": ["Default"]
-      },
       "infoPlist": {
         "NSCameraUsageDescription": "Used for profile photo",
         "NSPhotoLibraryUsageDescription": "Used for profile photo",
@@ -57,8 +53,6 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store",
-      "expo-apple-authentication",
       [
         "expo-notifications",
         {
@@ -78,6 +72,10 @@
       ],
     ],
     "scheme": "crspulse",
-    "extra": {}
+    "extra": {
+      "eas": {
+        "projectId": "YOUR_EAS_PROJECT_ID"
+      }
+    }
   }
 }

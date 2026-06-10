@@ -21,8 +21,6 @@ export const DRAW_FILTERS = [
   { label: 'All Time', value: 'all' },
 ] as const;
 
-export const PAGINATION_LIMIT = 20;
-
 export const PREDICTION_LABELS = {
   strong: 'High Chance',
   moderate: 'Moderate Chance',
@@ -37,31 +35,10 @@ export const SCORE_STATUS = {
 
 export const NEAR_THRESHOLD = 10;
 
-// SecureStore keys: alphanumeric + . - _ only (no @ or /)
 export const STORAGE_KEYS = {
-  AUTH_TOKEN: 'crs_pulse.auth_token',
   USER_PROFILE: 'crs_pulse.user_profile',
   DRAWS_CACHE: 'crs_pulse.draws_cache',
-  DASHBOARD_CACHE: 'crs_pulse.dashboard_cache',
-  ANALYTICS_CACHE: 'crs_pulse.analytics_cache',
-  ONBOARDING_COMPLETE: 'crs_pulse.onboarding_complete',
-  FCM_TOKEN: 'crs_pulse.fcm_token',
   DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
   LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
-} as const;
-
-export const API_CACHE_KEYS = {
-  DRAWS: 'draws',
-  DASHBOARD: 'dashboard',
-  ANALYTICS: 'analytics',
-  NOTIFICATIONS: 'notifications',
-  PROFILE: 'profile',
-} as const;
-
-export const QUERY_STALE_TIMES = {
-  DRAWS: 5 * 60 * 1000,        // 5 min
-  DASHBOARD: 2 * 60 * 1000,    // 2 min
-  ANALYTICS: 10 * 60 * 1000,   // 10 min
-  NOTIFICATIONS: 1 * 60 * 1000, // 1 min
-  PROFILE: 5 * 60 * 1000,      // 5 min
+  PUSH_TOKEN: 'crs_pulse.push_token',
 } as const;

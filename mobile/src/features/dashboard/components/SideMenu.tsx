@@ -26,9 +26,9 @@ const PRIVACY_TEXT = `CRS Pulse respects your privacy.
 
 All data you enter (age, education, language scores, work experience) is stored locally on your device only. We do not collect, transmit, or share any personal information with third parties.
 
-Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
+Push notifications (if enabled) register your device with our server so we can alert you when IRCC publishes a new draw. No personal profile data is sent — only an anonymous device token.
 
-Push notifications (if enabled) are sent locally from your device when a new draw is detected — no notification servers are involved.
+Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
 We do not use analytics trackers, advertising SDKs, or any third-party data collection tools.
 

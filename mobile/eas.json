@@ -23,7 +23,8 @@
         "distribution": "internal"
       },
       "env": {
-        "APP_ENV": "staging"
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev"
       }
     },
     "production": {
@@ -35,7 +36,8 @@
         "distribution": "store"
       },
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev"
       }
     }
   },

@@ -1,33 +1,3 @@
-// ─── Auth ────────────────────────────────────────────────────────────────────
-
-export type AuthUser = {
-  id: number;
-  email: string;
-  name: string;
-  email_verified_at: string | null;
-  created_at: string;
-};
-
-export type LoginPayload = {
-  email: string;
-  password: string;
-  device_name: string;
-};
-
-export type RegisterPayload = {
-  name: string;
-  email: string;
-  password: string;
-  password_confirmation: string;
-  device_name: string;
-};
-
-export type AuthResponse = {
-  user: AuthUser;
-  token: string;
-  expires_at: string;
-};
-
 // ─── Categories ──────────────────────────────────────────────────────────────
 
 export const CATEGORIES = [
@@ -45,27 +15,6 @@ export type Category = (typeof CATEGORIES)[number];
 // draw categories (FSW → General, FST → Trades) plus PNP.
 export type ProgramCategory = Category | 'FSW' | 'FST' | 'PNP';
 
-// ─── User Profile ────────────────────────────────────────────────────────────
-
-export type UserProfile = {
-  id: number;
-  user_id: number;
-  crs_score: number;
-  category: Category;
-  notifications_enabled: boolean;
-  weekly_summary_enabled: boolean;
-  created_at: string;
-  updated_at: string;
-};
-
-export type UpdateProfilePayload = {
-  name?: string;
-  crs_score?: number;
-  category?: Category;
-  notifications_enabled?: boolean;
-  weekly_summary_enabled?: boolean;
-};
-
 // ─── Draws ───────────────────────────────────────────────────────────────────
 
 export type Draw = {
@@ -78,12 +27,6 @@ export type Draw = {
   tie_breaking_rule: string | null;
   notes: string | null;
   created_at: string;
-};
-
-export type DrawsResponse = {
-  data: Draw[];
-  meta: PaginationMeta;
-  links: PaginationLinks;
 };
 
 export type DrawFilter = 'last_month' | 'last_year' | 'all';
@@ -131,76 +74,10 @@ export type Prediction = {
   estimated_draws: number | null;
 };
 
-// ─── Notifications ───────────────────────────────────────────────────────────
-
-export type NotificationType =
-  | 'new_draw'
-  | 'score_threshold'
-  | 'weekly_summary';
-
-export type AppNotification = {
-  id: number;
-  type: NotificationType;
-  title: string;
-  body: string;
-  data: Record<string, unknown>;
-  read_at: string | null;
-  created_at: string;
-};
-
-export type NotificationsResponse = {
-  data: AppNotification[];
-  meta: PaginationMeta;
-  unread_count: number;
-};
-
-export type DeviceTokenPayload = {
-  token: string;
-  platform: 'android' | 'ios';
-};
-
-// ─── Shared ───────────────────────────────────────────────────────────────────
-
-export type PaginationMeta = {
-  current_page: number;
-  from: number | null;
-  last_page: number;
-  per_page: number;
-  to: number | null;
-  total: number;
-};
-
-export type PaginationLinks = {
-  first: string;
-  last: string;
-  prev: string | null;
-  next: string | null;
-};
-
-export type ApiError = {
-  message: string;
-  errors?: Record<string, string[]> | undefined;
-  status: number;
-};
-
-export type ApiResponse<T> = {
-  data: T;
-  message?: string;
-};
-
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
-  Splash: undefined;
-  Auth: undefined;
-  Onboarding: undefined;
   Main: undefined;
-};
-
-export type AuthStackParamList = {
-  Login: undefined;
-  Register: undefined;
-  ForgotPassword: undefined;
 };
 
 export type MainTabParamList = {

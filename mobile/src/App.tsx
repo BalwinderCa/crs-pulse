@@ -1,5 +1,4 @@
-import React, { Suspense } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React, { Suspense, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
@@ -26,15 +25,10 @@ if (__DEV__) LogBox.ignoreAllLogs();
 import RootNavigator from '@/navigation/RootNavigator';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { setupPushListeners } from '@/services/pushService';
+import { useDrawsStore } from '@/store/drawsStore';
 
 SplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries:   { retry: 2, refetchOnWindowFocus: false, staleTime: 2 * 60 * 1000 },
-    mutations: { retry: 0 },
-  },
-});
 
 function LoadingFallback() {
   const colors = useColors();
@@ -47,6 +41,13 @@ function LoadingFallback() {
 
 function AppInner() {
   useNetworkStatus();
+
+  useEffect(() => {
+    return setupPushListeners(() => {
+      useDrawsStore.getState().refresh().catch(() => {});
+    });
+  }, []);
+
   return <RootNavigator />;
 }
 
@@ -55,14 +56,12 @@ export default function App() {
   return (
     <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
       <SafeAreaProvider>
-        <QueryClientProvider client={queryClient}>
-          <ErrorBoundary>
-            <Suspense fallback={<LoadingFallback />}>
-              <AppInner />
-            </Suspense>
-          </ErrorBoundary>
-          <Toast />
-        </QueryClientProvider>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <AppInner />
+          </Suspense>
+        </ErrorBoundary>
+        <Toast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

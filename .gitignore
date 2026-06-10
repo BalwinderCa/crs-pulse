@@ -46,16 +46,6 @@ mobile/android/.externalNativeBuild
 .env.production
 mobile/.env
 
-# Laravel / PHP
-backend/vendor/
-backend/.env
-backend/storage/logs/*.log
-backend/storage/framework/cache/
-backend/storage/framework/sessions/
-backend/storage/framework/views/
-backend/bootstrap/cache/
-backend/.phpunit.result.cache
-
 # Logs
 *.log
 npm-debug.log*
@@ -78,8 +68,7 @@ yarn-error.log*
 # Metro bundler cache
 mobile/.metro-health-check*
 
-# Claude AI settings
-.claude/
+workers/push/.wrangler/
 
 # SQLite databases
 *.sqlite

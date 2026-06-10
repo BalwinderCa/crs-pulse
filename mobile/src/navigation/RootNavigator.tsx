@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
-import SplashScreenView from '@/features/auth/screens/SplashScreen';
+import SplashScreenView from '@/components/splash/SplashScreen';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from '@/types';
 
