@@ -1,7 +1,15 @@
 /** @type {import('expo/config').ExpoConfig} */
 const base = require('./app.json').expo;
 
-const projectId = process.env.EAS_PROJECT_ID || base.extra?.eas?.projectId;
+const rawProjectId = process.env.EAS_PROJECT_ID || base.extra?.eas?.projectId;
+const projectId =
+  rawProjectId && rawProjectId !== 'YOUR_EAS_PROJECT_ID' ? rawProjectId : undefined;
+
+if (!projectId && process.env.APP_ENV === 'production') {
+  console.warn(
+    '[CRS Pulse] EAS_PROJECT_ID is required for production push notifications. Run `eas init` and set EAS_PROJECT_ID.',
+  );
+}
 const appStoreId = process.env.EXPO_PUBLIC_APP_STORE_ID || '';
 const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||

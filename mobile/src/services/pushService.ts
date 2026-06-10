@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
+import { resolveEasProjectId } from '@/utils/easConfig';
 
 function getPushUrl(): string | null {
   const url = process.env.EXPO_PUBLIC_PUSH_URL?.replace(/\/$/, '');
@@ -26,12 +27,14 @@ export function buildPushHeaders(apiKey?: string): Record<string, string> {
 async function getExpoPushToken(): Promise<string | null> {
   if (!Device.isDevice) return null;
 
-  const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ??
-    Constants.easConfig?.projectId;
+  const projectId = resolveEasProjectId(
+    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId,
+  );
 
   if (!projectId) {
-    console.warn('Expo projectId missing — push token unavailable');
+    console.warn(
+      'EAS project ID not configured — set EAS_PROJECT_ID in .env.local or run eas init',
+    );
     return null;
   }
 
