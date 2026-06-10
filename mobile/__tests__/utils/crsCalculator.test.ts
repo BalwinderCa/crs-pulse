@@ -2,7 +2,6 @@ import {
   toCLB,
   calculateCRS,
   type CRSInput,
-  type LangScores,
 } from '../../src/features/onboarding/utils/crsCalculator';
 
 // ─── Base input for tests ─────────────────────────────────────────────────────
@@ -31,12 +30,12 @@ const BASE_INPUT: CRSInput = {
 // ─── TCF Listening CLB mapping ────────────────────────────────────────────────
 
 describe('TCF Listening CLB mapping', () => {
-  it('returns CLB 0 for score 269 (below CLB 4 threshold)', () => {
-    expect(toCLB('TCF', 'listening', 269)).toBe(0);
+  it('returns CLB 0 for score 330 (below CLB 4 threshold)', () => {
+    expect(toCLB('TCF', 'listening', 330)).toBe(0);
   });
 
-  it('returns CLB 4 for score 270 (CLB 4 lower boundary)', () => {
-    expect(toCLB('TCF', 'listening', 270)).toBe(4);
+  it('returns CLB 4 for score 331 (CLB 4 lower boundary)', () => {
+    expect(toCLB('TCF', 'listening', 331)).toBe(4);
   });
 
   it('returns CLB 4 for score 368 (CLB 4 upper boundary)', () => {
@@ -156,7 +155,7 @@ describe('French language bonus (IRCC additional points)', () => {
       ...BASE_INPUT,
       firstLangTest: 'TCF',
       // TCF speaking 4 = CLB 4, below CLB 7
-      firstLang: { speaking: 4, listening: 270, reading: 342, writing: 4 },
+      firstLang: { speaking: 4, listening: 331, reading: 342, writing: 4 },
       hasSecondLang: false,
     };
 
@@ -207,5 +206,83 @@ describe('Skill transferability with two_or_more education', () => {
     const r1 = calculateCRS(bachelorsInput);
     const r2 = calculateCRS(twoOrMoreInput);
     expect(r2.eduTransferPoints).toBe(r1.eduTransferPoints);
+  });
+});
+
+// ─── Core human capital tables (verified against IRCC CRS grid) ──────────────
+
+describe('Core human capital points', () => {
+  it('education without spouse: secondary 30, 1yr 90, 2yr 98, bachelors 120', () => {
+    const base = { ...BASE_INPUT, age: 30 };
+    expect(calculateCRS({ ...base, education: 'secondary' }).educationPoints).toBe(30);
+    expect(calculateCRS({ ...base, education: '1year' }).educationPoints).toBe(90);
+    expect(calculateCRS({ ...base, education: '2year' }).educationPoints).toBe(98);
+    expect(calculateCRS({ ...base, education: 'bachelors' }).educationPoints).toBe(120);
+    expect(calculateCRS({ ...base, education: 'two_or_more' }).educationPoints).toBe(128);
+    expect(calculateCRS({ ...base, education: 'masters' }).educationPoints).toBe(135);
+    expect(calculateCRS({ ...base, education: 'phd' }).educationPoints).toBe(150);
+  });
+
+  it('education with spouse: secondary 28, 1yr 84, 2yr 91, bachelors 112', () => {
+    const base = { ...BASE_INPUT, maritalStatus: 'married' as const, age: 30 };
+    expect(calculateCRS({ ...base, education: 'secondary' }).educationPoints).toBe(28);
+    expect(calculateCRS({ ...base, education: '1year' }).educationPoints).toBe(84);
+    expect(calculateCRS({ ...base, education: '2year' }).educationPoints).toBe(91);
+    expect(calculateCRS({ ...base, education: 'bachelors' }).educationPoints).toBe(112);
+    expect(calculateCRS({ ...base, education: 'two_or_more' }).educationPoints).toBe(119);
+    expect(calculateCRS({ ...base, education: 'masters' }).educationPoints).toBe(126);
+    expect(calculateCRS({ ...base, education: 'phd' }).educationPoints).toBe(140);
+  });
+
+  it('first language without spouse: CLB 9 across all abilities = 124', () => {
+    // CLB 9 single = 31/ability → 124
+    const input: CRSInput = {
+      ...BASE_INPUT,
+      firstLangTest: 'CLB',
+      firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 },
+    };
+    expect(calculateCRS(input).firstLangPoints).toBe(124);
+  });
+
+  it('first language without spouse: CLB 7 = 17/ability, CLB 6 = 9, CLB 4 = 6', () => {
+    const mk = (clb: number): CRSInput => ({
+      ...BASE_INPUT,
+      firstLangTest: 'CLB',
+      firstLang: { speaking: clb, listening: clb, reading: clb, writing: clb },
+    });
+    expect(calculateCRS(mk(7)).firstLangPoints).toBe(68);  // 17 × 4
+    expect(calculateCRS(mk(6)).firstLangPoints).toBe(36);  // 9 × 4
+    expect(calculateCRS(mk(4)).firstLangPoints).toBe(24);  // 6 × 4
+    expect(calculateCRS(mk(3)).firstLangPoints).toBe(0);
+  });
+
+  it('first language with spouse: CLB 4 = 6/ability', () => {
+    const input: CRSInput = {
+      ...BASE_INPUT,
+      maritalStatus: 'married',
+      firstLangTest: 'CLB',
+      firstLang: { speaking: 4, listening: 4, reading: 4, writing: 4 },
+    };
+    expect(calculateCRS(input).firstLangPoints).toBe(24);  // 6 × 4
+  });
+
+  it('second language subtotal caps at 24 single, 22 with spouse', () => {
+    const base: CRSInput = {
+      ...BASE_INPUT,
+      firstLangTest: 'CLB',
+      firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 },
+      hasSecondLang: true,
+      secondLangTest: 'CLB',
+      // CLB 9+ on all four second-language abilities = 6 × 4 = 24 raw
+      secondLang: { speaking: 9, listening: 9, reading: 9, writing: 9 },
+    };
+    expect(calculateCRS(base).secondLangPoints).toBe(24);
+    expect(calculateCRS({ ...base, maritalStatus: 'married' }).secondLangPoints).toBe(22);
+  });
+
+  it('age 29 single = 110, age 29 married = 100, age 40 single = 83', () => {
+    expect(calculateCRS({ ...BASE_INPUT, age: 29 }).agePoints).toBe(110);
+    expect(calculateCRS({ ...BASE_INPUT, maritalStatus: 'married', age: 29 }).agePoints).toBe(100);
+    expect(calculateCRS({ ...BASE_INPUT, age: 40 }).agePoints).toBe(83);
   });
 });

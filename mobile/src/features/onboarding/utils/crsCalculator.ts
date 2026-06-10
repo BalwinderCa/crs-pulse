@@ -178,7 +178,7 @@ function tcfToCLB(skill: keyof LangScores, score: number): number {
     if (score >= 458) return 7;
     if (score >= 398) return 6;
     if (score >= 369) return 5;
-    if (score >= 270) return 4;
+    if (score >= 331) return 4;
     return 0;
   }
   if (skill === 'reading') {
@@ -344,11 +344,11 @@ function agePoints(age: number, married: boolean): number {
 // Education
 const EDU_SINGLE: Record<EducationLevel, number> = {
   less_than_secondary: 0,
-  secondary: 28,
-  '1year': 84,
-  '2year': 91,
-  bachelors: 112,
-  two_or_more: 128, // verified: IRCC gives 128 for two_or_more (single, no spouse)
+  secondary: 30,
+  '1year': 90,
+  '2year': 98,
+  bachelors: 120,
+  two_or_more: 128,
   masters: 135,
   phd: 150,
 };
@@ -369,9 +369,9 @@ function firstLangPointsSingle(clb: number): number {
   if (clb >= 10) return 34;
   if (clb === 9)  return 31;
   if (clb === 8)  return 23;
-  if (clb === 7)  return 16;
-  if (clb === 6)  return 8;
-  if (clb === 5)  return 6;
+  if (clb === 7)  return 17;
+  if (clb === 6)  return 9;
+  if (clb >= 4)   return 6;  // CLB 4 or 5
   return 0;
 }
 
@@ -382,7 +382,7 @@ function firstLangPointsMarried(clb: number): number {
   if (clb === 8)  return 22;
   if (clb === 7)  return 16;
   if (clb === 6)  return 8;
-  if (clb === 5)  return 6;
+  if (clb >= 4)   return 6;  // CLB 4 or 5
   return 0;
 }
 
@@ -555,7 +555,11 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
   const cweTable = married ? CWE_MARRIED : CWE_SINGLE;
   const cwePts   = cweTable[input.canadianWorkExp] ?? 0;
 
-  const coreTotal = agePoints_ + eduPoints_ + firstLangPts + Math.min(24, secondLangPts) + cwePts;
+  // Second official language subtotal caps: 24 single, 22 with spouse (IRCC grid)
+  const secondLangCap    = married ? 22 : 24;
+  const secondLangCapped = Math.min(secondLangCap, secondLangPts);
+
+  const coreTotal = agePoints_ + eduPoints_ + firstLangPts + secondLangCapped + cwePts;
 
   // ── Spouse / common-law factors ──
   let spouseEduPts = 0, spouseLangPts = 0, spouseCWEPts = 0;
@@ -584,7 +588,7 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
     agePoints: agePoints_,
     educationPoints: eduPoints_,
     firstLangPoints: firstLangPts,
-    secondLangPoints: Math.min(24, secondLangPts),
+    secondLangPoints: secondLangCapped,
     canadianWorkExpPoints: cwePts,
     coreTotal,
     spouseEducationPoints: spouseEduPts,
