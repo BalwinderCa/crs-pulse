@@ -177,8 +177,8 @@ function tcfToCLB(skill: keyof LangScores, score: number): number {
     if (score >= 503) return 8;
     if (score >= 458) return 7;
     if (score >= 398) return 6;
-    if (score >= 331) return 5;
-    if (score >= 331) return 4;
+    if (score >= 369) return 5;
+    if (score >= 270) return 4;
     return 0;
   }
   if (skill === 'reading') {
