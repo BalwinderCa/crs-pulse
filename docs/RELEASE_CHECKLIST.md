@@ -8,6 +8,14 @@
 - [ ] `cd workers/push && npm run deploy`
 - [ ] `google-play-service-account.json` in `mobile/` (gitignored) for `eas submit`
 
+## Android push (FCM V1) — required for notifications
+
+- [ ] Create a Firebase project and add an Android app with package `com.crspulse.app`
+- [ ] Download the real `google-services.json` (replace the placeholder in `mobile/`)
+- [ ] Upload it to EAS as a file env var: `eas env:create --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --environment production`
+- [ ] Firebase Console → Project settings → Cloud Messaging → generate an FCM **service account key**, then upload: `eas credentials` → Android → Google Service Account → FCM V1
+- [ ] Rebuild after wiring credentials (FCM config is baked in at build time)
+
 ## Play Console
 
 - [ ] Privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
