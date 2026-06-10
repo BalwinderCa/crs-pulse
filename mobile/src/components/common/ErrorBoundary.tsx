@@ -14,7 +14,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
-    console.error('[ErrorBoundary]', error, info.componentStack);
+    if (__DEV__) {
+      console.error('[ErrorBoundary]', error, info.componentStack);
+    }
   }
 
   reset = () => this.setState({ hasError: false, error: null });
@@ -29,7 +31,9 @@ export class ErrorBoundary extends Component<Props, State> {
         <View style={[styles.container, { backgroundColor: c.surfacePrimary }]} accessibilityRole="alert">
           <Text style={styles.emoji}>⚠️</Text>
           <Text style={[styles.title, { color: c.textPrimary }]}>Something went wrong</Text>
-          <Text style={[styles.message, { color: c.textSecondary }]}>{this.state.error?.message}</Text>
+          <Text style={[styles.message, { color: c.textSecondary }]}>
+            {__DEV__ ? this.state.error?.message : 'Please restart the app and try again.'}
+          </Text>
           <TouchableOpacity style={styles.btn} onPress={this.reset} accessibilityRole="button" accessibilityLabel="Try again">
             <Text style={styles.btnText}>Try Again</Text>
           </TouchableOpacity>

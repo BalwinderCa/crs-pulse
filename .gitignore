@@ -44,7 +44,18 @@ mobile/android/.externalNativeBuild
 .env
 .env.local
 .env.production
+.dev.vars
 mobile/.env
+
+# Firebase / signing credentials (also listed in mobile/.gitignore)
+google-services.json
+GoogleService-Info.plist
+google-play-service-account.json
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
 
 # Logs
 *.log
