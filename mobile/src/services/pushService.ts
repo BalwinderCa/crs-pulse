@@ -10,6 +10,19 @@ function getPushUrl(): string | null {
   return url || null;
 }
 
+/** Headers for push worker API calls (includes optional Bearer auth). */
+export function buildPushHeaders(apiKey?: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  };
+  const key = (apiKey ?? process.env.EXPO_PUBLIC_PUSH_API_KEY)?.trim();
+  if (key) {
+    headers.Authorization = `Bearer ${key}`;
+  }
+  return headers;
+}
+
 async function getExpoPushToken(): Promise<string | null> {
   if (!Device.isDevice) return null;
 
@@ -53,7 +66,7 @@ export async function registerForPushNotifications(): Promise<boolean> {
 
     const res = await fetch(`${pushUrl}/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      headers: buildPushHeaders(),
       body: JSON.stringify({
         token,
         platform: Platform.OS === 'ios' ? 'ios' : 'android',
@@ -81,7 +94,7 @@ export async function unregisterPushNotifications(): Promise<void> {
     if (token) {
       await fetch(`${pushUrl}/revoke`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: buildPushHeaders(),
         body: JSON.stringify({ token }),
       });
       await AsyncStorage.removeItem(STORAGE_KEYS.PUSH_TOKEN);

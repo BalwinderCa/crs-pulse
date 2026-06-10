@@ -20,8 +20,14 @@ const CATEGORY_MAP: Record<string, string> = {
 
 export interface Env {
   TOKENS_KV: KVNamespace;
+  /** Protects POST /register and DELETE /revoke. Set via `wrangler secret put PUSH_API_SECRET`. */
+  PUSH_API_SECRET?: string;
+  /** Protects POST /sync. Set via `wrangler secret put SYNC_SECRET`. */
   SYNC_SECRET?: string;
 }
+
+const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
+const MAX_TOKENS = 50_000;
 
 interface StoredToken {
   token: string;
@@ -60,6 +66,16 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
+function isAuthorized(request: Request, secret: string | undefined): boolean {
+  if (!secret) return true;
+  const auth = request.headers.get('Authorization');
+  return auth === `Bearer ${secret}`;
+}
+
+function isValidExpoToken(token: string): boolean {
+  return EXPO_TOKEN_RE.test(token) && token.length <= 256;
+}
+
 function corsPreflight(): Response {
   return new Response(null, {
     status: 204,
@@ -89,6 +105,9 @@ async function saveTokens(kv: KVNamespace, tokens: StoredToken[]): Promise<void>
 async function registerToken(kv: KVNamespace, token: string, platform: 'ios' | 'android'): Promise<void> {
   const tokens = await getTokens(kv);
   if (tokens.some((t) => t.token === token)) return;
+  if (tokens.length >= MAX_TOKENS) {
+    throw new Error('Token registry full');
+  }
   tokens.push({ token, platform });
   await saveTokens(kv, tokens);
 }
@@ -196,12 +215,14 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/health' && request.method === 'GET') {
-      const tokenCount = (await getTokens(env.TOKENS_KV)).length;
-      const lastDraw = await env.TOKENS_KV.get(LAST_DRAW_KEY);
-      return json({ status: 'ok', service: 'crs-pulse-push', token_count: tokenCount, last_draw: lastDraw });
+      return json({ status: 'ok', service: 'crs-pulse-push' });
     }
 
     if (url.pathname === '/register' && request.method === 'POST') {
+      if (!isAuthorized(request, env.PUSH_API_SECRET)) {
+        return json({ message: 'Unauthorized' }, 401);
+      }
+
       let body: { token?: string; platform?: string };
       try {
         body = (await request.json()) as { token?: string; platform?: string };
@@ -215,12 +236,23 @@ export default {
       if (body.platform !== 'ios' && body.platform !== 'android') {
         return json({ message: 'platform must be ios or android' }, 422);
       }
+      if (!isValidExpoToken(body.token)) {
+        return json({ message: 'Invalid Expo push token format' }, 422);
+      }
 
-      await registerToken(env.TOKENS_KV, body.token, body.platform);
+      try {
+        await registerToken(env.TOKENS_KV, body.token, body.platform);
+      } catch {
+        return json({ message: 'Token registry unavailable' }, 503);
+      }
       return json({ message: 'Push token registered.' });
     }
 
     if (url.pathname === '/revoke' && request.method === 'DELETE') {
+      if (!isAuthorized(request, env.PUSH_API_SECRET)) {
+        return json({ message: 'Unauthorized' }, 401);
+      }
+
       let body: { token?: string };
       try {
         body = (await request.json()) as { token?: string };
@@ -229,18 +261,20 @@ export default {
       }
 
       if (!body.token) return json({ message: 'token is required' }, 422);
+      if (!isValidExpoToken(body.token)) {
+        return json({ message: 'Invalid Expo push token format' }, 422);
+      }
 
       await revokeToken(env.TOKENS_KV, body.token);
       return json({ message: 'Push token revoked.' });
     }
 
-    // Manual trigger for testing (optional SYNC_SECRET via wrangler secret)
     if (url.pathname === '/sync' && request.method === 'POST') {
-      if (env.SYNC_SECRET) {
-        const auth = request.headers.get('Authorization');
-        if (auth !== `Bearer ${env.SYNC_SECRET}`) {
-          return json({ message: 'Unauthorized' }, 401);
-        }
+      if (!env.SYNC_SECRET) {
+        return json({ message: 'SYNC_SECRET not configured' }, 503);
+      }
+      if (!isAuthorized(request, env.SYNC_SECRET)) {
+        return json({ message: 'Unauthorized' }, 401);
       }
       const result = await checkAndNotify(env.TOKENS_KV);
       return json(result);
