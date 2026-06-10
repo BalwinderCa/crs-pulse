@@ -20,7 +20,11 @@ const CATEGORY_MAP: Record<string, string> = {
 
 export interface Env {
   TOKENS_KV: KVNamespace;
-  /** Protects POST /register and DELETE /revoke. Set via `wrangler secret put PUSH_API_SECRET`. */
+  /**
+   * Protects POST /register and DELETE /revoke. REQUIRED in production —
+   * both endpoints return 503 until it is set via
+   * `wrangler secret put PUSH_API_SECRET`.
+   */
   PUSH_API_SECRET?: string;
   /** Protects POST /sync. Set via `wrangler secret put SYNC_SECRET`. */
   SYNC_SECRET?: string;
@@ -66,10 +70,26 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
+/** Constant-time string comparison (length is not hidden, contents are). */
+function timingSafeEqualStr(a: string, b: string): boolean {
+  const enc = new TextEncoder();
+  const ab = enc.encode(a);
+  const bb = enc.encode(b);
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) diff |= ab[i]! ^ bb[i]!;
+  return diff === 0;
+}
+
+/**
+ * Fails CLOSED: a missing secret means the endpoint is not available, never
+ * that it is open. Callers should respond 503 when the secret is unset.
+ */
 function isAuthorized(request: Request, secret: string | undefined): boolean {
-  if (!secret) return true;
+  if (!secret) return false;
   const auth = request.headers.get('Authorization');
-  return auth === `Bearer ${secret}`;
+  if (!auth) return false;
+  return timingSafeEqualStr(auth, `Bearer ${secret}`);
 }
 
 function isValidExpoToken(token: string): boolean {
@@ -219,6 +239,9 @@ export default {
     }
 
     if (url.pathname === '/register' && request.method === 'POST') {
+      if (!env.PUSH_API_SECRET) {
+        return json({ message: 'Service unavailable' }, 503);
+      }
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
@@ -249,6 +272,9 @@ export default {
     }
 
     if (url.pathname === '/revoke' && request.method === 'DELETE') {
+      if (!env.PUSH_API_SECRET) {
+        return json({ message: 'Service unavailable' }, 503);
+      }
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
