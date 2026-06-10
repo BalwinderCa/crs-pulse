@@ -17,15 +17,8 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
   );
 }
 
-const rawProjectId = process.env.EAS_PROJECT_ID;
-const projectId =
-  rawProjectId && rawProjectId !== 'YOUR_EAS_PROJECT_ID' ? rawProjectId : undefined;
-
-if (!projectId && process.env.APP_ENV === 'production') {
-  console.warn(
-    '[CRS Pulse] EAS_PROJECT_ID is required for production push notifications. Run `eas init` and set EAS_PROJECT_ID.',
-  );
-}
+// Created via `eas init` as @balwinder98/crs-pulse.
+const projectId = process.env.EAS_PROJECT_ID || '255e43da-70b7-44a9-a50f-88522339a9cd';
 const appStoreId = process.env.EXPO_PUBLIC_APP_STORE_ID || '';
 const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
@@ -35,6 +28,7 @@ const privacyPolicyUrl =
 module.exports = () => ({
   name: 'CRS Pulse – Express Entry Calculator',
   slug: 'crs-pulse',
+  owner: 'balwinder98',
   version: '1.0.0',
   newArchEnabled: false,
   orientation: 'portrait',
@@ -104,7 +98,7 @@ module.exports = () => ({
   scheme: 'crspulse',
   extra: {
     eas: {
-      ...(projectId ? { projectId } : {}),
+      projectId,
     },
     privacyPolicyUrl,
     githubRepoUrl: 'https://github.com/BalwinderCa/crs-pulse',
