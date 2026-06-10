@@ -1,4 +1,5 @@
-import '@testing-library/jest-native/extend-expect';
+// NOTE: extend-expect is loaded via setupFilesAfterEnv in package.json —
+// this file runs in the setupFiles phase, before jest globals exist.
 
 // Mock Expo modules
 jest.mock('expo-secure-store', () => ({
@@ -16,7 +17,8 @@ jest.mock('@react-native-community/netinfo', () => ({
   addEventListener: jest.fn().mockReturnValue(jest.fn()),
 }));
 
-jest.mock('@react-native-firebase/app', () => ({}));
+// virtual: package not installed in this workspace (native module, EAS build only)
+jest.mock('@react-native-firebase/app', () => ({}), { virtual: true });
 jest.mock('@react-native-firebase/messaging', () => () => ({
   requestPermission:  jest.fn().mockResolvedValue(1),
   getToken:           jest.fn().mockResolvedValue('test-fcm-token'),
@@ -25,7 +27,7 @@ jest.mock('@react-native-firebase/messaging', () => () => ({
   getInitialNotification:  jest.fn().mockResolvedValue(null),
   deleteToken:        jest.fn(),
   AuthorizationStatus: { AUTHORIZED: 1, PROVISIONAL: 2 },
-}));
+}), { virtual: true });
 
 jest.mock('expo-device', () => ({
   isDevice: true,
