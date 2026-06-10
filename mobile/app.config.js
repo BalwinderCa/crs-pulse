@@ -1,9 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-/** @type {import('expo/config').ExpoConfig} */
-const base = require('./app.json').expo;
-
 // Android push (FCM V1) requires google-services.json baked into the build.
 // On EAS, provide it as a file-type env var named GOOGLE_SERVICES_JSON;
 // locally, drop the real file at mobile/google-services.json (gitignored).
@@ -20,7 +17,7 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
   );
 }
 
-const rawProjectId = process.env.EAS_PROJECT_ID || base.extra?.eas?.projectId;
+const rawProjectId = process.env.EAS_PROJECT_ID;
 const projectId =
   rawProjectId && rawProjectId !== 'YOUR_EAS_PROJECT_ID' ? rawProjectId : undefined;
 
@@ -34,29 +31,80 @@ const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md';
 
+/** @type {import('expo/config').ExpoConfig} */
 module.exports = () => ({
-  ...base,
-  android: {
-    ...base.android,
-    ...(googleServicesFile ? { googleServicesFile } : {}),
+  name: 'CRS Pulse – Express Entry Calculator',
+  slug: 'crs-pulse',
+  version: '1.0.0',
+  newArchEnabled: false,
+  orientation: 'portrait',
+  icon: './assets/icon.png',
+  userInterfaceStyle: 'automatic',
+  splash: {
+    image: './assets/splash.png',
+    resizeMode: 'contain',
+    backgroundColor: '#0A1628',
   },
+  assetBundlePatterns: ['**/*'],
   ios: {
-    ...base.ios,
+    supportsTablet: false,
+    bundleIdentifier: 'com.crspulse.app',
+    buildNumber: '1',
     config: {
-      ...base.ios?.config,
       usesNonExemptEncryption: false,
     },
     infoPlist: {
-      ...base.ios?.infoPlist,
+      UIBackgroundModes: ['remote-notification'],
       CFBundleDisplayName: 'CRS Pulse',
       ITSAppUsesNonExemptEncryption: false,
     },
   },
+  android: {
+    adaptiveIcon: {
+      foregroundImage: './assets/adaptive-icon.png',
+      backgroundColor: '#0A1628',
+    },
+    package: 'com.crspulse.app',
+    versionCode: 1,
+    permissions: ['VIBRATE', 'POST_NOTIFICATIONS'],
+    ...(googleServicesFile ? { googleServicesFile } : {}),
+  },
+  web: {
+    favicon: './assets/favicon.png',
+  },
+  plugins: [
+    [
+      'expo-build-properties',
+      {
+        android: {
+          compileSdkVersion: 35,
+          targetSdkVersion: 35,
+          buildToolsVersion: '35.0.0',
+        },
+      },
+    ],
+    [
+      'expo-notifications',
+      {
+        icon: './assets/notification-icon.png',
+        color: '#1A6DFF',
+        sounds: [],
+        iosDisplayInForeground: true,
+      },
+    ],
+    [
+      'expo-splash-screen',
+      {
+        backgroundColor: '#0A1628',
+        image: './assets/splash.png',
+        resizeMode: 'contain',
+      },
+    ],
+  ],
+  scheme: 'crspulse',
   extra: {
-    ...base.extra,
     eas: {
-      ...base.extra?.eas,
-      ...(projectId && projectId !== 'YOUR_EAS_PROJECT_ID' ? { projectId } : {}),
+      ...(projectId ? { projectId } : {}),
     },
     privacyPolicyUrl,
     githubRepoUrl: 'https://github.com/BalwinderCa/crs-pulse',

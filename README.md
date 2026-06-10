@@ -206,7 +206,7 @@ express-entry-calculator/
 │   │   ├── store/          # Zustand stores (profile, draws, timeline)
 │   │   ├── services/       # pushService
 │   │   └── navigation/
-│   └── app.json
+│   └── app.config.js
 ├── workers/push/
 │   └── src/index.ts        # IRCC poll + Expo push
 ```
