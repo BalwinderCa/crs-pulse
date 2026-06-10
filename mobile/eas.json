@@ -43,6 +43,9 @@
   },
   "submit": {
     "production": {
+      "ios": {
+        "appleId": "balwinderxcode@gmail.com"
+      },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "production"

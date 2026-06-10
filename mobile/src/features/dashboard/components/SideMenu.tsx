@@ -5,7 +5,9 @@ import {
   TouchableWithoutFeedback, View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GITHUB_REPO_URL, PRIVACY_POLICY_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -32,7 +34,7 @@ Draw history is fetched directly from the official IRCC public data feed (canada
 
 We do not use analytics trackers, advertising SDKs, or any third-party data collection tools.
 
-Full policy: https://crspulse.app/privacy
+Full policy: ${PRIVACY_POLICY_URL}
 
 For questions, contact: balwinderxcode@gmail.com`;
 
@@ -120,19 +122,20 @@ export function SideMenu({ visible, onClose }: Props) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration! https://crspulse.app',
+        message: `Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration! ${GITHUB_REPO_URL}`,
         title: 'CRS Pulse',
       });
     } catch {}
     onClose();
   };
 
+  const appStoreId = Constants.expoConfig?.extra?.appStoreId as string | undefined;
+
   const handleRate = () => {
-    const url = Platform.OS === 'ios'
-      ? 'https://apps.apple.com/app/crs-pulse/id0000000000'
-      : 'https://play.google.com/store/apps/details?id=com.crspulse.app';
-    Linking.openURL(url);
-    onClose();
+    if (Platform.OS === 'ios' && appStoreId) {
+      Linking.openURL(`https://apps.apple.com/app/id${appStoreId}`);
+      onClose();
+    }
   };
 
   const handleCoffee = () => {
@@ -147,8 +150,10 @@ export function SideMenu({ visible, onClose }: Props) {
   ];
 
   const groupTwo: MenuItem[] = [
-    { icon: 'share-outline', label: 'Share App',    onPress: handleShare },
-    { icon: 'star-outline',  label: Platform.OS === 'ios' ? 'Review on App Store' : 'Review on Play Store', onPress: handleRate },
+    { icon: 'share-outline', label: 'Share App', onPress: handleShare },
+    ...(Platform.OS === 'ios' && appStoreId
+      ? [{ icon: 'star-outline' as const, label: 'Review on App Store', onPress: handleRate }]
+      : []),
   ];
 
   const renderItem = (item: MenuItem, idx: number, arr: MenuItem[]) => (

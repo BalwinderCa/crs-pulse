@@ -52,7 +52,7 @@
           "image": "./assets/splash.png",
           "resizeMode": "contain"
         }
-      ],
+      ]
     ],
     "scheme": "crspulse",
     "extra": {

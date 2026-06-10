@@ -20,6 +20,14 @@ The app stores locally (via AsyncStorage):
 
 This data is not transmitted to our servers.
 
+## iOS App Store privacy labels
+
+When completing Apple's App Privacy questionnaire:
+
+- **Data Not Linked to You:** CRS calculator inputs and timeline data (stored on device only)
+- **Data Used to Track You:** None
+- **Identifiers:** Push notification token (only if you enable draw alerts)
+
 ## Data sent to third parties
 
 ### IRCC (Government of Canada)

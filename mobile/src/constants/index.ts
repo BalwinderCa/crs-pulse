@@ -1,6 +1,11 @@
 export const APP_NAME = 'CRS Pulse';
 export const APP_VERSION = '1.0.0';
 
+/** Public URLs — no custom domain required; GitHub hosts the privacy policy. */
+export const GITHUB_REPO_URL = 'https://github.com/BalwinderCa/crs-pulse';
+export const PRIVACY_POLICY_URL =
+  'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md';
+
 export const CATEGORIES = ['CEC', 'General', 'Healthcare', 'STEM', 'Trades', 'French'] as const;
 
 export const CATEGORY_LABELS: Record<string, string> = {

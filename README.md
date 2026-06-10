@@ -52,16 +52,17 @@ Set your EAS project ID in `mobile/.env.local` (or EAS secrets):
 EAS_PROJECT_ID=your-eas-project-id
 ```
 
-Privacy policy: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) — host at `https://crspulse.app/privacy` for Play Store.
+Privacy policy: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) — no custom domain needed. Use the GitHub URL in App Store Connect:
+
+`https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
 
 Run on a device or simulator:
 
 ```bash
 npm run ios
-npm run android
 ```
 
-Push notifications require a **physical device** (not simulator).
+Push notifications require a **physical iPhone** (not simulator).
 
 ## Push worker (Cloudflare)
 
@@ -125,15 +126,67 @@ Local dev: `npm run dev` → `http://localhost:8787`
 | `npm run deploy` | Deploy to Cloudflare |
 | `npm run tail` | Stream live logs |
 
-## Production builds
+## iOS App Store release
+
+### Prerequisites
+
+- [Apple Developer Program](https://developer.apple.com/programs/) membership ($99/yr)
+- [EAS CLI](https://docs.expo.dev/build/setup/): `npm install -g eas-cli`
+- Privacy policy URL (GitHub, no domain required): `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+
+### One-time setup
 
 ```bash
 cd mobile
+npm install
+cp .env.example .env.local
 eas login
-eas build:configure
-eas build --platform android --profile production
-eas build --platform ios --profile production
+eas init                    # links project, sets EAS_PROJECT_ID
 ```
+
+Set in `mobile/.env.local`:
+
+```
+EAS_PROJECT_ID=your-eas-project-id
+EXPO_PUBLIC_PUSH_URL=https://crs-pulse-push.balwinderxcode.workers.dev
+```
+
+### App Store Connect
+
+1. Create app at [App Store Connect](https://appstoreconnect.apple.com) with bundle ID `com.crspulse.app`
+2. Fill **App Privacy** questionnaire: no tracking; data stored on device; optional push token sent to server
+3. Set privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+4. Export compliance: app uses standard HTTPS only (`ITSAppUsesNonExemptEncryption` is false)
+
+### Push notifications (APNs)
+
+EAS manages APNs credentials. On first iOS production build:
+
+```bash
+eas credentials --platform ios
+```
+
+Choose **Push Notifications: Manage your Apple Push Notifications Key** and let EAS create/upload the key.
+
+### Build and submit
+
+```bash
+cd mobile
+npm run build:ios           # eas build --platform ios --profile production
+npm run submit:ios          # eas submit --platform ios --profile production --latest
+```
+
+First `eas submit` will prompt for `ascAppId` and `appleTeamId` if not in `eas.json`.
+
+After the app is live, add to `.env.local` for the in-app review link:
+
+```
+EXPO_PUBLIC_APP_STORE_ID=1234567890
+```
+
+### TestFlight
+
+Production builds with `distribution: store` go to App Store Connect automatically after submit. Add internal/external testers in TestFlight before submitting for App Review.
 
 `EXPO_PUBLIC_PUSH_URL` is set in `mobile/eas.json` for preview and production profiles.
 
