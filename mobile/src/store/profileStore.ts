@@ -32,6 +32,8 @@ export type CalcInputs = {
   jobOffer: string;
   hasSiblingInCanada: boolean;
   hasTradeCert: boolean;
+  /** TEF Canada score table by test date (default: post-Dec 2023). */
+  tefScale: 'current' | 'oct2019' | 'legacy';
 };
 
 export const DEFAULT_CALC_INPUTS: CalcInputs = {
@@ -62,6 +64,7 @@ export const DEFAULT_CALC_INPUTS: CalcInputs = {
   jobOffer: 'none',
   hasSiblingInCanada: false,
   hasTradeCert: false,
+  tefScale: 'current',
 };
 
 // ─── Profile ──────────────────────────────────────────────────────────────────

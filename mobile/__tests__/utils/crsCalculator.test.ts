@@ -27,6 +27,29 @@ const BASE_INPUT: CRSInput = {
   hasTradeCert: false,
 };
 
+// ─── TEF Canada CLB mapping (current scale, after Dec 10 2023) ────────────────
+
+describe('TEF Canada CLB mapping (current scale)', () => {
+  it('maps speaking 456 to CLB 7 on current TEF scale', () => {
+    expect(toCLB('TEF', 'speaking', 456, 'current')).toBe(7);
+  });
+
+  it('maps speaking 310 to CLB 7 only on legacy pre-2019 scale', () => {
+    expect(toCLB('TEF', 'speaking', 310, 'current')).toBe(0);
+    expect(toCLB('TEF', 'speaking', 310, 'legacy')).toBe(7);
+  });
+
+  it('maps listening 434 to CLB 7 on current scale', () => {
+    expect(toCLB('TEF', 'listening', 434, 'current')).toBe(7);
+  });
+
+  it('distinguishes Oct 2019 and current listening thresholds', () => {
+    expect(toCLB('TEF', 'listening', 450, 'oct2019')).toBe(7);
+    expect(toCLB('TEF', 'listening', 450, 'current')).toBe(7);
+    expect(toCLB('TEF', 'listening', 462, 'current')).toBe(8);
+  });
+});
+
 // ─── TCF Listening CLB mapping ────────────────────────────────────────────────
 
 describe('TCF Listening CLB mapping', () => {

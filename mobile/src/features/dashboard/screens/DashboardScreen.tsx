@@ -9,7 +9,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import {
   calculateCRS, suggestCategory, toCLB, getClbBreakpoints, getClbBand,
-  type CRSInput, type LanguageTest, type LangScores,
+  type CRSInput, type LanguageTest, type LangScores, type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
 import type { ProgramCategory } from '@/types';
 import { SideMenu } from '../components/SideMenu';
@@ -64,6 +64,7 @@ function buildCRSInput(d: CalcInputs): CRSInput {
     jobOffer:           d.jobOffer as any,
     hasSiblingInCanada: d.hasSiblingInCanada,
     hasTradeCert:       d.hasTradeCert,
+    tefScale:           (d.tefScale ?? 'current') as TefScale,
   };
 }
 
@@ -135,9 +136,9 @@ function FieldLabel({ children, top }: { children: string; top?: boolean }) {
 }
 
 /** Snaps through IRCC CLB breakpoints for a given test + skill. */
-function LangInput({ label, test, skill, value, onChange }: {
+function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }: {
   label: string; test: LanguageTest; skill: keyof LangScores;
-  value: number; onChange: (v: number) => void;
+  value: number; onChange: (v: number) => void; tefScale?: TefScale;
 }) {
   const c = useColors();
   const accent = useAccentColor();
@@ -145,10 +146,10 @@ function LangInput({ label, test, skill, value, onChange }: {
   // Breakpoints: [0 = "not set", CLB4 minimum, CLB5 minimum, ..., CLB10+]
   // Filter to CLB ≥ 4 so the first + tap always lands on a valid EE score.
   const bps = useMemo(() => {
-    const raw = getClbBreakpoints(test, skill);
-    const valid = raw.filter(s => toCLB(test, skill, s) >= 4);
+    const raw = getClbBreakpoints(test, skill, tefScale);
+    const valid = raw.filter(s => toCLB(test, skill, s, tefScale) >= 4);
     return [0, ...valid];
-  }, [test, skill]);
+  }, [test, skill, tefScale]);
 
   // Index of current value in bps (largest bp <= value)
   const idx = useMemo(() => {
@@ -159,17 +160,17 @@ function LangInput({ label, test, skill, value, onChange }: {
     return value <= 0 ? 0 : i;
   }, [bps, value]);
 
-  const clb   = toCLB(test, skill, value);
-  const isSet = value > 0 && clb > 0;
+  const clb   = toCLB(test, skill, value, tefScale);
+  const isSet = value > 0 && clb >= 4;
 
   // Band range for current CLB level (e.g. 42–50 for PTE CLB 4)
   const scoreDisplay = useMemo(() => {
     if (!isSet) return '';
-    const [lo, hi] = getClbBand(test, skill, value);
+    const [lo, hi] = getClbBand(test, skill, value, tefScale);
     return lo < hi - 0.001
       ? `${fmtScore(test, lo)}–${fmtScore(test, hi)}`
       : fmtScore(test, value);
-  }, [test, skill, value, isSet]);
+  }, [test, skill, value, isSet, tefScale]);
 
   return (
     <View style={[st.langRow, { backgroundColor: c.surfaceInput, borderColor: c.border }]}>
@@ -298,7 +299,9 @@ const CLOSED_SECTIONS: SectionMap = {
 function coerceInputs(saved: CalcInputs): CalcInputs {
   const n = (v: any) => Number(v) || 0;
   return {
+    ...DEFAULT_CALC_INPUTS,
     ...saved,
+    tefScale: saved.tefScale ?? 'current',
     firstLangSpeaking:  n(saved.firstLangSpeaking),  firstLangListening: n(saved.firstLangListening),
     firstLangReading:   n(saved.firstLangReading),   firstLangWriting:   n(saved.firstLangWriting),
     secondLangSpeaking: n(saved.secondLangSpeaking), secondLangListening:n(saved.secondLangListening),
@@ -351,11 +354,13 @@ export default function DashboardScreen() {
   // Score shown only when all 4 first-language CLB fields are ≥ CLB 4
   const scoreReady = useMemo(() => {
     const t = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
-    return toCLB(t, 'speaking',  inputs.firstLangSpeaking)  > 0 &&
-           toCLB(t, 'listening', inputs.firstLangListening) > 0 &&
-           toCLB(t, 'reading',   inputs.firstLangReading)   > 0 &&
-           toCLB(t, 'writing',   inputs.firstLangWriting)   > 0;
-  }, [inputs.firstLangTest, inputs.firstLangSpeaking, inputs.firstLangListening,
+    const scale = (inputs.tefScale ?? 'current') as TefScale;
+    const clbOk = (skill: keyof LangScores, v: number) => toCLB(t, skill, v, scale) >= 4;
+    return clbOk('speaking', inputs.firstLangSpeaking) &&
+           clbOk('listening', inputs.firstLangListening) &&
+           clbOk('reading', inputs.firstLangReading) &&
+           clbOk('writing', inputs.firstLangWriting);
+  }, [inputs.firstLangTest, inputs.tefScale, inputs.firstLangSpeaking, inputs.firstLangListening,
       inputs.firstLangReading, inputs.firstLangWriting]);
 
   // Autosave (debounced 800 ms)
@@ -448,6 +453,8 @@ export default function DashboardScreen() {
   function renderLanguage() {
     const firstTest = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
     const secondTest = (LANG_TEST_MAP[inputs.secondLangTest] ?? 'TEF') as LanguageTest;
+    const tefScale = (inputs.tefScale ?? 'current') as TefScale;
+    const usesTef = inputs.hasSecondLang && inputs.secondLangTest === 'TEF';
     return (
       <View style={st.secBody}>
         <FieldLabel>FIRST LANGUAGE TEST</FieldLabel>
@@ -487,11 +494,27 @@ export default function DashboardScreen() {
                   }))} />
               ))}
             </View>
+            {usesTef && (
+              <>
+                <FieldLabel top>TEF TEST DATE</FieldLabel>
+                <View style={st.pillRow}>
+                  <OptionPill label="After Dec 2023"
+                    selected={tefScale === 'current'}
+                    onPress={() => upd('tefScale', 'current')} />
+                  <OptionPill label="Oct 2019–Dec 2023"
+                    selected={tefScale === 'oct2019'}
+                    onPress={() => upd('tefScale', 'oct2019')} />
+                  <OptionPill label="Before Oct 2019"
+                    selected={tefScale === 'legacy'}
+                    onPress={() => upd('tefScale', 'legacy')} />
+                </View>
+              </>
+            )}
             <FieldLabel top>SCORES</FieldLabel>
-            <LangInput label="Speaking"  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} />
-            <LangInput label="Listening" test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} />
-            <LangInput label="Reading"   test={secondTest} skill="reading"   value={inputs.secondLangReading}   onChange={v => upd('secondLangReading',   v)} />
-            <LangInput label="Writing"   test={secondTest} skill="writing"   value={inputs.secondLangWriting}   onChange={v => upd('secondLangWriting',   v)} />
+            <LangInput label="Speaking"  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} tefScale={tefScale} />
+            <LangInput label="Listening" test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} tefScale={tefScale} />
+            <LangInput label="Reading"   test={secondTest} skill="reading"   value={inputs.secondLangReading}   onChange={v => upd('secondLangReading',   v)} tefScale={tefScale} />
+            <LangInput label="Writing"   test={secondTest} skill="writing"   value={inputs.secondLangWriting}   onChange={v => upd('secondLangWriting',   v)} tefScale={tefScale} />
           </>
         )}
       </View>

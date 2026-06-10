@@ -84,7 +84,7 @@ function buildCRSInput(d: CalcInputs): CRSInput {
       reading:   Number(d.secondLangReading)   || 0,
       writing:   Number(d.secondLangWriting)   || 0,
     },
-    canadianWorkExp:       d.canadianWorkExp,
+    canadianWorkExp:       Math.min(5, d.canadianWorkExp) as CRSInput['canadianWorkExp'],
     foreignWorkExp:        d.foreignWorkExp,
     spouseEducation:       d.spouseEducation,
     spouseLang: {
@@ -98,6 +98,7 @@ function buildCRSInput(d: CalcInputs): CRSInput {
     jobOffer:                d.jobOffer,
     hasSiblingInCanada:      d.hasSiblingInCanada,
     hasTradeCert:            d.hasTradeCert,
+    tefScale:                (d.tefScale ?? 'current') as CRSInput['tefScale'],
   } as CRSInput;
 }
 

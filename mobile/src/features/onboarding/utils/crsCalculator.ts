@@ -15,6 +15,9 @@ export type EducationLevel =
 
 export type LanguageTest = 'IELTS' | 'CELPIP' | 'PTE_CORE' | 'TEF' | 'TCF' | 'CLB';
 
+/** TEF Canada score scale — IRCC uses different tables by test date. Default `current` (after Dec 10, 2023). */
+export type TefScale = 'current' | 'oct2019' | 'legacy';
+
 export type LangScores = {
   speaking: number;
   listening: number;
@@ -45,6 +48,8 @@ export type CRSInput = {
   jobOffer: JobOfferType;
   hasSiblingInCanada: boolean;
   hasTradeCert: boolean;           // certificate of qualification
+  /** TEF scale when first or second language test is TEF. Defaults to post-Dec 2023 table. */
+  tefScale?: TefScale;
 };
 
 export type CRSBreakdown = {
@@ -116,8 +121,39 @@ function ieltsToCLB(skill: keyof LangScores, score: number): number {
   return 0;
 }
 
-// TEF → CLB (speaking/listening/reading/writing)
-function tefToCLB(skill: keyof LangScores, score: number): number {
+// TEF Canada → CLB/NCLC (tests after December 10, 2023 — default as of 2026)
+function tefToCLBCurrent(skill: keyof LangScores, score: number): number {
+  const mins: Record<keyof LangScores, [number, number, number, number, number, number, number]> = {
+    speaking:  [556, 518, 494, 456, 422, 387, 328],
+    listening: [546, 503, 462, 434, 393, 352, 306],
+    reading:   [546, 503, 462, 434, 393, 352, 306],
+    writing:   [558, 512, 472, 428, 379, 330, 268],
+  };
+  const t = mins[skill];
+  if (score >= t[0]) return 10;
+  if (score >= t[1]) return 9;
+  if (score >= t[2]) return 8;
+  if (score >= t[3]) return 7;
+  if (score >= t[4]) return 6;
+  if (score >= t[5]) return 5;
+  if (score >= t[6]) return 4;
+  return 0;
+}
+
+// TEF Canada → CLB (Oct 1, 2019 – December 10, 2023)
+function tefToCLBOct2019(_skill: keyof LangScores, score: number): number {
+  if (score >= 566) return 10;
+  if (score >= 533) return 9;
+  if (score >= 500) return 8;
+  if (score >= 450) return 7;
+  if (score >= 400) return 6;
+  if (score >= 350) return 5;
+  if (score >= 300) return 4;
+  return 0;
+}
+
+// TEF Canada → CLB (before September 30, 2019)
+function tefToCLBLegacy(skill: keyof LangScores, score: number): number {
   if (skill === 'speaking') {
     if (score >= 393) return 10;
     if (score >= 371) return 9;
@@ -157,6 +193,12 @@ function tefToCLB(skill: keyof LangScores, score: number): number {
   if (score >= 226) return 5;
   if (score >= 181) return 4;
   return 0;
+}
+
+function tefToCLB(skill: keyof LangScores, score: number, scale: TefScale = 'current'): number {
+  if (scale === 'oct2019') return tefToCLBOct2019(skill, score);
+  if (scale === 'legacy') return tefToCLBLegacy(skill, score);
+  return tefToCLBCurrent(skill, score);
 }
 
 // TCF → CLB
@@ -245,21 +287,30 @@ function pteCoreToCLB(skill: keyof LangScores, score: number): number {
   return 0;
 }
 
-export function toCLB(test: LanguageTest, skill: keyof LangScores, score: number): number {
+export function toCLB(
+  test: LanguageTest,
+  skill: keyof LangScores,
+  score: number,
+  tefScale: TefScale = 'current',
+): number {
   if (test === 'CELPIP' || test === 'CLB') return Math.min(12, Math.max(0, Math.round(score)));
   if (test === 'IELTS')    return ieltsToCLB(skill, score);
   if (test === 'PTE_CORE') return pteCoreToCLB(skill, score);
-  if (test === 'TEF')      return tefToCLB(skill, score);
+  if (test === 'TEF')      return tefToCLB(skill, score, tefScale);
   if (test === 'TCF')      return tcfToCLB(skill, score);
   return 0;
 }
 
-export function scoresToCLB(test: LanguageTest, scores: LangScores): LangScores {
+export function scoresToCLB(
+  test: LanguageTest,
+  scores: LangScores,
+  tefScale: TefScale = 'current',
+): LangScores {
   return {
-    speaking:  toCLB(test, 'speaking',  scores.speaking),
-    listening: toCLB(test, 'listening', scores.listening),
-    reading:   toCLB(test, 'reading',   scores.reading),
-    writing:   toCLB(test, 'writing',   scores.writing),
+    speaking:  toCLB(test, 'speaking',  scores.speaking,  tefScale),
+    listening: toCLB(test, 'listening', scores.listening, tefScale),
+    reading:   toCLB(test, 'reading',   scores.reading,   tefScale),
+    writing:   toCLB(test, 'writing',   scores.writing,   tefScale),
   };
 }
 
@@ -279,14 +330,18 @@ const TEST_RANGES: Record<LanguageTest, TestRange> = {
   TCF:      { min: 0,   max: 699, step: 1   },
 };
 
-export function getClbBreakpoints(test: LanguageTest, skill: keyof LangScores): number[] {
+export function getClbBreakpoints(
+  test: LanguageTest,
+  skill: keyof LangScores,
+  tefScale: TefScale = 'current',
+): number[] {
   const { min, max, step } = TEST_RANGES[test];
   const breaks: number[] = [min]; // first snap = test minimum (below CLB 4)
-  let prevClb = toCLB(test, skill, min);
+  let prevClb = toCLB(test, skill, min, tefScale);
 
   for (let s = min + step; s <= max + 0.001; s += step) {
     const sc = parseFloat(s.toFixed(2));
-    const clb = toCLB(test, skill, sc);
+    const clb = toCLB(test, skill, sc, tefScale);
     if (clb !== prevClb) {
       breaks.push(sc);
       prevClb = clb;
@@ -300,8 +355,9 @@ export function getClbBand(
   test: LanguageTest,
   skill: keyof LangScores,
   score: number,
+  tefScale: TefScale = 'current',
 ): [number, number] {
-  const breaks = getClbBreakpoints(test, skill);
+  const breaks = getClbBreakpoints(test, skill, tefScale);
   const { max } = TEST_RANGES[test];
   if (breaks.length === 0) return [score, score];
   let lower = breaks[0] ?? 0;
@@ -493,7 +549,7 @@ function spouseLangPointsPer(clb: number): number {
 
 // ─── Additional Points ────────────────────────────────────────────────────────
 
-function additionalPoints(input: CRSInput, firstClb: LangScores): number {
+function additionalPoints(input: CRSInput, firstClb: LangScores, tefScale: TefScale = 'current'): number {
   let pts = 0;
 
   if (input.hasProvincialNomination) return 600; // dominates
@@ -512,7 +568,7 @@ function additionalPoints(input: CRSInput, firstClb: LangScores): number {
   if (input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF') {
     frenchClb = firstClb;
   } else if (input.hasSecondLang && (input.secondLangTest === 'TEF' || input.secondLangTest === 'TCF')) {
-    frenchClb = scoresToCLB(input.secondLangTest, input.secondLang);
+    frenchClb = scoresToCLB(input.secondLangTest, input.secondLang, tefScale);
   }
   if (frenchClb) {
     const minFrench = Math.min(frenchClb.speaking, frenchClb.listening, frenchClb.reading, frenchClb.writing);
@@ -523,7 +579,7 @@ function additionalPoints(input: CRSInput, firstClb: LangScores): number {
       if (input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF') {
         // French is first language; English is second (if provided and not another French test)
         if (input.hasSecondLang && input.secondLangTest !== 'TEF' && input.secondLangTest !== 'TCF') {
-          const englishClb = scoresToCLB(input.secondLangTest, input.secondLang);
+          const englishClb = scoresToCLB(input.secondLangTest, input.secondLang, tefScale);
           englishMinClb = Math.min(englishClb.speaking, englishClb.listening, englishClb.reading, englishClb.writing);
         }
       } else {
@@ -541,9 +597,10 @@ function additionalPoints(input: CRSInput, firstClb: LangScores): number {
 
 export function calculateCRS(input: CRSInput): CRSBreakdown {
   const married = input.maritalStatus === 'married';
-  const firstClb = scoresToCLB(input.firstLangTest, input.firstLang);
+  const tefScale = input.tefScale ?? 'current';
+  const firstClb = scoresToCLB(input.firstLangTest, input.firstLang, tefScale);
   const secondClb = input.hasSecondLang
-    ? scoresToCLB(input.secondLangTest, input.secondLang)
+    ? scoresToCLB(input.secondLangTest, input.secondLang, tefScale)
     : { speaking: 0, listening: 0, reading: 0, writing: 0 };
 
   // ── A: Core / Human Capital ──
@@ -584,7 +641,7 @@ export function calculateCRS(input: CRSInput): CRSBreakdown {
   const skillPts = skillBreakdown.total;
 
   // ── C: Additional ──
-  const addPts = additionalPoints(input, firstClb);
+  const addPts = additionalPoints(input, firstClb, tefScale);
 
   const total = Math.min(1200, coreTotal + spouseTotal + skillPts + addPts);
 
