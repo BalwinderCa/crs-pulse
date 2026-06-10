@@ -16,23 +16,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.crspulse.app",
       "buildNumber": "1",
-      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSCameraUsageDescription": "Used for profile photo",
-        "NSPhotoLibraryUsageDescription": "Used for profile photo",
-        "UIBackgroundModes": ["remote-notification"],
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false,
-          "NSAllowsLocalNetworking": true,
-          "NSExceptionDomains": {
-            "canada.ca": {
-              "NSIncludesSubdomains": true,
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.0",
-              "NSExceptionRequiresForwardSecrecy": false
-            }
-          }
-        }
+        "UIBackgroundModes": ["remote-notification"]
       }
     },
     "android": {
@@ -43,11 +28,9 @@
       "package": "com.crspulse.app",
       "versionCode": 1,
       "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "POST_NOTIFICATIONS"
-      ],
-      "googleServicesFile": "./google-services.json"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
