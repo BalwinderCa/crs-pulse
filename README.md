@@ -84,7 +84,13 @@ Paste the returned IDs into `workers/push/wrangler.toml`, then:
 
 ```bash
 npm run deploy
+
+# Required production secrets (one-time)
+npx wrangler secret put PUSH_API_SECRET
+npx wrangler secret put SYNC_SECRET
 ```
+
+Set the same `PUSH_API_SECRET` value as `EXPO_PUBLIC_PUSH_API_KEY` in EAS secrets / `mobile/.env.local`.
 
 Verify:
 
