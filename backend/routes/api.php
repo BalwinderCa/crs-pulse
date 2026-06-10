@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DashboardController;
 use App\Http\Controllers\Api\V1\DrawController;
+use App\Http\Controllers\Api\V1\ForgotPasswordController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -15,10 +16,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // ── Auth (rate limited: 10/min) ──────────────────────────────────────────
     Route::prefix('auth')->name('auth.')->middleware('throttle:auth')->group(function () {
-        Route::post('/register', [AuthController::class, 'register'])->name('register');
-        Route::post('/login',    [AuthController::class, 'login'])->name('login');
-        Route::post('/google',   [AuthController::class, 'googleLogin'])->name('google');
-        Route::post('/apple',    [AuthController::class, 'appleLogin'])->name('apple');
+        Route::post('/register',         [AuthController::class, 'register'])->name('register');
+        Route::post('/login',            [AuthController::class, 'login'])->name('login');
+        Route::post('/google',           [AuthController::class, 'googleLogin'])->name('google');
+        Route::post('/apple',            [AuthController::class, 'appleLogin'])->name('apple');
+        Route::post('/forgot-password',  [ForgotPasswordController::class, 'sendResetLink'])->name('forgot-password');
+        Route::post('/reset-password',   [ForgotPasswordController::class, 'resetPassword'])->name('reset-password');
 
         Route::middleware('auth:sanctum')->group(function () {
             Route::get('/me',     [AuthController::class, 'me'])->name('me');
