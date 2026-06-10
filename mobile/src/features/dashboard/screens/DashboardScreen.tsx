@@ -622,7 +622,10 @@ export default function DashboardScreen() {
         <View style={st.calcSection}>
           <Text style={[st.calcTitle, { color: c.textPrimary }]}>CRS Calculator</Text>
           <Text style={[st.calcSub, { color: c.textMuted }]}>
-            {scoreReady ? 'Score updates live as you edit' : 'Enter your language scores to unlock your CRS'}
+            {scoreReady ? 'Score updates live as you edit' : 'Enter CLB 4+ scores in all four language skills to unlock your CRS'}
+          </Text>
+          <Text style={[st.disclaimer, { color: c.textMuted }]}>
+            Unofficial calculator based on the IRCC CRS grid (2025-08-21). Verify with the official IRCC CRS tool.
           </Text>
 
           <SectionHeader title="Personal"        icon="person-outline"    expanded={exp.personal}
@@ -719,7 +722,8 @@ const st = StyleSheet.create({
   // Calculator
   calcSection: { marginBottom: spacing.lg },
   calcTitle:   { fontSize: typography.xl, fontWeight: typography.bold, marginBottom: 2 },
-  calcSub:     { fontSize: typography.xs, marginBottom: spacing.lg },
+  calcSub:     { fontSize: typography.xs, marginBottom: spacing.xs },
+  disclaimer:  { fontSize: typography.xs, lineHeight: 16, marginBottom: spacing.lg, fontStyle: 'italic' },
 
   // Section header
   secHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg,

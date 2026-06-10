@@ -14,7 +14,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 
 const ABOUT_TEXT = `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate Express Entry tracker built for aspiring Canadians like you.
 
-After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the official government formula — no guesswork, no outdated tables.
+After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.
 
 What drives me every day is the belief that everyone deserves a fair shot at building a life in Canada. Better information leads to better decisions — and better decisions change lives.
 
@@ -31,6 +31,8 @@ Push notifications (if enabled) register your device with our server so we can a
 Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
 We do not use analytics trackers, advertising SDKs, or any third-party data collection tools.
+
+Full policy: https://crspulse.app/privacy
 
 For questions, contact: balwinderxcode@gmail.com`;
 
