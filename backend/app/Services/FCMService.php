@@ -95,6 +95,11 @@ class FCMService
         }
     }
 
+    private function base64url(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
+    }
+
     private function getAccessToken(): string
     {
         if (! file_exists($this->credentialsPath)) {
@@ -103,18 +108,19 @@ class FCMService
 
         $credentials = json_decode(file_get_contents($this->credentialsPath), true);
 
-        $now = time();
-        $jwt = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']))
-            . '.' . base64_encode(json_encode([
-                'iss'   => $credentials['client_email'],
-                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
-                'aud'   => 'https://oauth2.googleapis.com/token',
-                'exp'   => $now + 3600,
-                'iat'   => $now,
-            ]));
+        $now    = time();
+        $header  = $this->base64url(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+        $payload = $this->base64url(json_encode([
+            'iss'   => $credentials['client_email'],
+            'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+            'aud'   => 'https://oauth2.googleapis.com/token',
+            'exp'   => $now + 3600,
+            'iat'   => $now,
+        ]));
+        $signingInput = "{$header}.{$payload}";
 
-        openssl_sign($jwt, $signature, $credentials['private_key'], 'SHA256');
-        $signedJwt = $jwt . '.' . base64_encode($signature);
+        openssl_sign($signingInput, $signature, $credentials['private_key'], 'SHA256');
+        $signedJwt = "{$signingInput}.{$this->base64url($signature)}";
 
         $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
