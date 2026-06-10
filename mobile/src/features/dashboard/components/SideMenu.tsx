@@ -20,7 +20,7 @@ After seeing how stressful and confusing the immigration process can be, I built
 
 What drives me every day is the belief that everyone deserves a fair shot at building a life in Canada. Better information leads to better decisions — and better decisions change lives.
 
-Your support means the world to me. Every contribution helps fund new features, smarter insights, and better tools to help you improve your profile and track your progress toward permanent residency.
+Your support means the world to me. I keep building smarter tools to help you improve your profile and track your progress toward permanent residency.
 
 Thank you for trusting CRS Pulse on your immigration journey. Keep going — Canada is waiting!`;
 
@@ -229,17 +229,19 @@ export function SideMenu({ visible, onClose }: Props) {
 
             </ScrollView>
 
-            {/* Footer — Buy Me a Coffee */}
-            <TouchableOpacity
-              onPress={handleCoffee}
-              activeOpacity={0.75}
-              style={[s.coffeeBtn, { paddingBottom: insets.bottom + spacing.md, borderTopColor: c.border }]}
-            >
-              <View style={[s.coffeeInner, { backgroundColor: '#F9A825' }]}>
-                <Ionicons name="cafe" size={18} color="#000" />
-                <Text style={s.coffeeTxt}>Buy Me a Coffee</Text>
-              </View>
-            </TouchableOpacity>
+            {/* Buy Me a Coffee — Android only; Apple rejects external tip/donation links (3.1.1) */}
+            {Platform.OS !== 'ios' && (
+              <TouchableOpacity
+                onPress={handleCoffee}
+                activeOpacity={0.75}
+                style={[s.coffeeBtn, { paddingBottom: insets.bottom + spacing.md, borderTopColor: c.border }]}
+              >
+                <View style={[s.coffeeInner, { backgroundColor: '#F9A825' }]}>
+                  <Ionicons name="cafe" size={18} color="#000" />
+                  <Text style={s.coffeeTxt}>Buy Me a Coffee</Text>
+                </View>
+              </TouchableOpacity>
+            )}
           </>
         )}
       </Animated.View>
