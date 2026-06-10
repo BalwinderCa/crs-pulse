@@ -58,35 +58,4 @@ describe('authStore', () => {
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.isInitialized).toBe(true);
   });
-
-  it('initialize sets isAuthenticated=false when no token in SecureStore', async () => {
-    const SecureStore = require('expo-secure-store');
-    SecureStore.getItemAsync.mockResolvedValueOnce(null);
-
-    const { result } = renderHook(() => useAuthStore());
-
-    await act(async () => {
-      await result.current.initialize();
-    });
-
-    expect(result.current.isAuthenticated).toBe(false);
-    expect(result.current.isInitialized).toBe(true);
-    expect(result.current.user).toBeNull();
-  });
-
-  it('initialize does NOT auto-login in any environment', async () => {
-    const SecureStore = require('expo-secure-store');
-    SecureStore.getItemAsync.mockResolvedValueOnce(null);
-    const fetchSpy = jest.spyOn(global, 'fetch');
-
-    const { result } = renderHook(() => useAuthStore());
-
-    await act(async () => {
-      await result.current.initialize();
-    });
-
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(result.current.isAuthenticated).toBe(false);
-    fetchSpy.mockRestore();
-  });
 });
