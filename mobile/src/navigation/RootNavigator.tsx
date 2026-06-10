@@ -4,7 +4,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
+import { useAuthStore } from '@/store/authStore';
 import SplashScreenView from '@/features/auth/screens/SplashScreen';
+import AuthNavigator from './AuthNavigator';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from '@/types';
 
@@ -13,11 +15,12 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function RootNavigator() {
   const { profile, load: loadProfile } = useProfileStore();
   const loadDraws = useDrawsStore((s) => s.load);
+  const { isAuthenticated, isInitialized, initialize } = useAuthStore();
 
-  // Init stores on mount
+  // Init all stores on mount
   useEffect(() => {
-    Promise.all([loadProfile(), loadDraws()]).catch(() => {});
-  }, [loadProfile, loadDraws]);
+    Promise.all([initialize(), loadProfile(), loadDraws()]).catch(() => {});
+  }, [initialize, loadProfile, loadDraws]);
 
   // Fallback: hide splash after 5s if stores never resolve
   useEffect(() => {
@@ -25,17 +28,21 @@ export default function RootNavigator() {
     return () => clearTimeout(t);
   }, []);
 
-  // Hide splash once profile resolves
+  // Hide splash once auth is resolved and local profile is loaded
   useEffect(() => {
-    if (profile !== null) SplashScreen.hideAsync().catch(() => {});
-  }, [profile]);
+    if (isInitialized && profile !== null) SplashScreen.hideAsync().catch(() => {});
+  }, [isInitialized, profile]);
 
-  if (profile === null) return <SplashScreenView />;
+  if (!isInitialized || profile === null) return <SplashScreenView />;
 
   return (
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        <Stack.Screen name="Main" component={MainNavigator} />
+        {isAuthenticated ? (
+          <Stack.Screen name="Main" component={MainNavigator} />
+        ) : (
+          <Stack.Screen name="Auth" component={AuthNavigator} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );
