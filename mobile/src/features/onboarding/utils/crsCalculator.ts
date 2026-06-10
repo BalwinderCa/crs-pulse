@@ -512,7 +512,22 @@ function additionalPoints(input: CRSInput, firstClb: LangScores): number {
   }
   if (frenchClb) {
     const minFrench = Math.min(frenchClb.speaking, frenchClb.listening, frenchClb.reading, frenchClb.writing);
-    if (minFrench >= 7) pts += 25;
+    if (minFrench >= 7) {
+      // IRCC: 50 pts when French CLB 7+ and English below CLB 5 (unilingual Francophone)
+      //       25 pts when French CLB 7+ and English CLB 5+
+      let englishMinClb = 0;
+      if (input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF') {
+        // French is first language; English is second (if provided and not another French test)
+        if (input.hasSecondLang && input.secondLangTest !== 'TEF' && input.secondLangTest !== 'TCF') {
+          const englishClb = scoresToCLB(input.secondLangTest, input.secondLang);
+          englishMinClb = Math.min(englishClb.speaking, englishClb.listening, englishClb.reading, englishClb.writing);
+        }
+      } else {
+        // English is first language; French is second — English CLB comes from firstClb
+        englishMinClb = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
+      }
+      pts += englishMinClb >= 5 ? 25 : 50;
+    }
   }
 
   return Math.min(600, pts);
