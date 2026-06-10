@@ -461,9 +461,12 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): { total: n
     else if (minClb >= 5)  tradePts = 25;
   }
 
-  const workPts = Math.min(50, clampTo50(fweLang) + clampTo50(fweCWE) + tradePts);
+  // IRCC: education, foreign work, and trade cert are three separate 50-pt buckets (max 100 total)
+  const foreignPts = Math.min(50, clampTo50(fweLang) + clampTo50(fweCWE));
+  const tradePtsCapped = Math.min(50, tradePts);
+  const workPts = foreignPts + tradePtsCapped;
 
-  return { total: Math.min(100, eduPts + workPts), eduPts, workPts };
+  return { total: Math.min(100, eduPts + foreignPts + tradePtsCapped), eduPts, workPts };
 }
 
 // ─── Spouse Points ────────────────────────────────────────────────────────────

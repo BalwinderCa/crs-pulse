@@ -190,6 +190,22 @@ describe('Skill transferability with two_or_more education', () => {
     expect(result.eduTransferPoints).toBe(50);
   });
 
+  it('trade cert and foreign work transfer stack in separate 50-pt buckets (max 100)', () => {
+    const input: CRSInput = {
+      ...BASE_INPUT,
+      firstLangTest: 'CLB',
+      firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 },
+      foreignWorkExp: 3,
+      canadianWorkExp: 2,
+      hasTradeCert: true,
+    };
+
+    const result = calculateCRS(input);
+    // Foreign work (50) + trade cert (50) = 100 skill transfer
+    expect(result.skillTransferPoints).toBe(100);
+    expect(result.workTransferPoints).toBe(100);
+  });
+
   it('bachelors and two_or_more earn the same skill transfer edu points', () => {
     const bachelorsInput: CRSInput = {
       ...BASE_INPUT,
