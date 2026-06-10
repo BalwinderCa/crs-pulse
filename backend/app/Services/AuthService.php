@@ -71,7 +71,7 @@ class AuthService
 
     public function logout(User $user): void
     {
-        $user->currentAccessToken()->delete();
+        $user->currentAccessToken()?->delete();
     }
 
     private function createToken(User $user, string $deviceName): string
