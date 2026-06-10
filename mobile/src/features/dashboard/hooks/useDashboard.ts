@@ -50,7 +50,10 @@ export function useDashboard() {
 
     // Latest draw matching user category (or any if none)
     // draws.length > 0 is guaranteed above, so draws[0] is always defined
-    const categoryDraws = draws.filter(d => d.category === userCategory);
+    // Map program category → IRCC draw category:
+    // FSW draws are stored as 'General'; FST draws are stored as 'Trades'
+    const drawCategory  = userCategory === 'FSW' ? 'General' : userCategory === 'FST' ? 'Trades' : userCategory;
+    const categoryDraws = draws.filter(d => d.category === drawCategory);
     const latestDraw    = (categoryDraws[0] ?? draws[0])!;
     const recentDraws   = draws.slice(0, 10);
 

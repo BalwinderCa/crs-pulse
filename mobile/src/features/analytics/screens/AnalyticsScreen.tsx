@@ -15,7 +15,7 @@ import type { Colors } from '@/theme/colors';
 import type { Category } from '@/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_WIDTH = SCREEN_WIDTH - spacing.base * 2;
+const CHART_WIDTH = SCREEN_WIDTH - spacing.base * 4; // margin (base*2) + card padding (base*2)
 
 const PERIODS = [
   { label: '3M', value: '3m' as const },
@@ -44,7 +44,7 @@ function makeStyles(c: Colors, accent: string) {
     // Category pills (horizontal scroll)
     catScroll:  { paddingLeft: spacing.base },
     catRow:     { flexDirection: 'row', gap: spacing.xs, paddingRight: spacing.base },
-    catBtn:     { paddingHorizontal: spacing.md, paddingVertical: spacing.sm - 2, borderRadius: borderRadius.full, backgroundColor: c.surfaceSecondary, borderWidth: 1, borderColor: c.border },
+    catBtn:     { paddingHorizontal: spacing.md, paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md, backgroundColor: c.surfaceSecondary, borderWidth: 0.3, borderColor: c.border },
     catBtnActive: { backgroundColor: accent, borderColor: accent },
     catText:      { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     catTextActive:{ color: palette.white },
@@ -57,7 +57,7 @@ function makeStyles(c: Colors, accent: string) {
       borderRadius: borderRadius.md,
       padding: spacing.xs,
       gap: spacing.xs,
-      borderWidth: 1,
+      borderWidth: 0.3,
       borderColor: c.border,
     },
     periodBtn:        { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
@@ -67,7 +67,7 @@ function makeStyles(c: Colors, accent: string) {
 
     // Stats 2×2 grid
     statsGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, paddingHorizontal: spacing.base },
-    statCard:     { flex: 1, minWidth: '45%', gap: 6, backgroundColor: c.surfaceCard, borderRadius: borderRadius.md, borderWidth: 1, borderColor: c.border, padding: spacing.base },
+    statCard:     { flex: 1, minWidth: '45%', gap: 6, backgroundColor: c.surfaceCard, borderRadius: borderRadius.md, borderWidth: 0.3, borderColor: c.border, padding: spacing.base },
     statCardLabel:{ color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.5, textTransform: 'uppercase' },
     statCardValue:{ color: c.textPrimary, fontSize: typography['3xl'], fontWeight: typography.black, letterSpacing: -0.5 },
 

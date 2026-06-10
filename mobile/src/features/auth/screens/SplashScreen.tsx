@@ -1,29 +1,30 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { palette, typography, spacing } from '@/theme';
-import { useColors } from '@/hooks/useColors';
+import { Image, StyleSheet, Text, View } from 'react-native';
+import { typography, spacing } from '@/theme';
 
 export default function SplashScreen() {
-  const colors = useColors();
   return (
-    <View style={[styles.container, { backgroundColor: colors.surfacePrimary }]}>
-      <View style={styles.logoBox}>
-        <Text style={styles.logo}>CRS</Text>
-      </View>
-      <Text style={[styles.title, { color: colors.textPrimary }]}>CRS Pulse</Text>
-      <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Express Entry Tracker</Text>
+    <View style={styles.container}>
+      <Image
+        source={require('../../../../assets/logo.png')}
+        style={styles.logo}
+        resizeMode="contain"
+      />
+      <Text style={styles.title}>CRS Pulse</Text>
+      <Text style={styles.subtitle}>Express Entry Tracker</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
-  logoBox: {
-    width: 80, height: 80, borderRadius: 20,
-    backgroundColor: '#1A6DFF',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0A1628',
+    gap: spacing.sm,
   },
-  logo:     { fontSize: 26, fontWeight: '800', color: palette.white, letterSpacing: 1.5 },
-  title:    { fontSize: typography['4xl'], fontWeight: typography.bold, textAlign: 'center', letterSpacing: -0.5 },
-  subtitle: { fontSize: typography.base, textAlign: 'center' },
+  logo:     { width: 180, height: 180, marginBottom: 8 },
+  title:    { fontSize: typography['4xl'], fontWeight: typography.bold, textAlign: 'center', letterSpacing: -0.5, color: '#7BA7D4' },
+  subtitle: { fontSize: typography.base, textAlign: 'center', color: '#E63946' },
 });

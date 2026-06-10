@@ -366,8 +366,13 @@ export default function TimelineScreen() {
           <Text style={[s.headerSub,   { color: c.textMuted }]}>Express Entry</Text>
           <Text style={[s.headerTitle, { color: c.textPrimary }]}>My Timeline</Text>
         </View>
-        <TouchableOpacity style={[s.addBtn, { backgroundColor: accent }]}
-          onPress={() => setModalMilestone(undefined)}>
+        <TouchableOpacity
+          style={[s.addBtn, { backgroundColor: accent }]}
+          onPress={() => setModalMilestone(undefined)}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Add milestone"
+        >
           <Ionicons name="add" size={20} color="#fff" />
           <Text style={s.addBtnTxt}>Add</Text>
         </TouchableOpacity>
@@ -382,8 +387,13 @@ export default function TimelineScreen() {
           <Text style={[s.emptySub,   { color: c.textMuted }]}>
             Track your immigration journey by adding your first milestone.
           </Text>
-          <TouchableOpacity style={[s.emptyBtn, { backgroundColor: accent }]}
-            onPress={() => setModalMilestone(undefined)}>
+          <TouchableOpacity
+            style={[s.emptyBtn, { backgroundColor: accent }]}
+            onPress={() => setModalMilestone(undefined)}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Add milestone"
+          >
             <Ionicons name="add" size={18} color="#fff" />
             <Text style={s.addBtnTxt}>Add Milestone</Text>
           </TouchableOpacity>
@@ -397,7 +407,11 @@ export default function TimelineScreen() {
           ))}
           <TouchableOpacity
             style={[s.bottomAdd, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
-            onPress={() => setModalMilestone(undefined)}>
+            onPress={() => setModalMilestone(undefined)}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Add milestone"
+          >
             <Ionicons name="add-circle-outline" size={18} color={accent} />
             <Text style={[s.bottomAddTxt, { color: accent }]}>Add Milestone</Text>
           </TouchableOpacity>

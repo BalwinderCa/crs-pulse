@@ -71,8 +71,9 @@ export function DrawCard({ draw, userScore }: Props) {
     <TouchableOpacity
       onPress={() => Linking.openURL(IRCC_ROUNDS_URL)}
       activeOpacity={0.7}
+      accessible={true}
       accessibilityRole="link"
-      accessibilityLabel={`Draw #${draw.draw_number} — view on IRCC website`}
+      accessibilityLabel={`Draw ${draw.draw_number}, ${draw.category}, cutoff ${draw.cutoff_score}, ${format(new Date(draw.date), 'MMMM d yyyy')}, ${draw.invitations_issued.toLocaleString()} invitations`}
     >
       <View style={styles.card}>
         {/* Colored left border by category */}

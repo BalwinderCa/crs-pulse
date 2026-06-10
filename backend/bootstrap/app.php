@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // API-only app — never redirect unauthenticated requests; let the
+        // AuthenticationException handler return a JSON 401 instead.
+        $middleware->redirectGuestsTo(fn () => null);
+
         $middleware->api(prepend: [
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         ]);

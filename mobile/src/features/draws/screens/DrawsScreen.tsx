@@ -24,7 +24,7 @@ function makeStyles(c: Colors, accent: string) {
 
     // Filter pills — premium segmented look
     filterWrap:    { paddingHorizontal: spacing.base, paddingVertical: spacing.sm },
-    filterRow:     { flexDirection: 'row', gap: spacing.xs, backgroundColor: c.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.xs, borderWidth: 1, borderColor: c.border },
+    filterRow:     { flexDirection: 'row', gap: spacing.xs, backgroundColor: c.surfaceSecondary, borderRadius: borderRadius.md, padding: spacing.xs, borderWidth: 0.3, borderColor: c.border },
     filterBtn:     { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
     filterBtnActive: { backgroundColor: accent },
     filterText:    { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },

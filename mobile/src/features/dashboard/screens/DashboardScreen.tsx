@@ -101,6 +101,10 @@ function SectionHeader({ title, icon, expanded, onToggle, summaryText, score }: 
     <TouchableOpacity
       style={[st.secHeader, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
       onPress={onToggle} activeOpacity={0.7}
+      accessible={true}
+      accessibilityRole="button"
+      accessibilityLabel={`${title} section, ${expanded ? 'expanded' : 'collapsed'}`}
+      accessibilityState={{ expanded }}
     >
       <View style={[st.secIcon, { backgroundColor: accent + '18' }]}>
         <Ionicons name={icon as any} size={15} color={accent} />
@@ -232,9 +236,9 @@ function CLBStepper({ label, value, onChange }: {
   );
 }
 
-function Stepper({ value, onChange, min = 0, max = 10, unit }: {
+function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
   value: number; onChange: (v: number) => void;
-  min?: number; max?: number; unit?: string;
+  min?: number; max?: number; unit?: string; label?: string;
 }) {
   const c = useColors();
   const accent = useAccentColor();
@@ -243,6 +247,9 @@ function Stepper({ value, onChange, min = 0, max = 10, unit }: {
       <TouchableOpacity
         style={[st.stepBtn, { backgroundColor: value <= min ? c.surfaceTertiary : accent }]}
         onPress={() => onChange(Math.max(min, value - 1))} disabled={value <= min}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={label ? `Decrease ${label}` : 'Decrease'}
       >
         <Ionicons name="remove" size={18} color={value <= min ? c.textMuted : palette.white} />
       </TouchableOpacity>
@@ -252,6 +259,9 @@ function Stepper({ value, onChange, min = 0, max = 10, unit }: {
       <TouchableOpacity
         style={[st.stepBtn, { backgroundColor: value >= max ? c.surfaceTertiary : accent }]}
         onPress={() => onChange(Math.min(max, value + 1))} disabled={value >= max}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={label ? `Increase ${label}` : 'Increase'}
       >
         <Ionicons name="add" size={18} color={value >= max ? c.textMuted : palette.white} />
       </TouchableOpacity>
@@ -359,9 +369,12 @@ export default function DashboardScreen() {
   }, [inputs, result.total, cat, scoreReady]);
 
   // Latest draw for cutoff comparison in floating pill
+  // Map program category (from suggestCategory) to IRCC draw category:
+  // FSW draws are stored as 'General'; FST draws are stored as 'Trades'
   const latestDraw = useMemo(() => {
     if (!draws.length) return null;
-    return draws.find((d) => d.category === cat) ?? draws[0] ?? null;
+    const drawCat = cat === 'FSW' ? 'General' : cat === 'FST' ? 'Trades' : cat;
+    return draws.find((d) => d.category === drawCat) ?? draws[0] ?? null;
   }, [draws, cat]);
 
   const score    = result.total;
@@ -410,7 +423,7 @@ export default function DashboardScreen() {
             onPress={() => upd('maritalStatus', 'married_not_accompanying')} />
         </View>
         <FieldLabel top>YOUR AGE</FieldLabel>
-        <Stepper value={inputs.age} onChange={v => upd('age', v)} min={17} max={55} unit="yrs" />
+        <Stepper value={inputs.age} onChange={v => upd('age', v)} min={17} max={55} unit="yrs" label="age" />
       </View>
     );
   }

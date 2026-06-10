@@ -65,7 +65,22 @@ type DrawsStore = {
   refresh: () => Promise<void>;   // force re-fetch from IRCC
 };
 
-const STALE_MS = 60 * 60 * 1000; // 1 hour
+const STALE_MS    = 60 * 60 * 1000; // 1 hour
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 2_000; // ms between retries
+
+async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      return res;
+    } catch (err) {
+      if (attempt === retries) throw err;
+      await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
+    }
+  }
+  throw new Error('Max retries reached');
+}
 
 export const useDrawsStore = create<DrawsStore>((set, get) => ({
   draws: [],
@@ -97,9 +112,7 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
     set(hasCache ? { isRefreshing: true, error: null } : { isLoading: true, error: null });
 
     try {
-      const res = await fetch(IRCC_URL, {
-        headers: { Accept: 'application/json' },
-      });
+      const res = await fetchWithRetry(IRCC_URL);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
@@ -122,10 +135,14 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
       // Notify if new draw detected and user opted in
       checkAndNotifyNewDraw(draws).catch(() => {});
     } catch (err) {
+      const raw = err instanceof Error ? err.message : '';
+      const isNetworkErr = /network request failed|failed to fetch|network failed/i.test(raw);
       set({
         isLoading: false,
         isRefreshing: false,
-        error: err instanceof Error ? err.message : 'Failed to load draws',
+        error: isNetworkErr
+          ? 'Unable to reach the IRCC server. Check your connection and try again.'
+          : (raw || 'Failed to load draws'),
       });
     }
   },
