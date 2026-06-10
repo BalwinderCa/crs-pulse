@@ -29,7 +29,7 @@ const CATEGORY_COLOR: Record<string, string> = {
 
 type Props = { draw: Draw; userScore?: number };
 
-function makeStyles(c: Colors, accentColor: string) {
+function makeStyles(c: Colors, _accentColor: string) {
   return StyleSheet.create({
     card: {
       flexDirection: 'row',

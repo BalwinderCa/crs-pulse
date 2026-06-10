@@ -23,8 +23,8 @@ export type Milestone = {
   type: MilestoneType;
   date: string;       // YYYY-MM-DD
   note: string;
-  customLabel?: string;
-  customEmoji?: string;
+  customLabel?: string | undefined;
+  customEmoji?: string | undefined;
 };
 
 type TimelineStore = {

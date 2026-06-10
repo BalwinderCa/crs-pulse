@@ -8,7 +8,7 @@ GoogleSignin.configure({
 
 export async function signInWithGoogle(): Promise<string> {
   await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  const userInfo = await GoogleSignin.signIn();
+  await GoogleSignin.signIn();
 
   const { idToken } = await GoogleSignin.getTokens();
 
@@ -22,7 +22,7 @@ export async function signInWithGoogle(): Promise<string> {
 export async function signOutGoogle(): Promise<void> {
   try {
     await GoogleSignin.signOut();
-  } catch (_) {
+  } catch {
     // ignore
   }
 }

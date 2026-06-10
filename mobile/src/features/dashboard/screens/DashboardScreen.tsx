@@ -11,7 +11,7 @@ import {
   calculateCRS, suggestCategory, toCLB, getClbBreakpoints, getClbBand,
   type CRSInput, type LanguageTest, type LangScores,
 } from '@/features/onboarding/utils/crsCalculator';
-import type { Category } from '@/types';
+import type { ProgramCategory } from '@/types';
 import { SideMenu } from '../components/SideMenu';
 
 const EDU_OPTIONS = [
@@ -287,8 +287,7 @@ function Toggle({ label, value, onPress, icon }: {
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
-const SECTION_NAMES = ['personal', 'education', 'language', 'work', 'additional', 'spouse'] as const;
-type SectionName = typeof SECTION_NAMES[number];
+type SectionName = 'personal' | 'education' | 'language' | 'work' | 'additional' | 'spouse';
 type SectionMap  = Record<SectionName, boolean>;
 
 const CLOSED_SECTIONS: SectionMap = {
@@ -323,7 +322,7 @@ export default function DashboardScreen() {
   );
   const [exp,      setExp]      = useState<SectionMap>({ ...CLOSED_SECTIONS });
   // reviewed: tracks which sections the user has explicitly opened this session
-  const [reviewed, setReviewed] = useState<SectionMap>({ ...CLOSED_SECTIONS });
+  const [, setReviewed] = useState<SectionMap>({ ...CLOSED_SECTIONS });
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Re-sync all local state when store is hard-reset
@@ -345,8 +344,8 @@ export default function DashboardScreen() {
 
   const crsInput = useMemo(() => buildCRSInput(inputs), [inputs]);
   const result   = useMemo(() => calculateCRS(crsInput), [crsInput]);
-  const cat = useMemo((): Category =>
-    suggestCategory(crsInput, result.firstLangClb) as Category,
+  const cat = useMemo((): ProgramCategory =>
+    suggestCategory(crsInput, result.firstLangClb) as ProgramCategory,
   [crsInput, result]);
 
   // Score shown only when all 4 first-language CLB fields are ≥ CLB 4
@@ -401,9 +400,6 @@ export default function DashboardScreen() {
   }, [scoreReady, inputs.firstLangTest, result.firstLangClb]);
   const workSummary = `${inputs.canadianWorkExp === 0 ? 'No CA exp' : `${inputs.canadianWorkExp}yr CA`} · ${
     inputs.foreignWorkExp === 0 ? 'No foreign exp' : inputs.foreignWorkExp === 1 ? '1–2yr foreign' : '3+yr foreign'}`;
-
-  // Completion flags — language uses score-based check; others require explicit review
-  const langComplete = scoreReady;
 
   // ─── Section renderers ──────────────────────────────────────────────────────
 

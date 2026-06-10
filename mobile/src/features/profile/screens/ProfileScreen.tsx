@@ -2,8 +2,8 @@ import React from 'react';
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useProfileStore, DEFAULT_CALC_INPUTS } from '@/store/profileStore';
-import type { LocalProfile, ThemeMode } from '@/store/profileStore';
+import { useProfileStore } from '@/store/profileStore';
+import type { ThemeMode } from '@/store/profileStore';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
@@ -181,13 +181,6 @@ const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
   { label: 'Dark',   value: 'dark',   icon: 'moon-outline'           },
 ];
 
-const DEFAULT_PROFILE: LocalProfile = {
-  crs_score: 0,
-  category: 'CEC',
-  accent_color: '#FF6B6B',
-  theme: 'system',
-  calculatorInputs: DEFAULT_CALC_INPUTS,
-};
 
 export default function ProfileScreen() {
   const colors  = useColors();
@@ -246,14 +239,6 @@ export default function ProfileScreen() {
     score >= 490 ? palette.success :
     score >= 450 ? palette.warning :
     palette.danger;
-
-  // CRS breakdown (core components)
-  const breakdown = [
-    { label: 'Core / Human Capital', value: result.coreTotal           },
-    { label: 'Spouse Factors',       value: result.spouseTotal         },
-    { label: 'Skill Transferability',value: result.skillTransferPoints },
-    { label: 'Additional Points',    value: result.additionalPoints    },
-  ];
 
   const infoGroups = [
     {
@@ -330,7 +315,7 @@ export default function ProfileScreen() {
       {infoGroups.map((group) => (
         <Card key={group.title} style={styles.section}>
           <Text style={styles.groupTitle}>{group.title}</Text>
-          {group.rows.map(({ label, value }, i) => (
+          {group.rows.map(({ label, value }) => (
             <View key={label}>
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>{label}</Text>

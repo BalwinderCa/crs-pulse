@@ -24,6 +24,7 @@
       "@/assets/*": ["assets/*"]
     },
     "target": "ESNext",
+    "module": "ESNext",
     "lib": ["ESNext"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

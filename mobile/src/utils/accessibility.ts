@@ -1,4 +1,4 @@
-import { AccessibilityInfo, Platform } from 'react-native';
+import { AccessibilityInfo } from 'react-native';
 
 export async function announceForAccessibility(message: string): Promise<void> {
   AccessibilityInfo.announceForAccessibility(message);
@@ -15,7 +15,6 @@ export function getScoreAccessibilityLabel(
 }
 
 export function getPredictionAccessibilityLabel(
-  strength: 'strong' | 'moderate' | 'weak',
   label: string,
   description: string,
 ): string {

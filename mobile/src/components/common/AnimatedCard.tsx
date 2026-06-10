@@ -4,8 +4,8 @@ import { Card } from './Card';
 
 type Props = {
   children: React.ReactNode;
-  delay?: number;
-  style?: ViewStyle;
+  delay?: number | undefined;
+  style?: ViewStyle | undefined;
 };
 
 export function AnimatedCard({ children, delay = 0, style }: Props) {

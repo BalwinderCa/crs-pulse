@@ -1,7 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
-import { palette, typography, spacing, borderRadius, shadows } from '@/theme';
+import { typography, spacing, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import type { MainTabParamList } from '@/types';
@@ -51,7 +51,7 @@ export default function MainNavigator() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: styles.tabLabel,
         tabBarLabel: TAB_LABELS[route.name],
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color }) => {
           const icons = TAB_ICONS[route.name];
           return (
             <View style={[styles.iconWrap, focused && { backgroundColor: accent + '20' }]}>

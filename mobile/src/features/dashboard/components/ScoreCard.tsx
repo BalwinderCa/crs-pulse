@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { Badge } from '@/components/common/Badge';
 import { palette, spacing, typography, borderRadius, shadows } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -103,7 +103,7 @@ function makeStyles(c: Colors) {
   });
 }
 
-export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawDate }: Props) {
+export function ScoreCard({ userScore, latestCutoff, drawNumber, drawDate }: Props) {
   const colors = useColors();
   const accent = useAccentColor();
   const styles = makeStyles(colors);

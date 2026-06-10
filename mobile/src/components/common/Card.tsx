@@ -1,14 +1,14 @@
 import React from 'react';
-import { StyleSheet, View, ViewProps, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewProps, ViewStyle } from 'react-native';
 import { borderRadius, spacing, shadows } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
 
 type Props = ViewProps & {
   children: React.ReactNode;
-  variant?: 'default' | 'elevated' | 'outlined' | 'glass';
-  padding?: keyof typeof spacing | 0;
-  style?: ViewStyle;
+  variant?: 'default' | 'elevated' | 'outlined' | 'glass' | undefined;
+  padding?: keyof typeof spacing | 0 | undefined;
+  style?: StyleProp<ViewStyle> | undefined;
 };
 
 function makeStyles(c: Colors) {

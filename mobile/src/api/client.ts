@@ -71,7 +71,7 @@ apiClient.interceptors.response.use(
         (error.response?.data as Record<string, string>)?.message ??
         error.message ??
         'An unexpected error occurred',
-      errors: (error.response?.data as Record<string, string[]>)?.errors,
+      errors: (error.response?.data as { errors?: Record<string, string[]> })?.errors,
       status: status ?? 0,
     };
 

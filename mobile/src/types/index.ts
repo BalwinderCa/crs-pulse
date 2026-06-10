@@ -41,6 +41,10 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+// Program the user's local profile targets — includes programs that map onto
+// draw categories (FSW → General, FST → Trades) plus PNP.
+export type ProgramCategory = Category | 'FSW' | 'FST' | 'PNP';
+
 // ─── User Profile ────────────────────────────────────────────────────────────
 
 export type UserProfile = {
@@ -88,7 +92,7 @@ export type DrawFilter = 'last_month' | 'last_year' | 'all';
 
 export type DashboardData = {
   user_score: number;
-  user_category: Category;
+  user_category: ProgramCategory;
   latest_draw: Draw;
   score_difference: number;
   prediction: Prediction;
@@ -175,7 +179,7 @@ export type PaginationLinks = {
 
 export type ApiError = {
   message: string;
-  errors?: Record<string, string[]>;
+  errors?: Record<string, string[]> | undefined;
   status: number;
 };
 

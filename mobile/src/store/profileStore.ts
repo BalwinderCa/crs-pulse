@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
-import type { Category } from '@/types';
+import type { ProgramCategory } from '@/types';
 
 // ─── Calculator inputs ────────────────────────────────────────────────────────
 export type CalcInputs = {
@@ -69,9 +69,11 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 
 export type LocalProfile = {
   crs_score: number;
-  category: Category;
+  category: ProgramCategory;
   accent_color: string;
   theme: ThemeMode;
+  notifications_enabled: boolean;
+  weekly_summary_enabled: boolean;
   calculatorInputs: CalcInputs;
 };
 
@@ -80,6 +82,8 @@ const DEFAULT_PROFILE: LocalProfile = {
   category: 'CEC',
   accent_color: '#DC2626',
   theme: 'system',
+  notifications_enabled: true,
+  weekly_summary_enabled: true,
   calculatorInputs: DEFAULT_CALC_INPUTS,
 };
 

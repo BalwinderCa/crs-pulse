@@ -55,7 +55,7 @@ function daysLabel(dateStr: string): { value: string; sub: string; future: boole
 
 // ─── Milestone card ───────────────────────────────────────────────────────────
 
-function MilestoneCard({ item, onEdit, onDelete }: { item: Milestone; onEdit: () => void; onDelete: () => void }) {
+function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; onDelete: () => void }) {
   const c = useColors();
   const meta = MILESTONE_META[item.type];
   const label = item.type === 'Custom' && item.customLabel ? item.customLabel : item.type;
@@ -102,7 +102,7 @@ function MilestoneCard({ item, onEdit, onDelete }: { item: Milestone; onEdit: ()
 function AddMilestoneModal({ visible, onClose, editing }: {
   visible: boolean;
   onClose: () => void;
-  editing?: Milestone | null;
+  editing?: Milestone | null | undefined;
 }) {
   const c = useColors();
   const accent = useAccentColor();
@@ -228,7 +228,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                   onChangeText={t => {
                     // keep only the last grapheme cluster (one emoji)
                     const chars = [...t];
-                    setCustomEmoji(chars.length ? chars[chars.length - 1] : '');
+                    setCustomEmoji(chars[chars.length - 1] ?? '');
                   }}
                   placeholder="😀"
                   placeholderTextColor={c.textMuted}
@@ -300,7 +300,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
               {/* Scrollable predefined types */}
               <ScrollView showsVerticalScrollIndicator={false}
                 style={{ maxHeight: 340 }}>
-                {MILESTONE_TYPES.filter(t => t !== 'Custom').map((t, i, arr) => {
+                {MILESTONE_TYPES.filter(t => t !== 'Custom').map((t) => {
                   const m = MILESTONE_META[t];
                   const selected = t === type;
                   return (
@@ -400,7 +400,7 @@ export default function TimelineScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={s.list} showsVerticalScrollIndicator={false}>
-          {milestones.map((item, idx) => (
+          {milestones.map((item) => (
             <View key={item.id} style={s.cardCol}>
               <MilestoneCard item={item} onEdit={() => setModalMilestone(item)} onDelete={() => remove(item.id)} />
             </View>

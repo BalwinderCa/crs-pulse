@@ -32,7 +32,7 @@ export default function RegisterScreen() {
   const navigation = useNavigation<Nav>();
   const { mutate: register, isPending }               = useRegister();
   const { mutate: googleLogin, isPending: gPending }  = useGoogleLogin();
-  const { mutate: appleLogin,  isPending: aPending }  = useAppleLogin();
+  const { mutate: appleLogin }  = useAppleLogin();
   const [appleAvailable, setAppleAvailable] = useState(false);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function RegisterScreen() {
     try {
       const idToken = await signInWithGoogle();
       googleLogin(idToken);
-    } catch (_) {}
+    } catch {}
   };
 
   const onApplePress = async () => {
@@ -64,7 +64,7 @@ export default function RegisterScreen() {
         nonce:          result.nonce,
         full_name:      fullName,
       });
-    } catch (_) {}
+    } catch {}
   };
 
   return (

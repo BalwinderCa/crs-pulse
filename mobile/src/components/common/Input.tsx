@@ -14,13 +14,13 @@ import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
 
 type Props = TextInputProps & {
-  label?: string;
-  error?: string;
-  hint?: string;
-  containerStyle?: ViewStyle;
-  leftIcon?: keyof typeof Ionicons.glyphMap;
-  rightIcon?: keyof typeof Ionicons.glyphMap;
-  onRightIconPress?: () => void;
+  label?: string | undefined;
+  error?: string | undefined;
+  hint?: string | undefined;
+  containerStyle?: ViewStyle | undefined;
+  leftIcon?: keyof typeof Ionicons.glyphMap | undefined;
+  rightIcon?: keyof typeof Ionicons.glyphMap | undefined;
+  onRightIconPress?: (() => void) | undefined;
 };
 
 function makeStyles(c: Colors) {
