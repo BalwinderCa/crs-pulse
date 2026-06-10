@@ -1,7 +1,12 @@
 import {
   toCLB,
   calculateCRS,
+  getClbBreakpoints,
+  getClbBand,
+  getTestRange,
   type CRSInput,
+  type LangScores,
+  type TefScale,
 } from '../../src/features/onboarding/utils/crsCalculator';
 
 // ─── Base input for tests ─────────────────────────────────────────────────────
@@ -91,6 +96,60 @@ describe('TCF Listening CLB mapping', () => {
 
   it('returns CLB 10 for score 549', () => {
     expect(toCLB('TCF', 'listening', 549)).toBe(10);
+  });
+});
+
+// ─── Score input ranges / slider breakpoints ─────────────────────────────────
+
+describe('CLB breakpoints cover the full score scale (regression: TEF capped at 450)', () => {
+  const SKILLS: Array<keyof LangScores> = ['speaking', 'listening', 'reading', 'writing'];
+
+  it.each(SKILLS)('TEF current scale: CLB 10 reachable for %s', (skill) => {
+    const bps = getClbBreakpoints('TEF', skill, 'current');
+    const maxClb = toCLB('TEF', skill, Math.max(...bps), 'current');
+    expect(maxClb).toBe(10);
+  });
+
+  it.each(SKILLS)('TEF Oct 2019 scale: CLB 10 reachable for %s', (skill) => {
+    const bps = getClbBreakpoints('TEF', skill, 'oct2019');
+    expect(toCLB('TEF', skill, Math.max(...bps), 'oct2019')).toBe(10);
+  });
+
+  it.each(SKILLS)('TEF legacy scale: CLB 10 reachable for %s', (skill) => {
+    const bps = getClbBreakpoints('TEF', skill, 'legacy');
+    expect(toCLB('TEF', skill, Math.max(...bps), 'legacy')).toBe(10);
+  });
+
+  it('TEF current speaking includes the official CLB 7–10 thresholds', () => {
+    const bps = getClbBreakpoints('TEF', 'speaking', 'current');
+    expect(bps).toEqual(expect.arrayContaining([456, 494, 518, 556]));
+  });
+
+  it.each(SKILLS)('TCF: CLB 10 reachable for %s', (skill) => {
+    const bps = getClbBreakpoints('TCF', skill);
+    expect(toCLB('TCF', skill, Math.max(...bps))).toBe(10);
+  });
+
+  it('TCF speaking band display tops out at 20, not 699', () => {
+    const [lo, hi] = getClbBand('TCF', 'speaking', 16);
+    expect(lo).toBe(16);
+    expect(hi).toBe(20);
+  });
+
+  it('TEF legacy per-skill maxima follow the raw scales', () => {
+    expect(getTestRange('TEF', 'speaking', 'legacy').max).toBe(450);
+    expect(getTestRange('TEF', 'writing', 'legacy').max).toBe(450);
+    expect(getTestRange('TEF', 'listening', 'legacy').max).toBe(360);
+    expect(getTestRange('TEF', 'reading', 'legacy').max).toBe(300);
+  });
+
+  it('non-French test ranges are unchanged', () => {
+    const scales: TefScale[] = ['current', 'oct2019', 'legacy'];
+    for (const s of scales) {
+      expect(getTestRange('IELTS', 'speaking', s)).toEqual({ min: 0, max: 9, step: 0.5 });
+      expect(getTestRange('CELPIP', 'reading', s)).toEqual({ min: 1, max: 12, step: 1 });
+      expect(getTestRange('PTE_CORE', 'writing', s)).toEqual({ min: 10, max: 90, step: 1 });
+    }
   });
 });
 

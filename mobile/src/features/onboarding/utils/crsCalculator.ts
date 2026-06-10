@@ -321,21 +321,44 @@ export function scoresToCLB(
 
 type TestRange = { min: number; max: number; step: number };
 
-const TEST_RANGES: Record<LanguageTest, TestRange> = {
+const TEST_RANGES: Record<Exclude<LanguageTest, 'TEF' | 'TCF'>, TestRange> = {
   IELTS:    { min: 0,   max: 9,   step: 0.5 },
   CELPIP:   { min: 1,   max: 12,  step: 1   },
   CLB:      { min: 0,   max: 12,  step: 1   },
   PTE_CORE: { min: 10,  max: 90,  step: 1   },
-  TEF:      { min: 0,   max: 450, step: 1   },
-  TCF:      { min: 0,   max: 699, step: 1   },
 };
+
+// TEF/TCF score scales vary by skill and (for TEF) by test date:
+//   TEF since Oct 2019: all four skills normalized to 0–699
+//   TEF legacy (pre Oct 2019): raw scales — speaking/writing 0–450,
+//     listening 0–360, reading 0–300
+//   TCF: listening/reading 0–699, speaking/writing 0–20
+export function getTestRange(
+  test: LanguageTest,
+  skill: keyof LangScores,
+  tefScale: TefScale = 'current',
+): TestRange {
+  if (test === 'TEF') {
+    if (tefScale === 'legacy') {
+      if (skill === 'listening') return { min: 0, max: 360, step: 1 };
+      if (skill === 'reading')   return { min: 0, max: 300, step: 1 };
+      return { min: 0, max: 450, step: 1 };
+    }
+    return { min: 0, max: 699, step: 1 };
+  }
+  if (test === 'TCF') {
+    if (skill === 'speaking' || skill === 'writing') return { min: 0, max: 20, step: 1 };
+    return { min: 0, max: 699, step: 1 };
+  }
+  return TEST_RANGES[test];
+}
 
 export function getClbBreakpoints(
   test: LanguageTest,
   skill: keyof LangScores,
   tefScale: TefScale = 'current',
 ): number[] {
-  const { min, max, step } = TEST_RANGES[test];
+  const { min, max, step } = getTestRange(test, skill, tefScale);
   const breaks: number[] = [min]; // first snap = test minimum (below CLB 4)
   let prevClb = toCLB(test, skill, min, tefScale);
 
@@ -358,7 +381,7 @@ export function getClbBand(
   tefScale: TefScale = 'current',
 ): [number, number] {
   const breaks = getClbBreakpoints(test, skill, tefScale);
-  const { max } = TEST_RANGES[test];
+  const { max } = getTestRange(test, skill, tefScale);
   if (breaks.length === 0) return [score, score];
   let lower = breaks[0] ?? 0;
   let upperIdx = 1;
