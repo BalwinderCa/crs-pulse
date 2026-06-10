@@ -9,6 +9,8 @@ coverage/
 google-services.json
 GoogleService-Info.plist
 google-play-service-account.json
+fcm-v1-service-account.json
+*firebase-adminsdk*.json
 *.jks
 *.p8
 *.p12
