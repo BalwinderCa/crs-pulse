@@ -12,6 +12,7 @@ import {
   type CRSInput, type LanguageTest, type LangScores, type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
 import type { ProgramCategory } from '@/types';
+import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { SideMenu } from '../components/SideMenu';
 
 const EDU_OPTIONS = [
@@ -352,25 +353,34 @@ export default function DashboardScreen() {
   [crsInput, result]);
 
   // Score shown only when all 4 first-language CLB fields are ≥ CLB 4
-  const scoreReady = useMemo(() => {
-    const t = (LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS') as LanguageTest;
-    const scale = (inputs.tefScale ?? 'current') as TefScale;
-    const clbOk = (skill: keyof LangScores, v: number) => toCLB(t, skill, v, scale) >= 4;
-    return clbOk('speaking', inputs.firstLangSpeaking) &&
-           clbOk('listening', inputs.firstLangListening) &&
-           clbOk('reading', inputs.firstLangReading) &&
-           clbOk('writing', inputs.firstLangWriting);
-  }, [inputs.firstLangTest, inputs.tefScale, inputs.firstLangSpeaking, inputs.firstLangListening,
-      inputs.firstLangReading, inputs.firstLangWriting]);
+  const scoreReady = useMemo(
+    () => isCrsScoreReady(
+      inputs.firstLangTest,
+      {
+        speaking: inputs.firstLangSpeaking,
+        listening: inputs.firstLangListening,
+        reading: inputs.firstLangReading,
+        writing: inputs.firstLangWriting,
+      },
+      (inputs.tefScale ?? 'current') as TefScale,
+    ),
+    [inputs.firstLangTest, inputs.tefScale, inputs.firstLangSpeaking, inputs.firstLangListening,
+      inputs.firstLangReading, inputs.firstLangWriting],
+  );
 
   // Autosave (debounced 800 ms)
   useEffect(() => {
     const t = setTimeout(() => {
       saveCalcInputs(inputs);
-      if (scoreReady) saveProfile({ crs_score: result.total, category: cat });
+      if (scoreReady) {
+        saveProfile({ crs_score: result.total, category: cat });
+      } else {
+        // Clear stale score when language inputs drop below CLB 4
+        saveProfile({ crs_score: 0 });
+      }
     }, 800);
     return () => clearTimeout(t);
-  }, [inputs, result.total, cat, scoreReady]);
+  }, [inputs, result.total, cat, scoreReady, saveCalcInputs, saveProfile]);
 
   // Latest draw for cutoff comparison in floating pill
   // Map program category (from suggestCategory) to IRCC draw category:
