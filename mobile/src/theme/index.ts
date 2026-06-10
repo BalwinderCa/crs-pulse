@@ -21,8 +21,8 @@ export const palette = {
   successLight: '#00E5A018',
   warning: '#FFB547',
   warningLight: '#FFB54718',
-  danger: '#FF6B6B',
-  dangerLight: '#FF6B6B18',
+  danger: '#DC2626',      // 4.75:1 contrast on white — WCAG AA
+  dangerLight: '#DC262618',
 
   // Neutrals (absolute, not mode-dependent)
   white: '#FFFFFF',
@@ -46,7 +46,7 @@ export const palette = {
   surfaceInput: '#0A1220',
   textPrimary: '#F0F5FF',
   textSecondary: '#7A94B8',
-  textMuted: '#374D6E',
+  textMuted: '#6B85A8',
 
   transparent: 'transparent',
 } as const;

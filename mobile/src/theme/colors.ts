@@ -11,7 +11,7 @@ export const darkColors = {
   // Text
   textPrimary:   '#F0F5FF',
   textSecondary: '#7A94B8',
-  textMuted:     '#374D6E',
+  textMuted:     '#6B85A8',  // 5.25:1 on #060B14 — WCAG AA
   // Border / divider
   border: '#1C2B45',
 } as const;
@@ -29,9 +29,9 @@ export const lightColors = {
   // Text
   textPrimary:   '#060B14',
   textSecondary: '#4A5F80',
-  textMuted:     '#7A94B8',
+  textMuted:     '#4A6080',  // 5.85:1 on #F2F6FF — WCAG AA
   // Border / divider
   border: '#C8D8EE',
 } as const;
 
-export type Colors = typeof darkColors;
+export type Colors = Record<keyof typeof darkColors, string>;

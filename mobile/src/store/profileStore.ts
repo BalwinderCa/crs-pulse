@@ -78,7 +78,7 @@ export type LocalProfile = {
 const DEFAULT_PROFILE: LocalProfile = {
   crs_score: 0,
   category: 'CEC',
-  accent_color: '#FF6B6B',   // Coral — matches the danger/action button colour
+  accent_color: '#DC2626',
   theme: 'system',
   calculatorInputs: DEFAULT_CALC_INPUTS,
 };
