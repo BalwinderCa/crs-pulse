@@ -461,7 +461,12 @@ function clampTo50(v: number): number { return Math.min(50, v); }
 
 function skillTransferability(input: CRSInput, firstClb: LangScores): { total: number; eduPts: number; workPts: number } {
   const minClb = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
-  const hasDegree = ['bachelors', 'two_or_more', 'masters', 'phd'].includes(input.education);
+  // IRCC transferability tiers (distinct from the core education grid):
+  //   - "Post-secondary credential of one year or longer" (incl. a single
+  //     bachelor's degree): 13 / 25
+  //   - "Two or more credentials (one 3+ years)", master's/professional, or
+  //     doctoral: 25 / 50
+  const hasTopTierEdu = ['two_or_more', 'masters', 'phd'].includes(input.education);
   const hasPostSec = input.education !== 'less_than_secondary' && input.education !== 'secondary';
   const cwe = input.canadianWorkExp;
   const fwe = input.foreignWorkExp;
@@ -469,7 +474,7 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): { total: n
   // 1. Education + first language
   let eduLang = 0;
   if (hasPostSec) {
-    if (hasDegree) {
+    if (hasTopTierEdu) {
       if (minClb >= 9)  eduLang = 50;
       else if (minClb >= 7) eduLang = 25;
     } else {
@@ -481,7 +486,7 @@ function skillTransferability(input: CRSInput, firstClb: LangScores): { total: n
   // 2. Education + Canadian work experience
   let eduCWE = 0;
   if (hasPostSec && cwe >= 1) {
-    if (hasDegree) {
+    if (hasTopTierEdu) {
       eduCWE = cwe >= 2 ? 50 : 25;
     } else {
       eduCWE = cwe >= 2 ? 25 : 13;

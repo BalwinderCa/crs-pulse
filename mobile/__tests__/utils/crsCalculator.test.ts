@@ -191,7 +191,7 @@ describe('French language bonus (IRCC additional points)', () => {
 describe('Skill transferability with two_or_more education', () => {
   it('two_or_more + CLB 7 language earns top-tier edu+lang points (25 pts)', () => {
     // Per IRCC grid, "two or more post-secondary credentials (one 3+ years)"
-    // sits in the same transferability row as a bachelor's degree: 25 / 50.
+    // sits in the top transferability row: 25 / 50.
     const input: CRSInput = {
       ...BASE_INPUT,
       education: 'two_or_more',
@@ -229,21 +229,57 @@ describe('Skill transferability with two_or_more education', () => {
     expect(result.workTransferPoints).toBe(100);
   });
 
-  it('bachelors and two_or_more earn the same skill transfer edu points', () => {
-    const bachelorsInput: CRSInput = {
+  // IRCC transferability rows:
+  //   "Post-secondary program credential of one year or longer" → 13 / 25
+  //   (a single bachelor's belongs here, NOT in the 25/50 row)
+  //   "Two or more credentials (one 3+ yrs)" / master's / doctoral → 25 / 50
+  it('a single bachelors earns the 13/25 tier (NOT 25/50) for edu + language', () => {
+    const clb7: CRSInput = {
       ...BASE_INPUT,
       education: 'bachelors',
-      firstLang: { speaking: 7.5, listening: 8.5, reading: 8.0, writing: 7.5 },
+      firstLang: { speaking: 6.0, listening: 6.0, reading: 6.0, writing: 6.0 }, // all CLB 7
     };
-    const twoOrMoreInput: CRSInput = {
+    const clb9: CRSInput = {
       ...BASE_INPUT,
-      education: 'two_or_more',
-      firstLang: { speaking: 7.5, listening: 8.5, reading: 8.0, writing: 7.5 },
+      education: 'bachelors',
+      firstLang: { speaking: 7.5, listening: 8.5, reading: 8.0, writing: 7.5 }, // all CLB 9+
     };
+    expect(calculateCRS(clb7).eduTransferPoints).toBe(13);
+    expect(calculateCRS(clb9).eduTransferPoints).toBe(25);
+  });
 
-    const r1 = calculateCRS(bachelorsInput);
-    const r2 = calculateCRS(twoOrMoreInput);
-    expect(r2.eduTransferPoints).toBe(r1.eduTransferPoints);
+  it('bachelors + Canadian work experience earns the 13/25 tier', () => {
+    const base: CRSInput = {
+      ...BASE_INPUT,
+      education: 'bachelors',
+      firstLangTest: 'CLB',
+      firstLang: { speaking: 4, listening: 4, reading: 4, writing: 4 }, // below CLB 7 → no edu+lang pts
+    };
+    expect(calculateCRS({ ...base, canadianWorkExp: 1 }).eduTransferPoints).toBe(13);
+    expect(calculateCRS({ ...base, canadianWorkExp: 2 }).eduTransferPoints).toBe(25);
+  });
+
+  it('masters and phd earn the 25/50 tier like two_or_more', () => {
+    const mk = (education: CRSInput['education']): CRSInput => ({
+      ...BASE_INPUT,
+      education,
+      firstLang: { speaking: 7.5, listening: 8.5, reading: 8.0, writing: 7.5 }, // CLB 9+
+    });
+    expect(calculateCRS(mk('masters')).eduTransferPoints).toBe(50);
+    expect(calculateCRS(mk('phd')).eduTransferPoints).toBe(50);
+    expect(calculateCRS(mk('two_or_more')).eduTransferPoints).toBe(50);
+    // Regression: bachelors must stay strictly below the top tier
+    expect(calculateCRS(mk('bachelors')).eduTransferPoints).toBe(25);
+  });
+
+  it('1yr/2yr diplomas keep the 13/25 tier', () => {
+    const mk = (education: CRSInput['education']): CRSInput => ({
+      ...BASE_INPUT,
+      education,
+      firstLang: { speaking: 6.0, listening: 6.0, reading: 6.0, writing: 6.0 }, // all CLB 7
+    });
+    expect(calculateCRS(mk('1year')).eduTransferPoints).toBe(13);
+    expect(calculateCRS(mk('2year')).eduTransferPoints).toBe(13);
   });
 });
 
