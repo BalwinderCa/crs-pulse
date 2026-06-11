@@ -36,7 +36,7 @@ module.exports = () => ({
   userInterfaceStyle: 'automatic',
   splash: {
     image: './assets/splash.png',
-    resizeMode: 'contain',
+    resizeMode: 'cover',
     backgroundColor: '#0A1628',
   },
   assetBundlePatterns: ['**/*'],
@@ -54,6 +54,10 @@ module.exports = () => ({
     },
   },
   android: {
+    splash: {
+      backgroundColor: '#0A1628',
+      resizeMode: 'native',
+    },
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
       backgroundColor: '#0A1628',
@@ -90,8 +94,17 @@ module.exports = () => ({
       'expo-splash-screen',
       {
         backgroundColor: '#0A1628',
-        image: './assets/splash.png',
-        resizeMode: 'contain',
+        ios: {
+          image: './assets/splash.png',
+          resizeMode: 'cover',
+          enableFullScreenImage_legacy: true,
+        },
+        android: {
+          // 1×1 transparent — satisfies Android 12 splash API with no visible logo
+          image: './assets/splash-android-blank.png',
+          imageWidth: 1,
+          backgroundColor: '#0A1628',
+        },
       },
     ],
   ],

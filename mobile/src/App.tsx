@@ -29,7 +29,8 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { setupPushListeners } from '@/services/pushService';
 import { useDrawsStore } from '@/store/drawsStore';
 
-SplashScreen.preventAutoHideAsync();
+// Keep native splash visible until app data is ready, then hide in RootNavigator.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function LoadingFallback() {
   const colors = useColors();
@@ -59,6 +60,7 @@ function ToastHost() {
 
 export default function App() {
   const colors = useColors();
+
   return (
     <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.surfacePrimary }]}>
       <SafeAreaProvider>

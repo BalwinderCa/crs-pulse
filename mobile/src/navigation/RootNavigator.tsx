@@ -1,36 +1,44 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import * as SplashScreen from 'expo-splash-screen';
+import * as ExpoSplash from 'expo-splash-screen';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
-import SplashScreenView from '@/components/splash/SplashScreen';
 import MainNavigator from './MainNavigator';
 import type { RootStackParamList } from '@/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const BOOT_TIMEOUT_MS = 8_000;
 
 export default function RootNavigator() {
   const { profile, load: loadProfile } = useProfileStore();
   const loadDraws = useDrawsStore((s) => s.load);
+  const [ready, setReady] = useState(false);
 
-  // Init stores on mount
   useEffect(() => {
-    Promise.all([loadProfile(), loadDraws()]).catch(() => {});
+    loadDraws().catch(() => {});
+
+    const timeout = setTimeout(() => setReady(true), BOOT_TIMEOUT_MS);
+
+    loadProfile()
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timeout);
+        setReady(true);
+      });
+
+    return () => clearTimeout(timeout);
   }, [loadProfile, loadDraws]);
 
-  // Fallback: hide splash after 5s if stores never resolve
   useEffect(() => {
-    const t = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 5000);
-    return () => clearTimeout(t);
-  }, []);
+    if (ready && profile !== null) {
+      ExpoSplash.hideAsync().catch(() => {});
+    }
+  }, [ready, profile]);
 
-  // Hide splash once profile resolves
-  useEffect(() => {
-    if (profile !== null) SplashScreen.hideAsync().catch(() => {});
-  }, [profile]);
-
-  if (profile === null) return <SplashScreenView />;
+  if (!ready || profile === null) {
+    return null;
+  }
 
   return (
     <NavigationContainer>
