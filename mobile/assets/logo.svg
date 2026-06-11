@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- CRS Pulse logo: maple leaf + heartbeat line -->
+  <defs>
+    <path id="leaf" d="
+      M256 30
+      L230 96 L198 74 L210 148 L156 100 L165 152 L98 136 L122 196 L72 208 L178 286
+      L160 350 L240 326 L249 360 L263 360 L272 326 L352 350 L334 286
+      L440 208 L390 196 L414 136 L347 152 L356 100 L302 148 L314 74 L282 96 Z" />
+    <path id="stem" d="M249 354 L263 354 L261 482 L251 482 Z" />
+    <clipPath id="leafClip">
+      <use href="#leaf" />
+      <use href="#stem" />
+    </clipPath>
+  </defs>
+  <use href="#leaf" fill="#E8312E" />
+  <use href="#stem" fill="#E8312E" />
+  <!-- casing: punches a gap in the leaf around the line; clipped so it never
+       shows outside the leaf, so the logo works on any background -->
+  <g clip-path="url(#leafClip)">
+    <path fill="none" stroke="#0A1628" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"
+      d="M30 300 H148 L184 248 L220 330 L256 146 L292 402 L324 266 L342 300 H482" />
+  </g>
+  <!-- heartbeat line -->
+  <path fill="none" stroke="#35C2DC" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"
+    d="M30 300 H148 L184 248 L220 330 L256 146 L292 402 L324 266 L342 300 H482" />
+</svg>

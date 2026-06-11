@@ -26,7 +26,9 @@ const privacyPolicyUrl =
 
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = () => ({
-  name: 'CRS Pulse – Express Entry Calculator',
+  // Launcher/home-screen label. Store listing names are set in Play Console /
+  // App Store Connect, not here.
+  name: 'CRS Pulse',
   slug: 'crs-pulse',
   owner: 'balwinder98',
   version: '1.0.1',
@@ -100,9 +102,9 @@ module.exports = () => ({
           enableFullScreenImage_legacy: true,
         },
         android: {
-          // 1×1 transparent — satisfies Android 12 splash API with no visible logo
-          image: './assets/splash-android-blank.png',
-          imageWidth: 1,
+          // Rendered from assets/logo.svg (source of truth for the brand mark)
+          image: './assets/splash-icon-android.png',
+          imageWidth: 200,
           backgroundColor: '#0A1628',
         },
       },
