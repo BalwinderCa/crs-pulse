@@ -10,6 +10,8 @@ import { DRAW_FILTERS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 import type { DrawFilter } from '@/types';
 
@@ -30,7 +32,7 @@ function makeStyles(c: Colors, accent: string) {
     filterText:    { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     filterTextActive: { color: palette.white },
 
-    listContent: { paddingHorizontal: spacing.base, paddingBottom: spacing['4xl'] + spacing.xl },
+    listContent: { paddingHorizontal: spacing.base },
   });
 }
 
@@ -38,12 +40,16 @@ export default function DrawsScreen() {
   const [activeFilter, setActiveFilter] = useState<DrawFilter>('all');
   const colors = useColors();
   const accent = useAccentColor();
+  const { contentPaddingBottom } = useTabBarLayout();
+  const { contentFrameStyle } = useResponsiveLayout();
   const styles = makeStyles(colors, accent);
   const { draws, isLoading, isRefreshing, isError, error, refetch } = useDraws({ filter: activeFilter });
 
+  const listContentStyle = [styles.listContent, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
+
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <Text style={styles.greeting}>Express Entry</Text>
           <Text style={styles.title}>Draw History</Text>
@@ -55,14 +61,14 @@ export default function DrawsScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <ErrorState message={(error as { message: string })?.message} onRetry={refetch} />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Express Entry</Text>
         <Text style={styles.title}>Draw History</Text>
@@ -93,7 +99,7 @@ export default function DrawsScreen() {
           data={draws}
           keyExtractor={(item) => String(item.draw_number)}
           renderItem={({ item }) => <DrawCard draw={item} />}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={listContentStyle}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
           refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} tintColor={accent} colors={[accent]} />}

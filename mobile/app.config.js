@@ -29,7 +29,7 @@ module.exports = () => ({
   name: 'CRS Pulse – Express Entry Calculator',
   slug: 'crs-pulse',
   owner: 'balwinder98',
-  version: '1.0.0',
+  version: '1.0.1',
   newArchEnabled: false,
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -60,6 +60,7 @@ module.exports = () => ({
     },
     package: 'com.crspulse.app',
     permissions: ['VIBRATE', 'POST_NOTIFICATIONS'],
+    softwareKeyboardLayoutMode: 'resize',
     ...(googleServicesFile ? { googleServicesFile } : {}),
   },
   web: {

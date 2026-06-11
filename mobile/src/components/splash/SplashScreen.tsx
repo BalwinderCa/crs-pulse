@@ -1,10 +1,11 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { typography, spacing } from '@/theme';
 
 export default function SplashScreen() {
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Image
         source={require('../../../assets/logo.png')}
         style={styles.logo}
@@ -12,7 +13,7 @@ export default function SplashScreen() {
       />
       <Text style={styles.title}>CRS Pulse</Text>
       <Text style={styles.subtitle}>Express Entry Tracker</Text>
-    </View>
+    </SafeAreaView>
   );
 }
 

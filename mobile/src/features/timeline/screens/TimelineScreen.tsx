@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Alert, Modal, Platform, ScrollView, StyleSheet, Text,
+  Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -11,6 +11,9 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTimelineStore, type Milestone, type MilestoneType } from '@/store/timelineStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
@@ -106,6 +109,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 }) {
   const c = useColors();
   const accent = useAccentColor();
+  const insets = useSafeAreaInsets();
   const add    = useTimelineStore((s) => s.add);
   const update = useTimelineStore((s) => s.update);
   const remove = useTimelineStore((s) => s.remove);
@@ -167,8 +171,11 @@ function AddMilestoneModal({ visible, onClose, editing }: {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet"
       onRequestClose={() => { reset(); onClose(); }}>
-      <SafeAreaView style={[s.modal, { backgroundColor: c.surfacePrimary }]} edges={['top']}>
-
+      <SafeAreaView style={[s.modal, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
+        <KeyboardAvoidingView
+          style={s.modalKeyboard}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
         {/* Top bar */}
         <View style={[s.modalBar, { borderBottomColor: c.border }]}>
           <TouchableOpacity onPress={() => { reset(); onClose(); }} style={[s.modalBtn, { borderColor: c.border }]}>
@@ -191,8 +198,11 @@ function AddMilestoneModal({ visible, onClose, editing }: {
           </TouchableOpacity>
         )}
 
-        <ScrollView contentContainerStyle={s.modalBody} showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[s.modalBody, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
 
           {/* Type */}
           <Text style={[s.fieldLabel, { color: c.textMuted }]}>TYPE</Text>
@@ -340,7 +350,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             </View>
           </View>
         </Modal>
-
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
@@ -351,14 +361,18 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 export default function TimelineScreen() {
   const c = useColors();
   const accent = useAccentColor();
+  const { contentPaddingBottom } = useTabBarLayout();
+  const { contentFrameStyle } = useResponsiveLayout();
   const { milestones, load, remove } = useTimelineStore();
   // null = closed, undefined = add mode, Milestone = edit mode
   const [modalMilestone, setModalMilestone] = useState<Milestone | null | undefined>(null);
 
   useEffect(() => { load(); }, []);
 
+  const listStyle = [s.list, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
+
   return (
-    <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]}>
+    <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
 
       {/* Header */}
       <View style={[s.header, { borderBottomColor: c.border }]}>
@@ -399,7 +413,7 @@ export default function TimelineScreen() {
           </TouchableOpacity>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={s.list} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
           {milestones.map((item) => (
             <View key={item.id} style={s.cardCol}>
               <MilestoneCard item={item} onEdit={() => setModalMilestone(item)} onDelete={() => remove(item.id)} />
@@ -443,7 +457,8 @@ const s = StyleSheet.create({
                  borderRadius: borderRadius.full },
   addBtnTxt:   { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
-  list:        { paddingHorizontal: spacing.base, paddingTop: spacing.lg, paddingBottom: 100 },
+  list:        { paddingHorizontal: spacing.base, paddingTop: spacing.lg },
+  modalKeyboard: { flex: 1 },
   timelineRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: 4 },
   lineCol:     { alignItems: 'center', width: 16 },
   dot:         { width: 10, height: 10, borderRadius: 5, marginTop: spacing.md + 6 },

@@ -13,6 +13,8 @@ import {
 } from '@/features/onboarding/utils/crsCalculator';
 import type { ProgramCategory } from '@/types';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { SideMenu } from '../components/SideMenu';
 
 const EDU_OPTIONS = [
@@ -323,6 +325,8 @@ function coerceInputs(saved: CalcInputs): CalcInputs {
 export default function DashboardScreen() {
   const c      = useColors();
   const accent = useAccentColor();
+  const { floatingBottomOffset, floatingOverlayPaddingBottom } = useTabBarLayout();
+  const { contentFrameStyle } = useResponsiveLayout();
   const profile        = useProfileStore((s) => s.profile);
   const resetKey       = useProfileStore((s) => s.resetKey);
   const saveCalcInputs = useProfileStore((s) => s.saveCalcInputs);
@@ -630,10 +634,14 @@ export default function DashboardScreen() {
   // ─── Main render ─────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={[st.safe, { backgroundColor: c.surfacePrimary }]}>
+    <SafeAreaView style={[st.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
       <ScrollView
         style={st.scroll}
-        contentContainerStyle={st.content}
+        contentContainerStyle={[
+          st.content,
+          { paddingBottom: floatingOverlayPaddingBottom },
+          contentFrameStyle,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -696,7 +704,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       {/* ── Floating score pill ── */}
-      <View style={st.floatWrap} pointerEvents="none">
+      <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="none">
         {scoreReady ? (
           <View style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
             shadowColor: scoreClr }]}>
@@ -742,7 +750,7 @@ export default function DashboardScreen() {
 const st = StyleSheet.create({
   safe:    { flex: 1 },
   scroll:  { flex: 1 },
-  content: { paddingHorizontal: spacing.base, paddingBottom: 110 },
+  content: { paddingHorizontal: spacing.base },
 
   // Header
   hamburger:   { marginRight: spacing.sm, paddingBottom: 2 },
@@ -827,7 +835,7 @@ const st = StyleSheet.create({
   noticeTxt: { flex: 1, fontSize: typography.xs, lineHeight: 18 },
 
   // Floating score
-  floatWrap: { position: 'absolute', bottom: 10, left: spacing.base, right: spacing.base },
+  floatWrap: { position: 'absolute', left: spacing.base, right: spacing.base },
 
   floatCard:  { borderRadius: borderRadius.xl, borderWidth: 1, overflow: 'hidden',
                 shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 12,

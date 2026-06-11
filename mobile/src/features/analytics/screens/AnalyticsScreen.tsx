@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LineChart } from 'react-native-chart-kit';
 import { useAnalytics } from '../hooks/useAnalytics';
@@ -11,11 +11,10 @@ import { EmptyState } from '@/components/common/EmptyState';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 import type { Category } from '@/types';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CHART_WIDTH = SCREEN_WIDTH - spacing.base * 4; // margin (base*2) + card padding (base*2)
 
 const PERIODS = [
   { label: '3M', value: '3m' as const },
@@ -35,7 +34,7 @@ const CATEGORIES: Array<{ label: string; value: Category | 'all' }> = [
 function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
     safe:     { flex: 1, backgroundColor: c.surfacePrimary },
-    content:  { paddingBottom: spacing['4xl'] + spacing.xl, gap: spacing.md },
+    content:  { gap: spacing.md },
     header:   { paddingHorizontal: spacing.base, paddingTop: spacing.base, gap: spacing.xs },
     greeting: { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
     title:    { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
@@ -95,13 +94,19 @@ export default function AnalyticsScreen() {
   const [category, setCategory] = useState<Category | 'all'>('all');
   const colors = useColors();
   const accent = useAccentColor();
+  const { contentPaddingBottom } = useTabBarLayout();
+  const { contentMaxWidth, contentFrameStyle } = useResponsiveLayout();
+  const { width: screenWidth } = useWindowDimensions();
   const styles = makeStyles(colors, accent);
+  const chartWidth = Math.min(screenWidth, contentMaxWidth ?? screenWidth) - spacing.base * 4;
 
   const { data, isLoading, isError, error, refetch } = useAnalytics({ category, period });
 
+  const scrollContentStyle = [styles.content, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
+
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
           <Text style={styles.greeting}>Express Entry</Text>
           <Text style={styles.title}>Analytics</Text>
@@ -113,7 +118,7 @@ export default function AnalyticsScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <ErrorState message={(error as { message: string })?.message} onRetry={refetch} />
       </SafeAreaView>
     );
@@ -121,7 +126,7 @@ export default function AnalyticsScreen() {
 
   if (!data || data.total_draws === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <EmptyState icon="pulse-outline" title="No analytics data" description="Analytics will appear once draws are published." />
       </SafeAreaView>
     );
@@ -135,8 +140,8 @@ export default function AnalyticsScreen() {
   const trendBadge = data.trend === 'rising' ? 'success' as const : data.trend === 'falling' ? 'danger' as const : 'neutral' as const;
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollContentStyle}>
         <View style={styles.header}>
           <Text style={styles.greeting}>Express Entry</Text>
           <Text style={styles.title}>Analytics</Text>
@@ -206,7 +211,7 @@ export default function AnalyticsScreen() {
             <Text style={styles.chartTitle}>CRS Cutoff Trend</Text>
             <LineChart
               data={{ labels: chartLabels, datasets: [{ data: chartValues, strokeWidth: 2 }] }}
-              width={CHART_WIDTH}
+              width={chartWidth}
               height={200}
               yAxisSuffix=""
               chartConfig={{

@@ -1,9 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { typography, spacing, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useTabBarLayout, TAB_BAR_TOP_PADDING } from '@/hooks/useTabBarLayout';
 import type { MainTabParamList } from '@/types';
 
 import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
@@ -35,16 +36,31 @@ const TAB_LABELS: Record<keyof MainTabParamList, string> = {
 export default function MainNavigator() {
   const colors = useColors();
   const accent = useAccentColor();
+  const { tabBarHeight, tabBarBottomPadding } = useTabBarLayout();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        sceneStyle: { backgroundColor: colors.surfacePrimary },
+        tabBarHideOnKeyboard: true,
         tabBarStyle: [
           styles.tabBar,
           {
-            backgroundColor: colors.surfaceSecondary,
-            borderTopColor: colors.border,
+            // Match screen bg so no visible seam above the tabs
+            backgroundColor: colors.surfacePrimary,
+            borderTopWidth: 0,
+            borderTopColor: 'transparent',
+            height: tabBarHeight,
+            paddingBottom: tabBarBottomPadding,
+            ...Platform.select({
+              android: { elevation: 0 },
+              ios: {
+                shadowOpacity: 0,
+                shadowRadius: 0,
+                shadowOffset: { width: 0, height: 0 },
+              },
+            }),
           },
         ],
         tabBarActiveTintColor: accent,
@@ -76,10 +92,7 @@ export default function MainNavigator() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    borderTopWidth: 1,
-    height: 84,
-    paddingBottom: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: TAB_BAR_TOP_PADDING,
     paddingHorizontal: spacing.sm,
   },
   iconWrap: {

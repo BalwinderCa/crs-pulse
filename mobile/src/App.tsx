@@ -25,6 +25,7 @@ if (__DEV__) LogBox.ignoreAllLogs();
 import RootNavigator from '@/navigation/RootNavigator';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { setupPushListeners } from '@/services/pushService';
 import { useDrawsStore } from '@/store/drawsStore';
 
@@ -51,6 +52,11 @@ function AppInner() {
   return <RootNavigator />;
 }
 
+function ToastHost() {
+  const { tabBarHeight } = useTabBarLayout();
+  return <Toast bottomOffset={tabBarHeight + 8} />;
+}
+
 export default function App() {
   const colors = useColors();
   return (
@@ -61,7 +67,7 @@ export default function App() {
             <AppInner />
           </Suspense>
         </ErrorBoundary>
-        <Toast />
+        <ToastHost />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

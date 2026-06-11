@@ -215,7 +215,11 @@ export function SideMenu({ visible, onClose }: Props) {
             </View>
 
             {/* Content */}
-            <ScrollView showsVerticalScrollIndicator={false} style={{ flex: 1 }}>
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
+              contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
+            >
 
               {/* Group 1 */}
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>

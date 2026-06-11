@@ -145,7 +145,8 @@ export const layout = {
   screenHeight: SCREEN_HEIGHT,
   horizontalPadding: spacing.base,
   headerHeight: 56,
-  tabBarHeight: 80,
+  /** Base tab content height (excludes device bottom inset — use useTabBarLayout()). */
+  tabBarHeight: 64,
   cardMinHeight: 80,
 } as const;
 

@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet, View, ViewStyle, RefreshControl, KeyboardAvoidi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { palette, spacing } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 
 type Props = {
@@ -16,12 +18,16 @@ type Props = {
   keyboardAvoiding?: boolean;
 };
 
-function makeStyles(c: Colors) {
+function makeStyles(c: Colors, contentPaddingBottom: number, contentFrameStyle?: ViewStyle) {
   return StyleSheet.create({
     safe: { flex: 1, backgroundColor: c.surfacePrimary },
     keyboardView: { flex: 1 },
     scroll: { flex: 1 },
-    scrollContent: { flexGrow: 1, paddingBottom: spacing['4xl'] },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: contentPaddingBottom,
+      ...contentFrameStyle,
+    },
     flat: { flex: 1 },
     hPad: { paddingHorizontal: spacing.base },
   });
@@ -38,7 +44,9 @@ export function ScreenWrapper({
   keyboardAvoiding = false,
 }: Props) {
   const colors = useColors();
-  const styles = makeStyles(colors);
+  const { contentPaddingBottom } = useTabBarLayout();
+  const { contentFrameStyle } = useResponsiveLayout();
+  const styles = makeStyles(colors, contentPaddingBottom, contentFrameStyle);
 
   const content = (
     <SafeAreaView style={[styles.safe, style]} edges={['top', 'left', 'right']}>
@@ -71,7 +79,10 @@ export function ScreenWrapper({
 
   if (keyboardAvoiding) {
     return (
-      <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         {content}
       </KeyboardAvoidingView>
     );
