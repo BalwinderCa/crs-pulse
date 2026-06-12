@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useProfileStore } from '@/store/profileStore';
@@ -20,6 +20,7 @@ import {
   type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
+import { exportProfilePdf, shareProfileLink } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 
@@ -171,6 +172,15 @@ function makeStyles(c: Colors, accent: string) {
     themeBtnText:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     themeBtnTextActive: { color: c.textPrimary },
 
+    // Export & Share
+    exportRow:     { flexDirection: 'row', gap: spacing.sm },
+    exportBtn: {
+      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+      gap: spacing.xs, paddingVertical: spacing.sm + 2,
+      borderRadius: borderRadius.md, borderWidth: 0.5,
+    },
+    exportBtnText: { fontSize: typography.sm, fontWeight: typography.semibold },
+
     // Danger zone
     dangerTitle: { color: palette.danger, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase' },
   });
@@ -190,6 +200,8 @@ export default function ProfileScreen() {
   const styles  = makeStyles(colors, accent);
   const { profile, save, reset } = useProfileStore();
   const { enabled: notifEnabled, toggle: toggleNotif } = useDrawNotifications();
+  const [exporting,  setExporting]  = useState(false);
+  const [sharing,    setSharing]    = useState(false);
 
   if (!profile) {
     return (
@@ -246,6 +258,28 @@ export default function ProfileScreen() {
     score >= 490 ? palette.success :
     score >= 450 ? palette.warning :
     palette.danger;
+
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
+    } catch {
+      Alert.alert('Export failed', 'Could not generate PDF. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleShareLink = async () => {
+    setSharing(true);
+    try {
+      await shareProfileLink(coerced);
+    } catch {
+      Alert.alert('Share failed', 'Could not open share sheet. Please try again.');
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const infoGroups = [
     {
@@ -316,6 +350,37 @@ export default function ProfileScreen() {
         )}
 
 
+      </Card>
+
+      {/* ── Export & Share ── */}
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Export & Share</Text>
+        <View style={styles.exportRow}>
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
+            onPress={handleExportPdf}
+            disabled={exporting}
+            activeOpacity={0.7}
+            accessibilityLabel="Export CRS profile as PDF"
+          >
+            <Ionicons name="document-outline" size={18} color={accent} />
+            <Text style={[styles.exportBtnText, { color: accent }]}>
+              {exporting ? 'Generating…' : 'Export PDF'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}
+            onPress={handleShareLink}
+            disabled={sharing}
+            activeOpacity={0.7}
+            accessibilityLabel="Share CRS profile link"
+          >
+            <Ionicons name="link-outline" size={18} color={colors.textPrimary} />
+            <Text style={[styles.exportBtnText, { color: colors.textPrimary }]}>
+              {sharing ? 'Sharing…' : 'Share Link'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </Card>
 
       {/* ── Profile Details (grouped) ── */}
