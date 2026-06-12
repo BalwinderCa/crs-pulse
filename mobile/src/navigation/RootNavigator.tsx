@@ -7,6 +7,7 @@ import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
 import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
+import SinpCalculatorScreen from '@/features/sinp/screens/SinpCalculatorScreen';
 import type { RootStackParamList } from '@/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -57,6 +58,7 @@ export default function RootNavigator() {
         <Stack.Screen name="Main" component={MainNavigator} />
         <Stack.Screen name="Faq" component={FaqScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="SinpCalculator" component={SinpCalculatorScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

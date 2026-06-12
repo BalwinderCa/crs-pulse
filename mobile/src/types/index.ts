@@ -80,6 +80,7 @@ export type RootStackParamList = {
   Main: undefined;
   Faq:  undefined;
   ReportIssue: undefined;
+  SinpCalculator: undefined;
 };
 
 export type MainTabParamList = {

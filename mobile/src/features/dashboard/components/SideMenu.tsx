@@ -143,12 +143,13 @@ export function SideMenu({ visible, onClose }: Props) {
   };
 
   // Two groups of menu items
-  const navigateTo = (screen: 'Faq' | 'ReportIssue') => () => {
+  const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'SinpCalculator') => () => {
     onClose();
     navigation.navigate(screen);
   };
 
   const groupOne: MenuItem[] = [
+    { icon: 'calculator-outline',         label: 'SINP Calculator', onPress: navigateTo('SinpCalculator') },
     { icon: 'information-circle-outline', label: 'About Us',       onPress: () => setDetail('about') },
     { icon: 'help-circle-outline',        label: 'FAQ',            onPress: navigateTo('Faq') },
     { icon: 'lock-closed-outline',        label: 'Privacy Policy', onPress: () => setDetail('privacy') },
