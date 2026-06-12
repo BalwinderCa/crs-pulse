@@ -20,7 +20,7 @@ import {
   type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
-import { exportProfilePdf, shareProfileLink } from '@/utils/exportProfile';
+import { exportProfilePdf } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 
@@ -201,7 +201,6 @@ export default function ProfileScreen() {
   const { profile, save, reset } = useProfileStore();
   const { enabled: notifEnabled, toggle: toggleNotif } = useDrawNotifications();
   const [exporting,  setExporting]  = useState(false);
-  const [sharing,    setSharing]    = useState(false);
 
   if (!profile) {
     return (
@@ -267,17 +266,6 @@ export default function ProfileScreen() {
       Alert.alert('Export failed', 'Could not generate PDF. Please try again.');
     } finally {
       setExporting(false);
-    }
-  };
-
-  const handleShareLink = async () => {
-    setSharing(true);
-    try {
-      await shareProfileLink(coerced);
-    } catch {
-      Alert.alert('Share failed', 'Could not open share sheet. Please try again.');
-    } finally {
-      setSharing(false);
     }
   };
 
@@ -352,37 +340,6 @@ export default function ProfileScreen() {
 
       </Card>
 
-      {/* ── Export & Share ── */}
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Export & Share</Text>
-        <View style={styles.exportRow}>
-          <TouchableOpacity
-            style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
-            onPress={handleExportPdf}
-            disabled={exporting}
-            activeOpacity={0.7}
-            accessibilityLabel="Export CRS profile as PDF"
-          >
-            <Ionicons name="document-outline" size={18} color={accent} />
-            <Text style={[styles.exportBtnText, { color: accent }]}>
-              {exporting ? 'Generating…' : 'Export PDF'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.exportBtn, { backgroundColor: colors.surfaceSecondary, borderColor: colors.border }]}
-            onPress={handleShareLink}
-            disabled={sharing}
-            activeOpacity={0.7}
-            accessibilityLabel="Share CRS profile link"
-          >
-            <Ionicons name="link-outline" size={18} color={colors.textPrimary} />
-            <Text style={[styles.exportBtnText, { color: colors.textPrimary }]}>
-              {sharing ? 'Sharing…' : 'Share Link'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Card>
-
       {/* ── Profile Details (grouped) ── */}
       {infoGroups.map((group) => (
         <Card key={group.title} style={styles.section}>
@@ -397,6 +354,28 @@ export default function ProfileScreen() {
           ))}
         </Card>
       ))}
+
+      {/* ── Profile Report ── */}
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>Profile Report</Text>
+        <Text style={styles.hint}>
+          Download a PDF summary of your CRS score and profile details.
+        </Text>
+        <View style={styles.exportRow}>
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
+            onPress={handleExportPdf}
+            disabled={exporting}
+            activeOpacity={0.7}
+            accessibilityLabel="Export CRS profile as PDF"
+          >
+            <Ionicons name="document-outline" size={18} color={accent} />
+            <Text style={[styles.exportBtnText, { color: accent }]}>
+              {exporting ? 'Generating…' : 'Export Profile as PDF'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </Card>
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>
