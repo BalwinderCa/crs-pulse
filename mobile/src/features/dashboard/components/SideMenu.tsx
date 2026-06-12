@@ -6,7 +6,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { RootStackParamList } from '@/types';
 import { GITHUB_REPO_URL, PRIVACY_POLICY_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -100,6 +103,7 @@ export function SideMenu({ visible, onClose }: Props) {
   const c      = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const slideX          = useRef(new Animated.Value(-MENU_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -138,18 +142,20 @@ export function SideMenu({ visible, onClose }: Props) {
     }
   };
 
-  const handleCoffee = () => {
-    Linking.openURL('https://buymeacoffee.com/crspulse');
+  // Two groups of menu items
+  const navigateTo = (screen: 'Faq' | 'ReportIssue') => () => {
     onClose();
+    navigation.navigate(screen);
   };
 
-  // Two groups of menu items
   const groupOne: MenuItem[] = [
     { icon: 'information-circle-outline', label: 'About Us',       onPress: () => setDetail('about') },
+    { icon: 'help-circle-outline',        label: 'FAQ',            onPress: navigateTo('Faq') },
     { icon: 'lock-closed-outline',        label: 'Privacy Policy', onPress: () => setDetail('privacy') },
   ];
 
   const groupTwo: MenuItem[] = [
+    { icon: 'bug-outline',   label: 'Report an Issue', onPress: navigateTo('ReportIssue') },
     { icon: 'share-outline', label: 'Share App', onPress: handleShare },
     ...(Platform.OS === 'ios' && appStoreId
       ? [{ icon: 'star-outline' as const, label: 'Review on App Store', onPress: handleRate }]
@@ -232,20 +238,6 @@ export function SideMenu({ visible, onClose }: Props) {
               </View>
 
             </ScrollView>
-
-            {/* Buy Me a Coffee — Android only; Apple rejects external tip/donation links (3.1.1) */}
-            {Platform.OS !== 'ios' && (
-              <TouchableOpacity
-                onPress={handleCoffee}
-                activeOpacity={0.75}
-                style={[s.coffeeBtn, { paddingBottom: insets.bottom + spacing.md, borderTopColor: c.border }]}
-              >
-                <View style={[s.coffeeInner, { backgroundColor: '#F9A825' }]}>
-                  <Ionicons name="cafe" size={18} color="#000" />
-                  <Text style={s.coffeeTxt}>Buy Me a Coffee</Text>
-                </View>
-              </TouchableOpacity>
-            )}
           </>
         )}
       </Animated.View>
@@ -297,16 +289,4 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   rowLabel: { flex: 1, fontSize: typography.base, fontWeight: typography.medium },
-
-  // Coffee button
-  coffeeBtn: {
-    paddingHorizontal: spacing.base, paddingTop: spacing.md,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  coffeeInner: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: spacing.sm, borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
-  },
-  coffeeTxt: { fontSize: typography.base, fontWeight: typography.bold, color: '#000' },
 });

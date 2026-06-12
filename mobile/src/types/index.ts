@@ -78,6 +78,8 @@ export type Prediction = {
 
 export type RootStackParamList = {
   Main: undefined;
+  Faq:  undefined;
+  ReportIssue: undefined;
 };
 
 export type MainTabParamList = {

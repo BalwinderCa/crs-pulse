@@ -5,6 +5,8 @@ import * as ExpoSplash from 'expo-splash-screen';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
+import FaqScreen from '@/features/faq/screens/FaqScreen';
+import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
 import type { RootStackParamList } from '@/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -44,6 +46,8 @@ export default function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         <Stack.Screen name="Main" component={MainNavigator} />
+        <Stack.Screen name="Faq" component={FaqScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
