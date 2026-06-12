@@ -42,13 +42,28 @@ async function getExpoPushToken(): Promise<string | null> {
   return data ?? null;
 }
 
-export async function registerForPushNotifications(): Promise<boolean> {
-  if (!Device.isDevice) return false;
+export type PushRegisterFailure =
+  | 'simulator'
+  | 'expo_go'
+  | 'not_configured'
+  | 'permission_denied'
+  | 'token_failed'
+  | 'server_error';
+
+export type PushRegisterResult = { ok: true } | { ok: false; reason: PushRegisterFailure };
+
+export async function registerForPushNotifications(): Promise<PushRegisterResult> {
+  if (!Device.isDevice) return { ok: false, reason: 'simulator' };
+
+  // Expo Go cannot receive remote push notifications (SDK 53+)
+  if (Constants.executionEnvironment === 'storeClient') {
+    return { ok: false, reason: 'expo_go' };
+  }
 
   const pushUrl = getPushUrl();
   if (!pushUrl) {
     console.warn('EXPO_PUBLIC_PUSH_URL not set — push registration skipped');
-    return false;
+    return { ok: false, reason: 'not_configured' };
   }
 
   const { status: existing } = await Notifications.getPermissionsAsync();
@@ -59,11 +74,11 @@ export async function registerForPushNotifications(): Promise<boolean> {
     granted = status === 'granted';
   }
 
-  if (!granted) return false;
+  if (!granted) return { ok: false, reason: 'permission_denied' };
 
   try {
     const token = await getExpoPushToken();
-    if (!token) return false;
+    if (!token) return { ok: false, reason: 'token_failed' };
 
     await AsyncStorage.setItem(STORAGE_KEYS.PUSH_TOKEN, token);
 
@@ -78,13 +93,13 @@ export async function registerForPushNotifications(): Promise<boolean> {
 
     if (!res.ok) {
       console.warn('Push register failed:', res.status);
-      return false;
+      return { ok: false, reason: 'server_error' };
     }
 
-    return true;
+    return { ok: true };
   } catch (err) {
     console.warn('Push registration failed:', err);
-    return false;
+    return { ok: false, reason: 'server_error' };
   }
 }
 

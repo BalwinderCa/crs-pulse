@@ -1,8 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { STORAGE_KEYS } from '@/constants';
-import { registerForPushNotifications, unregisterPushNotifications } from '@/services/pushService';
+import {
+  registerForPushNotifications,
+  unregisterPushNotifications,
+  type PushRegisterFailure,
+} from '@/services/pushService';
+
+const FAILURE_MESSAGES: Record<PushRegisterFailure, string> = {
+  simulator:         'Push notifications are not available on simulators. Try a physical device.',
+  expo_go:           'Push notifications are not supported in Expo Go. Use a development or production build.',
+  not_configured:    'Push notifications are not configured for this build.',
+  permission_denied: 'Notifications are disabled for this app. Enable them in your device settings to receive draw alerts.',
+  token_failed:      'Could not register this device for notifications. Please try again later.',
+  server_error:      'Could not reach the notification service. Check your connection and try again.',
+};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -38,8 +52,18 @@ export function useDrawNotifications() {
 
   const toggle = useCallback(async () => {
     if (!enabled) {
-      const ok = await registerForPushNotifications();
-      if (!ok) return;
+      const result = await registerForPushNotifications();
+      if (!result.ok) {
+        if (result.reason === 'permission_denied') {
+          Alert.alert('Notifications Disabled', FAILURE_MESSAGES.permission_denied, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          ]);
+        } else {
+          Alert.alert('Notifications Unavailable', FAILURE_MESSAGES[result.reason]);
+        }
+        return;
+      }
     } else {
       await unregisterPushNotifications();
     }
