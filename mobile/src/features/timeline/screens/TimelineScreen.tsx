@@ -33,7 +33,7 @@ const MILESTONE_META: Record<MilestoneType, Meta> = {
   'ADR':                   { icon: 'alert-circle-outline',     color: '#FF8C42' },
   'Portal 1':              { icon: 'log-in-outline',           color: '#A78BFA' },
   'Portal 2':              { icon: 'log-in-outline',           color: '#7C3AED' },
-  'Final Decision':        { icon: 'trophy-outline',           color: '#FF6B6B' },
+  'Final Decision':        { icon: 'trophy-outline',           color: '#DC2626' },
   'Custom':                { icon: 'create-outline',           color: palette.gray300 },
 };
 
