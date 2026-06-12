@@ -156,7 +156,7 @@ describe('CLB breakpoints cover the full score scale (regression: TEF capped at 
 // ─── French bonus additional points ──────────────────────────────────────────
 
 describe('French language bonus (IRCC additional points)', () => {
-  it('awards 25 pts when French CLB 7+ and no English score (unilingual Francophone)', () => {
+  it('awards 50 pts when French CLB 7+ and no English score (unilingual Francophone)', () => {
     const input: CRSInput = {
       ...BASE_INPUT,
       firstLangTest: 'TCF',
@@ -166,10 +166,10 @@ describe('French language bonus (IRCC additional points)', () => {
     };
 
     const result = calculateCRS(input);
-    expect(result.additionalPoints).toBe(25);
+    expect(result.additionalPoints).toBe(50);
   });
 
-  it('awards 25 pts when French CLB 7+ and English below CLB 5', () => {
+  it('awards 50 pts when French CLB 7+ and English below CLB 5', () => {
     // French first lang (TCF), English second lang below CLB 5
     // IELTS speaking 4.0 = CLB 4, listening 4.5 = CLB 4, reading 3.5 = CLB 4, writing 4.0 = CLB 4
     const input: CRSInput = {
@@ -182,10 +182,10 @@ describe('French language bonus (IRCC additional points)', () => {
     };
 
     const result = calculateCRS(input);
-    expect(result.additionalPoints).toBe(25);
+    expect(result.additionalPoints).toBe(50);
   });
 
-  it('awards 50 pts when French CLB 7+ and English CLB 5+', () => {
+  it('awards 25 pts when French CLB 7+ and English CLB 5+', () => {
     // French first lang (TCF), English second lang at CLB 5+
     // IELTS speaking 5.0 = CLB 5, listening 5.0 = CLB 5, reading 4.0 = CLB 5, writing 5.0 = CLB 5
     const input: CRSInput = {
@@ -198,10 +198,10 @@ describe('French language bonus (IRCC additional points)', () => {
     };
 
     const result = calculateCRS(input);
-    expect(result.additionalPoints).toBe(50);
+    expect(result.additionalPoints).toBe(25);
   });
 
-  it('awards 50 pts when English first and French second with English CLB 7+', () => {
+  it('awards 25 pts when English first and French second with English CLB 7+', () => {
     // English first (IELTS CLB 9+), French second (TCF CLB 7+)
     const input: CRSInput = {
       ...BASE_INPUT,
@@ -213,10 +213,10 @@ describe('French language bonus (IRCC additional points)', () => {
     };
 
     const result = calculateCRS(input);
-    expect(result.additionalPoints).toBe(50);
+    expect(result.additionalPoints).toBe(25);
   });
 
-  it('awards 25 pts when English first at CLB 4 and French second CLB 7+', () => {
+  it('awards 50 pts when English first at CLB 4 and French second CLB 7+', () => {
     // English first (IELTS CLB 4), French second (TCF CLB 7+)
     const input: CRSInput = {
       ...BASE_INPUT,
@@ -228,7 +228,7 @@ describe('French language bonus (IRCC additional points)', () => {
     };
 
     const result = calculateCRS(input);
-    expect(result.additionalPoints).toBe(25);
+    expect(result.additionalPoints).toBe(50);
   });
 
   it('supports TEF Canada as FIRST official language with full points (current scale)', () => {
@@ -244,7 +244,7 @@ describe('French language bonus (IRCC additional points)', () => {
     const result = calculateCRS(input);
     expect(result.firstLangClb).toEqual({ speaking: 10, listening: 10, reading: 10, writing: 10 });
     expect(result.firstLangPoints).toBe(136);     // 34 x 4 (single, CLB 10+)
-    expect(result.additionalPoints).toBe(25);     // French NCLC 7+, no English test
+    expect(result.additionalPoints).toBe(50);     // French NCLC 7+, no English test → unilingual bonus
   });
 
   it('awards 0 pts when French CLB below 7', () => {
