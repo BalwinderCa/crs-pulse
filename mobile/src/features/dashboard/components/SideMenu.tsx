@@ -41,9 +41,30 @@ Full policy: ${PRIVACY_POLICY_URL}
 
 For questions, contact: balwinderxcode@gmail.com`;
 
+const TERMS_TEXT = `By using CRS Pulse, you agree to these terms.
+
+CRS Pulse is a free informational tool. Scores, draw data, processing times and any other figures shown in the app are estimates for planning purposes only. They are not immigration advice, and they are not a maximum, a minimum, or a guarantee of any outcome.
+
+CRS Pulse is an independent project. It is not affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada. Always verify scores, eligibility, and processing times with the official tools on canada.ca before making decisions.
+
+Your data stays on your device. We do not collect or sell personal information (see the Privacy Policy for details).
+
+The app is provided "as is", without warranties of any kind. To the maximum extent permitted by law, the developer is not liable for any loss or damage arising from your use of the app or reliance on its estimates.
+
+These terms may be updated from time to time. Continued use of the app after an update means you accept the revised terms.
+
+Questions? Contact: balwinderxcode@gmail.com`;
+
 const MENU_WIDTH = Dimensions.get('window').width * 0.75;
 
-type DetailModal = 'about' | 'privacy' | null;
+type DetailModal = 'about' | 'privacy' | 'terms' | 'contact' | null;
+
+const DETAIL_TITLES: Record<NonNullable<DetailModal>, string> = {
+  about:   'About Us',
+  privacy: 'Privacy Policy',
+  terms:   'Terms & Conditions',
+  contact: 'Contact Us',
+};
 
 interface Props {
   visible: boolean;
@@ -76,6 +97,76 @@ function DetailView({ title, body, onClose }: {
     </View>
   );
 }
+
+function ContactView({ onClose }: { onClose: () => void }) {
+  const c = useColors();
+  const accent = useAccentColor();
+  const insets = useSafeAreaInsets();
+
+  const rows = [
+    {
+      icon: 'mail-outline' as const,
+      label: 'Email us',
+      sub: 'balwinderxcode@gmail.com',
+      onPress: () => Linking.openURL('mailto:balwinderxcode@gmail.com?subject=CRS%20Pulse'),
+    },
+    {
+      icon: 'logo-github' as const,
+      label: 'Open a GitHub issue',
+      sub: 'Bug reports & feature requests',
+      onPress: () => Linking.openURL(`${GITHUB_REPO_URL}/issues`),
+    },
+  ];
+
+  return (
+    <View style={[dv.wrap, { backgroundColor: c.surfacePrimary }]}>
+      <View style={[dv.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
+        <TouchableOpacity onPress={onClose} hitSlop={16} style={dv.backBtn}>
+          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
+          <Text style={[dv.backLabel, { color: c.textPrimary }]}>Back</Text>
+        </TouchableOpacity>
+        <Text style={[dv.title, { color: c.textPrimary }]}>Contact Us</Text>
+        <View style={{ width: 60 }} />
+      </View>
+      <View style={dv.body}>
+        <Text style={[dv.text, { color: c.textSecondary, marginBottom: spacing.lg }]}>
+          Questions, feedback, or something not working? We usually reply within a couple of days.
+        </Text>
+        {rows.map((row) => (
+          <TouchableOpacity
+            key={row.label}
+            style={[cv.row, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
+            onPress={row.onPress}
+            activeOpacity={0.65}
+          >
+            <View style={[cv.iconBox, { backgroundColor: accent + '1A' }]}>
+              <Ionicons name={row.icon} size={19} color={accent} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[cv.label, { color: c.textPrimary }]}>{row.label}</Text>
+              <Text style={[cv.sub, { color: c.textMuted }]}>{row.sub}</Text>
+            </View>
+            <Ionicons name="open-outline" size={15} color={c.textMuted} />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+const cv = StyleSheet.create({
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+    borderWidth: StyleSheet.hairlineWidth, borderRadius: borderRadius.md,
+    padding: spacing.md, marginBottom: spacing.sm,
+  },
+  iconBox: {
+    width: 36, height: 36, borderRadius: borderRadius.md,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  label: { fontSize: typography.sm, fontWeight: typography.semibold },
+  sub:   { fontSize: typography.xs, marginTop: 1 },
+});
 
 const dv = StyleSheet.create({
   wrap:      { flex: 1 },
@@ -143,20 +234,25 @@ export function SideMenu({ visible, onClose }: Props) {
   };
 
   // Two groups of menu items
-  const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'SinpCalculator') => () => {
+  const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'DocumentChecklist') => () => {
     onClose();
     navigation.navigate(screen);
   };
 
   const groupOne: MenuItem[] = [
-    { icon: 'calculator-outline',         label: 'SINP Calculator', onPress: navigateTo('SinpCalculator') },
-    { icon: 'information-circle-outline', label: 'About Us',       onPress: () => setDetail('about') },
-    { icon: 'help-circle-outline',        label: 'FAQ',            onPress: navigateTo('Faq') },
-    { icon: 'lock-closed-outline',        label: 'Privacy Policy', onPress: () => setDetail('privacy') },
+    { icon: 'help-circle-outline',     label: 'FAQ',                 onPress: navigateTo('Faq') },
+    { icon: 'checkbox-outline',        label: 'Document Checklists', onPress: navigateTo('DocumentChecklist') },
+  ];
+
+  const groupAbout: MenuItem[] = [
+    { icon: 'information-circle-outline', label: 'About Us',           onPress: () => setDetail('about') },
+    { icon: 'lock-closed-outline',        label: 'Privacy Policy',     onPress: () => setDetail('privacy') },
+    { icon: 'document-text-outline',      label: 'Terms & Conditions', onPress: () => setDetail('terms') },
   ];
 
   const groupTwo: MenuItem[] = [
     { icon: 'bug-outline',   label: 'Report an Issue', onPress: navigateTo('ReportIssue') },
+    { icon: 'mail-outline',  label: 'Contact Us',      onPress: () => setDetail('contact') },
     { icon: 'share-outline', label: 'Share App', onPress: handleShare },
     ...(Platform.OS === 'ios' && appStoreId
       ? [{ icon: 'star-outline' as const, label: 'Review on App Store', onPress: handleRate }]
@@ -197,10 +293,12 @@ export function SideMenu({ visible, onClose }: Props) {
         { backgroundColor: c.surfacePrimary, width: MENU_WIDTH,
           transform: [{ translateX: slideX }] },
       ]}>
-        {detail ? (
+        {detail === 'contact' ? (
+          <ContactView onClose={() => setDetail(null)} />
+        ) : detail ? (
           <DetailView
-            title={detail === 'about' ? 'About Us' : 'Privacy Policy'}
-            body={detail  === 'about' ? ABOUT_TEXT : PRIVACY_TEXT}
+            title={DETAIL_TITLES[detail]}
+            body={detail === 'about' ? ABOUT_TEXT : detail === 'terms' ? TERMS_TEXT : PRIVACY_TEXT}
             onClose={() => setDetail(null)}
           />
         ) : (
@@ -228,17 +326,32 @@ export function SideMenu({ visible, onClose }: Props) {
               contentContainerStyle={{ paddingBottom: insets.bottom + spacing.xl }}
             >
 
-              {/* Group 1 */}
+              {/* General */}
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>General</Text>
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                 {groupOne.map((item, i) => renderItem(item, i, groupOne))}
               </View>
 
-              {/* Group 2 */}
+              {/* About */}
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>About</Text>
+              <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
+                {groupAbout.map((item, i) => renderItem(item, i, groupAbout))}
+              </View>
+
+              {/* Support */}
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>Support</Text>
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                 {groupTwo.map((item, i) => renderItem(item, i, groupTwo))}
               </View>
 
             </ScrollView>
+
+            {/* Footer */}
+            <View style={[s.footer, { paddingBottom: insets.bottom + spacing.md, borderTopColor: c.border }]}>
+              <Text style={[s.footerText, { color: c.textMuted }]}>
+                CRS Pulse v{Constants.expoConfig?.version ?? '1.0.0'}
+              </Text>
+            </View>
           </>
         )}
       </Animated.View>
@@ -273,11 +386,23 @@ const s = StyleSheet.create({
   closeBtn:    { padding: spacing.xs },
 
   // Groups
+  groupTitle: {
+    marginHorizontal: spacing.base, marginTop: spacing.lg, marginBottom: spacing.xs,
+    fontSize: typography.xs, fontWeight: typography.bold,
+    letterSpacing: 0.8, textTransform: 'uppercase',
+  },
   group: {
-    marginHorizontal: spacing.base, marginTop: spacing.base,
+    marginHorizontal: spacing.base,
     borderRadius: borderRadius.md, borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
+
+  // Footer
+  footer: {
+    alignItems: 'center', paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth, marginTop: spacing.sm,
+  },
+  footerText: { fontSize: typography.xs, fontWeight: typography.medium, letterSpacing: 0.3 },
 
   // Row
   row: {

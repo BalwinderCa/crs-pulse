@@ -3,6 +3,7 @@ import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useProfileStore } from '@/store/profileStore';
+import { useApplicationStore } from '@/store/applicationStore';
 import type { ThemeMode } from '@/store/profileStore';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -427,7 +428,10 @@ export default function ProfileScreen() {
         <Button
           title="Reset All Data"
           variant="danger"
-          onPress={() => reset()}
+          onPress={() => {
+            reset();
+            useApplicationStore.getState().clear();
+          }}
           fullWidth
         />
       </Card>

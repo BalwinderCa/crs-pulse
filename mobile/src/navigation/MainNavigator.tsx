@@ -7,7 +7,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout, TAB_BAR_TOP_PADDING } from '@/hooks/useTabBarLayout';
 import type { MainTabParamList } from '@/types';
 
-import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
+import HomeScreen from '@/features/home/screens/HomeScreen';
 import TimelineScreen from '@/features/timeline/screens/TimelineScreen';
 import DrawsScreen from '@/features/draws/screens/DrawsScreen';
 import AnalyticsScreen from '@/features/analytics/screens/AnalyticsScreen';
@@ -81,7 +81,7 @@ export default function MainNavigator() {
         },
       })}
     >
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen name="Dashboard" component={HomeScreen} />
       <Tab.Screen name="Timeline"  component={TimelineScreen} />
       <Tab.Screen name="Draws"     component={DrawsScreen} />
       <Tab.Screen name="Analytics" component={AnalyticsScreen} />

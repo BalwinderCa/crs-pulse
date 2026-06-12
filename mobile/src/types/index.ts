@@ -77,10 +77,15 @@ export type Prediction = {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   Main: undefined;
   Faq:  undefined;
   ReportIssue: undefined;
   SinpCalculator: undefined;
+  CrsCalculator: undefined;
+  Calculators: undefined;
+  ApplicationSetup: undefined;
+  DocumentChecklist: undefined;
 };
 
 export type MainTabParamList = {

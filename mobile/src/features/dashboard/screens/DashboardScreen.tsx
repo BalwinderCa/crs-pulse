@@ -15,7 +15,7 @@ import type { ProgramCategory } from '@/types';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
-import { SideMenu } from '../components/SideMenu';
+import { useNavigation } from '@react-navigation/native';
 
 const EDU_OPTIONS = [
   { label: 'Less than high school', value: 'less_than_secondary' },
@@ -339,7 +339,7 @@ export default function DashboardScreen() {
   const [exp,      setExp]      = useState<SectionMap>({ ...CLOSED_SECTIONS });
   // reviewed: tracks which sections the user has explicitly opened this session
   const [, setReviewed] = useState<SectionMap>({ ...CLOSED_SECTIONS });
-  const [menuOpen, setMenuOpen] = useState(false);
+  const navigation = useNavigation();
 
   // Re-sync all local state when store is hard-reset
   useEffect(() => {
@@ -647,12 +647,12 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <View style={[st.appHeader, { borderBottomColor: c.border }]}>
-          <TouchableOpacity onPress={() => setMenuOpen(true)} hitSlop={12} style={st.hamburger}>
-            <Ionicons name="menu" size={26} color={c.textPrimary} />
+          <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={12} style={st.hamburger}>
+            <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={[st.appGreeting, { color: c.textMuted }]}>Express Entry</Text>
-            <Text style={[st.appTitle, { color: c.textPrimary }]}>CRS Pulse</Text>
+            <Text style={[st.appTitle, { color: c.textPrimary }]}>CRS Calculator</Text>
           </View>
           {scoreReady && (
             <View style={[st.catBadge, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
@@ -660,8 +660,6 @@ export default function DashboardScreen() {
             </View>
           )}
         </View>
-
-        <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
 
         {/* Calculator */}
         <View style={st.calcSection}>
