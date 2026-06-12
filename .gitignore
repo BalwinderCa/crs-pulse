@@ -90,3 +90,6 @@ workers/push/.wrangler/
 
 # Broken symlinks / local paths
 mobile/Crs\ Pulse
+
+# Claude Code local config/skills
+.claude/
