@@ -121,7 +121,7 @@ export function SideMenu({ visible, onClose }: Props) {
         Animated.timing(backdropOpacity, { toValue: 0, duration: 180, useNativeDriver: true }),
       ]).start(() => setDetail(null));
     }
-  }, [visible]);
+  }, [visible, slideX, backdropOpacity]);
 
   const handleShare = async () => {
     try {

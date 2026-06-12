@@ -367,7 +367,7 @@ export default function TimelineScreen() {
   // null = closed, undefined = add mode, Milestone = edit mode
   const [modalMilestone, setModalMilestone] = useState<Milestone | null | undefined>(null);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [load]);
 
   const listStyle = [s.list, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
 
