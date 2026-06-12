@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
-import { useProfileStore } from '@/store/profileStore';
+import { useProfileStore, DEFAULT_PROFILE } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
@@ -10,7 +10,7 @@ import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
 import type { RootStackParamList } from '@/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
-const BOOT_TIMEOUT_MS = 8_000;
+const BOOT_TIMEOUT_MS = 5_000;
 
 export default function RootNavigator() {
   const { profile, load: loadProfile } = useProfileStore();
@@ -20,7 +20,14 @@ export default function RootNavigator() {
   useEffect(() => {
     loadDraws().catch(() => {});
 
-    const timeout = setTimeout(() => setReady(true), BOOT_TIMEOUT_MS);
+    const timeout = setTimeout(() => {
+      // Safety net: if AsyncStorage hung and profile is still null, seed defaults
+      // so the app can render rather than freezing on the splash indefinitely.
+      if (useProfileStore.getState().profile === null) {
+        useProfileStore.setState({ profile: DEFAULT_PROFILE });
+      }
+      setReady(true);
+    }, BOOT_TIMEOUT_MS);
 
     loadProfile()
       .catch(() => {})
@@ -32,11 +39,13 @@ export default function RootNavigator() {
     return () => clearTimeout(timeout);
   }, [loadProfile, loadDraws]);
 
+  // Hide splash as soon as ready — don't gate on profile, as loadProfile()
+  // always sets a non-null value and the null guard below handles the brief gap.
   useEffect(() => {
-    if (ready && profile !== null) {
+    if (ready) {
       ExpoSplash.hideAsync().catch(() => {});
     }
-  }, [ready, profile]);
+  }, [ready]);
 
   if (!ready || profile === null) {
     return null;

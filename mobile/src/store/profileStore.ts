@@ -80,7 +80,7 @@ export type LocalProfile = {
   calculatorInputs: CalcInputs;
 };
 
-const DEFAULT_PROFILE: LocalProfile = {
+export const DEFAULT_PROFILE: LocalProfile = {
   crs_score: 0,
   category: 'CEC',
   accent_color: '#DC2626',
