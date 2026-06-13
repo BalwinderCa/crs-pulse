@@ -1,7 +1,14 @@
+import {
+  listTokens,
+  migrateLegacyTokens,
+  registerToken,
+  revokeToken,
+  revokeTokens,
+} from './tokenStore';
+
 const IRCC_URL =
   'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
-const TOKENS_KEY = 'tokens';
 const LAST_DRAW_KEY = 'last_draw_number';
 
 const CATEGORY_MAP: Record<string, string> = {
@@ -31,12 +38,6 @@ export interface Env {
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
-const MAX_TOKENS = 50_000;
-
-interface StoredToken {
-  token: string;
-  platform: 'ios' | 'android';
-}
 
 interface LatestDraw {
   draw_number: number;
@@ -107,35 +108,6 @@ function corsPreflight(): Response {
   });
 }
 
-async function getTokens(kv: KVNamespace): Promise<StoredToken[]> {
-  const raw = await kv.get(TOKENS_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw) as StoredToken[];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-async function saveTokens(kv: KVNamespace, tokens: StoredToken[]): Promise<void> {
-  await kv.put(TOKENS_KEY, JSON.stringify(tokens));
-}
-
-async function registerToken(kv: KVNamespace, token: string, platform: 'ios' | 'android'): Promise<void> {
-  const tokens = await getTokens(kv);
-  if (tokens.some((t) => t.token === token)) return;
-  if (tokens.length >= MAX_TOKENS) {
-    throw new Error('Token registry full');
-  }
-  tokens.push({ token, platform });
-  await saveTokens(kv, tokens);
-}
-
-async function revokeToken(kv: KVNamespace, token: string): Promise<void> {
-  await saveTokens(kv, (await getTokens(kv)).filter((t) => t.token !== token));
-}
-
 async function fetchLatestDraw(): Promise<LatestDraw | null> {
   const res = await fetch(IRCC_URL, {
     headers: { Accept: 'application/json', 'User-Agent': 'CRS-Pulse-Push/1.0' },
@@ -157,12 +129,24 @@ async function fetchLatestDraw(): Promise<LatestDraw | null> {
   return latest;
 }
 
+interface ExpoTicket {
+  status: 'ok' | 'error';
+  details?: { error?: string };
+}
+
+/**
+ * Fans out to Expo in 100-message chunks and returns the tokens Expo reports as
+ * `DeviceNotRegistered` so the caller can prune them. Pruning keeps the KV
+ * registry from accumulating dead tokens (uninstalls, revoked grants) over time.
+ */
 async function sendExpoPush(
   tokens: string[],
   title: string,
   body: string,
   data: Record<string, string>,
-): Promise<void> {
+): Promise<string[]> {
+  const unregistered: string[] = [];
+
   for (let i = 0; i < tokens.length; i += 100) {
     const chunk = tokens.slice(i, i + 100);
     const messages = chunk.map((to) => ({
@@ -174,12 +158,29 @@ async function sendExpoPush(
       priority: 'high',
     }));
 
-    await fetch(EXPO_PUSH_URL, {
+    const res = await fetch(EXPO_PUSH_URL, {
       method: 'POST',
       headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(messages),
     });
+
+    if (!res.ok) continue;
+
+    try {
+      const payload = (await res.json()) as { data?: ExpoTicket[] };
+      const tickets = payload.data ?? [];
+      tickets.forEach((ticket, idx) => {
+        if (ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered') {
+          const bad = chunk[idx];
+          if (bad) unregistered.push(bad);
+        }
+      });
+    } catch {
+      // Non-JSON response — nothing to prune from this chunk.
+    }
   }
+
+  return unregistered;
 }
 
 async function checkAndNotify(kv: KVNamespace): Promise<{
@@ -187,6 +188,9 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
   draw_number?: number;
   token_count?: number;
 }> {
+  // Fold any legacy single-array registry into per-token keys before reading.
+  await migrateLegacyTokens(kv, isValidExpoToken);
+
   const latest = await fetchLatestDraw();
   if (!latest) return { notified: false };
 
@@ -205,7 +209,7 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
 
   await kv.put(LAST_DRAW_KEY, String(latest.draw_number));
 
-  const tokens = await getTokens(kv);
+  const tokens = await listTokens(kv);
   if (tokens.length === 0) {
     return { notified: false, draw_number: latest.draw_number, token_count: 0 };
   }
@@ -213,17 +217,16 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
   const title = `New Express Entry Draw #${latest.draw_number}`;
   const body = `${latest.category} — Cutoff: ${latest.cutoff} points`;
 
-  await sendExpoPush(
-    tokens.map((t) => t.token),
-    title,
-    body,
-    {
-      type: 'new_draw',
-      draw_number: String(latest.draw_number),
-      cutoff: String(latest.cutoff),
-      category: latest.category,
-    },
-  );
+  const unregistered = await sendExpoPush(tokens, title, body, {
+    type: 'new_draw',
+    draw_number: String(latest.draw_number),
+    cutoff: String(latest.cutoff),
+    category: latest.category,
+  });
+
+  if (unregistered.length > 0) {
+    await revokeTokens(kv, unregistered);
+  }
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
 }
