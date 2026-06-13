@@ -13,6 +13,7 @@ import SinpCalculatorScreen from '@/features/sinp/screens/SinpCalculatorScreen';
 import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
 import CalculatorsScreen from '@/features/calculators/screens/CalculatorsScreen';
 import ApplicationSetupScreen from '@/features/tracker/screens/ApplicationSetupScreen';
+import ChecklistHubScreen from '@/features/checklist/screens/ChecklistHubScreen';
 import DocumentChecklistScreen from '@/features/checklist/screens/DocumentChecklistScreen';
 import FswCalculatorScreen from '@/features/fsw/screens/FswCalculatorScreen';
 import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScreen';
@@ -88,7 +89,8 @@ export default function RootNavigator() {
         <Stack.Screen name="CrsCalculator" component={DashboardScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Calculators" component={CalculatorsScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ApplicationSetup" component={ApplicationSetupScreen} options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="DocumentChecklist" component={DocumentChecklistScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="DocumentChecklist" component={ChecklistHubScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="DocumentChecklistDetail" component={DocumentChecklistScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="FswCalculator" component={FswCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="BcSirsCalculator" component={BcSirsCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />

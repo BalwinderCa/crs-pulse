@@ -14,7 +14,7 @@ type CalcEntry = {
   title: string;
   desc: string;
   meta: string;
-  route?: keyof RootStackParamList;
+  route?: 'CrsCalculator' | 'SinpCalculator' | 'FswCalculator' | 'BcSirsCalculator';
 };
 
 const CALCULATORS: CalcEntry[] = [

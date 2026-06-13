@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/types';
 import { useProfileStore } from '@/store/profileStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import type { ThemeMode } from '@/store/profileStore';
@@ -12,7 +15,6 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { useDrawNotifications } from '@/hooks/useDrawNotifications';
 import {
   calculateCRS,
   suggestCategory,
@@ -201,7 +203,7 @@ export default function ProfileScreen() {
   const accent  = useAccentColor();
   const styles  = makeStyles(colors, accent);
   const { profile, save, reset } = useProfileStore();
-  const { enabled: notifEnabled, toggle: toggleNotif } = useDrawNotifications();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [exporting,  setExporting]  = useState(false);
 
   if (!profile) {
@@ -379,20 +381,19 @@ export default function ProfileScreen() {
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Notifications</Text>
-        <View style={styles.notifRow}>
+        <TouchableOpacity
+          style={styles.notifRow}
+          onPress={() => navigation.navigate('Notifications')}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Open notification settings"
+        >
           <View style={styles.notifText}>
-            <Text style={styles.notifLabel}>New Draw Alerts</Text>
-            <Text style={styles.hint}>Get notified when a new Express Entry draw is published</Text>
+            <Text style={styles.notifLabel}>Notifications</Text>
+            <Text style={styles.hint}>Manage draw alerts and view recent draws</Text>
           </View>
-          <Switch
-            value={notifEnabled}
-            onValueChange={toggleNotif}
-            trackColor={{ false: colors.surfaceTertiary, true: accent }}
-            thumbColor={palette.white}
-            accessibilityLabel="Enable new draw notifications"
-          />
-        </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
       </Card>
 
       {/* ── Appearance ── */}

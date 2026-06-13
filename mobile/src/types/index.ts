@@ -86,6 +86,7 @@ export type RootStackParamList = {
   Calculators: undefined;
   ApplicationSetup: undefined;
   DocumentChecklist: undefined;
+  DocumentChecklistDetail: { programId: string };
   FswCalculator: undefined;
   BcSirsCalculator: undefined;
   Notifications: undefined;

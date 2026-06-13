@@ -2,112 +2,61 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
-
-interface ChecklistSection {
-  title: string;
-  icon: string;
-  items: { id: string; label: string; hint?: string }[];
-}
-
-const SECTIONS: ChecklistSection[] = [
-  {
-    title: 'Identity',
-    icon: 'person-outline',
-    items: [
-      { id: 'passport',     label: 'Valid passport', hint: 'Should not expire within 6 months' },
-      { id: 'photo',        label: 'Digital photo',  hint: 'Meets IRCC specifications' },
-      { id: 'birth_cert',   label: 'Birth certificate' },
-      { id: 'marriage_cert',label: 'Marriage certificate (if married)' },
-    ],
-  },
-  {
-    title: 'Language',
-    icon: 'language-outline',
-    items: [
-      { id: 'lang_test',   label: 'Language test results', hint: 'IELTS / CELPIP / PTE Core / TEF / TCF — valid 2 years' },
-      { id: 'lang_second', label: 'Second language results (if claiming points)' },
-    ],
-  },
-  {
-    title: 'Education',
-    icon: 'school-outline',
-    items: [
-      { id: 'eca',         label: 'Educational Credential Assessment (ECA)', hint: 'WES, IQAS, ICES, etc. — valid 5 years' },
-      { id: 'degrees',     label: 'Degrees and diplomas' },
-      { id: 'transcripts', label: 'Transcripts' },
-    ],
-  },
-  {
-    title: 'Work Experience',
-    icon: 'briefcase-outline',
-    items: [
-      { id: 'ref_letters', label: 'Employment reference letters', hint: 'Duties, hours/week, salary, dates, company letterhead' },
-      { id: 'pay_stubs',   label: 'Pay stubs / T4s' },
-      { id: 'job_offer',   label: 'Job offer letter (if applicable)' },
-    ],
-  },
-  {
-    title: 'Funds & Civil Documents',
-    icon: 'wallet-outline',
-    items: [
-      { id: 'funds',  label: 'Proof of funds', hint: 'Official bank letters — 6-month history' },
-      { id: 'police', label: 'Police certificates', hint: 'Every country lived in 6+ months since age 18' },
-      { id: 'medical',label: 'Immigration medical exam', hint: 'IRCC-approved panel physician' },
-    ],
-  },
-  {
-    title: 'Other',
-    icon: 'documents-outline',
-    items: [
-      { id: 'translations', label: 'Certified translations', hint: 'For any document not in English or French' },
-      { id: 'pnp_cert',     label: 'Provincial nomination certificate (if applicable)' },
-      { id: 'spouse_docs',  label: "Spouse / partner documents (if accompanying)" },
-    ],
-  },
-];
-
-const TOTAL_ITEMS = SECTIONS.reduce((n, s) => n + s.items.length, 0);
+import { findChecklistProgram } from '../data/checklists';
+import type { RootStackParamList } from '@/types';
 
 export default function DocumentChecklistScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const route = useRoute<RouteProp<RootStackParamList, 'DocumentChecklistDetail'>>();
+  const programId = route.params?.programId ?? 'express_entry';
+  const program = findChecklistProgram(programId) ?? findChecklistProgram('express_entry')!;
+  const storageKey = `${STORAGE_KEYS.DOC_CHECKLIST}:${program.id}`;
+
   const [checked, setChecked] = useState<Record<string, boolean>>({});
 
+  const totalItems = useMemo(
+    () => program.sections.reduce((n, s) => n + s.items.length, 0),
+    [program],
+  );
+
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEYS.DOC_CHECKLIST)
-      .then((raw) => { if (raw) setChecked(JSON.parse(raw)); })
+    AsyncStorage.getItem(storageKey)
+      .then((raw) => setChecked(raw ? JSON.parse(raw) : {}))
       .catch(() => {});
-  }, []);
+  }, [storageKey]);
 
   const toggle = (id: string) => {
     setChecked((prev) => {
       const next = { ...prev, [id]: !prev[id] };
-      AsyncStorage.setItem(STORAGE_KEYS.DOC_CHECKLIST, JSON.stringify(next)).catch(() => {});
+      AsyncStorage.setItem(storageKey, JSON.stringify(next)).catch(() => {});
       return next;
     });
   };
 
   const doneCount = useMemo(() => Object.values(checked).filter(Boolean).length, [checked]);
-  const progress = TOTAL_ITEMS === 0 ? 0 : doneCount / TOTAL_ITEMS;
+  const progress = totalItems === 0 ? 0 : doneCount / totalItems;
+  const allDone = doneCount >= totalItems && totalItems > 0;
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Document Checklist" variant="stack" />
+      <AppHeader title={program.label} variant="stack" />
 
       {/* Progress */}
       <View style={s.progressWrap}>
         <View style={s.progressLabels}>
           <Text style={[s.progressText, { color: c.textSecondary }]}>
-            {doneCount} of {TOTAL_ITEMS} documents ready
+            {doneCount} of {totalItems} documents ready
           </Text>
-          <Text style={[s.progressText, { color: doneCount === TOTAL_ITEMS ? palette.success : c.textMuted }]}>
+          <Text style={[s.progressText, { color: allDone ? palette.success : c.textMuted }]}>
             {Math.round(progress * 100)}%
           </Text>
         </View>
@@ -115,7 +64,7 @@ export default function DocumentChecklistScreen() {
           <View
             style={[
               s.progressFill,
-              { backgroundColor: doneCount === TOTAL_ITEMS ? palette.success : accent, width: `${progress * 100}%` },
+              { backgroundColor: allDone ? palette.success : accent, width: `${progress * 100}%` },
             ]}
           />
         </View>
@@ -125,12 +74,9 @@ export default function DocumentChecklistScreen() {
         contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[s.intro, { color: c.textSecondary }]}>
-          Standard documents for an Express Entry permanent residence application. Your personalized
-          checklist after an ITA is the official list — always follow your IRCC account.
-        </Text>
+        <Text style={[s.intro, { color: c.textSecondary }]}>{program.intro}</Text>
 
-        {SECTIONS.map((section) => {
+        {program.sections.map((section) => {
           const sectionDone = section.items.every((i) => checked[i.id]);
           return (
             <View
@@ -189,12 +135,7 @@ export default function DocumentChecklistScreen() {
 }
 
 const s = StyleSheet.create({
-  wrap:      { flex: 1 },
-  topBar:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-               paddingHorizontal: spacing.base, paddingBottom: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth },
-  backBtn:   { flexDirection: 'row', alignItems: 'center', gap: 2, width: 60 },
-  backLabel: { fontSize: typography.base, fontWeight: typography.medium },
-  title:     { fontSize: typography.base, fontWeight: typography.semibold, flex: 1, textAlign: 'center' },
+  wrap: { flex: 1 },
 
   progressWrap:   { paddingHorizontal: spacing.base, paddingTop: spacing.md, gap: spacing.xs },
   progressLabels: { flexDirection: 'row', justifyContent: 'space-between' },
