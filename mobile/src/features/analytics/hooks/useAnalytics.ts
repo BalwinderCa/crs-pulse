@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useDrawsStore } from '@/store/drawsStore';
+import { downsample, MAX_CHART_POINTS } from '@/utils/downsample';
 import type { Analytics, Category, ChartDataPoint } from '@/types';
 
 type Params = { category?: Category | 'all'; period?: 'all' | '1y' | '6m' | '3m' };
@@ -40,10 +41,13 @@ export function useAnalytics({ category = 'all', period = 'all' }: Params = {}) 
     const trendPct = olderAvg > 0 ? ((newerAvg - olderAvg) / olderAvg) * 100 : 0;
     const trend: Analytics['trend'] = Math.abs(trendPct) < 1 ? 'stable' : trendPct > 0 ? 'rising' : 'falling';
 
-    // Chart data: oldest → newest
-    const chartData: ChartDataPoint[] = [...filtered]
-      .reverse()
-      .map(d => ({ date: d.date, cutoff: d.cutoff_score, invitations: d.invitations_issued }));
+    // Chart data: oldest → newest, capped so large histories stay smooth/legible
+    const chartData: ChartDataPoint[] = downsample(
+      [...filtered]
+        .reverse()
+        .map(d => ({ date: d.date, cutoff: d.cutoff_score, invitations: d.invitations_issued })),
+      MAX_CHART_POINTS,
+    );
 
     return {
       category,
