@@ -28,6 +28,10 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { setupPushListeners } from '@/services/pushService';
 import { useDrawsStore } from '@/store/drawsStore';
+import { installGlobalErrorHandler } from '@/services/errorReporter';
+
+// Capture uncaught JS errors as early as possible (idempotent).
+installGlobalErrorHandler();
 
 // Keep native splash visible until app data is ready, then hide in RootNavigator.
 SplashScreen.preventAutoHideAsync().catch(() => {});

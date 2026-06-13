@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { Appearance, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { palette, spacing, typography } from '@/theme';
 import { darkColors, lightColors } from '@/theme/colors';
+import { reportError } from '@/services/errorReporter';
 
 type Props = { children: ReactNode; fallback?: ReactNode };
 type State = { hasError: boolean; error: Error | null };
@@ -14,9 +15,10 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
-    if (__DEV__) {
-      console.error('[ErrorBoundary]', error, info.componentStack);
-    }
+    void reportError(error, {
+      source: 'react-error-boundary',
+      componentStack: info.componentStack,
+    });
   }
 
   reset = () => this.setState({ hasError: false, error: null });
