@@ -15,6 +15,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 import type { Category } from '@/types';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 const PERIODS = [
   { label: '3M', value: '3m' as const },
@@ -108,8 +109,7 @@ export default function AnalyticsScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Express Entry</Text>
-          <Text style={styles.title}>Analytics</Text>
+          <AppHeader title="Trends" />
         </View>
         <View style={styles.skeletons}>{[1,2,3].map((k) => <SkeletonCard key={k} />)}</View>
       </SafeAreaView>
@@ -143,8 +143,7 @@ export default function AnalyticsScreen() {
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={scrollContentStyle}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Express Entry</Text>
-          <Text style={styles.title}>Analytics</Text>
+          <AppHeader title="Trends" />
         </View>
 
         {/* Category filter */}

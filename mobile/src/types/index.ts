@@ -86,6 +86,10 @@ export type RootStackParamList = {
   Calculators: undefined;
   ApplicationSetup: undefined;
   DocumentChecklist: undefined;
+  FswCalculator: undefined;
+  BcSirsCalculator: undefined;
+  Notifications: undefined;
+  ProcessingTimes: undefined;
 };
 
 export type MainTabParamList = {

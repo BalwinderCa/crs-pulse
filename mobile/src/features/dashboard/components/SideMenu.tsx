@@ -234,14 +234,15 @@ export function SideMenu({ visible, onClose }: Props) {
   };
 
   // Two groups of menu items
-  const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'DocumentChecklist') => () => {
+  const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'DocumentChecklist' | 'ProcessingTimes') => () => {
     onClose();
     navigation.navigate(screen);
   };
 
   const groupOne: MenuItem[] = [
-    { icon: 'help-circle-outline',     label: 'FAQ',                 onPress: navigateTo('Faq') },
-    { icon: 'checkbox-outline',        label: 'Document Checklists', onPress: navigateTo('DocumentChecklist') },
+    { icon: 'help-circle-outline',     label: 'FAQ',                    onPress: navigateTo('Faq') },
+    { icon: 'checkbox-outline',        label: 'Document Checklists',    onPress: navigateTo('DocumentChecklist') },
+    { icon: 'hourglass-outline',       label: 'Check Processing Times', onPress: navigateTo('ProcessingTimes') },
   ];
 
   const groupAbout: MenuItem[] = [

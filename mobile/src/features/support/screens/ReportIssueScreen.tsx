@@ -1,12 +1,12 @@
 import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GITHUB_REPO_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 const SUPPORT_EMAIL = 'balwinderxcode@gmail.com';
 
@@ -25,7 +25,6 @@ export default function ReportIssueScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
 
   const actions = [
     {
@@ -44,14 +43,7 @@ export default function ReportIssueScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <View style={[s.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={16} style={s.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[s.backLabel, { color: c.textPrimary }]}>Back</Text>
-        </TouchableOpacity>
-        <Text style={[s.title, { color: c.textPrimary }]}>Report an Issue</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      <AppHeader title="Report an Issue" variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}

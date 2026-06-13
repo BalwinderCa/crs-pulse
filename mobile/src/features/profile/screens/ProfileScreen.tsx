@@ -24,6 +24,7 @@ import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { exportProfilePdf } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 const LANG_TEST_MAP: Record<string, string> = {
@@ -207,8 +208,7 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.headerWrap}>
-          <Text style={styles.greeting}>Your Account</Text>
-          <Text style={styles.title}>Profile</Text>
+          <AppHeader title="Profile" />
         </View>
         <View style={styles.skeletons}><SkeletonCard /><SkeletonCard /></View>
       </SafeAreaView>
@@ -313,8 +313,7 @@ export default function ProfileScreen() {
   return (
     <ScreenWrapper scrollable keyboardAvoiding>
       <View style={styles.headerWrap}>
-        <Text style={styles.greeting}>Your Account</Text>
-        <Text style={styles.title}>Profile</Text>
+        <AppHeader title="Profile" />
       </View>
 
       {/* ── CRS Score Hero ── */}

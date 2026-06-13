@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { AppHeader } from '@/components/layout/AppHeader';
 import { useApplicationStore } from '@/store/applicationStore';
 import {
   APPLICATION_CATEGORIES,
@@ -103,15 +104,7 @@ export default function ApplicationSetupScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      {/* Top bar */}
-      <View style={[s.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={back} hitSlop={16} style={s.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[s.backLabel, { color: c.textPrimary }]}>Back</Text>
-        </TouchableOpacity>
-        <Text style={[s.title, { color: c.textPrimary }]}>Track Application</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      <AppHeader title="Track Application" variant="stack" onBackPress={back} />
 
       {/* Progress */}
       <View style={s.progressWrap}>

@@ -7,6 +7,7 @@ import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import type { RootStackParamList } from '@/types';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 type CalcEntry = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -35,13 +36,15 @@ const CALCULATORS: CalcEntry[] = [
     icon: 'checkmark-done-outline',
     title: 'FSW Eligibility — 67 points',
     desc: 'Federal Skilled Worker six-factor eligibility check.',
-    meta: 'Coming soon',
+    meta: 'Out of 100 · pass 67',
+    route: 'FswCalculator',
   },
   {
     icon: 'trail-sign-outline',
     title: 'British Columbia — SIRS',
     desc: 'BC PNP Skills Immigration registration score.',
-    meta: 'Coming soon',
+    meta: 'Out of 200 · draw-based',
+    route: 'BcSirsCalculator',
   },
 ];
 
@@ -53,14 +56,7 @@ export default function CalculatorsScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <View style={[s.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={16} style={s.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[s.backLabel, { color: c.textPrimary }]}>Back</Text>
-        </TouchableOpacity>
-        <Text style={[s.title, { color: c.textPrimary }]}>Calculators</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      <AppHeader title="Calculators" variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}

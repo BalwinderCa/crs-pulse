@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -6,10 +6,14 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useApplicationStore } from '@/store/applicationStore';
-import { findApplicationType, PROCESSING_TIMES_UPDATED } from '@/features/tracker/data/processingTimes';
+import {
+  findApplicationType,
+  getApplicationStages,
+  PROCESSING_TIMES_UPDATED,
+} from '@/features/tracker/data/processingTimes';
 import { Card } from '@/components/common/Card';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { SideMenu } from '@/features/dashboard/components/SideMenu';
+import { AppHeader } from '@/components/layout/AppHeader';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -39,22 +43,23 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const { draws, isRefreshing, refresh } = useDrawsStore();
   const application = useApplicationStore((s) => s.application);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   // Tracked application → progress vs typical IRCC processing time
   const tracked = useMemo(() => {
     if (!application) return null;
     const found = findApplicationType(application.categoryId, application.typeId);
     if (!found) return null;
+    const stages = getApplicationStages(application.categoryId, application.typeId);
     const totalDays = Math.round(found.type.months * 30.44);
     if (!application.appliedDate) {
-      return { ...found, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
+      return { ...found, stages, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
     }
     const applied = new Date(application.appliedDate);
     const daysIn = Math.max(0, daysBetween(applied, new Date()));
     const decisionDate = new Date(applied.getTime() + totalDays * DAY_MS);
     return {
       ...found,
+      stages,
       applied,
       daysIn,
       totalDays,
@@ -86,18 +91,7 @@ export default function HomeScreen() {
 
   return (
     <ScreenWrapper scrollable refreshing={isRefreshing} onRefresh={refresh}>
-      {/* Header */}
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => setMenuOpen(true)} hitSlop={12} style={s.hamburger}>
-          <Ionicons name="menu" size={26} color={c.textPrimary} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[s.greeting, { color: c.textMuted }]}>Express Entry</Text>
-          <Text style={[s.appTitle, { color: c.textPrimary }]}>CRS Pulse</Text>
-        </View>
-      </View>
-
-      <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+      <AppHeader title="Home" />
 
       {/* Score hero */}
       <Card style={s.heroCard}>
@@ -174,21 +168,87 @@ export default function HomeScreen() {
                 </View>
                 <View style={[s.drawDivider, { backgroundColor: c.border }]} />
                 <View style={s.appStat}>
-                  <Text style={[s.appStatVal, { color: accent }]}>
+                  <Text style={[s.appStatVal, { color: tracked.progress >= 1 ? palette.warning : accent }]}>
                     {Math.max(0, Math.ceil((tracked.totalDays - (tracked.daysIn ?? 0)) / 30.44))}
                   </Text>
                   <Text style={[s.appStatLabel, { color: c.textMuted }]}>Months left (est.)</Text>
                 </View>
               </View>
               <View style={[s.appTrack, { backgroundColor: c.surfaceTertiary }]}>
-                <View style={[s.appFill, { backgroundColor: accent, width: `${Math.round(tracked.progress * 100)}%` }]} />
+                <View
+                  style={[
+                    s.appFill,
+                    {
+                      backgroundColor: tracked.progress >= 1 ? palette.warning : accent,
+                      width: `${Math.min(100, Math.round(tracked.progress * 100))}%`,
+                    },
+                  ]}
+                />
               </View>
-              <Text style={[s.appDecision, { color: c.textSecondary }]}>
-                Estimated decision:{' '}
-                <Text style={{ color: accent, fontWeight: typography.bold }}>
-                  {tracked.decisionDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })}
+              <View style={s.appProgressRow}>
+                <Text style={[s.appProgressText, { color: c.textMuted }]}>
+                  Applied {tracked.applied.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </Text>
+                <Text style={[s.appProgressText, { color: c.textMuted }]}>
+                  {Math.min(100, Math.round(tracked.progress * 100))}% of typical time
+                </Text>
+              </View>
+
+              {/* Estimated stage */}
+              <View style={s.stageRow}>
+                {tracked.stages.map((stage, i) => {
+                  const reached = tracked.progress >= stage.at;
+                  const isCurrent =
+                    reached && (i === tracked.stages.length - 1 || tracked.progress < tracked.stages[i + 1]!.at);
+                  return (
+                    <View key={stage.label} style={s.stageItem}>
+                      <View
+                        style={[
+                          s.stageDot,
+                          { backgroundColor: reached ? accent : c.surfaceTertiary },
+                          isCurrent && { borderWidth: 2, borderColor: accent + '55' },
+                        ]}
+                      >
+                        <Ionicons
+                          name={(reached ? stage.icon : 'ellipse-outline') as any}
+                          size={12}
+                          color={reached ? '#fff' : c.textMuted}
+                        />
+                      </View>
+                      <Text
+                        style={[
+                          s.stageLabel,
+                          { color: isCurrent ? c.textPrimary : c.textMuted },
+                          isCurrent && { fontWeight: typography.bold },
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {stage.label}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+              <Text style={[s.stageNote, { color: c.textMuted }]}>
+                Typical stage for time elapsed — actual progress shows in your IRCC account
               </Text>
+
+              {tracked.progress >= 1 ? (
+                <View style={[s.overdueRow, { backgroundColor: palette.warning + '14' }]}>
+                  <Ionicons name="alert-circle-outline" size={15} color={palette.warning} />
+                  <Text style={[s.overdueText, { color: palette.warning }]}>
+                    Past typical processing time. Check your IRCC account, or contact IRCC via
+                    webform if you have not heard anything.
+                  </Text>
+                </View>
+              ) : (
+                <Text style={[s.appDecision, { color: c.textSecondary }]}>
+                  Estimated decision:{' '}
+                  <Text style={{ color: accent, fontWeight: typography.bold }}>
+                    {tracked.decisionDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })}
+                  </Text>
+                </Text>
+              )}
             </>
           ) : (
             <Text style={[s.appDecision, { color: c.textSecondary }]}>
@@ -203,6 +263,15 @@ export default function HomeScreen() {
                 <Ionicons name="people-outline" size={14} color={c.textMuted} />
                 <Text style={[s.appInfoText, { color: c.textSecondary }]}>
                   About {tracked.type.peopleWaiting.toLocaleString()} people waiting for a decision
+                </Text>
+              </View>
+            )}
+            {tracked.type.peopleWaiting != null && (
+              <View style={s.appInfoRow}>
+                <Ionicons name="speedometer-outline" size={14} color={c.textMuted} />
+                <Text style={[s.appInfoText, { color: c.textSecondary }]}>
+                  ≈{Math.round(tracked.type.peopleWaiting / tracked.type.months).toLocaleString()}{' '}
+                  decisions per month at the current pace
                 </Text>
               </View>
             )}
@@ -298,14 +367,6 @@ export default function HomeScreen() {
 }
 
 const s = StyleSheet.create({
-  header: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    paddingTop: spacing.base, paddingBottom: spacing.md,
-  },
-  hamburger: { padding: 2 },
-  greeting:  { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.6, textTransform: 'uppercase' },
-  appTitle:  { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.4 },
-
   // Hero
   heroCard: { gap: spacing.sm, marginBottom: spacing.sm },
   heroTop:  { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
@@ -338,6 +399,19 @@ const s = StyleSheet.create({
   appTrack:     { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: spacing.sm },
   appFill:      { height: '100%', borderRadius: 3 },
   appDecision:  { fontSize: typography.sm, lineHeight: 20, marginTop: spacing.xs },
+  appProgressRow:  { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs },
+  appProgressText: { fontSize: typography.xs, fontWeight: typography.medium },
+
+  // Stage tracker
+  stageRow:   { flexDirection: 'row', marginTop: spacing.sm, gap: spacing.xs },
+  stageItem:  { flex: 1, alignItems: 'center', gap: spacing.xs },
+  stageDot:   { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  stageLabel: { fontSize: 10, lineHeight: 13, textAlign: 'center' },
+  stageNote:  { fontSize: 10, lineHeight: 14, textAlign: 'center', marginTop: spacing.xs },
+
+  overdueRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
+                 borderRadius: borderRadius.md, padding: spacing.sm, marginTop: spacing.xs },
+  overdueText: { flex: 1, fontSize: typography.xs, lineHeight: 17, fontWeight: typography.semibold },
   appInfoBox:   { borderTopWidth: StyleSheet.hairlineWidth, marginTop: spacing.sm,
                   paddingTop: spacing.sm, gap: spacing.xs },
   appInfoRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },

@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 interface ChecklistSection {
   title: string;
@@ -78,7 +78,6 @@ export default function DocumentChecklistScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const navigation = useNavigation();
   const [checked, setChecked] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -100,14 +99,7 @@ export default function DocumentChecklistScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <View style={[s.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} hitSlop={16} style={s.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[s.backLabel, { color: c.textPrimary }]}>Back</Text>
-        </TouchableOpacity>
-        <Text style={[s.title, { color: c.textPrimary }]}>Document Checklist</Text>
-        <View style={{ width: 60 }} />
-      </View>
+      <AppHeader title="Document Checklist" variant="stack" />
 
       {/* Progress */}
       <View style={s.progressWrap}>

@@ -14,6 +14,11 @@ import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
 import CalculatorsScreen from '@/features/calculators/screens/CalculatorsScreen';
 import ApplicationSetupScreen from '@/features/tracker/screens/ApplicationSetupScreen';
 import DocumentChecklistScreen from '@/features/checklist/screens/DocumentChecklistScreen';
+import FswCalculatorScreen from '@/features/fsw/screens/FswCalculatorScreen';
+import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScreen';
+import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
+import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
+import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
 import type { RootStackParamList } from '@/types';
@@ -30,6 +35,7 @@ export default function RootNavigator() {
   useEffect(() => {
     loadDraws().catch(() => {});
     useApplicationStore.getState().load().catch(() => {});
+    useNotificationsStore.getState().load().catch(() => {});
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))
@@ -83,6 +89,10 @@ export default function RootNavigator() {
         <Stack.Screen name="Calculators" component={CalculatorsScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ApplicationSetup" component={ApplicationSetupScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="DocumentChecklist" component={DocumentChecklistScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="FswCalculator" component={FswCalculatorScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="BcSirsCalculator" component={BcSirsCalculatorScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="ProcessingTimes" component={ProcessingTimesScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

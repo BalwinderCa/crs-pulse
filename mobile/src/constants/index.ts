@@ -49,4 +49,5 @@ export const STORAGE_KEYS = {
   ONBOARDING_SEEN: 'crs_pulse.onboarding_seen',
   TRACKED_APPLICATION: 'crs_pulse.tracked_application',
   DOC_CHECKLIST: 'crs_pulse.doc_checklist',
+  NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
 } as const;

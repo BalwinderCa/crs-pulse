@@ -14,6 +14,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 import type { DrawFilter } from '@/types';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
@@ -51,8 +52,7 @@ export default function DrawsScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Express Entry</Text>
-          <Text style={styles.title}>Draw History</Text>
+          <AppHeader title="Draws" />
         </View>
         <View style={styles.skeletons}>{[1,2,3].map((k) => <SkeletonCard key={k} />)}</View>
       </SafeAreaView>
@@ -70,8 +70,7 @@ export default function DrawsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Text style={styles.greeting}>Express Entry</Text>
-        <Text style={styles.title}>Draw History</Text>
+        <AppHeader title="Draws" />
         <Text style={styles.subtitle}>{draws.length} draws found</Text>
       </View>
 

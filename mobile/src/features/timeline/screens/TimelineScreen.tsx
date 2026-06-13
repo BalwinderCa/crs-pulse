@@ -14,6 +14,7 @@ import { useTimelineStore, type Milestone, type MilestoneType } from '@/store/ti
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
@@ -376,20 +377,7 @@ export default function TimelineScreen() {
 
       {/* Header */}
       <View style={[s.header, { borderBottomColor: c.border }]}>
-        <View>
-          <Text style={[s.headerSub,   { color: c.textMuted }]}>Express Entry</Text>
-          <Text style={[s.headerTitle, { color: c.textPrimary }]}>My Timeline</Text>
-        </View>
-        <TouchableOpacity
-          style={[s.addBtn, { backgroundColor: accent }]}
-          onPress={() => setModalMilestone(undefined)}
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Add milestone"
-        >
-          <Ionicons name="add" size={20} color="#fff" />
-          <Text style={s.addBtnTxt}>Add</Text>
-        </TouchableOpacity>
+        <AppHeader title="Timeline" />
       </View>
 
       {milestones.length === 0 ? (
@@ -446,15 +434,7 @@ export default function TimelineScreen() {
 const s = StyleSheet.create({
   safe: { flex: 1 },
 
-  header:      { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between',
-                 paddingHorizontal: spacing.base, paddingTop: spacing.base,
-                 paddingBottom: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth },
-  headerSub:   { fontSize: typography.xs, fontWeight: typography.semibold,
-                 letterSpacing: 0.8, textTransform: 'uppercase' },
-  headerTitle: { fontSize: typography['3xl'], fontWeight: typography.black, letterSpacing: -0.5 },
-  addBtn:      { flexDirection: 'row', alignItems: 'center', gap: spacing.xs,
-                 paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-                 borderRadius: borderRadius.full },
+  header:      { paddingHorizontal: spacing.base, borderBottomWidth: StyleSheet.hairlineWidth },
   addBtnTxt:   { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
   list:        { paddingHorizontal: spacing.base, paddingTop: spacing.lg },

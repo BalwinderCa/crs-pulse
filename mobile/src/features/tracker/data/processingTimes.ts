@@ -123,6 +123,73 @@ export const APPLICATION_CATEGORIES: ApplicationCategory[] = [
   },
 ];
 
+// ─── Typical stages per program ───────────────────────────────────────────────
+// `at` = fraction of typical processing time elapsed when the stage usually
+// begins. Heuristic for orientation only — real status lives in the IRCC account.
+
+export interface ApplicationStage {
+  label: string;
+  icon: string;
+  at: number;
+}
+
+const PR_STAGES: ApplicationStage[] = [
+  { label: 'Submitted',                icon: 'paper-plane',      at: 0 },
+  { label: 'Biometrics & AOR',         icon: 'finger-print',     at: 0.05 },
+  { label: 'Eligibility & background', icon: 'search',           at: 0.2 },
+  { label: 'Final decision',           icon: 'shield-checkmark', at: 0.85 },
+];
+
+const FAMILY_STAGES: ApplicationStage[] = [
+  { label: 'Submitted',              icon: 'paper-plane',      at: 0 },
+  { label: 'Sponsor approval',       icon: 'person-circle',    at: 0.05 },
+  { label: 'Biometrics & medicals',  icon: 'finger-print',     at: 0.3 },
+  { label: 'Applicant review',       icon: 'search',           at: 0.5 },
+  { label: 'Final decision',         icon: 'shield-checkmark', at: 0.9 },
+];
+
+const TEMPORARY_STAGES: ApplicationStage[] = [
+  { label: 'Submitted',  icon: 'paper-plane',      at: 0 },
+  { label: 'Biometrics', icon: 'finger-print',     at: 0.1 },
+  { label: 'Review',     icon: 'search',           at: 0.3 },
+  { label: 'Decision',   icon: 'shield-checkmark', at: 0.85 },
+];
+
+const CITIZENSHIP_STAGES: ApplicationStage[] = [
+  { label: 'Submitted',        icon: 'paper-plane',      at: 0 },
+  { label: 'AOR',              icon: 'mail-open',        at: 0.1 },
+  { label: 'Test & interview', icon: 'school',           at: 0.5 },
+  { label: 'Decision',         icon: 'shield-checkmark', at: 0.8 },
+  { label: 'Oath ceremony',    icon: 'flag',             at: 0.92 },
+];
+
+const DOCUMENT_STAGES: ApplicationStage[] = [
+  { label: 'Submitted',  icon: 'paper-plane',      at: 0 },
+  { label: 'Processing', icon: 'search',           at: 0.15 },
+  { label: 'Mailed out', icon: 'send',             at: 0.9 },
+];
+
+const STAGES_BY_CATEGORY: Record<string, ApplicationStage[]> = {
+  economic:    PR_STAGES,
+  refugees:    PR_STAGES,
+  hc:          PR_STAGES,
+  family:      FAMILY_STAGES,
+  temporary:   TEMPORARY_STAGES,
+  citizenship: CITIZENSHIP_STAGES,
+  passport:    DOCUMENT_STAGES,
+  pr_cards:    DOCUMENT_STAGES,
+  documents:   DOCUMENT_STAGES,
+};
+
+// Programs whose flow differs from their category's default
+const STAGES_BY_TYPE: Record<string, ApplicationStage[]> = {
+  cit_proof: DOCUMENT_STAGES, // proof of citizenship: no test or oath
+};
+
+export function getApplicationStages(categoryId: string, typeId: string): ApplicationStage[] {
+  return STAGES_BY_TYPE[typeId] ?? STAGES_BY_CATEGORY[categoryId] ?? PR_STAGES;
+}
+
 export function findApplicationType(
   categoryId: string,
   typeId: string,
