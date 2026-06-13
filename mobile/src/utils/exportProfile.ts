@@ -1,6 +1,5 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
 import { format } from 'date-fns';
 import type { CalcInputs } from '@/store/profileStore';
 import type { CRSBreakdown } from '@/features/onboarding/utils/crsCalculator';
@@ -173,26 +172,5 @@ export async function exportProfilePdf(
     mimeType:    'application/pdf',
     UTI:         'com.adobe.pdf',
     dialogTitle: 'Save or share CRS Profile',
-  });
-}
-
-// ─── Shareable link ───────────────────────────────────────────────────────────
-
-export function generateShareUrl(inputs: CalcInputs): string {
-  try {
-    const json    = JSON.stringify(inputs);
-    const b64     = btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-    return `https://crspulse.app/share?p=${b64}`;
-  } catch {
-    return 'https://crspulse.app';
-  }
-}
-
-export async function shareProfileLink(inputs: CalcInputs): Promise<void> {
-  const url = generateShareUrl(inputs);
-  await Share.share({
-    message: `My CRS Express Entry profile on CRS Pulse: ${url}`,
-    url,
-    title: 'My CRS Profile',
   });
 }
