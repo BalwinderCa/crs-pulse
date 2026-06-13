@@ -18,7 +18,8 @@ The repository has two independent workspaces:
 npm run start          # Start Expo dev server
 npm run ios            # Run on iOS simulator
 npm run android        # Run on Android emulator
-npm run test           # Run Jest tests (coverage threshold: 70%)
+npm run test           # Run Jest tests
+npm run test:coverage  # Enforced thresholds: critical calculators ≥95%, CRS grid ≥75%, global floor
 npm run test -- --testPathPattern=<file>  # Run a single test file
 npm run lint           # ESLint
 npm run type-check     # TypeScript check (no emit)

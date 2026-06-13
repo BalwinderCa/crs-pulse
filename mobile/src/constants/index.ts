@@ -1,5 +1,9 @@
+import Constants from 'expo-constants';
+
 export const APP_NAME = 'CRS Pulse';
-export const APP_VERSION = '1.0.0';
+// Single source of truth: the version declared in app.config.js, so this never
+// drifts from the built binary.
+export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.1';
 
 /** Public URLs — no custom domain required; GitHub hosts the privacy policy. */
 export const GITHUB_REPO_URL = 'https://github.com/BalwinderCa/crs-pulse';

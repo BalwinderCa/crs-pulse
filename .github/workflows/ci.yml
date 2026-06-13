@@ -31,11 +31,11 @@ jobs:
       - name: ESLint
         run: npm run lint
 
-      - name: Jest tests
-        run: npm test
+      - name: Jest tests (enforces coverage thresholds)
+        run: npm run test:coverage
 
   push-worker:
-    name: Push worker — TypeScript check
+    name: Push worker — type-check & tests
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,9 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Node 24 runs the worker's TypeScript tests directly via type stripping.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: npm
           cache-dependency-path: workers/push/package-lock.json
 
@@ -53,4 +54,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript check
-        run: npx tsc --noEmit
+        run: npm run type-check
+
+      - name: Node tests
+        run: npm test
