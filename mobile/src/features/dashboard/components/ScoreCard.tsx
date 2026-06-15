@@ -155,15 +155,15 @@ export function ScoreCard({ userScore, latestCutoff, drawNumber, drawDate }: Pro
               ) : null}
             </Svg>
             <View style={styles.gaugeCenter}>
-              <Text style={[styles.gaugeScore, { color: accent }]}>{userScore}</Text>
-              <Text style={[styles.gaugeMax, { color: colors.textMuted }]}>/ 1200</Text>
+              <Text style={[styles.gaugeScore, { color: accent }]} maxFontSizeMultiplier={1.3}>{userScore}</Text>
+              <Text style={[styles.gaugeMax, { color: colors.textMuted }]} maxFontSizeMultiplier={1.3}>/ 1200</Text>
             </View>
           </View>
 
           {/* Right column */}
           <View style={styles.rightCol}>
             <Text style={styles.scoreLabel}>CRS Score</Text>
-            <Text style={[styles.score, { color: accent }]}>{userScore}</Text>
+            <Text style={[styles.score, { color: accent }]} maxFontSizeMultiplier={1.3}>{userScore}</Text>
             <Badge label={status.label} variant={status.variant} />
             <View style={styles.statsRow}>
               <View style={styles.statItem}>

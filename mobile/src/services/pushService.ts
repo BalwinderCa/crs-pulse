@@ -32,9 +32,11 @@ async function getExpoPushToken(): Promise<string | null> {
   );
 
   if (!projectId) {
-    console.warn(
-      'EAS project ID not configured — set EAS_PROJECT_ID in .env.local or run eas init',
-    );
+    if (__DEV__) {
+      console.warn(
+        'EAS project ID not configured — set EAS_PROJECT_ID in .env.local or run eas init',
+      );
+    }
     return null;
   }
 
@@ -62,7 +64,7 @@ export async function registerForPushNotifications(): Promise<PushRegisterResult
 
   const pushUrl = getPushUrl();
   if (!pushUrl) {
-    console.warn('EXPO_PUBLIC_PUSH_URL not set — push registration skipped');
+    if (__DEV__) console.warn('EXPO_PUBLIC_PUSH_URL not set — push registration skipped');
     return { ok: false, reason: 'not_configured' };
   }
 
@@ -92,13 +94,13 @@ export async function registerForPushNotifications(): Promise<PushRegisterResult
     });
 
     if (!res.ok) {
-      console.warn('Push register failed:', res.status);
+      if (__DEV__) console.warn('Push register failed:', res.status);
       return { ok: false, reason: 'server_error' };
     }
 
     return { ok: true };
   } catch (err) {
-    console.warn('Push registration failed:', err);
+    if (__DEV__) console.warn('Push registration failed:', err);
     return { ok: false, reason: 'server_error' };
   }
 }
@@ -118,7 +120,7 @@ export async function unregisterPushNotifications(): Promise<void> {
       await AsyncStorage.removeItem(STORAGE_KEYS.PUSH_TOKEN);
     }
   } catch (err) {
-    console.warn('Push unregister failed:', err);
+    if (__DEV__) console.warn('Push unregister failed:', err);
   }
 }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text,
-  TextInput, TouchableOpacity, View,
+  TextInput, TouchableOpacity, useColorScheme, View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -118,6 +118,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 }) {
   const c = useColors();
   const accent = useAccentColor();
+  const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const add    = useTimelineStore((s) => s.add);
   const update = useTimelineStore((s) => s.update);
@@ -239,6 +240,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                 placeholderTextColor={c.textMuted}
                 value={customLabel}
                 onChangeText={setCustomLabel}
+                maxLength={60}
               />
               <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>EMOJI (OPTIONAL)</Text>
               <TouchableOpacity
@@ -287,7 +289,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
               mode="date"
               display="spinner"
               onChange={(_e, d) => { if (d) setDate(d); }}
-              themeVariant="light"
+              themeVariant={scheme === 'dark' ? 'dark' : 'light'}
             />
           )}
 
@@ -310,6 +312,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             value={note}
             onChangeText={setNote}
             multiline
+            maxLength={500}
           />
 
         </ScrollView>

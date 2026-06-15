@@ -264,7 +264,10 @@ export default function ProfileScreen() {
   const handleExportPdf = async () => {
     setExporting(true);
     try {
-      await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
+      const shared = await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
+      if (!shared) {
+        Alert.alert('Sharing unavailable', 'This device cannot share files. Your PDF could not be exported.');
+      }
     } catch {
       Alert.alert('Export failed', 'Could not generate PDF. Please try again.');
     } finally {

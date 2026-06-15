@@ -4,6 +4,8 @@ import {
   getClbBreakpoints,
   getClbBand,
   getTestRange,
+  scoresToCLB,
+  suggestCategory,
   type CRSInput,
   type LangScores,
   type TefScale,
@@ -437,5 +439,80 @@ describe('Core human capital points', () => {
     expect(calculateCRS({ ...BASE_INPUT, age: 40 }).agePoints).toBe(50);
     expect(calculateCRS({ ...BASE_INPUT, age: 44 }).agePoints).toBe(6);
     expect(calculateCRS({ ...BASE_INPUT, age: 45 }).agePoints).toBe(0);
+  });
+});
+
+// ─── PTE Core → CLB (IRCC official table) ──────────────────────────────────────
+describe('PTE Core CLB mapping', () => {
+  it('maps each ability across CLB bands', () => {
+    // Speaking band thresholds: 89/84/76/68/59/51/42
+    expect(toCLB('PTE_CORE', 'speaking', 89)).toBe(10);
+    expect(toCLB('PTE_CORE', 'speaking', 84)).toBe(9);
+    expect(toCLB('PTE_CORE', 'speaking', 76)).toBe(8);
+    expect(toCLB('PTE_CORE', 'speaking', 68)).toBe(7);
+    expect(toCLB('PTE_CORE', 'speaking', 59)).toBe(6);
+    expect(toCLB('PTE_CORE', 'speaking', 51)).toBe(5);
+    expect(toCLB('PTE_CORE', 'speaking', 42)).toBe(4);
+    expect(toCLB('PTE_CORE', 'speaking', 41)).toBe(0);
+    // Listening: 89/82/71/60/50/39/28
+    expect(toCLB('PTE_CORE', 'listening', 82)).toBe(9);
+    expect(toCLB('PTE_CORE', 'listening', 28)).toBe(4);
+    expect(toCLB('PTE_CORE', 'listening', 27)).toBe(0);
+    // Reading: 88/78/69/60/51/42/33
+    expect(toCLB('PTE_CORE', 'reading', 88)).toBe(10);
+    expect(toCLB('PTE_CORE', 'reading', 33)).toBe(4);
+    expect(toCLB('PTE_CORE', 'reading', 32)).toBe(0);
+    // Writing: 90/88/79/69/60/51/41
+    expect(toCLB('PTE_CORE', 'writing', 90)).toBe(10);
+    expect(toCLB('PTE_CORE', 'writing', 79)).toBe(8);
+    expect(toCLB('PTE_CORE', 'writing', 41)).toBe(4);
+    expect(toCLB('PTE_CORE', 'writing', 40)).toBe(0);
+  });
+
+  it('feeds through scoresToCLB and calculateCRS', () => {
+    const clb = scoresToCLB('PTE_CORE', { speaking: 84, listening: 82, reading: 78, writing: 88 });
+    expect(clb).toEqual({ speaking: 9, listening: 9, reading: 9, writing: 9 });
+    const total = calculateCRS({
+      ...BASE_INPUT,
+      firstLangTest: 'PTE_CORE',
+      firstLang: { speaking: 84, listening: 82, reading: 78, writing: 88 },
+    }).total;
+    expect(total).toBeGreaterThan(0);
+  });
+});
+
+// ─── IELTS below-CLB-4 floor on every ability ──────────────────────────────────
+describe('IELTS returns 0 below the CLB 4 floor', () => {
+  it('all four abilities clamp to 0 when below minimum', () => {
+    expect(toCLB('IELTS', 'speaking', 3.5)).toBe(0);
+    expect(toCLB('IELTS', 'listening', 4.0)).toBe(0);
+    expect(toCLB('IELTS', 'reading', 3.0)).toBe(0);
+    expect(toCLB('IELTS', 'writing', 3.5)).toBe(0);
+  });
+});
+
+// ─── Category suggestion ───────────────────────────────────────────────────────
+describe('suggestCategory', () => {
+  const clb = (n: number): LangScores => ({ speaking: n, listening: n, reading: n, writing: n });
+
+  it('PNP dominates when a nomination is held', () => {
+    expect(suggestCategory({ ...BASE_INPUT, hasProvincialNomination: true }, clb(9))).toBe('PNP');
+  });
+
+  it('French stream when first test is French and NCLC 7+', () => {
+    expect(suggestCategory({ ...BASE_INPUT, firstLangTest: 'TEF' }, clb(7))).toBe('French');
+    expect(suggestCategory({ ...BASE_INPUT, firstLangTest: 'TCF' }, clb(8))).toBe('French');
+  });
+
+  it('CEC with Canadian work experience', () => {
+    expect(suggestCategory({ ...BASE_INPUT, canadianWorkExp: 2 }, clb(8))).toBe('CEC');
+  });
+
+  it('FST with a trade certificate and CLB 5+', () => {
+    expect(suggestCategory({ ...BASE_INPUT, hasTradeCert: true }, clb(5))).toBe('FST');
+  });
+
+  it('FSW as the default profile', () => {
+    expect(suggestCategory({ ...BASE_INPUT }, clb(8))).toBe('FSW');
   });
 });

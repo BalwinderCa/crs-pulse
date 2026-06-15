@@ -157,20 +157,23 @@ td:last-child{text-align:right;font-weight:600;color:#1a2b45}
 
 // ─── Export PDF ───────────────────────────────────────────────────────────────
 
+/** Resolves `true` when the PDF was handed to the share sheet, `false` when
+ *  sharing is unavailable on the device (caller should inform the user). */
 export async function exportProfilePdf(
   inputs:   CalcInputs,
   result:   CRSBreakdown,
   score:    number,
   category: string | null,
   accent?:  string,
-): Promise<void> {
+): Promise<boolean> {
   const html = buildProfileHtml(inputs, result, score, category, accent);
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   const canShare = await Sharing.isAvailableAsync();
-  if (!canShare) return;
+  if (!canShare) return false;
   await Sharing.shareAsync(uri, {
     mimeType:    'application/pdf',
     UTI:         'com.adobe.pdf',
     dialogTitle: 'Save or share CRS Profile',
   });
+  return true;
 }

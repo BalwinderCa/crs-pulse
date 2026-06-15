@@ -69,9 +69,30 @@ function json(data: unknown, status = 200): Response {
     status,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
     },
   });
+}
+
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+// The mobile client embeds the (necessarily public) bearer key in its bundle, so
+// the key alone cannot gate abuse. A per-IP fixed-window counter in KV throttles
+// register/revoke floods. Fails OPEN: a KV hiccup must never lock out a real
+// device. Keys TTL-expire so the window self-cleans.
+const RL_PREFIX = 'rl:';
+const RL_WINDOW_SECONDS = 60;
+const RL_MAX_REQUESTS = 60;
+
+async function isRateLimited(kv: KVNamespace, request: Request, route: string): Promise<boolean> {
+  const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const key = `${RL_PREFIX}${route}:${ip}`;
+  try {
+    const count = parseInt((await kv.get(key)) ?? '0', 10) + 1;
+    if (count > RL_MAX_REQUESTS) return true;
+    await kv.put(key, String(count), { expirationTtl: RL_WINDOW_SECONDS });
+    return false;
+  } catch {
+    return false; // fail open — never lock out a legitimate device on KV error
+  }
 }
 
 /** Constant-time string comparison (length is not hidden, contents are). */
@@ -251,6 +272,9 @@ export default {
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
+      if (await isRateLimited(env.TOKENS_KV, request, 'register')) {
+        return json({ message: 'Too many requests' }, 429);
+      }
 
       let body: { token?: string; platform?: string };
       try {
@@ -283,6 +307,9 @@ export default {
       }
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
+      }
+      if (await isRateLimited(env.TOKENS_KV, request, 'revoke')) {
+        return json({ message: 'Too many requests' }, 429);
       }
 
       let body: { token?: string };

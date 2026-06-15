@@ -37,13 +37,35 @@ type TimelineStore = {
 
 const KEY = 'timeline_milestones';
 
+/**
+ * Guards against corrupt or stale-schema persisted data: a bad `date` would
+ * produce `NaN` from `getTime()` and destabilize every sort, and a missing
+ * `id`/`type` would break rendering. Invalid entries are dropped rather than
+ * crashing the timeline.
+ */
+function isValidMilestone(m: unknown): m is Milestone {
+  if (!m || typeof m !== 'object') return false;
+  const x = m as Record<string, unknown>;
+  return (
+    typeof x.id === 'string' &&
+    typeof x.type === 'string' &&
+    typeof x.date === 'string' &&
+    !Number.isNaN(new Date(x.date).getTime())
+  );
+}
+
 export const useTimelineStore = create<TimelineStore>((set, get) => ({
   milestones: [],
 
   load: async () => {
     try {
       const raw = await AsyncStorage.getItem(KEY);
-      if (raw) set({ milestones: JSON.parse(raw) });
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const milestones = (Array.isArray(parsed) ? parsed : [])
+        .filter(isValidMilestone)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      set({ milestones });
     } catch {}
   },
 

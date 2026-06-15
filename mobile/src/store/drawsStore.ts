@@ -67,19 +67,25 @@ type DrawsStore = {
 
 const STALE_MS    = 60 * 60 * 1000; // 1 hour
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 2_000; // ms between retries
+const RETRY_DELAY = 1_000; // base ms; doubles each attempt (exponential backoff)
 
+// Retries on network errors AND transient server failures (HTTP 5xx / 429) with
+// exponential backoff (1s, 2s, 4s). 4xx (other than 429) is returned as-is —
+// retrying a client error is pointless.
 async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Response> {
+  let lastErr: unknown;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const res = await fetch(url, { headers: { Accept: 'application/json' } });
-      return res;
+      const retryable = res.status >= 500 || res.status === 429;
+      if (res.ok || !retryable || attempt === retries) return res;
     } catch (err) {
+      lastErr = err;
       if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, RETRY_DELAY * attempt));
     }
+    await new Promise(r => setTimeout(r, RETRY_DELAY * 2 ** (attempt - 1)));
   }
-  throw new Error('Max retries reached');
+  throw lastErr instanceof Error ? lastErr : new Error('Max retries reached');
 }
 
 export const useDrawsStore = create<DrawsStore>((set, get) => ({
@@ -116,7 +122,7 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
-      const rounds: Record<string, string>[] = json.rounds ?? [];
+      const rounds: Record<string, string>[] = Array.isArray(json?.rounds) ? json.rounds : [];
 
       const draws: Draw[] = rounds
         .map(parseRound)
