@@ -22,8 +22,8 @@ type Meta = { icon: React.ComponentProps<typeof Ionicons>['name']; color: string
 
 const MILESTONE_META: Record<MilestoneType, Meta> = {
   'ITA':                   { icon: 'mail-open-outline',        color: '#5B9EFF' },
-  'Application Submitted': { icon: 'document-text-outline',    color: '#00E5A0' },
-  'AOR Received':          { icon: 'checkmark-circle-outline', color: '#00E5A0' },
+  'Application Submitted': { icon: 'cloud-upload-outline',     color: '#00E5A0' },
+  'AOR Received':          { icon: 'receipt-outline',          color: '#00E5A0' },
   'Biometrics Requested':  { icon: 'finger-print-outline',     color: '#FFB547' },
   'Biometrics Completed':  { icon: 'shield-checkmark-outline', color: '#00E5A0' },
   'Medical Requested':     { icon: 'medkit-outline',           color: '#FFB547' },
@@ -31,9 +31,9 @@ const MILESTONE_META: Record<MilestoneType, Meta> = {
   'Passport Requested':    { icon: 'id-card-outline',          color: '#FFB547' },
   'Passport Submitted':    { icon: 'send-outline',             color: '#5B9EFF' },
   'Passport Collected':    { icon: 'ribbon-outline',           color: '#00E5A0' },
-  'ADR':                   { icon: 'alert-circle-outline',     color: '#FF8C42' },
-  'Portal 1':              { icon: 'log-in-outline',           color: '#A78BFA' },
-  'Portal 2':              { icon: 'log-in-outline',           color: '#7C3AED' },
+  'ADR':                   { icon: 'document-attach-outline',  color: '#FF8C42' },
+  'Portal 1':              { icon: 'enter-outline',            color: '#A78BFA' },
+  'Portal 2':              { icon: 'globe-outline',            color: '#7C3AED' },
   'Final Decision':        { icon: 'trophy-outline',           color: '#DC2626' },
   'Custom':                { icon: 'create-outline',           color: palette.gray300 },
 };
