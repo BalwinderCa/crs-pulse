@@ -14,6 +14,14 @@
 export const TOKEN_PREFIX = 'token:';
 export const LEGACY_TOKENS_KEY = 'tokens';
 export const REVOKED_PREFIX = 'revoked:';
+export const RECEIPT_PREFIX = 'receipt:';
+
+/**
+ * How long a pending push receipt is kept before it's given up on. Expo retains
+ * receipts for roughly a day; a receipt unresolved past that will never resolve,
+ * so KV auto-expires it and the next poll stops looking for it.
+ */
+export const RECEIPT_TTL_SECONDS = 60 * 60 * 24;
 
 /**
  * How long a revocation tombstone lives. It only needs to outlast the window
@@ -74,6 +82,44 @@ export async function listTokens(kv: KVNamespace): Promise<string[]> {
 /** Deletes a batch of tokens (e.g. those Expo reports as unregistered). */
 export async function revokeTokens(kv: KVNamespace, tokens: string[]): Promise<void> {
   await Promise.all(tokens.map((t) => revokeToken(kv, t)));
+}
+
+// ─── Push receipts ──────────────────────────────────────────────────────────
+// A push "ticket" returned at send time only confirms Expo queued the message.
+// Final delivery status (notably `DeviceNotRegistered` for uninstalled apps)
+// arrives in a "receipt" minutes later. We park each ticket id -> token here so
+// a later poll can fetch the receipts and prune tokens that failed to deliver.
+
+/** Parks ticket ids (mapped to their token) for a later receipt poll. */
+export async function storeReceipts(
+  kv: KVNamespace,
+  receipts: { id: string; token: string }[],
+): Promise<void> {
+  await Promise.all(
+    receipts.map((r) =>
+      kv.put(RECEIPT_PREFIX + r.id, r.token, { expirationTtl: RECEIPT_TTL_SECONDS }),
+    ),
+  );
+}
+
+/** Lists every pending receipt as `{ id, token }`, paginating through KV. */
+export async function listReceipts(kv: KVNamespace): Promise<{ id: string; token: string }[]> {
+  const out: { id: string; token: string }[] = [];
+  let cursor: string | undefined;
+  do {
+    const res = await kv.list({ prefix: RECEIPT_PREFIX, cursor });
+    for (const key of res.keys) {
+      const token = await kv.get(key.name);
+      if (token) out.push({ id: key.name.slice(RECEIPT_PREFIX.length), token });
+    }
+    cursor = res.list_complete ? undefined : res.cursor;
+  } while (cursor);
+  return out;
+}
+
+/** Drops a resolved (or abandoned) receipt. */
+export async function deleteReceipt(kv: KVNamespace, id: string): Promise<void> {
+  await kv.delete(RECEIPT_PREFIX + id);
 }
 
 /**

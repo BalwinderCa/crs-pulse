@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import {
   TOKEN_PREFIX,
   LEGACY_TOKENS_KEY,
+  RECEIPT_PREFIX,
   hasToken,
   registerToken,
   revokeToken,
   revokeTokens,
   listTokens,
   migrateLegacyTokens,
+  storeReceipts,
+  listReceipts,
+  deleteReceipt,
 } from './tokenStore.ts';
 
 // Minimal in-memory KV that mimics Cloudflare KV semantics, including
@@ -63,6 +67,30 @@ test('hasToken reflects live registry membership', async () => {
   assert.equal(await hasToken(k, 'ExpoPushToken[x]'), true);
   await revokeToken(k, 'ExpoPushToken[x]');
   assert.equal(await hasToken(k, 'ExpoPushToken[x]'), false);
+});
+
+test('receipts: store, list, and delete round-trip', async () => {
+  const store = new MockKV();
+  const k = store as unknown as KVNamespace;
+
+  await storeReceipts(k, [
+    { id: 'r1', token: 'ExpoPushToken[a]' },
+    { id: 'r2', token: 'ExpoPushToken[b]' },
+  ]);
+  assert.equal(store.store.get(`${RECEIPT_PREFIX}r1`), 'ExpoPushToken[a]');
+
+  const listed = await listReceipts(k);
+  assert.deepEqual(
+    [...listed].sort((x, y) => x.id.localeCompare(y.id)),
+    [
+      { id: 'r1', token: 'ExpoPushToken[a]' },
+      { id: 'r2', token: 'ExpoPushToken[b]' },
+    ],
+  );
+
+  await deleteReceipt(k, 'r1');
+  const after = await listReceipts(k);
+  assert.deepEqual(after, [{ id: 'r2', token: 'ExpoPushToken[b]' }]);
 });
 
 test('concurrent registrations never lose writes (race regression)', async () => {

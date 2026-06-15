@@ -5,8 +5,12 @@ import {
   registerToken,
   revokeToken,
   revokeTokens,
+  storeReceipts,
+  listReceipts,
+  deleteReceipt,
 } from './tokenStore';
 import { validateTokenWithExpo } from './expoValidate';
+import { fetchExpoReceipts } from './expoReceipts';
 
 // canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the
 // worker reads the latest draw from a GitHub Actions mirror (raw.githubusercontent)
@@ -158,21 +162,32 @@ async function fetchLatestDraw(): Promise<LatestDraw | null> {
 
 interface ExpoTicket {
   status: 'ok' | 'error';
+  id?: string;
   details?: { error?: string };
 }
 
+interface SendResult {
+  /** Tokens Expo rejected synchronously (prune immediately). */
+  unregistered: string[];
+  /** Ticket ids for accepted messages, mapped to their token, for later receipt polling. */
+  receipts: { id: string; token: string }[];
+}
+
 /**
- * Fans out to Expo in 100-message chunks and returns the tokens Expo reports as
- * `DeviceNotRegistered` so the caller can prune them. Pruning keeps the KV
- * registry from accumulating dead tokens (uninstalls, revoked grants) over time.
+ * Fans out to Expo in 100-message chunks. Returns tokens Expo rejects at send
+ * time (`DeviceNotRegistered` in the ticket) for immediate pruning, plus the
+ * accepted tickets' receipt ids mapped to their token — final delivery failures
+ * (the common `DeviceNotRegistered` case) only surface later in the receipt and
+ * are pruned by the receipt poll.
  */
 async function sendExpoPush(
   tokens: string[],
   title: string,
   body: string,
   data: Record<string, string>,
-): Promise<string[]> {
+): Promise<SendResult> {
   const unregistered: string[] = [];
+  const receipts: { id: string; token: string }[] = [];
 
   for (let i = 0; i < tokens.length; i += 100) {
     const chunk = tokens.slice(i, i + 100);
@@ -197,17 +212,51 @@ async function sendExpoPush(
       const payload = (await res.json()) as { data?: ExpoTicket[] };
       const tickets = payload.data ?? [];
       tickets.forEach((ticket, idx) => {
+        const token = chunk[idx];
+        if (!token) return;
         if (ticket.status === 'error' && ticket.details?.error === 'DeviceNotRegistered') {
-          const bad = chunk[idx];
-          if (bad) unregistered.push(bad);
+          unregistered.push(token);
+        } else if (ticket.status === 'ok' && ticket.id) {
+          receipts.push({ id: ticket.id, token });
         }
       });
     } catch {
-      // Non-JSON response — nothing to prune from this chunk.
+      // Non-JSON response — nothing to prune or track from this chunk.
     }
   }
 
-  return unregistered;
+  return { unregistered, receipts };
+}
+
+/**
+ * Polls Expo for the receipts parked by previous sends and prunes tokens that
+ * failed to deliver with `DeviceNotRegistered`. Receipts Expo hasn't resolved
+ * yet are left in place for the next run; resolved ones are dropped. This is the
+ * authoritative dead-token cleanup — send-time tickets rarely carry the error.
+ */
+async function processReceipts(kv: KVNamespace): Promise<void> {
+  const pending = await listReceipts(kv);
+  if (pending.length === 0) return;
+
+  const toRevoke: string[] = [];
+  const resolved: string[] = [];
+
+  // Expo accepts up to 1000 receipt ids per request.
+  for (let i = 0; i < pending.length; i += 1000) {
+    const batch = pending.slice(i, i + 1000);
+    const receipts = await fetchExpoReceipts(batch.map((p) => p.id));
+    for (const { id, token } of batch) {
+      const receipt = receipts[id];
+      if (!receipt) continue; // not resolved yet — keep for next poll
+      resolved.push(id);
+      if (receipt.status === 'error' && receipt.details?.error === 'DeviceNotRegistered') {
+        toRevoke.push(token);
+      }
+    }
+  }
+
+  if (toRevoke.length > 0) await revokeTokens(kv, toRevoke);
+  await Promise.all(resolved.map((id) => deleteReceipt(kv, id)));
 }
 
 async function checkAndNotify(kv: KVNamespace): Promise<{
@@ -244,7 +293,7 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
   const title = `New Express Entry Draw #${latest.draw_number}`;
   const body = `${latest.category} — Cutoff: ${latest.cutoff} points`;
 
-  const unregistered = await sendExpoPush(tokens, title, body, {
+  const { unregistered, receipts } = await sendExpoPush(tokens, title, body, {
     type: 'new_draw',
     draw_number: String(latest.draw_number),
     cutoff: String(latest.cutoff),
@@ -253,6 +302,10 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
 
   if (unregistered.length > 0) {
     await revokeTokens(kv, unregistered);
+  }
+  // Park accepted tickets so a later poll can prune devices that fail delivery.
+  if (receipts.length > 0) {
+    await storeReceipts(kv, receipts);
   }
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
@@ -353,6 +406,8 @@ export default {
       if (!isAuthorized(request, env.SYNC_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
+      // Resolve any outstanding delivery receipts, then check for a new draw.
+      await processReceipts(env.TOKENS_KV);
       const result = await checkAndNotify(env.TOKENS_KV);
       return json(result);
     }
@@ -361,6 +416,8 @@ export default {
   },
 
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    // Prune devices that failed delivery on the previous draw, then notify.
+    await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV);
   },
 };
