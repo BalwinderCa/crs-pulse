@@ -47,6 +47,14 @@ const MILESTONE_TYPES: MilestoneType[] = [
   'Final Decision', 'Custom',
 ];
 
+// Illustrative rows shown on the empty timeline so new users can see the kind of
+// milestones they can track. Not real data — dates are placeholders.
+const SAMPLE_MILESTONES: { type: MilestoneType; when: string }[] = [
+  { type: 'ITA',                when: 'e.g. Jan 12' },
+  { type: 'AOR Received',       when: 'e.g. Feb 03' },
+  { type: 'Passport Requested', when: 'e.g. Apr 22' },
+];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function daysLabel(dateStr: string): { value: string; sub: string; future: boolean } {
@@ -381,14 +389,33 @@ export default function TimelineScreen() {
       </View>
 
       {milestones.length === 0 ? (
-        <View style={s.empty}>
+        <ScrollView contentContainerStyle={s.empty} showsVerticalScrollIndicator={false}>
           <View style={[s.emptyIcon, { backgroundColor: accent + '18' }]}>
             <Ionicons name="time-outline" size={36} color={accent} />
           </View>
           <Text style={[s.emptyTitle, { color: c.textPrimary }]}>No milestones yet</Text>
           <Text style={[s.emptySub,   { color: c.textMuted }]}>
-            Track your immigration journey by adding your first milestone.
+            Track your immigration journey — log key dates like your ITA, AOR,
+            biometrics, medical, and passport request.
           </Text>
+
+          {/* Example rows so users can see what they can add */}
+          <Text style={[s.sampleHint, { color: c.textMuted }]}>FOR EXAMPLE</Text>
+          <View style={s.sampleList}>
+            {SAMPLE_MILESTONES.map(({ type, when }) => {
+              const m = MILESTONE_META[type];
+              return (
+                <View key={type} style={[s.sampleCard, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
+                  <View style={[s.cardIcon, { backgroundColor: m.color + '20' }]}>
+                    <MaterialCommunityIcons name={m.icon} size={20} color={m.color} />
+                  </View>
+                  <Text style={[s.sampleLabel, { color: c.textSecondary }]}>{type}</Text>
+                  <Text style={[s.sampleWhen, { color: c.textMuted }]}>{when}</Text>
+                </View>
+              );
+            })}
+          </View>
+
           <TouchableOpacity
             style={[s.emptyBtn, { backgroundColor: accent }]}
             onPress={() => setModalMilestone(undefined)}
@@ -397,9 +424,9 @@ export default function TimelineScreen() {
             accessibilityLabel="Add milestone"
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.addBtnTxt}>Add Milestone</Text>
+            <Text style={s.addBtnTxt}>Add Your First Milestone</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
           {milestones.map((item) => (
@@ -458,8 +485,17 @@ const s = StyleSheet.create({
   daysVal:   { fontSize: typography.sm, fontWeight: typography.bold, lineHeight: 18 },
   daysSub:   { fontSize: typography.xs, marginTop: 1 },
 
-  empty:      { flex: 1, alignItems: 'center', justifyContent: 'center',
-                paddingHorizontal: spacing['2xl'] },
+  empty:      { flexGrow: 1, alignItems: 'center', justifyContent: 'center',
+                paddingHorizontal: spacing['2xl'], paddingVertical: spacing['2xl'] },
+
+  sampleHint: { fontSize: typography.xs, fontWeight: typography.semibold,
+                letterSpacing: 1, marginBottom: spacing.sm, marginTop: spacing.xs },
+  sampleList: { alignSelf: 'stretch', gap: spacing.sm, marginBottom: spacing.xl, opacity: 0.7 },
+  sampleCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+                borderRadius: borderRadius.md, borderWidth: 0.3, borderStyle: 'dashed',
+                paddingHorizontal: spacing.base, paddingVertical: spacing.md },
+  sampleLabel:{ flex: 1, fontSize: typography.base, fontWeight: typography.medium },
+  sampleWhen: { fontSize: typography.xs, fontStyle: 'italic' },
   emptyIcon:  { width: 72, height: 72, borderRadius: borderRadius.md,
                 alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
   emptyTitle: { fontSize: typography.xl, fontWeight: typography.bold, marginBottom: spacing.sm },
