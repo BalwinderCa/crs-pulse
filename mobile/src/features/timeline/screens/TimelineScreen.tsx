@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
@@ -130,6 +130,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
   const [showPicker,  setShowPicker]  = useState(false);
   const [note,        setNote]        = useState('');
   const [pickingType, setPickingType] = useState(false);
+  const emojiInputRef = useRef<TextInput>(null);
 
   // Pre-fill when editing
   useEffect(() => {
@@ -240,8 +241,13 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                 onChangeText={setCustomLabel}
               />
               <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>EMOJI (OPTIONAL)</Text>
-              <View style={[s.emojiPickerRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+              <TouchableOpacity
+                activeOpacity={1}
+                style={[s.emojiPickerRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
+                onPress={() => emojiInputRef.current?.focus()}
+              >
                 <TextInput
+                  ref={emojiInputRef}
                   style={[s.emojiPickerInput, { color: c.textPrimary, borderColor: customEmoji ? accent : c.border }]}
                   value={customEmoji}
                   onChangeText={t => {
@@ -249,15 +255,15 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                     const chars = [...t];
                     setCustomEmoji(chars[chars.length - 1] ?? '');
                   }}
-                  placeholder="😀"
                   placeholderTextColor={c.textMuted}
                   maxLength={8}
                   keyboardType="default"
                 />
                 <Text style={[s.emojiPickerHint, { color: c.textMuted }]}>
-                  Tap the field, then press{'\n'}the globe 🌐 on the keyboard{'\n'}to pick an emoji
+                  Tap here to open the keyboard, then use the emoji button — the
+                  🌐 globe key on iOS, or the 🙂 emoji key on Android — to pick one.
                 </Text>
-              </View>
+              </TouchableOpacity>
             </>
           )}
 
