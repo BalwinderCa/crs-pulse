@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -18,24 +18,24 @@ import { AppHeader } from '@/components/layout/AppHeader';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
-type Meta = { icon: React.ComponentProps<typeof Ionicons>['name']; color: string };
+type Meta = { icon: React.ComponentProps<typeof MaterialCommunityIcons>['name']; color: string };
 
 const MILESTONE_META: Record<MilestoneType, Meta> = {
-  'ITA':                   { icon: 'mail-open-outline',        color: '#5B9EFF' },
-  'Application Submitted': { icon: 'cloud-upload-outline',     color: '#00E5A0' },
-  'AOR Received':          { icon: 'receipt-outline',          color: '#00E5A0' },
-  'Biometrics Requested':  { icon: 'finger-print-outline',     color: '#FFB547' },
-  'Biometrics Completed':  { icon: 'shield-checkmark-outline', color: '#00E5A0' },
-  'Medical Requested':     { icon: 'medkit-outline',           color: '#FFB547' },
-  'Medical Passed':        { icon: 'heart-outline',            color: '#00E5A0' },
-  'Passport Requested':    { icon: 'id-card-outline',          color: '#FFB547' },
-  'Passport Submitted':    { icon: 'send-outline',             color: '#5B9EFF' },
-  'Passport Collected':    { icon: 'ribbon-outline',           color: '#00E5A0' },
-  'ADR':                   { icon: 'document-attach-outline',  color: '#FF8C42' },
-  'Portal 1':              { icon: 'enter-outline',            color: '#A78BFA' },
-  'Portal 2':              { icon: 'globe-outline',            color: '#7C3AED' },
-  'Final Decision':        { icon: 'trophy-outline',           color: '#DC2626' },
-  'Custom':                { icon: 'create-outline',           color: palette.gray300 },
+  'ITA':                   { icon: 'email-check-outline',       color: '#5B9EFF' },
+  'Application Submitted': { icon: 'file-upload-outline',       color: '#00E5A0' },
+  'AOR Received':          { icon: 'clipboard-check-outline',   color: '#00E5A0' },
+  'Biometrics Requested':  { icon: 'fingerprint',               color: '#FFB547' },
+  'Biometrics Completed':  { icon: 'shield-check-outline',      color: '#00E5A0' },
+  'Medical Requested':     { icon: 'medical-bag',               color: '#FFB547' },
+  'Medical Passed':        { icon: 'heart-pulse',               color: '#00E5A0' },
+  'Passport Requested':    { icon: 'passport',                  color: '#FFB547' },
+  'Passport Submitted':    { icon: 'send-outline',              color: '#5B9EFF' },
+  'Passport Collected':    { icon: 'airplane-takeoff',          color: '#00E5A0' },
+  'ADR':                   { icon: 'file-alert-outline',        color: '#FF8C42' },
+  'Portal 1':              { icon: 'login-variant',             color: '#A78BFA' },
+  'Portal 2':              { icon: 'web-check',                 color: '#7C3AED' },
+  'Final Decision':        { icon: 'party-popper',              color: '#DC2626' },
+  'Custom':                { icon: 'pencil-outline',            color: palette.gray300 },
 };
 
 const MILESTONE_TYPES: MilestoneType[] = [
@@ -74,7 +74,7 @@ function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; 
       <View style={[s.cardIcon, { backgroundColor: meta.color + '20' }]}>
         {item.type === 'Custom' && item.customEmoji
           ? <Text style={s.cardEmoji}>{item.customEmoji}</Text>
-          : <Ionicons name={meta.icon} size={20} color={meta.color} />}
+          : <MaterialCommunityIcons name={meta.icon} size={22} color={meta.color} />}
       </View>
       <View style={s.cardMid}>
         <Text style={[s.cardTitle, { color: c.textPrimary }]}>{label}</Text>
@@ -212,7 +212,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             onPress={() => setPickingType(true)}
           >
             <View style={[s.typeIcon, { backgroundColor: meta.color + '20' }]}>
-              <Ionicons name={meta.icon} size={18} color={meta.color} />
+              <MaterialCommunityIcons name={meta.icon} size={20} color={meta.color} />
             </View>
             <Text style={[s.fieldVal, { color: c.textPrimary, flex: 1 }]}>
               {type === 'Custom' && customLabel ? customLabel : type}
@@ -321,7 +321,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                       onPress={() => { setType(t); setPickingType(false); }}
                     >
                       <View style={[s.typeIconSm, { backgroundColor: m.color + '20' }]}>
-                        <Ionicons name={m.icon} size={16} color={m.color} />
+                        <MaterialCommunityIcons name={m.icon} size={18} color={m.color} />
                       </View>
                       <Text style={[s.typeRowTxt, { color: selected ? accent : c.textPrimary },
                         selected && { fontWeight: typography.bold }]}>{t}</Text>
@@ -340,7 +340,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                     onPress={() => { setType('Custom'); setPickingType(false); }}
                   >
                     <View style={[s.typeIconSm, { backgroundColor: m.color + '20' }]}>
-                      <Ionicons name={m.icon} size={16} color={m.color} />
+                      <MaterialCommunityIcons name={m.icon} size={18} color={m.color} />
                     </View>
                     <Text style={[s.typeRowTxt, { color: selected ? accent : c.textPrimary },
                       selected && { fontWeight: typography.bold }]}>Custom</Text>
