@@ -1,5 +1,116 @@
-import { View } from 'react-native';
-import Svg, { Path, Circle, Line, Polyline, Polygon, Rect } from 'react-native-svg';
+import React from 'react';
+import { Text, View } from 'react-native';
+import Svg, { Path, Circle, Line, Polyline, Polygon, Rect, Text as SvgText } from 'react-native-svg';
+
+// ─── Multi-series line trend (area fill, reference line, axis labels) ─────────
+
+export type TrendSeries = { points: number[]; color: string; dashed?: boolean; fill?: string };
+
+export function TrendLineChart({
+  series,
+  min,
+  max,
+  gridColor,
+  axisColor,
+  refLine,
+  width = 300,
+  height = 140,
+}: {
+  series: TrendSeries[];
+  min: number;
+  max: number;
+  gridColor: string;
+  axisColor: string;
+  refLine?: { value: number; color: string; label?: string };
+  width?: number;
+  height?: number;
+}) {
+  const padL = 34, padR = 8, padT = 10, padB = 8;
+  const w = width - padL - padR;
+  const h = height - padT - padB;
+  const span = Math.max(1, max - min);
+  const xAt = (i: number, n: number) => padL + (n <= 1 ? w / 2 : (w * i) / (n - 1));
+  const yAt = (v: number) => padT + h - (h * (v - min)) / span;
+
+  return (
+    <Svg width={width} height={height}>
+      {/* gridlines + y labels */}
+      {[0, 0.5, 1].map((g) => {
+        const yv = max - g * span;
+        return (
+          <React.Fragment key={g}>
+            <Line x1={padL} y1={padT + h * g} x2={width - padR} y2={padT + h * g} stroke={gridColor} strokeWidth={0.5} />
+            <SvgText x={padL - 5} y={padT + h * g + 3} fontSize={9} fill={axisColor} textAnchor="end">{Math.round(yv)}</SvgText>
+          </React.Fragment>
+        );
+      })}
+
+      {/* reference line (e.g. user score) */}
+      {refLine && refLine.value >= min && refLine.value <= max && (
+        <>
+          <Line x1={padL} y1={yAt(refLine.value)} x2={width - padR} y2={yAt(refLine.value)}
+            stroke={refLine.color} strokeWidth={1} strokeDasharray="3 3" />
+          {refLine.label && (
+            <SvgText x={width - padR} y={yAt(refLine.value) - 3} fontSize={9} fill={refLine.color} textAnchor="end">{refLine.label}</SvgText>
+          )}
+        </>
+      )}
+
+      {series.map((sr, si) => {
+        const n = sr.points.length;
+        if (n === 0) return null;
+        const pts = sr.points.map((v, i) => `${xAt(i, n)},${yAt(v)}`).join(' ');
+        const area = sr.fill
+          ? `${xAt(0, n)},${padT + h} ${pts} ${xAt(n - 1, n)},${padT + h}`
+          : null;
+        return (
+          <React.Fragment key={si}>
+            {area && sr.fill && <Polygon points={area} fill={sr.fill} />}
+            <Polyline points={pts} fill="none" stroke={sr.color} strokeWidth={2} strokeLinejoin="round"
+              {...(sr.dashed ? { strokeDasharray: '4 3' } : {})} />
+          </React.Fragment>
+        );
+      })}
+    </Svg>
+  );
+}
+
+// ─── Horizontal labeled bars (category comparison, distribution) ──────────────
+
+export function HorizontalBars({
+  items,
+  track,
+  labelColor,
+  valueColor,
+  fontSize = 12,
+}: {
+  items: { label: string; value: number; max: number; color: string; suffix?: string; highlight?: boolean }[];
+  track: string;
+  labelColor: string;
+  valueColor: string;
+  fontSize?: number;
+}) {
+  return (
+    <View style={{ gap: 8 }}>
+      {items.map((it) => (
+        <View key={it.label} style={{ gap: 3 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize, color: it.highlight ? it.color : labelColor, fontWeight: it.highlight ? '700' : '500' }}>
+              {it.label}
+            </Text>
+            <Text style={{ fontSize, color: valueColor, fontWeight: '700', fontVariant: ['tabular-nums'] }}>
+              {it.value}{it.suffix ?? ''}
+            </Text>
+          </View>
+          <View style={{ height: 7, borderRadius: 4, backgroundColor: track, overflow: 'hidden' }}>
+            <View style={{ height: '100%', borderRadius: 4, backgroundColor: it.color,
+              width: `${Math.max(2, Math.min(100, (it.value / it.max) * 100))}%` }} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 // ─── Semicircle gauge (invitation odds) ──────────────────────────────────────
 

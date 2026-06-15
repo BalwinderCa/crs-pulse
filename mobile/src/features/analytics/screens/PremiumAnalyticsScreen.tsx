@@ -2,146 +2,224 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card } from '@/components/common/Card';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { usePremiumStore } from '../store/premiumStore';
-import { OddsGauge, ForecastBandChart, MiniBars, MarkerBar } from '../components/PremiumCharts';
+import { useTabBarLayout } from '@/hooks/useTabBarLayout';
+import { OddsGauge, ForecastBandChart, MiniBars, MarkerBar, HorizontalBars, TrendLineChart } from '../components/PremiumCharts';
+import { useAnalyticsData } from '../hooks/useAnalyticsData';
 
-// ─── Stub data (layout only — real calcs come from draws + profile later) ─────
-const STUB = {
-  category: 'Canadian Experience Class',
-  userScore: 512,
-  trendCutoff: 507,
-  oddsFraction: 0.62,
-  oddsLabel: 'Moderate' as const,
-  timeframe: '~2–3 draws · ≈ 6 weeks',
-  gapTo: 'High',
-  gapPoints: 14,
-  paths: [
-    { label: 'French (NCLC 7+)', delta: '+50' },
-    { label: 'Listening → CLB 9', delta: '+6' },
-    { label: 'Provincial nomination', delta: '+600' },
-  ],
-  forecast: {
-    actual: [515, 521, 509, 512, 507],
-    proj: [507, 511, 514],
-    band: [{ lo: 507, hi: 507 }, { lo: 503, hi: 519 }, { lo: 500, hi: 528 }],
-    min: 495,
-    max: 535,
-    likely: '508–522',
-    confidence: 'Medium',
-  },
-  trend: [518, 511, 524, 509, 515, 506, 512, 504, 510],
-  cadenceDays: 21,
-  cadence: [18, 24, 14, 28, 21, 16, 21],
-  invitationsYtd: '84,300',
-  volume: [62, 58, 31, 47, 25, 60],
-  percentile: 78,
-};
 
-const ODDS_COLOR: Record<string, string> = {
-  High: palette.success,
-  Moderate: palette.warning,
-  Low: palette.danger,
-};
+const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
+const fmt = (n: number) => n.toLocaleString('en-CA');
+
+type TabKey = 'ops' | 'improve' | 'trends';
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'ops', label: 'Operations' },
+  { key: 'improve', label: 'Improve' },
+  { key: 'trends', label: 'Trends' },
+];
 
 export default function PremiumAnalyticsScreen() {
   const c = useColors();
   const accent = useAccentColor();
-  const insets = useSafeAreaInsets();
-  const { isPremium, toggle } = usePremiumStore();
+  const { contentPaddingBottom } = useTabBarLayout();
+  const [tab, setTab] = useState<TabKey>('ops');
+  const data = useAnalyticsData();
 
-  // What-if simulator state (stub recompute)
   const [age, setAge] = useState(30);
   const [clb, setClb] = useState(9);
   const [french, setFrench] = useState(false);
   const [pnp, setPnp] = useState(false);
-  const whatIfScore = Math.min(
-    1200,
-    Math.round(380 + Math.max(0, 45 - age) * 2 + clb * 12 + (french ? 50 : 0) + (pnp ? 600 : 0)),
-  );
-  const whatIfLabel = whatIfScore - STUB.trendCutoff >= 10 ? 'High' : whatIfScore - STUB.trendCutoff >= -10 ? 'Moderate' : 'Low';
+  const whatIfScore = Math.min(1200, Math.round(380 + Math.max(0, 45 - age) * 2 + clb * 12 + (french ? 50 : 0) + (pnp ? 600 : 0)));
+  const whatIfLabel = whatIfScore - data.trendCutoff >= 10 ? 'High' : whatIfScore - data.trendCutoff >= -10 ? 'Moderate' : 'Low';
 
-  const oddsColor = ODDS_COLOR[STUB.oddsLabel] ?? palette.warning;
+  const oddsColor = ODDS_COLOR[data.oddsLabel] ?? palette.warning;
 
   return (
-    <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Premium Analytics" variant="stack" />
+    <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
+      <View style={s.header}>
+        <AppHeader title="Analytics" />
+      </View>
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, { paddingBottom: contentPaddingBottom }]}
         showsVerticalScrollIndicator={false}
       >
-        {/* Demo toggle (stub only — real builds gate on entitlement) */}
-        <TouchableOpacity
-          style={[s.demoPill, { borderColor: accent }]}
-          onPress={() => { void toggle(); }}
-          accessibilityRole="button"
-          accessibilityLabel="Toggle premium preview"
-        >
-          <Ionicons name="flask-outline" size={12} color={accent} />
-          <Text style={[s.demoText, { color: accent }]}>
-            DEMO · {isPremium ? 'Unlocked — tap to lock' : 'Locked — tap to unlock'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* ① Odds (always visible — teaser when locked) */}
+        {/* Pinned odds hero */}
         <Card style={[s.card, { borderTopWidth: 2, borderTopColor: accent }]}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>YOUR ODDS · {STUB.category}</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>YOUR ODDS · {data.category}</Text>
           <View style={s.gaugeWrap}>
-            <OddsGauge fraction={STUB.oddsFraction} color={oddsColor} track={c.surfaceTertiary} />
+            <OddsGauge fraction={data.oddsFraction} color={oddsColor} track={c.surfaceTertiary} />
             <View style={s.gaugeCenter}>
-              <Text style={[s.oddsLabel, { color: oddsColor }]}>{STUB.oddsLabel}</Text>
-              <Text style={[s.oddsTime, { color: c.textSecondary }]}>{STUB.timeframe}</Text>
+              <Text style={[s.oddsLabel, { color: oddsColor }]}>{data.oddsLabel}</Text>
+              <Text style={[s.oddsTime, { color: c.textSecondary }]}>{data.timeframe}</Text>
             </View>
           </View>
           <View style={[s.compareRow, { borderTopColor: c.border }]}>
-            <Text style={[s.compareText, { color: c.textSecondary }]}>
-              Your <Text style={[s.num, { color: c.textPrimary }]}>{STUB.userScore}</Text>
-            </Text>
+            <Text style={[s.compareText, { color: c.textSecondary }]}>Your <Text style={[s.num, { color: c.textPrimary }]}>{data.userScore}</Text></Text>
             <View style={[s.vDiv, { backgroundColor: c.border }]} />
-            <Text style={[s.compareText, { color: c.textSecondary }]}>
-              Trend cutoff <Text style={[s.num, { color: c.textPrimary }]}>~{STUB.trendCutoff}</Text>
-            </Text>
+            <Text style={[s.compareText, { color: c.textSecondary }]}>Trend cutoff <Text style={[s.num, { color: c.textPrimary }]}>~{data.trendCutoff}</Text></Text>
           </View>
         </Card>
 
-        {isPremium ? (
-          <PremiumBody c={c} accent={accent}
+        {/* Section tabs */}
+        <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <TouchableOpacity
+                key={t.key}
+                style={[s.segBtn, active && { backgroundColor: accent }]}
+                onPress={() => setTab(t.key)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{t.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {tab === 'ops' && <OpsTab c={c} accent={accent} data={data} />}
+        {tab === 'improve' && (
+          <ImproveTab
+            c={c} accent={accent} data={data}
             age={age} setAge={setAge} clb={clb} setClb={setClb}
             french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
-            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel} />
-        ) : (
-          <LockedRegion c={c} accent={accent} onUnlock={() => { void toggle(); }} />
+            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
+          />
         )}
+        {tab === 'trends' && <TrendsTab c={c} accent={accent} data={data} />}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
           Estimates, not guarantees. Based on historical IRCC draw data and your profile. IRCC draws
           are unpredictable — always verify with the official tools.
         </Text>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
-// ─── Unlocked body (cards ②–⑦) ───────────────────────────────────────────────
-function PremiumBody({
-  c, accent, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel,
-}: any) {
+// ─── Operations tab (IRCC operational data) ───────────────────────────────────
+function OpsTab({ c, accent, data }: any) {
+  const i = data.ircc;
   return (
     <>
-      {/* ② Score-gap coach */}
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
+        <View style={s.rowBetween}>
+          <Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.nextDrawWindow}</Text>
+          <View style={[s.tagPill, { backgroundColor: accent + '18' }]}>
+            <Text style={[s.tagText, { color: accent }]}>{i.nextDrawLikely}</Text>
+          </View>
+        </View>
+        <Text style={[s.caption, { color: c.textSecondary }]}>
+          <Text style={[s.num, { color: c.textPrimary }]}>{i.daysSinceLast}</Text> days since last · avg gap{' '}
+          <Text style={[s.num, { color: c.textPrimary }]}>{i.avgGap}</Text> days · typically ~<Text style={[s.num, { color: c.textPrimary }]}>{i.typicalSize}</Text> ITAs
+        </Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>2026 INVITATIONS PACE</Text>
+        <View style={s.rowBetween}>
+          <Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.itaYtd)}</Text>
+          <Text style={[s.caption, { color: c.textSecondary }]}>ITAs issued YTD</Text>
+        </View>
+        <View style={[s.progressTrack, { backgroundColor: c.surfaceTertiary }]}>
+          <View style={[s.progressFill, { backgroundColor: accent, width: `${Math.round((i.itaYtd / i.itaProjected) * 100)}%` }]} />
+        </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>
+          ~{fmt(i.itaProjected)} projected · past 2025’s {fmt(i.ita2025)} pace · PR target {fmt(i.prTarget2026)}
+        </Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>YOUR PLACE IN LINE · {data.category}</Text>
+        <View style={s.statGrid}>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: accent }]}>{fmt(i.peopleAhead)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>ahead of you</Text></View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text></View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text></View>
+        </View>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>POOL COMPOSITION · candidates by CRS</Text>
+        <View style={{ marginTop: spacing.xs }}>
+          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
+            items={i.poolComposition.map((p: any) => ({
+              label: p.label + (p.mine ? '  ← you' : ''), value: p.value,
+              max: Math.max(...i.poolComposition.map((x: any) => x.value)),
+              color: p.mine ? accent : c.textMuted, highlight: !!p.mine,
+            }))} />
+        </View>
+        <Text style={[s.caption, { color: c.textSecondary }]}>
+          ≈<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.candidatesAtOrAbove)}</Text> score at or above you · pool ~{fmt(i.poolTotal)}
+        </Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>2026 ITA MIX · by category</Text>
+        <View style={{ marginTop: spacing.xs }}>
+          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
+            items={i.categoryMix.map((m: any, idx: number) => ({ label: m.label, value: m.value, max: 40, suffix: '%', color: idx === 0 ? accent : c.textMuted }))} />
+        </View>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>LATEST CUTOFF · by category</Text>
+        <View style={{ marginTop: spacing.xs }}>
+          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
+            items={i.categoryCutoffs.map((cc: any) => ({ label: cc.label, value: cc.value, max: 750, color: cc.label.startsWith('French') ? palette.success : accent, highlight: cc.label.startsWith('French') }))} />
+        </View>
+      </Card>
+
+      <Card style={[s.card, { borderLeftWidth: 3, borderLeftColor: palette.success }]}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>FRENCH ADVANTAGE</Text>
+        <Text style={[s.bodyText, { color: c.textPrimary }]}>
+          French draws cut off <Text style={[s.num, { color: palette.success }]}>~{i.cecCutoff - i.frenchCutoff} pts</Text> below CEC
+          ({i.frenchCutoff} vs {i.cecCutoff}). NCLC 7 French is the biggest CRS shortcut.
+        </Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DRAW SIZE & FREQUENCY · 2026</Text>
+        <View style={s.statGrid}>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.avgSize}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>avg/draw</Text></View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.largest}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>largest</Text></View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.drawsYtd}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>draws YTD</Text></View>
+        </View>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>TIE-BREAK · latest draw</Text>
+        <Text style={[s.num, { color: c.textPrimary, fontSize: typography.base }]}>{i.tieBreak}</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>
+          At the cutoff, only profiles submitted before this time were invited. Submit early to win ties.
+        </Text>
+      </Card>
+    </>
+  );
+}
+
+// ─── Improve tab (score-centric) ──────────────────────────────────────────────
+function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
+  return (
+    <>
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
-          <Text style={[s.gapBadge, { color: accent }]}>+{STUB.gapPoints} to “{STUB.gapTo}”</Text>
+          <Text style={[s.gapBadge, { color: accent }]}>+{data.gapPoints} to “{data.gapTo}”</Text>
         </View>
-        {STUB.paths.map((p, i) => (
-          <View key={p.label} style={[s.gapRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+        {data.paths.map((p: any, idx: number) => (
+          <View key={p.label} style={[s.gapRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
             <Text style={[s.gapLabel, { color: c.textPrimary }]}>{p.label}</Text>
             <Text style={[s.gapDelta, { color: palette.success }]}>{p.delta}</Text>
@@ -149,20 +227,15 @@ function PremiumBody({
         ))}
       </Card>
 
-      {/* ③ Forecast */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT {STUB.category.toUpperCase()} DRAW</Text>
-        <ForecastBandChart
-          actual={STUB.forecast.actual} forecast={STUB.forecast.proj} band={STUB.forecast.band}
-          min={STUB.forecast.min} max={STUB.forecast.max}
-          lineColor={accent} bandColor={accent + '26'} gridColor={c.border}
-        />
+        <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT {data.category.toUpperCase()} DRAW</Text>
+        <ForecastBandChart actual={data.forecast.actual} forecast={data.forecast.proj} band={data.forecast.band}
+          min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border} />
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          Likely <Text style={[s.num, { color: c.textPrimary }]}>{STUB.forecast.likely}</Text> · confidence {STUB.forecast.confidence.toLowerCase()}
+          Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · confidence {data.forecast.confidence.toLowerCase()}
         </Text>
       </Card>
 
-      {/* ④ What-if simulator */}
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
@@ -173,103 +246,137 @@ function PremiumBody({
         <SwitchRow c={c} accent={accent} label="French (NCLC 7+)" value={french} onChange={setFrench} />
         <SwitchRow c={c} accent={accent} label="Provincial nomination" value={pnp} onChange={setPnp} />
         <View style={[s.whatIfOut, { backgroundColor: (ODDS_COLOR[whatIfLabel] ?? accent) + '14' }]}>
-          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>
-            Projected odds: {whatIfLabel}
-          </Text>
+          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>Projected odds: {whatIfLabel}</Text>
         </View>
       </Card>
 
-      {/* ⑤ Cutoff trend (multi-category stub: single series + MA) */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF TREND · LAST {STUB.trend.length} DRAWS</Text>
-        <ForecastBandChart
-          actual={STUB.trend} forecast={[STUB.trend[STUB.trend.length - 1]!]} band={[{ lo: 0, hi: 0 }]}
-          min={495} max={535} lineColor={accent} bandColor="transparent" gridColor={c.border} height={110}
-        />
-        <Text style={[s.caption, { color: c.textMuted }]}>Solid = cutoff · tap chips (soon) to compare categories</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · est. odds</Text>
+        <View style={{ marginTop: spacing.xs }}>
+          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
+            items={data.streams.map((st: any, idx: number) => ({ label: st.label, value: st.value, max: 100, suffix: '%', color: idx === 0 ? palette.success : accent, highlight: idx === 0 }))} />
+        </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>Based on your profile vs each stream’s recent cutoffs</Text>
       </Card>
 
-      {/* ⑥ Cadence + volume */}
-      <View style={s.miniRow}>
-        <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
-          <MiniBars values={STUB.cadence} color={accent} track={c.surfaceTertiary} />
-          <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{STUB.cadenceDays}</Text> days</Text>
-        </Card>
-        <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
-          <MiniBars values={STUB.volume} color={palette.success} track={c.surfaceTertiary} />
-          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{STUB.invitationsYtd}</Text> YTD</Text>
-        </Card>
-      </View>
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
+        {data.byScoreBand.map((r: any, idx: number) => {
+          const mine = r.band === '510–524';
+          return (
+            <View key={r.band} style={[s.bandRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+              <Text style={[s.bandScore, { color: mine ? accent : c.textPrimary, fontWeight: mine ? typography.bold : typography.medium }]}>{r.band}{mine ? '  ← you' : ''}</Text>
+              <Text style={[s.bandWait, { color: c.textSecondary }]}>{r.wait}</Text>
+            </View>
+          );
+        })}
+      </Card>
 
-      {/* ⑦ Percentile */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>PERCENTILE</Text>
-        <Text style={[s.percentileText, { color: c.textPrimary }]}>
-          Your {STUB.userScore} beats {STUB.percentile}% of the last 12 months’ cutoffs
-        </Text>
+        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} beats {data.percentile}% of the last 12 months’ cutoffs</Text>
         <View style={{ marginTop: spacing.sm }}>
-          <MarkerBar fraction={STUB.percentile / 100} color={accent} track={c.surfaceTertiary} />
+          <MarkerBar fraction={data.percentile / 100} color={accent} track={c.surfaceTertiary} />
         </View>
       </Card>
     </>
   );
 }
 
-// ─── Locked region (scrim + unlock sheet) ─────────────────────────────────────
-function LockedRegion({ c, accent, onUnlock }: any) {
+// ─── Trends tab (historical patterns) ─────────────────────────────────────────
+function TrendsTab({ c, accent, data }: any) {
   return (
-    <View style={s.lockedWrap}>
-      {/* Dimmed, non-interactive preview behind the sheet */}
-      <View style={s.lockedPreview} pointerEvents="none">
-        <Card style={s.card}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
-          <View style={s.gapRow}><Ionicons name="arrow-up-circle-outline" size={16} color={accent} /><Text style={[s.gapLabel, { color: c.textPrimary }]}>French (NCLC 7+)</Text><Text style={[s.gapDelta, { color: palette.success }]}>+50</Text></View>
-          <View style={s.gapRow}><Ionicons name="arrow-up-circle-outline" size={16} color={accent} /><Text style={[s.gapLabel, { color: c.textPrimary }]}>Listening → CLB 9</Text><Text style={[s.gapDelta, { color: palette.success }]}>+6</Text></View>
+    <>
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF vs YOUR SCORE · last {data.trend.length} draws</Text>
+        <TrendLineChart
+          series={[{ points: data.trend, color: accent }]}
+          min={data.trendMin} max={data.trendMax}
+          gridColor={c.border} axisColor={c.textMuted}
+          refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
+          width={300} height={150}
+        />
+        <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF BY CATEGORY · trend</Text>
+        <TrendLineChart
+          series={[
+            { points: data.categoryTrends.CEC, color: accent },
+            { points: data.categoryTrends.French, color: palette.success },
+            { points: data.categoryTrends.PNP, color: palette.warning },
+          ]}
+          min={data.trendMin} max={data.trendMax}
+          gridColor={c.border} axisColor={c.textMuted}
+          width={300} height={150}
+        />
+        <View style={s.legendRow}>
+          {[['CEC', accent], ['French', palette.success], ['PNP', palette.warning]].map(([lbl, col]) => (
+            <View key={lbl} style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: col as string }]} />
+              <Text style={[s.legendText, { color: c.textSecondary }]}>{lbl}</Text>
+            </View>
+          ))}
+        </View>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS PER DRAW · last {data.invitationsTrend.length}</Text>
+        <TrendLineChart
+          series={[{ points: data.invitationsTrend, color: palette.success, fill: palette.success + '22' }]}
+          min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
+          gridColor={c.border} axisColor={c.textMuted}
+          width={300} height={140}
+        />
+        <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
+        <View style={{ marginTop: spacing.xs }}>
+          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
+            items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ← you' : ''), value: d.value, max: Math.max(...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
+        </View>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
+        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48} />
+        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>Jun</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>Aug</Text></Text>
+      </Card>
+
+      <View style={s.miniRow}>
+        <Card style={s.miniCard}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
+          <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary} />
+          <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> days</Text>
         </Card>
-        <Card style={s.card}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST</Text>
-          <ForecastBandChart actual={STUB.forecast.actual} forecast={STUB.forecast.proj} band={STUB.forecast.band}
-            min={STUB.forecast.min} max={STUB.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border} />
+        <Card style={s.miniCard}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
+          <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary} />
+          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> YTD</Text>
         </Card>
       </View>
 
-      {/* Scrim + unlock sheet */}
-      <View style={[s.scrim, { backgroundColor: c.surfacePrimary + 'D9' }]} />
-      <Card style={[s.unlockSheet, { borderColor: accent + '40' }]}>
-        <View style={[s.lockBadge, { backgroundColor: accent + '18' }]}>
-          <Ionicons name="lock-closed" size={20} color={accent} />
+      <Card style={s.card}>
+        <View style={s.rowBetween}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF MOMENTUM · last 6</Text>
+          <Text style={[s.num, { color: palette.success }]}>trending down ↓</Text>
         </View>
-        <Text style={[s.unlockTitle, { color: c.textPrimary }]}>Unlock Premium Insights</Text>
-        {[
-          ['analytics-outline', 'Personalized invitation odds'],
-          ['trending-up-outline', 'Score-gap coaching & paths'],
-          ['pulse-outline', 'Cutoff forecasts per category'],
-          ['options-outline', 'What-if score simulator'],
-        ].map(([icon, label]) => (
-          <View key={label} style={s.benefitRow}>
-            <Ionicons name={icon as any} size={15} color={accent} />
-            <Text style={[s.benefitText, { color: c.textSecondary }]}>{label}</Text>
-          </View>
-        ))}
-        <TouchableOpacity
-          style={[s.cta, { backgroundColor: accent }]}
-          onPress={onUnlock}
-          accessibilityRole="button"
-          accessibilityLabel="Unlock premium"
-        >
-          <Text style={s.ctaText}>Unlock · CA$3.99/mo</Text>
-        </TouchableOpacity>
-        <Text style={[s.ctaAlt, { color: c.textSecondary }]}>or CA$19.99/yr · save 58%</Text>
-        <Text style={[s.restore, { color: c.textMuted }]}>Restore purchase</Text>
-        <Text style={[s.demoNote, { color: c.textMuted }]}>(Demo: button just toggles the preview — no billing yet)</Text>
+        <View style={s.chipRow}>
+          {data.momentum.map((d: number, idx: number) => (
+            <View key={idx} style={[s.chip, { backgroundColor: (d <= 0 ? palette.success : palette.danger) + '18' }]}>
+              <Text style={[s.chipText, { color: d <= 0 ? palette.success : palette.danger }]}>{d > 0 ? `+${d}` : d}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>Falling cutoffs improve your odds · avg {data.avgInvitations} ITAs/draw</Text>
       </Card>
-    </View>
+    </>
   );
 }
 
-// ─── Small form rows ──────────────────────────────────────────────────────────
 function SliderRow({ c, accent, label, value, min, max, step, onChange, display }: any) {
   return (
     <View style={s.sliderRow}>
@@ -277,11 +384,8 @@ function SliderRow({ c, accent, label, value, min, max, step, onChange, display 
         <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
         <Text style={[s.sliderVal, { color: c.textPrimary }]}>{display}</Text>
       </View>
-      <Slider
-        minimumValue={min} maximumValue={max} step={step} value={value}
-        onValueChange={onChange}
-        minimumTrackTintColor={accent} maximumTrackTintColor={c.surfaceTertiary} thumbTintColor={accent}
-      />
+      <Slider minimumValue={min} maximumValue={max} step={step} value={value} onValueChange={onChange}
+        minimumTrackTintColor={accent} maximumTrackTintColor={c.surfaceTertiary} thumbTintColor={accent} />
     </View>
   );
 }
@@ -298,22 +402,32 @@ function SwitchRow({ c, accent, label, value, onChange }: any) {
 const TAB = { fontVariant: ['tabular-nums' as const] };
 
 const s = StyleSheet.create({
-  wrap: { flex: 1 },
+  safe: { flex: 1 },
+  header: { paddingHorizontal: spacing.base, paddingTop: spacing.base },
   body: { padding: spacing.base, paddingTop: spacing.md, gap: spacing.sm },
 
-  demoPill: {
-    alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 5,
-    borderWidth: 1, borderRadius: 999, paddingHorizontal: spacing.md, paddingVertical: 5, marginBottom: spacing.xs,
-  },
-  demoText: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.4 },
+  segWrap: { flexDirection: 'row', backgroundColor: 'transparent', borderRadius: borderRadius.md,
+             padding: spacing.xs, gap: spacing.xs, borderWidth: 0.3, marginVertical: spacing.xs },
+  segBtn: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+  segText: { fontSize: typography.sm, fontWeight: typography.bold },
 
   card: { gap: spacing.xs },
   kicker: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
+  opsBig: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, ...TAB },
+  bodyText: { fontSize: typography.sm, lineHeight: 20, fontWeight: typography.medium },
   rowBetween: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   num: { fontWeight: typography.bold, ...TAB },
   caption: { fontSize: typography.xs, lineHeight: 16, marginTop: 2 },
 
-  // Odds
+  tagPill: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.md },
+  tagText: { fontSize: typography.xs, fontWeight: typography.bold },
+  progressTrack: { height: 8, borderRadius: 4, overflow: 'hidden', marginTop: spacing.xs },
+  progressFill: { height: '100%', borderRadius: 4 },
+  statGrid: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
+  statCell: { flex: 1, alignItems: 'center', gap: 2 },
+  statCellLabel: { fontSize: 10, textAlign: 'center' },
+  vDivTall: { width: 1, height: 32 },
+
   gaugeWrap: { alignItems: 'center', marginTop: spacing.xs },
   gaugeCenter: { position: 'absolute', bottom: 0, alignItems: 'center' },
   oddsLabel: { fontSize: typography['2xl'], fontWeight: typography.black, letterSpacing: -0.5 },
@@ -323,13 +437,11 @@ const s = StyleSheet.create({
   compareText: { fontSize: typography.sm },
   vDiv: { width: 1, height: 16 },
 
-  // Gap
   gapBadge: { fontSize: typography.xs, fontWeight: typography.bold },
   gapRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
   gapLabel: { flex: 1, fontSize: typography.sm, fontWeight: typography.medium },
   gapDelta: { fontSize: typography.sm, fontWeight: typography.bold, ...TAB },
 
-  // What-if
   whatIfScore: { fontSize: typography.xl, fontWeight: typography.black, ...TAB },
   sliderRow: { marginTop: spacing.xs },
   sliderLabel: { fontSize: typography.sm },
@@ -339,28 +451,21 @@ const s = StyleSheet.create({
   whatIfOut: { borderRadius: borderRadius.md, paddingVertical: spacing.sm, alignItems: 'center', marginTop: spacing.sm },
   whatIfOutText: { fontSize: typography.sm, fontWeight: typography.bold },
 
-  // Mini row
   miniRow: { flexDirection: 'row', gap: spacing.sm },
   miniCard: { flex: 1, gap: spacing.xs },
 
-  // Percentile
-  percentileText: { fontSize: typography.sm, lineHeight: 20, fontWeight: typography.medium },
+  legendRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.xs },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  legendDot: { width: 9, height: 9, borderRadius: 5 },
+  legendText: { fontSize: typography.xs, fontWeight: typography.medium },
 
-  // Locked
-  lockedWrap: { position: 'relative' },
-  lockedPreview: { gap: spacing.sm, opacity: 0.5 },
-  scrim: { ...StyleSheet.absoluteFillObject, borderRadius: borderRadius.md },
-  unlockSheet: { position: 'absolute', left: spacing.lg, right: spacing.lg, top: spacing.lg,
-                 alignItems: 'center', gap: spacing.xs, borderWidth: 1, paddingVertical: spacing.lg },
-  lockBadge: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
-  unlockTitle: { fontSize: typography.lg, fontWeight: typography.bold, marginBottom: spacing.xs },
-  benefitRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, alignSelf: 'stretch' },
-  benefitText: { fontSize: typography.sm },
-  cta: { alignSelf: 'stretch', borderRadius: borderRadius.md, paddingVertical: spacing.md, alignItems: 'center', marginTop: spacing.md },
-  ctaText: { color: '#fff', fontSize: typography.base, fontWeight: typography.bold },
-  ctaAlt: { fontSize: typography.sm, marginTop: spacing.xs },
-  restore: { fontSize: typography.xs, marginTop: spacing.xs, textDecorationLine: 'underline' },
-  demoNote: { fontSize: 10, marginTop: spacing.sm, textAlign: 'center' },
+  bandRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: spacing.sm },
+  bandScore: { fontSize: typography.sm },
+  bandWait: { fontSize: typography.sm },
+
+  chipRow: { flexDirection: 'row', gap: spacing.xs, marginTop: spacing.xs, flexWrap: 'wrap' },
+  chip: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.md, minWidth: 38, alignItems: 'center' },
+  chipText: { fontSize: typography.sm, fontWeight: typography.bold, ...TAB },
 
   disclaimer: { fontSize: typography.xs, lineHeight: 16, textAlign: 'center', paddingHorizontal: spacing.sm, marginTop: spacing.sm },
 });

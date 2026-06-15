@@ -91,7 +91,6 @@ export type RootStackParamList = {
   BcSirsCalculator: undefined;
   Notifications: undefined;
   ProcessingTimes: undefined;
-  PremiumAnalytics: undefined;
 };
 
 export type MainTabParamList = {

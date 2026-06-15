@@ -10,7 +10,7 @@ import type { MainTabParamList } from '@/types';
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import TimelineScreen from '@/features/timeline/screens/TimelineScreen';
 import DrawsScreen from '@/features/draws/screens/DrawsScreen';
-import AnalyticsScreen from '@/features/analytics/screens/AnalyticsScreen';
+import PremiumAnalyticsScreen from '@/features/analytics/screens/PremiumAnalyticsScreen';
 import ProfileScreen from '@/features/profile/screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -29,7 +29,7 @@ const TAB_LABELS: Record<keyof MainTabParamList, string> = {
   Dashboard: 'Home',
   Timeline:  'Timeline',
   Draws:     'Draws',
-  Analytics: 'Trends',
+  Analytics: 'Analytics',
   Settings:  'Profile',
 };
 
@@ -84,7 +84,7 @@ export default function MainNavigator() {
       <Tab.Screen name="Dashboard" component={HomeScreen} />
       <Tab.Screen name="Timeline"  component={TimelineScreen} />
       <Tab.Screen name="Draws"     component={DrawsScreen} />
-      <Tab.Screen name="Analytics" component={AnalyticsScreen} />
+      <Tab.Screen name="Analytics" component={PremiumAnalyticsScreen} />
       <Tab.Screen name="Settings"  component={ProfileScreen} />
     </Tab.Navigator>
   );
