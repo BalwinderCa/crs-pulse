@@ -112,6 +112,29 @@ test('migrateLegacyTokens folds array into per-key entries then drops legacy key
   assert.equal(await migrateLegacyTokens(k, isValid), 0);
 });
 
+test('migration does not resurrect a token revoked during the transition window', async () => {
+  const store = new MockKV();
+  const k = store as unknown as KVNamespace;
+
+  // Legacy array still holds A and B (worker not yet redeployed/migrated).
+  store.store.set(
+    LEGACY_TOKENS_KEY,
+    JSON.stringify([
+      { token: 'ExpoPushToken[a]', platform: 'ios' },
+      { token: 'ExpoPushToken[b]', platform: 'ios' },
+    ]),
+  );
+
+  // User revokes A before migration runs.
+  await revokeToken(k, 'ExpoPushToken[a]');
+
+  const migrated = await migrateLegacyTokens(k, isValid);
+
+  assert.equal(migrated, 1); // only B
+  assert.deepEqual(await listTokens(k), ['ExpoPushToken[b]']);
+  assert.equal(store.store.has(`${TOKEN_PREFIX}ExpoPushToken[a]`), false);
+});
+
 test('migrateLegacyTokens drops a corrupt legacy blob safely', async () => {
   const store = new MockKV();
   const k = store as unknown as KVNamespace;

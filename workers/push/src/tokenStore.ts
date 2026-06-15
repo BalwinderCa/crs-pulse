@@ -13,6 +13,18 @@
 
 export const TOKEN_PREFIX = 'token:';
 export const LEGACY_TOKENS_KEY = 'tokens';
+export const REVOKED_PREFIX = 'revoked:';
+
+/**
+ * How long a revocation tombstone lives. It only needs to outlast the window
+ * between a worker redeploy and the next cron-driven legacy migration (≤15 min),
+ * so an hour is a comfortable margin. KV auto-expires it afterwards.
+ */
+export const REVOKED_TTL_SECONDS = 60 * 60;
+
+async function isRevoked(kv: KVNamespace, token: string): Promise<boolean> {
+  return (await kv.get(REVOKED_PREFIX + token)) !== null;
+}
 
 export type Platform = 'ios' | 'android';
 
@@ -31,7 +43,13 @@ export async function registerToken(
 }
 
 export async function revokeToken(kv: KVNamespace, token: string): Promise<void> {
-  await kv.delete(TOKEN_PREFIX + token);
+  // Drop the live key and leave a short-lived tombstone so a legacy migration
+  // that hasn't run yet won't resurrect a token revoked during the transition
+  // window. The tombstone TTL-expires on its own.
+  await Promise.all([
+    kv.delete(TOKEN_PREFIX + token),
+    kv.put(REVOKED_PREFIX + token, '1', { expirationTtl: REVOKED_TTL_SECONDS }),
+  ]);
 }
 
 /** Lists every registered token, paginating through KV. */
@@ -71,6 +89,8 @@ export async function migrateLegacyTokens(
     if (Array.isArray(parsed)) {
       for (const entry of parsed) {
         if (entry && typeof entry.token === 'string' && isValid(entry.token)) {
+          // Skip tokens revoked during the transition window — don't resurrect.
+          if (await isRevoked(kv, entry.token)) continue;
           await registerToken(kv, entry.token, entry.platform === 'ios' ? 'ios' : 'android');
           migrated++;
         }
