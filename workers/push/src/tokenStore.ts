@@ -33,6 +33,11 @@ export interface StoredToken {
   platform: Platform;
 }
 
+/** True when the token is already in the live registry. */
+export async function hasToken(kv: KVNamespace, token: string): Promise<boolean> {
+  return (await kv.get(TOKEN_PREFIX + token)) !== null;
+}
+
 /** Idempotent and race-free: a single put to a token-scoped key. */
 export async function registerToken(
   kv: KVNamespace,

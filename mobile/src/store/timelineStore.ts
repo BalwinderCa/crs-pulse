@@ -33,6 +33,8 @@ type TimelineStore = {
   add: (m: Omit<Milestone, 'id'>) => Promise<void>;
   update: (id: string, m: Omit<Milestone, 'id'>) => Promise<void>;
   remove: (id: string) => Promise<void>;
+  /** Wipes all milestones from memory and storage (used by "Reset All Data"). */
+  clearAll: () => Promise<void>;
 };
 
 const KEY = 'timeline_milestones';
@@ -90,5 +92,10 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     const updated = get().milestones.filter((m) => m.id !== id);
     set({ milestones: updated });
     try { await AsyncStorage.setItem(KEY, JSON.stringify(updated)); } catch {}
+  },
+
+  clearAll: async () => {
+    set({ milestones: [] });
+    try { await AsyncStorage.removeItem(KEY); } catch {}
   },
 }));

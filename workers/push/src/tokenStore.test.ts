@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   TOKEN_PREFIX,
   LEGACY_TOKENS_KEY,
+  hasToken,
   registerToken,
   revokeToken,
   revokeTokens,
@@ -53,6 +54,15 @@ test('registerToken stores one key per token, idempotently', async () => {
   assert.equal(store.store.size, 2);
   assert.equal(store.store.get(`${TOKEN_PREFIX}ExpoPushToken[a]`), 'ios');
   assert.equal(store.store.get(`${TOKEN_PREFIX}ExpoPushToken[b]`), 'android');
+});
+
+test('hasToken reflects live registry membership', async () => {
+  const k = kv();
+  assert.equal(await hasToken(k, 'ExpoPushToken[x]'), false);
+  await registerToken(k, 'ExpoPushToken[x]', 'ios');
+  assert.equal(await hasToken(k, 'ExpoPushToken[x]'), true);
+  await revokeToken(k, 'ExpoPushToken[x]');
+  assert.equal(await hasToken(k, 'ExpoPushToken[x]'), false);
 });
 
 test('concurrent registrations never lose writes (race regression)', async () => {

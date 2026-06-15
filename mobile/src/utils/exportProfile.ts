@@ -35,6 +35,26 @@ function canadianEdLabel(v: string): string {
   return '3+ year program';
 }
 
+/**
+ * Escapes a value before it is interpolated into the export HTML. Inputs are
+ * controlled enums/numbers today, but the PDF is built from a template string —
+ * escaping every string interpolation closes any XSS-in-PDF path if a free-text
+ * field ever reaches this template.
+ */
+function esc(value: string | number): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/** Only allow a 3/6/8-digit hex color into CSS; otherwise fall back to the brand red. */
+function safeColor(color: string): string {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(color) ? color : '#DC2626';
+}
+
 // ─── HTML template ────────────────────────────────────────────────────────────
 
 export function buildProfileHtml(
@@ -46,6 +66,7 @@ export function buildProfileHtml(
 ): string {
   const married = inputs.maritalStatus === 'married';
   const date    = format(new Date(), 'MMMM d, yyyy');
+  accent        = safeColor(accent);
 
   const maxAge    = married ? 100  : 110;
   const maxEdu    = married ? 140  : 150;
@@ -120,19 +141,19 @@ td:last-child{text-align:right;font-weight:600;color:#1a2b45}
 <div class="hero">
   <div class="snum">${score > 0 ? score : '—'}</div>
   <div class="slbl">Comprehensive Ranking System Score</div>
-  ${category ? `<div class="scat">${category} Stream</div>` : ''}
+  ${category ? `<div class="scat">${esc(category)} Stream</div>` : ''}
 </div>
 
 <div class="sec">
   <div class="stitle">Profile Summary</div>
   <table>
-    <tr><td>Age</td><td>${inputs.age}</td></tr>
-    <tr><td>Marital Status</td><td>${MARITAL_LABELS[inputs.maritalStatus] ?? inputs.maritalStatus}</td></tr>
-    <tr><td>Education</td><td>${EDU_LABELS[inputs.education] ?? inputs.education}</td></tr>
-    <tr><td>Canadian Education</td><td>${canadianEdLabel(inputs.canadianEducation)}</td></tr>
-    <tr><td>First Language Test</td><td>${inputs.firstLangTest}</td></tr>
+    <tr><td>Age</td><td>${esc(inputs.age)}</td></tr>
+    <tr><td>Marital Status</td><td>${esc(MARITAL_LABELS[inputs.maritalStatus] ?? inputs.maritalStatus)}</td></tr>
+    <tr><td>Education</td><td>${esc(EDU_LABELS[inputs.education] ?? inputs.education)}</td></tr>
+    <tr><td>Canadian Education</td><td>${esc(canadianEdLabel(inputs.canadianEducation))}</td></tr>
+    <tr><td>First Language Test</td><td>${esc(inputs.firstLangTest)}</td></tr>
     ${langBlock('First Lang', inputs.firstLangSpeaking, inputs.firstLangListening, inputs.firstLangReading, inputs.firstLangWriting)}
-    ${inputs.hasSecondLang ? `<tr><td>Second Language Test</td><td>${inputs.secondLangTest}</td></tr>
+    ${inputs.hasSecondLang ? `<tr><td>Second Language Test</td><td>${esc(inputs.secondLangTest)}</td></tr>
     ${langBlock('Second Lang', inputs.secondLangSpeaking, inputs.secondLangListening, inputs.secondLangReading, inputs.secondLangWriting)}` : ''}
     <tr><td>Canadian Work Experience</td><td>${workExpLabel(inputs.canadianWorkExp)}</td></tr>
     <tr><td>Foreign Work Experience</td><td>${workExpLabel(inputs.foreignWorkExp)}</td></tr>

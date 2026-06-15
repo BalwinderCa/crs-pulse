@@ -1,10 +1,12 @@
 import {
+  hasToken,
   listTokens,
   migrateLegacyTokens,
   registerToken,
   revokeToken,
   revokeTokens,
 } from './tokenStore';
+import { validateTokenWithExpo } from './expoValidate';
 
 // canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the
 // worker reads the latest draw from a GitHub Actions mirror (raw.githubusercontent)
@@ -121,15 +123,16 @@ function isValidExpoToken(token: string): boolean {
   return EXPO_TOKEN_RE.test(token) && token.length <= 256;
 }
 
+/**
+ * The only legitimate client is the native mobile app, which is not subject to
+ * the browser same-origin policy and never sends CORS preflights. Deliberately
+ * NOT advertising `Access-Control-Allow-Origin` means a browser's preflight
+ * fails, so arbitrary websites cannot drive the (bundled, necessarily public)
+ * bearer key to trigger register/revoke side effects cross-origin. Defense in
+ * depth on top of the per-IP rate limiter.
+ */
 function corsPreflight(): Response {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
+  return new Response(null, { status: 204 });
 }
 
 async function fetchLatestDraw(): Promise<LatestDraw | null> {
@@ -291,6 +294,21 @@ export default {
       }
       if (!isValidExpoToken(body.token)) {
         return json({ message: 'Invalid Expo push token format' }, 422);
+      }
+
+      // The client re-registers on every launch; skip the Expo probe (and its
+      // silent validation push) when the token is already in the registry.
+      let alreadyRegistered = false;
+      try {
+        alreadyRegistered = await hasToken(env.TOKENS_KV, body.token);
+      } catch {
+        // KV read failed — fall through and validate as if new.
+      }
+
+      // Reject tokens Expo synchronously flags as invalid (fails open on Expo
+      // outages so a real device is never blocked).
+      if (!alreadyRegistered && !(await validateTokenWithExpo(body.token))) {
+        return json({ message: 'Push token rejected by Expo' }, 422);
       }
 
       try {

@@ -6,8 +6,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/types';
 import { useProfileStore } from '@/store/profileStore';
-import { useApplicationStore } from '@/store/applicationStore';
 import type { ThemeMode } from '@/store/profileStore';
+import { resetAllData } from '@/utils/resetAllData';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
@@ -202,7 +202,7 @@ export default function ProfileScreen() {
   const colors  = useColors();
   const accent  = useAccentColor();
   const styles  = makeStyles(colors, accent);
-  const { profile, save, reset } = useProfileStore();
+  const { profile, save } = useProfileStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [exporting,  setExporting]  = useState(false);
 
@@ -432,8 +432,20 @@ export default function ProfileScreen() {
           title="Reset All Data"
           variant="danger"
           onPress={() => {
-            reset();
-            useApplicationStore.getState().clear();
+            Alert.alert(
+              'Reset All Data',
+              'This permanently erases your CRS profile, tracked application, timeline milestones, checklist progress, and notification settings on this device. This cannot be undone.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Reset Everything',
+                  style: 'destructive',
+                  onPress: () => {
+                    void resetAllData();
+                  },
+                },
+              ],
+            );
           }}
           fullWidth
         />

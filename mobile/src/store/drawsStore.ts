@@ -129,6 +129,13 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         .filter((d): d is Draw => d !== null)
         .sort((a, b) => b.draw_number - a.draw_number); // newest first
 
+      // A 200 response with an unexpected/changed shape (IRCC has reshaped this
+      // feed before) yields zero parseable rounds. Treat that as a failure so we
+      // keep the existing cache instead of overwriting good history with [].
+      if (draws.length === 0) {
+        throw new Error('IRCC feed returned no parseable draws');
+      }
+
       const lastFetched = new Date().toISOString();
       set({ draws, lastFetched, isLoading: false, isRefreshing: false, error: null });
 

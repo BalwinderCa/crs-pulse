@@ -13,6 +13,8 @@ type NotificationsStore = {
   loaded: boolean;
   load: () => Promise<void>;
   markSeen: (drawNumber: number) => Promise<void>;
+  /** Resets the seen-draw marker (used by "Reset All Data"). */
+  clear: () => Promise<void>;
 };
 
 export const useNotificationsStore = create<NotificationsStore>((set) => ({
@@ -32,6 +34,13 @@ export const useNotificationsStore = create<NotificationsStore>((set) => ({
     set({ seenDraw: drawNumber });
     try {
       await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW, String(drawNumber));
+    } catch {}
+  },
+
+  clear: async () => {
+    set({ seenDraw: null });
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW);
     } catch {}
   },
 }));

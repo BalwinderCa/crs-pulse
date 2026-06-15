@@ -55,7 +55,13 @@ export function useDashboard() {
     const drawCategory  = userCategory === 'FSW' ? 'General' : userCategory === 'FST' ? 'Trades' : userCategory;
     const categoryDraws = draws.filter(d => d.category === drawCategory);
     const latestDraw    = (categoryDraws[0] ?? draws[0])!;
-    const recentDraws   = draws.slice(0, 10);
+
+    // Predict against the user's own stream when there's enough category-specific
+    // history. Averaging across ALL categories mixed PNP (~700+) with French
+    // (~380) and CEC (~520), skewing the prediction. Fall back to the overall
+    // recent set only when the category has too few draws to be meaningful.
+    const predictionDraws = categoryDraws.length >= 3 ? categoryDraws : draws;
+    const recentDraws = predictionDraws.slice(0, 10);
 
     const scoreDiff = userScore - latestDraw.cutoff_score;
     const prediction = buildPrediction(userScore, recentDraws);
@@ -66,7 +72,9 @@ export function useDashboard() {
       latest_draw:      latestDraw,
       score_difference: scoreDiff,
       prediction,
-      recent_draws:     recentDraws.slice(0, 5),
+      // Display the overall recent feed (all categories), independent of the
+      // category-scoped set used for the prediction above.
+      recent_draws:     draws.slice(0, 5),
     };
   }, [draws, profile]);
 

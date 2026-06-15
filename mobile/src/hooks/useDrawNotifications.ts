@@ -20,9 +20,14 @@ const FAILURE_MESSAGES: Record<PushRegisterFailure, string> = {
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge:  false,
+    // `shouldShowAlert` is the SDK 52 field; `shouldShowBanner`/`shouldShowList`
+    // are its SDK 53+ replacements. Setting all three keeps foreground display
+    // working across the Expo upgrade without a behavioural change.
+    shouldShowAlert:  true,
+    shouldShowBanner: true,
+    shouldShowList:   true,
+    shouldPlaySound:  true,
+    shouldSetBadge:   false,
   }),
 });
 
