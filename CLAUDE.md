@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It calculates CRS scores, fetches live IRCC draw results, provides analytics, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker.
+CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics, tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker.
 
 The repository has two independent workspaces:
 - `mobile/` — Expo React Native app
@@ -47,7 +47,7 @@ eas submit                                      # Submit to app stores
 ### Data Flow
 
 ```
-IRCC JSON feed → Cloudflare Worker (every 15 min, KV cache)
+GitHub Actions mirror (data/latest-draw.json) → Cloudflare Worker (every 15 min, KV cache)
                        ↓ (new draw detected)
               Expo Push Notification API
                        ↓
@@ -56,29 +56,49 @@ IRCC JSON feed → Cloudflare Worker (every 15 min, KV cache)
 Mobile App → IRCC JSON feed (direct fetch, 1-hour stale cache in drawsStore)
 ```
 
+The worker reads draws from a GitHub-hosted mirror (`raw.githubusercontent.com/.../data/latest-draw.json`), not IRCC directly — canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520. The mobile app still fetches the IRCC JSON feed directly.
+
 The worker also exposes HTTP endpoints (`/register`, `/revoke`) that `pushService.ts` calls to manage Expo push tokens stored in Cloudflare KV.
 
 ### Mobile State Management (Zustand + AsyncStorage)
 
-Three persisted stores in `src/store/`:
+Stores in `src/store/`:
 
 | Store | Key State | Purpose |
 |---|---|---|
 | `profileStore` | `CalcInputs`, `LocalProfile` | CRS calculator inputs, theme, notifications, accent color |
 | `drawsStore` | `Draw[]`, cache timestamp | IRCC draw data; refreshes with 3× exponential backoff |
 | `timelineStore` | `Milestone[]` | Application timeline milestones, sorted by date |
+| `applicationStore` | `TrackedApplication` | The IRCC category/type the user is tracking + applied date |
 
-All three stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`.
+These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`.
 
 ### Feature Structure
 
-Each screen area lives under `src/features/<name>/` and contains its own components, hooks, and utils co-located together. Features: `dashboard`, `draws`, `analytics`, `profile`, `timeline`, `onboarding`.
+Each screen area lives under `src/features/<name>/` and contains its own components, hooks, and utils co-located together. Features:
 
-The CRS calculator logic is in `src/features/onboarding/utils/crsCalculator.ts` and implements the official IRCC formula for all language tests (IELTS, CELPIP, PTE, TEF, CLB).
+- `home` — landing screen (application tracker hub)
+- `dashboard` — CRS calculator screen
+- `calculators` — hub linking to all calculators
+- `draws`, `analytics`, `timeline` — live draws, on-device trends, milestone timeline
+- `tracker` — application setup + IRCC processing-time estimates
+- `checklist` — per-program document checklists
+- `notifications`, `profile`, `settings`, `onboarding`, `faq`, `support`
+
+Calculator logic lives in each feature's `utils/` (each documents its IRCC/provincial source and is "estimate only"):
+
+| Calculator | File | Notes |
+|---|---|---|
+| CRS | `features/onboarding/utils/crsCalculator.ts` | Official IRCC formula; all language tests (IELTS, CELPIP, PTE, TEF, CLB) |
+| FSW 67-point | `features/fsw/utils/fswCalculator.ts` | Six selection factors, min 67 to be eligible |
+| BC PNP SIRS | `features/bcpnp/utils/sirsCalculator.ts` | 200-point SIRS grid |
+| SINP EOI | `features/sinp/utils/sinpCalculator.ts` | 110-point Saskatchewan EOI grid, min 60 |
+
+Static reference data: `features/checklist/data/checklists.ts` (document checklists by program), `features/tracker/data/processingTimes.ts` (IRCC category/type processing times).
 
 ### Navigation
 
-`RootNavigator` (stack) loads profile and draws on boot, then renders `MainNavigator` (bottom tabs): Dashboard → Timeline → Draws → Analytics → Settings.
+`RootNavigator` (stack) loads profile and draws on boot, then renders `MainNavigator` (bottom tabs): Dashboard → Timeline → Draws → Analytics → Settings. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist`(+`Detail`), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`.
 
 ### Theme System
 
@@ -88,9 +108,9 @@ The CRS calculator logic is in `src/features/onboarding/utils/crsCalculator.ts` 
 
 Two entry points:
 - `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, and `/sync` (manual trigger)
-- `scheduled(event, env)` — Cron trigger every 15 minutes; polls IRCC, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected
+- `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected
 
-Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). KV binding: `TOKENS_KV`.
+Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). KV binding: `TOKENS_KV`.
 
 ## Key Conventions
 
@@ -113,6 +133,10 @@ Copy `mobile/.env.example` to `mobile/.env.local`. Required vars:
 | `EAS_PROJECT_ID` | From `eas init` or expo.dev |
 
 Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`.
+
+### Services & Observability
+
+`src/services/` holds cross-feature services: `pushService.ts` (Expo token register/revoke against the worker) and `errorReporter.ts` (production-safe error reporter — no-ops/console in dev).
 
 ### Testing
 

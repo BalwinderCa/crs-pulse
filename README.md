@@ -6,19 +6,26 @@ No accounts. No self-hosted backend. Profile data stays on your device.
 
 ## Features
 
-- **CRS calculator** — official IRCC scoring formula
+- **Calculators** — CRS (official IRCC formula), FSW 67-point grid, BC PNP SIRS (200-pt), and SINP EOI (110-pt), all computed on-device
 - **Live draws** — fetched directly from the IRCC public JSON feed
 - **Trends & analytics** — cutoff averages, charts, and trends computed on-device
+- **Application tracker** — track the IRCC program you applied to, with typical processing-time estimates
+- **Document checklists** — per-program document checklists compiled from IRCC requirements
 - **Application timeline** — track milestones locally
-- **Push notifications** — Cloudflare Worker polls IRCC every 15 minutes and sends Expo push when a new draw appears
+- **Push notifications** — Cloudflare Worker checks for new draws every 15 minutes and sends Expo push when a new draw appears
+
+All calculators are estimates for planning — each screen points to the official IRCC/provincial tool. Profile data stays on-device.
 
 ## Architecture
 
 | Feature | Source |
 |---------|--------|
-| Draws | Mobile app → [IRCC JSON feed](https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json) |
+| Draws (app) | Mobile app → [IRCC JSON feed](https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json) |
+| Draws (worker) | Cloudflare Worker → GitHub Actions mirror (`data/latest-draw.json`)¹ |
 | Trends | Computed on-device from cached draws |
 | Push alerts | [Cloudflare Worker](workers/push/) → Expo Push API |
+
+¹ canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the worker reads the latest draw from a GitHub-hosted mirror instead of IRCC directly.
 
 ```
 mobile/          Expo React Native app
@@ -202,13 +209,16 @@ Production builds with `distribution: store` go to App Store Connect automatical
 express-entry-calculator/
 ├── mobile/
 │   ├── src/
-│   │   ├── features/       # Screens (dashboard, draws, analytics, profile, timeline)
-│   │   ├── store/          # Zustand stores (profile, draws, timeline)
-│   │   ├── services/       # pushService
+│   │   ├── features/       # home, dashboard, calculators, fsw, bcpnp, sinp,
+│   │   │                   #   draws, analytics, timeline, tracker, checklist,
+│   │   │                   #   notifications, profile, settings, onboarding, faq, support
+│   │   ├── store/          # Zustand stores (profile, draws, timeline, application)
+│   │   ├── services/       # pushService, errorReporter
 │   │   └── navigation/
 │   └── app.config.js
 ├── workers/push/
-│   └── src/index.ts        # IRCC poll + Expo push
+│   └── src/index.ts        # draw-mirror poll + Expo push
+├── data/latest-draw.json   # GitHub Actions mirror the worker reads
 ```
 
 ## Privacy
