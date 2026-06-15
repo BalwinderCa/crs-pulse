@@ -6,8 +6,11 @@ import {
   revokeTokens,
 } from './tokenStore';
 
-const IRCC_URL =
-  'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
+// canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the
+// worker reads the latest draw from a GitHub Actions mirror (raw.githubusercontent)
+// rather than polling IRCC directly. See .github/workflows/ircc-mirror.yml.
+const DRAW_MIRROR_URL =
+  'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/latest-draw.json';
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const LAST_DRAW_KEY = 'last_draw_number';
 
@@ -109,24 +112,24 @@ function corsPreflight(): Response {
 }
 
 async function fetchLatestDraw(): Promise<LatestDraw | null> {
-  const res = await fetch(IRCC_URL, {
-    headers: { Accept: 'application/json', 'User-Agent': 'CRS-Pulse-Push/1.0' },
+  const res = await fetch(DRAW_MIRROR_URL, {
+    headers: { Accept: 'application/json' },
+    cf: { cacheTtl: 60, cacheEverything: true },
   });
   if (!res.ok) return null;
 
-  const json = (await res.json()) as { rounds?: Record<string, string>[] };
-  const rounds = json.rounds ?? [];
-
-  let latest: LatestDraw | null = null;
-  for (const r of rounds) {
-    const num = parseInt(r.drawNumber ?? '', 10);
-    const cutoff = parseInt((r.drawCRS ?? '').replace(/,/g, ''), 10);
-    if (!num || !cutoff) continue;
-    if (!latest || num > latest.draw_number) {
-      latest = { draw_number: num, cutoff, category: mapCategory(r.drawName ?? '') };
-    }
+  let r: { drawNumber?: string; drawCRS?: string; drawName?: string };
+  try {
+    r = (await res.json()) as { drawNumber?: string; drawCRS?: string; drawName?: string };
+  } catch {
+    return null;
   }
-  return latest;
+
+  const num = parseInt(r.drawNumber ?? '', 10);
+  const cutoff = parseInt((r.drawCRS ?? '').replace(/,/g, ''), 10);
+  if (!num || !cutoff) return null;
+
+  return { draw_number: num, cutoff, category: mapCategory(r.drawName ?? '') };
 }
 
 interface ExpoTicket {

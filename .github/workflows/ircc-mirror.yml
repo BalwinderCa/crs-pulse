@@ -1,0 +1,39 @@
+name: IRCC draw mirror
+
+# canada.ca (Akamai) rejects Cloudflare Worker egress (HTTP 520), so the push
+# worker cannot poll IRCC directly. This job runs on GitHub-hosted runners
+# (accepted egress), mirrors the latest draw into data/latest-draw.json, and the
+# worker reads it from raw.githubusercontent.com.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ircc-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest IRCC draw
+        run: node .github/scripts/fetch-latest-draw.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- data/latest-draw.json; then
+            echo "No new draw — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/latest-draw.json
+          git commit -m "chore(data): update IRCC latest draw [skip ci]"
+          git push
