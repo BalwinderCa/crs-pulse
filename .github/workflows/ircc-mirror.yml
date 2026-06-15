@@ -23,15 +23,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Each IRCC fetch is independent: canada.ca (Akamai) intermittently times
+      # out, and a transient blip on one feed must not skip the other or the
+      # commit. continue-on-error keeps the job green; the cron retries every 15m.
       - name: Fetch latest IRCC draw
+        continue-on-error: true
         run: node .github/scripts/fetch-latest-draw.mjs
 
-      # Processing times change ~monthly; a failure here must not block the draw
-      # mirror, so don't fail the job if IRCC is briefly unreachable.
       - name: Fetch IRCC processing times
-        run: node .github/scripts/fetch-processing-times.mjs || echo "processing-times fetch failed — keeping previous data"
+        if: always()
+        continue-on-error: true
+        run: node .github/scripts/fetch-processing-times.mjs
 
       - name: Commit if changed
+        if: always()
         run: |
           if git diff --quiet -- data/latest-draw.json data/processing-times.json; then
             echo "No data changes — nothing to commit."
