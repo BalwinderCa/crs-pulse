@@ -18,22 +18,12 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { CATEGORY_LABELS } from '@/constants';
-import type { Draw, RootStackParamList } from '@/types';
+import type { RootStackParamList } from '@/types';
 
 const DAY_MS = 86_400_000;
 
 function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / DAY_MS);
-}
-
-/** Median gap in days between recent draw dates (any category). */
-function medianDrawGap(draws: Draw[]): number | null {
-  const dates = [...new Set(draws.slice(0, 9).map((d) => d.date))]
-    .map((d) => new Date(d).getTime())
-    .sort((a, b) => b - a);
-  if (dates.length < 3) return null;
-  const gaps = dates.slice(0, -1).map((t, i) => (t - dates[i + 1]!) / DAY_MS).sort((a, b) => a - b);
-  return Math.round(gaps[Math.floor(gaps.length / 2)]!);
 }
 
 export default function HomeScreen() {
@@ -79,16 +69,8 @@ export default function HomeScreen() {
     () => draws.find((d) => d.category === drawCat) ?? draws[0] ?? null,
     [draws, drawCat],
   );
-  const latestDraw = draws[0] ?? null;
-
   const delta = scoreReady && myDraw ? score - myDraw.cutoff_score : null;
   const deltaColor = delta === null ? c.textMuted : delta >= 0 ? palette.success : palette.danger;
-
-  const daysSinceDraw = latestDraw ? daysBetween(new Date(latestDraw.date), new Date()) : null;
-  const gap = useMemo(() => medianDrawGap(draws), [draws]);
-  const nextDrawInDays = gap !== null && daysSinceDraw !== null
-    ? Math.max(0, gap - daysSinceDraw)
-    : null;
 
   return (
     <ScreenWrapper scrollable refreshing={isRefreshing} onRefresh={refresh}>
@@ -317,52 +299,6 @@ export default function HomeScreen() {
         </Card>
       )}
 
-      {/* Pulse stats */}
-      <View style={s.statRow}>
-        <Card style={s.statCard}>
-          <Text style={[s.statValue, { color: c.textPrimary }]}>
-            {daysSinceDraw !== null ? daysSinceDraw : '—'}
-          </Text>
-          <Text style={[s.statLabel, { color: c.textMuted }]}>
-            {daysSinceDraw === 1 ? 'Day since last draw' : 'Days since last draw'}
-          </Text>
-        </Card>
-        <Card style={s.statCard}>
-          <Text style={[s.statValue, { color: c.textPrimary }]}>
-            {nextDrawInDays !== null ? `~${nextDrawInDays}` : '—'}
-          </Text>
-          <Text style={[s.statLabel, { color: c.textMuted }]}>Days to next draw (est.)</Text>
-        </Card>
-      </View>
-
-      {/* Latest draw */}
-      {latestDraw && (
-        <Card style={s.drawCard}>
-          <View style={s.drawHeader}>
-            <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Latest Draw</Text>
-            <Text style={[s.drawDate, { color: c.textMuted }]}>
-              {new Date(latestDraw.date).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </Text>
-          </View>
-          <Text style={[s.drawCat, { color: c.textSecondary }]}>
-            #{latestDraw.draw_number} · {CATEGORY_LABELS[latestDraw.category] ?? latestDraw.category}
-          </Text>
-          <View style={s.drawStats}>
-            <View style={s.drawStat}>
-              <Text style={[s.drawStatVal, { color: accent }]}>{latestDraw.cutoff_score}</Text>
-              <Text style={[s.drawStatLabel, { color: c.textMuted }]}>CRS cutoff</Text>
-            </View>
-            <View style={[s.drawDivider, { backgroundColor: c.border }]} />
-            <View style={s.drawStat}>
-              <Text style={[s.drawStatVal, { color: c.textPrimary }]}>
-                {latestDraw.invitations_issued.toLocaleString()}
-              </Text>
-              <Text style={[s.drawStatLabel, { color: c.textMuted }]}>Invitations</Text>
-            </View>
-          </View>
-        </Card>
-      )}
-
     </ScreenWrapper>
   );
 }
@@ -419,22 +355,8 @@ const s = StyleSheet.create({
   appInfoText:  { flex: 1, fontSize: typography.xs, lineHeight: 17 },
   appNote:      { fontSize: typography.xs, lineHeight: 16, marginTop: 2 },
 
-  // Stats
-  statRow:   { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm },
-  statCard:  { flex: 1, alignItems: 'center', gap: 2, paddingVertical: spacing.md },
-  statValue: { fontSize: typography['2xl'], fontWeight: typography.black, letterSpacing: -0.5 },
-  statLabel: { fontSize: typography.xs, fontWeight: typography.medium, textAlign: 'center' },
-
-  // Latest draw
-  drawCard:     { gap: spacing.xs, marginBottom: spacing.sm },
-  drawHeader:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  // Shared
   sectionTitle: { fontSize: typography.base, fontWeight: typography.bold },
-  drawDate:     { fontSize: typography.xs, fontWeight: typography.medium },
-  drawCat:      { fontSize: typography.sm },
-  drawStats:    { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
-  drawStat:     { flex: 1, alignItems: 'center', gap: 2 },
-  drawStatVal:  { fontSize: typography.xl, fontWeight: typography.black },
-  drawStatLabel:{ fontSize: typography.xs },
   drawDivider:  { width: 1, height: 28 },
 
 });
