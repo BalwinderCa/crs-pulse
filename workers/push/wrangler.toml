@@ -1,6 +1,8 @@
 name = "crs-pulse-push"
 main = "src/index.ts"
 compatibility_date = "2024-11-01"
+# Privacy-first project — opt out of Wrangler's anonymous telemetry.
+send_metrics = false
 
 [[kv_namespaces]]
 binding = "TOKENS_KV"
