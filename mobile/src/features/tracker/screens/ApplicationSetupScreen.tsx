@@ -9,11 +9,8 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useApplicationStore } from '@/store/applicationStore';
-import {
-  APPLICATION_CATEGORIES,
-  PROCESSING_TIMES_UPDATED,
-  type ApplicationCategory,
-} from '../data/processingTimes';
+import { type ApplicationCategory } from '../data/processingTimes';
+import { useProcessingTimes } from '../hooks/useProcessingTimes';
 
 const STEPS = 3;
 
@@ -23,6 +20,8 @@ export default function ApplicationSetupScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { application, save } = useApplicationStore();
+  const { categories: APPLICATION_CATEGORIES, updatedLabel: PROCESSING_TIMES_UPDATED } =
+    useProcessingTimes();
 
   const [step, setStep] = useState(0);
   const [categoryId, setCategoryId] = useState<string | null>(application?.categoryId ?? null);

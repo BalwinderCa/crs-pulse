@@ -193,8 +193,37 @@ export function getApplicationStages(categoryId: string, typeId: string): Applic
 export function findApplicationType(
   categoryId: string,
   typeId: string,
+  categories: ApplicationCategory[] = APPLICATION_CATEGORIES,
 ): { category: ApplicationCategory; type: ApplicationType } | null {
-  const category = APPLICATION_CATEGORIES.find((c) => c.id === categoryId);
+  const category = categories.find((c) => c.id === categoryId);
   const type = category?.types.find((t) => t.id === typeId);
   return category && type ? { category, type } : null;
+}
+
+// ─── Live overlay ─────────────────────────────────────────────────────────────
+// The bundled figures above are the offline fallback and the source of truth for
+// structure, labels, icons, and stages. When the GitHub-mirrored IRCC feed is
+// available, its month + people-waiting numbers overlay the matching types so
+// the app shows current data without a store release. See processingTimesStore.
+
+export type LiveProcessingTimes = Record<string, { months: number; peopleWaiting?: number }>;
+
+/** Returns the categories with `months`/`peopleWaiting` overridden where live data exists. */
+export function applyLiveTimes(
+  categories: ApplicationCategory[],
+  live: LiveProcessingTimes | null,
+): ApplicationCategory[] {
+  if (!live) return categories;
+  return categories.map((cat) => ({
+    ...cat,
+    types: cat.types.map((t) => {
+      const override = live[t.id];
+      if (!override) return t;
+      return {
+        ...t,
+        months: override.months,
+        ...(override.peopleWaiting != null ? { peopleWaiting: override.peopleWaiting } : {}),
+      };
+    }),
+  }));
 }

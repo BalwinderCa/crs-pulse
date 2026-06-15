@@ -26,14 +26,19 @@ jobs:
       - name: Fetch latest IRCC draw
         run: node .github/scripts/fetch-latest-draw.mjs
 
+      # Processing times change ~monthly; a failure here must not block the draw
+      # mirror, so don't fail the job if IRCC is briefly unreachable.
+      - name: Fetch IRCC processing times
+        run: node .github/scripts/fetch-processing-times.mjs || echo "processing-times fetch failed — keeping previous data"
+
       - name: Commit if changed
         run: |
-          if git diff --quiet -- data/latest-draw.json; then
-            echo "No new draw — nothing to commit."
+          if git diff --quiet -- data/latest-draw.json data/processing-times.json; then
+            echo "No data changes — nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/latest-draw.json
-          git commit -m "chore(data): update IRCC latest draw [skip ci]"
+          git add data/latest-draw.json data/processing-times.json
+          git commit -m "chore(data): update IRCC draw + processing times [skip ci]"
           git push

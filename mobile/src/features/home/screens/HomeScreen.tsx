@@ -9,8 +9,8 @@ import { useApplicationStore } from '@/store/applicationStore';
 import {
   findApplicationType,
   getApplicationStages,
-  PROCESSING_TIMES_UPDATED,
 } from '@/features/tracker/data/processingTimes';
+import { useProcessingTimes } from '@/features/tracker/hooks/useProcessingTimes';
 import { Card } from '@/components/common/Card';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -43,11 +43,12 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const { draws, isRefreshing, refresh } = useDrawsStore();
   const application = useApplicationStore((s) => s.application);
+  const { categories, updatedLabel } = useProcessingTimes();
 
   // Tracked application → progress vs typical IRCC processing time
   const tracked = useMemo(() => {
     if (!application) return null;
-    const found = findApplicationType(application.categoryId, application.typeId);
+    const found = findApplicationType(application.categoryId, application.typeId, categories);
     if (!found) return null;
     const stages = getApplicationStages(application.categoryId, application.typeId);
     const totalDays = Math.round(found.type.months * 30.44);
@@ -66,7 +67,7 @@ export default function HomeScreen() {
       progress: Math.min(1, daysIn / totalDays),
       decisionDate,
     };
-  }, [application]);
+  }, [application, categories]);
 
   const score = profile?.crs_score ?? 0;
   const scoreReady = score > 0;
@@ -286,7 +287,7 @@ export default function HomeScreen() {
             <View style={s.appInfoRow}>
               <Ionicons name="refresh-outline" size={14} color={c.textMuted} />
               <Text style={[s.appInfoText, { color: c.textMuted }]}>
-                Last updated {PROCESSING_TIMES_UPDATED} · updated monthly
+                Last updated {updatedLabel} · updated monthly
               </Text>
             </View>
             <Text style={[s.appNote, { color: c.textMuted }]}>

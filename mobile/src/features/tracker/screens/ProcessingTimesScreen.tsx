@@ -6,10 +6,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import {
-  APPLICATION_CATEGORIES,
-  PROCESSING_TIMES_UPDATED,
-} from '../data/processingTimes';
+import { useProcessingTimes } from '../hooks/useProcessingTimes';
 
 const OFFICIAL_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html';
@@ -23,7 +20,8 @@ export default function ProcessingTimesScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const [open, setOpen] = useState<string | null>(APPLICATION_CATEGORIES[0]?.id ?? null);
+  const { categories, updatedLabel } = useProcessingTimes();
+  const [open, setOpen] = useState<string | null>(categories[0]?.id ?? null);
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
@@ -35,10 +33,10 @@ export default function ProcessingTimesScreen() {
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>
           Typical IRCC processing times by application type. Last updated{' '}
-          {PROCESSING_TIMES_UPDATED} · updated monthly.
+          {updatedLabel} · updated monthly.
         </Text>
 
-        {APPLICATION_CATEGORIES.map((cat) => {
+        {categories.map((cat) => {
           const expanded = open === cat.id;
           return (
             <View

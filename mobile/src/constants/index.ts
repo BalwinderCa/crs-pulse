@@ -44,9 +44,15 @@ export const SCORE_STATUS = {
 
 export const NEAR_THRESHOLD = 10;
 
+/** GitHub-mirrored IRCC permanent-residence processing times (built by the
+ *  ircc-mirror Action; canada.ca blocks worker/bot egress, GitHub runners pass). */
+export const PROCESSING_TIMES_URL =
+  'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/processing-times.json';
+
 export const STORAGE_KEYS = {
   USER_PROFILE: 'crs_pulse.user_profile',
   DRAWS_CACHE: 'crs_pulse.draws_cache',
+  PROCESSING_TIMES_CACHE: 'crs_pulse.processing_times_cache',
   DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
   LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
   PUSH_TOKEN: 'crs_pulse.push_token',

@@ -21,6 +21,7 @@ import NotificationsScreen from '@/features/notifications/screens/NotificationsS
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
+import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
 import type { RootStackParamList } from '@/types';
 
@@ -37,6 +38,7 @@ export default function RootNavigator() {
     loadDraws().catch(() => {});
     useApplicationStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
+    useProcessingTimesStore.getState().load().catch(() => {});
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))

@@ -1,0 +1,81 @@
+{
+  "updated": "June 8, 2026",
+  "times": {
+    "aip": {
+      "months": 26,
+      "peopleWaiting": 12900
+    },
+    "caregivers": {
+      "months": 80,
+      "peopleWaiting": 38800
+    },
+    "ee_cec": {
+      "months": 7,
+      "peopleWaiting": 60900
+    },
+    "ee_fsw": {
+      "months": 7,
+      "peopleWaiting": 52000
+    },
+    "ee_pnp": {
+      "months": 6,
+      "peopleWaiting": 14000
+    },
+    "pnp_paper": {
+      "months": 13,
+      "peopleWaiting": 110200
+    },
+    "qc_skilled": {
+      "months": 11,
+      "peopleWaiting": 24800
+    },
+    "qc_business": {
+      "months": 76,
+      "peopleWaiting": 3700
+    },
+    "self_emp": {
+      "months": 120,
+      "peopleWaiting": 8100
+    },
+    "suv": {
+      "months": 120,
+      "peopleWaiting": 46600
+    },
+    "spouse_inland": {
+      "months": 26,
+      "peopleWaiting": 55200
+    },
+    "spouse_outland": {
+      "months": 16,
+      "peopleWaiting": 51300
+    },
+    "child": {
+      "months": 35,
+      "peopleWaiting": 59300
+    },
+    "parents": {
+      "months": 32,
+      "peopleWaiting": 43500
+    },
+    "refugee_gov": {
+      "months": 14,
+      "peopleWaiting": 17300
+    },
+    "refugee_private": {
+      "months": 41,
+      "peopleWaiting": 76200
+    },
+    "hc_case": {
+      "months": 120,
+      "peopleWaiting": 53000
+    },
+    "citizenship": {
+      "months": 13,
+      "peopleWaiting": 326400
+    },
+    "cit_proof": {
+      "months": 15,
+      "peopleWaiting": 82000
+    }
+  }
+}
