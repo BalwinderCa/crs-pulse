@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LineChart } from 'react-native-chart-kit';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { Card } from '@/components/common/Card';
@@ -14,7 +17,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
-import type { Category } from '@/types';
+import type { Category, RootStackParamList } from '@/types';
 import { AppHeader } from '@/components/layout/AppHeader';
 
 const PERIODS = [
@@ -40,6 +43,17 @@ function makeStyles(c: Colors, accent: string) {
     greeting: { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
     title:    { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
     skeletons:{ padding: spacing.base, gap: spacing.sm },
+
+    premiumBanner: {
+      flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+      marginHorizontal: spacing.base,
+      backgroundColor: c.surfaceCard, borderRadius: borderRadius.md,
+      borderWidth: 1, borderColor: accent + '40', padding: spacing.md,
+    },
+    premiumIcon: { width: 32, height: 32, borderRadius: borderRadius.md,
+                   alignItems: 'center', justifyContent: 'center', backgroundColor: accent + '18' },
+    premiumTitle: { color: c.textPrimary, fontSize: typography.sm, fontWeight: typography.bold },
+    premiumSub:   { color: c.textMuted, fontSize: typography.xs, marginTop: 1 },
 
     // Category pills (horizontal scroll)
     catScroll:  { paddingLeft: spacing.base },
@@ -95,6 +109,7 @@ export default function AnalyticsScreen() {
   const [category, setCategory] = useState<Category | 'all'>('all');
   const colors = useColors();
   const accent = useAccentColor();
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { contentPaddingBottom } = useTabBarLayout();
   const { contentMaxWidth, contentFrameStyle } = useResponsiveLayout();
   const { width: screenWidth } = useWindowDimensions();
@@ -145,6 +160,24 @@ export default function AnalyticsScreen() {
         <View style={styles.header}>
           <AppHeader title="Trends" />
         </View>
+
+        {/* Premium Analytics entry */}
+        <TouchableOpacity
+          style={styles.premiumBanner}
+          onPress={() => nav.navigate('PremiumAnalytics')}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Open Premium Analytics"
+        >
+          <View style={styles.premiumIcon}>
+            <Ionicons name="sparkles" size={16} color={accent} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.premiumTitle}>Premium Analytics</Text>
+            <Text style={styles.premiumSub}>Personalized odds, forecasts & what-if</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
 
         {/* Category filter */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
