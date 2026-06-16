@@ -24,6 +24,14 @@ type PremiumStore = {
   price: string | null;   // localized price string from Play, e.g. "$4.99"
   error: string | null;
 
+  /**
+   * Whether a real purchase path exists on this device (Play Billing connected).
+   * false on iOS (no StoreKit product configured), emulators without Play, or a
+   * transient billing outage. The gate MUST fail open when this is false — never
+   * show a locked paywall the user cannot actually buy through.
+   */
+  billingAvailable: boolean;
+
   trialStartedAt: number | null; // ms epoch; null until resolved
   trialChecked: boolean;         // trial resolution attempted at least once
 
@@ -72,6 +80,7 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
   purchasing: false,
   price: null,
   error: null,
+  billingAvailable: false,
   trialStartedAt: null,
   trialChecked: false,
 
@@ -99,9 +108,10 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
     });
 
     if (!ok) {
-      // Billing unavailable (e.g. emulator without Play) — keep cached flag.
+      // Billing unavailable (iOS without StoreKit, emulator without Play, or a
+      // transient outage). Keep the cached flag; the gate fails OPEN below.
       const trialStartedAt = get().isPremium ? null : await resolveTrialStart();
-      set({ loaded: true, trialChecked: true, trialStartedAt });
+      set({ loaded: true, trialChecked: true, trialStartedAt, billingAvailable: false });
       return;
     }
 
@@ -119,6 +129,7 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       loaded: true,
       trialChecked: true,
       trialStartedAt,
+      billingAvailable: true,
     });
     void cacheEntitlement(isPremium);
   },

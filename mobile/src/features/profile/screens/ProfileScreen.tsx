@@ -18,10 +18,9 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import {
   calculateCRS,
   suggestCategory,
-  type CRSInput,
-  type LanguageTest,
   type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
+import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { exportProfilePdf } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
@@ -29,14 +28,6 @@ import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-const LANG_TEST_MAP: Record<string, string> = {
-  IELTS:      'IELTS',
-  CELPIP:     'CELPIP',
-  'PTE Core': 'PTE_CORE',
-  TEF:        'TEF',
-  TCF:        'TCF',
-};
-
 const EDU_LABELS: Record<string, string> = {
   less_than_secondary: 'Less than high school',
   secondary:           'High school diploma',
@@ -64,48 +55,6 @@ function jobOfferLabel(j: string): string {
   if (j === 'noc_00') return 'NOC TEER 0 Major Group 00';
   if (j === 'noc_a')  return 'NOC TEER 1/2/3';
   return 'None';
-}
-
-function buildCRSInput(d: CalcInputs): CRSInput {
-  const firstTest  = (LANG_TEST_MAP[d.firstLangTest]  ?? 'IELTS') as LanguageTest;
-  const secondTest = (LANG_TEST_MAP[d.secondLangTest] ?? 'TEF')   as LanguageTest;
-  const clb = (v: number) => Math.min(12, Math.max(0, Math.round(Number(v) || 0)));
-  return {
-    age:                  d.age,
-    maritalStatus:        d.maritalStatus,
-    education:            d.education,
-    canadianEducation:    d.canadianEducation,
-    firstLangTest:        firstTest,
-    firstLang: {
-      speaking:  Number(d.firstLangSpeaking)  || 0,
-      listening: Number(d.firstLangListening) || 0,
-      reading:   Number(d.firstLangReading)   || 0,
-      writing:   Number(d.firstLangWriting)   || 0,
-    },
-    hasSecondLang:    d.hasSecondLang,
-    secondLangTest:   secondTest,
-    secondLang: {
-      speaking:  Number(d.secondLangSpeaking)  || 0,
-      listening: Number(d.secondLangListening) || 0,
-      reading:   Number(d.secondLangReading)   || 0,
-      writing:   Number(d.secondLangWriting)   || 0,
-    },
-    canadianWorkExp:       Math.min(5, d.canadianWorkExp) as CRSInput['canadianWorkExp'],
-    foreignWorkExp:        d.foreignWorkExp,
-    spouseEducation:       d.spouseEducation,
-    spouseLang: {
-      speaking:  clb(d.spouseLangSpeaking),
-      listening: clb(d.spouseLangListening),
-      reading:   clb(d.spouseLangReading),
-      writing:   clb(d.spouseLangWriting),
-    },
-    spouseCanadianWorkExp: Math.min(5, d.spouseCanadianWorkExp) as CRSInput['spouseCanadianWorkExp'],
-    hasProvincialNomination: d.hasProvincialNomination,
-    jobOffer:                d.jobOffer,
-    hasSiblingInCanada:      d.hasSiblingInCanada,
-    hasTradeCert:            d.hasTradeCert,
-    tefScale:                (d.tefScale ?? 'current') as CRSInput['tefScale'],
-  } as CRSInput;
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────

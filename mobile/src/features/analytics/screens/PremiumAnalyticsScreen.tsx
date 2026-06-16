@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Slider from '@react-native-community/slider';
@@ -19,6 +19,11 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { OddsGauge, ForecastBandChart, MiniBars, MarkerBar, HorizontalBars, TrendLineChart } from '../components/PremiumCharts';
 import { useAnalyticsData } from '../hooks/useAnalyticsData';
+import { useProfileStore, DEFAULT_CALC_INPUTS, type CalcInputs } from '@/store/profileStore';
+import { useProcessingTimesStore } from '@/store/processingTimesStore';
+import { useEePoolStore } from '@/store/eePoolStore';
+import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
+import { calculateCRS } from '@/features/onboarding/utils/crsCalculator';
 
 
 const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
@@ -51,6 +56,7 @@ export default function PremiumAnalyticsScreen() {
   const data = useAnalyticsData();
   const isPremium = usePremiumStore((s) => s.isPremium);
   const premiumLoaded = usePremiumStore((s) => s.loaded);
+  const billingAvailable = usePremiumStore((s) => s.billingAvailable);
   const trialStartedAt = usePremiumStore((s) => s.trialStartedAt);
   const trialChecked = usePremiumStore((s) => s.trialChecked);
 
@@ -61,10 +67,12 @@ export default function PremiumAnalyticsScreen() {
     return () => clearInterval(id);
   }, []);
 
-  // Trial math. Paid users bypass it entirely.
+  // Trial math. Paid users bypass it entirely. When no purchase path exists
+  // (iOS without StoreKit, emulator, billing outage) the gate fails OPEN — we
+  // never show a trial countdown or lock for an unlock the user can't buy.
   const trialEndsAt = trialStartedAt != null ? trialStartedAt + TRIAL_MS : null;
-  const trialActive = !isPremium && trialEndsAt != null && now < trialEndsAt;
-  const trialExpired = !isPremium && trialEndsAt != null && now >= trialEndsAt;
+  const trialActive = billingAvailable && !isPremium && trialEndsAt != null && now < trialEndsAt;
+  const trialExpired = billingAvailable && !isPremium && trialEndsAt != null && now >= trialEndsAt;
   const trialMsLeft = trialEndsAt != null ? trialEndsAt - now : 0;
 
   // Gate priority: paywall (paid or in-trial only) → then "add your CRS score".
@@ -98,17 +106,41 @@ export default function PremiumAnalyticsScreen() {
   // staleness-guarded (returns early if <1h old), so this is cheap and only
   // hits the IRCC feed when the data is actually stale.
   const loadDraws = useDrawsStore((s) => s.load);
+  const loadPool = useEePoolStore((s) => s.load);
+  const loadProcTimes = useProcessingTimesStore((s) => s.load);
   useFocusEffect(
     useCallback(() => {
       loadDraws().catch(() => {});
-    }, [loadDraws]),
+      loadPool().catch(() => {});
+      loadProcTimes().catch(() => {});
+    }, [loadDraws, loadPool, loadProcTimes]),
   );
 
-  const [age, setAge] = useState(30);
+  // ── What-if: a REAL CRS recompute via the official calculator ──
+  // Anchored to the user's saved profile; the sliders override only age, first
+  // language (as CLB), French as a second language, and a provincial nomination.
+  const baseInputs = useProfileStore((s) => s.profile?.calculatorInputs) ?? DEFAULT_CALC_INPUTS;
+  const [age, setAge] = useState(() => baseInputs.age || 30);
   const [clb, setClb] = useState(9);
   const [french, setFrench] = useState(false);
   const [pnp, setPnp] = useState(false);
-  const whatIfScore = Math.min(1200, Math.round(380 + Math.max(0, 45 - age) * 2 + clb * 12 + (french ? 50 : 0) + (pnp ? 600 : 0)));
+  const whatIfScore = useMemo(() => {
+    const di: CalcInputs = {
+      ...baseInputs,
+      age,
+      firstLangTest: 'CLB',
+      firstLangSpeaking: clb, firstLangListening: clb, firstLangReading: clb, firstLangWriting: clb,
+      hasProvincialNomination: pnp,
+      hasSecondLang: french || baseInputs.hasSecondLang,
+      secondLangTest: french ? 'TCF' : baseInputs.secondLangTest,
+      // NCLC 7 thresholds on the TCF scale (triggers the French bonus correctly).
+      secondLangSpeaking:  french ? 10  : baseInputs.secondLangSpeaking,
+      secondLangListening: french ? 458 : baseInputs.secondLangListening,
+      secondLangReading:   french ? 453 : baseInputs.secondLangReading,
+      secondLangWriting:   french ? 10  : baseInputs.secondLangWriting,
+    };
+    return calculateCRS(buildCRSInput(di)).total;
+  }, [baseInputs, age, clb, french, pnp]);
   const whatIfLabel = whatIfScore - data.trendCutoff >= 10 ? 'High' : whatIfScore - data.trendCutoff >= -10 ? 'Moderate' : 'Low';
 
   const oddsColor = ODDS_COLOR[data.oddsLabel] ?? palette.warning;
@@ -288,16 +320,16 @@ function OpsTab({ c, accent, data }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>2026 INVITATIONS PACE</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{i.curYear} INVITATIONS PACE</Text>
         <View style={s.rowBetween}>
           <Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.itaYtd)}</Text>
           <Text style={[s.caption, { color: c.textSecondary }]}>ITAs issued YTD</Text>
         </View>
         <View style={[s.progressTrack, { backgroundColor: c.surfaceTertiary }]}>
-          <View style={[s.progressFill, { backgroundColor: accent, width: `${Math.round((i.itaYtd / i.itaProjected) * 100)}%` }]} />
+          <View style={[s.progressFill, { backgroundColor: accent, width: `${Math.min(100, Math.round((i.itaYtd / Math.max(1, i.itaProjected)) * 100))}%` }]} />
         </View>
         <Text style={[s.caption, { color: c.textMuted }]}>
-          ~{fmt(i.itaProjected)} projected · past 2025’s {fmt(i.ita2025)} pace · PR target {fmt(i.prTarget2026)}
+          ~{fmt(i.itaProjected)} projected · past {i.prevYear}’s {fmt(i.itaPrevYear)} pace · PR target {fmt(i.prTarget)}
         </Text>
       </Card>
 
@@ -323,12 +355,12 @@ function OpsTab({ c, accent, data }: any) {
             }))} />
         </View>
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          ≈<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.candidatesAtOrAbove)}</Text> score at or above you · pool ~{fmt(i.poolTotal)}
+          ≈<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.candidatesAtOrAbove)}</Text> score at or above you · pool ~{fmt(i.poolTotal)} · as of {i.poolAsOf}
         </Text>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>2026 ITA MIX · by category</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{i.curYear} ITA MIX · by category</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={i.categoryMix.map((m: any, idx: number) => ({ label: m.label, value: m.value, max: 40, suffix: '%', color: idx === 0 ? accent : c.textMuted }))} />
@@ -352,7 +384,7 @@ function OpsTab({ c, accent, data }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DRAW SIZE & FREQUENCY · 2026</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DRAW SIZE & FREQUENCY · {i.curYear}</Text>
         <View style={s.statGrid}>
           <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.avgSize}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>avg/draw</Text></View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
@@ -438,7 +470,7 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>PERCENTILE</Text>
-        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} beats {data.percentile}% of the last 12 months’ cutoffs</Text>
+        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} beats {data.percentile}% of recent draw cutoffs</Text>
         <View style={{ marginTop: spacing.sm }}>
           <MarkerBar fraction={data.percentile / 100} color={accent} track={c.surfaceTertiary} />
         </View>
@@ -500,7 +532,7 @@ function TrendsTab({ c, accent, data }: any) {
         <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
-            items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ← you' : ''), value: d.value, max: Math.max(...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
+            items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ← you' : ''), value: d.value, max: Math.max(1, ...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
         </View>
       </Card>
 

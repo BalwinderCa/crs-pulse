@@ -19,6 +19,9 @@ export const CATEGORY_LABELS: Record<string, string> = {
   STEM: 'STEM Occupations',
   Trades: 'Trade Occupations',
   French: 'French Language Proficiency',
+  PNP: 'Provincial Nominee Program',
+  Agriculture: 'Agriculture & Agri-food',
+  Education: 'Education Occupations',
 };
 
 export const CRS_MIN = 0;
@@ -49,10 +52,18 @@ export const NEAR_THRESHOLD = 10;
 export const PROCESSING_TIMES_URL =
   'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/processing-times.json';
 
+/** GitHub-mirrored Express Entry pool composition + Immigration Levels Plan
+ *  targets. IRCC publishes these periodically (no real-time feed), so the mirror
+ *  is refreshed when a new snapshot is published; the app falls back to the
+ *  bundled snapshot in features/analytics/data/eePool.ts when offline. */
+export const EE_POOL_URL =
+  'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/ee-pool.json';
+
 export const STORAGE_KEYS = {
   USER_PROFILE: 'crs_pulse.user_profile',
   DRAWS_CACHE: 'crs_pulse.draws_cache',
   PROCESSING_TIMES_CACHE: 'crs_pulse.processing_times_cache',
+  EE_POOL_CACHE: 'crs_pulse.ee_pool_cache',
   DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
   LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
   PUSH_TOKEN: 'crs_pulse.push_token',

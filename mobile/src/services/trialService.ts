@@ -53,3 +53,30 @@ export async function fetchTrialStart(): Promise<number | null> {
   const data = (await res.json()) as { startedAt?: number };
   return typeof data.startedAt === 'number' ? data.startedAt : null;
 }
+
+/**
+ * Erase this device's server-side trial record (user-initiated data deletion).
+ * Best-effort and never throws — called from "Reset all data" so the off-device
+ * trial identifier is removed alongside the local wipe.
+ */
+export async function deleteTrialRecord(): Promise<void> {
+  const base = pushBaseUrl();
+  if (!base) return;
+
+  const deviceId = await getDeviceId();
+  if (!deviceId) return;
+
+  const apiKey = process.env.EXPO_PUBLIC_PUSH_API_KEY?.trim();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+  try {
+    await fetch(`${base}/trial`, {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify({ deviceId }),
+    });
+  } catch {
+    // Swallow — local wipe still proceeds; the record self-expires via TTL.
+  }
+}

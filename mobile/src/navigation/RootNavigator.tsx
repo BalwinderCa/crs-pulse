@@ -24,6 +24,7 @@ import { usePremiumStore } from '@/store/premiumStore';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
+import { useEePoolStore } from '@/store/eePoolStore';
 import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
 import type { RootStackParamList } from '@/types';
 
@@ -41,6 +42,7 @@ export default function RootNavigator() {
     useApplicationStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
     useProcessingTimesStore.getState().load().catch(() => {});
+    useEePoolStore.getState().load().catch(() => {});
     usePremiumStore.getState().init().catch(() => {});
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)

@@ -14,13 +14,15 @@ CRS Pulse helps Canadian immigration applicants track their Express Entry journe
 
 **Live Draw History** — View official Express Entry draw results fetched directly from IRCC.
 
-**Trends** — See cutoff averages and score trends computed on your device.
+**Analytics (free 3-day trial, then a one-time unlock)** — Your odds versus the current trend cutoff, cutoff forecasts, category trends, draw cadence and momentum, your place in the pool, percentile, and what-if scenarios. Figures are derived from official IRCC draw data, the IRCC processing-times feed, and IRCC's published Express Entry pool composition; pool composition and annual targets are periodic IRCC snapshots (dated in-app), not real-time. Estimates only — not guarantees.
 
 **Timeline** — Track your immigration milestones locally.
 
 **Draw Alerts** — Optional push notifications when IRCC publishes a new draw.
 
 Your CRS profile stays on your device. No account required. No ads. No analytics trackers.
+
+**In-app purchases:** Contains one optional in-app purchase — a one-time "Analytics unlock" (no subscription). The rest of the app is free.
 
 This is an unofficial calculator. Always verify your score with the official IRCC CRS tool before making immigration decisions.
 

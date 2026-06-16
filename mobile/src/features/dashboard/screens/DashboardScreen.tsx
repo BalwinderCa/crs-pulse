@@ -10,8 +10,9 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import {
   calculateCRS, suggestCategory, toCLB, getClbBreakpoints, getClbBand,
-  type CRSInput, type LanguageTest, type LangScores, type TefScale,
+  type LanguageTest, type LangScores, type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
+import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
 import type { ProgramCategory } from '@/types';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
@@ -46,37 +47,6 @@ function fmtScore(test: LanguageTest, score: number): string {
   if (score <= 0) return '—';
   if (test === 'IELTS') return score.toFixed(1);
   return Math.round(score).toString();
-}
-
-function buildCRSInput(d: CalcInputs): CRSInput {
-  const firstTest  = (LANG_TEST_MAP[d.firstLangTest]  ?? 'IELTS')  as LanguageTest;
-  const secondTest = (LANG_TEST_MAP[d.secondLangTest] ?? 'TEF')    as LanguageTest;
-  const clb = (v: number) => Math.min(12, Math.max(0, Math.round(v)));
-  return {
-    maritalStatus: d.maritalStatus,
-    age: d.age,
-    education: d.education as any,
-    canadianEducation: d.canadianEducation,
-    firstLangTest: firstTest,
-    firstLang: { speaking: d.firstLangSpeaking, listening: d.firstLangListening,
-                 reading:  d.firstLangReading,  writing:  d.firstLangWriting },
-    hasSecondLang: d.hasSecondLang,
-    secondLangTest: secondTest,
-    secondLang: { speaking: d.secondLangSpeaking, listening: d.secondLangListening,
-                  reading:  d.secondLangReading,  writing:  d.secondLangWriting },
-    canadianWorkExp:    Math.min(5, d.canadianWorkExp) as any,
-    foreignWorkExp:     d.foreignWorkExp as any,
-    spouseEducation:    d.spouseEducation as any,
-    // Spouse lang stored as CLB directly
-    spouseLang: { speaking: clb(d.spouseLangSpeaking), listening: clb(d.spouseLangListening),
-                  reading:  clb(d.spouseLangReading),  writing:  clb(d.spouseLangWriting) },
-    spouseCanadianWorkExp: Math.min(5, d.spouseCanadianWorkExp) as any,
-    hasProvincialNomination: d.hasProvincialNomination,
-    jobOffer:           d.jobOffer as any,
-    hasSiblingInCanada: d.hasSiblingInCanada,
-    hasTradeCert:       d.hasTradeCert,
-    tefScale:           (d.tefScale ?? 'current') as TefScale,
-  };
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 // ─── Categories ──────────────────────────────────────────────────────────────
 
+// User-facing filter categories on the Draws screen.
 export const CATEGORIES = [
   'CEC',
   'General',
@@ -9,11 +10,21 @@ export const CATEGORIES = [
   'French',
 ] as const;
 
-export type Category = (typeof CATEGORIES)[number];
+// Every category the IRCC feed mapper (drawsStore.mapCategory) can emit. The
+// filter set above is a curated subset; this is the full runtime domain so the
+// `as Category` cast is sound and labels resolve for PNP/Agriculture/Education.
+export const DRAW_CATEGORIES = [
+  ...CATEGORIES,
+  'PNP',
+  'Agriculture',
+  'Education',
+] as const;
+
+export type Category = (typeof DRAW_CATEGORIES)[number];
 
 // Program the user's local profile targets — includes programs that map onto
 // draw categories (FSW → General, FST → Trades) plus PNP.
-export type ProgramCategory = Category | 'FSW' | 'FST' | 'PNP';
+export type ProgramCategory = Category | 'FSW' | 'FST';
 
 // ─── Draws ───────────────────────────────────────────────────────────────────
 
