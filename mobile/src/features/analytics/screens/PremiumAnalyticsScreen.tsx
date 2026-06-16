@@ -1,10 +1,16 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useDrawsStore } from '@/store/drawsStore';
+import { usePremiumStore } from '@/store/premiumStore';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -27,8 +33,25 @@ export default function PremiumAnalyticsScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const { contentPaddingBottom } = useTabBarLayout();
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [tab, setTab] = useState<TabKey>('ops');
   const data = useAnalyticsData();
+  const isPremium = usePremiumStore((s) => s.isPremium);
+  const premiumLoaded = usePremiumStore((s) => s.loaded);
+  // Gate priority: paywall first (must own analytics), then "add your CRS score".
+  // While billing is still resolving, don't flash the paywall over a paid user.
+  const locked = premiumLoaded && !isPremium;
+  const noProfile = !locked && data.userScore === 0;
+
+  // Refresh draws when the tab regains focus. load() is cache-first and
+  // staleness-guarded (returns early if <1h old), so this is cheap and only
+  // hits the IRCC feed when the data is actually stale.
+  const loadDraws = useDrawsStore((s) => s.load);
+  useFocusEffect(
+    useCallback(() => {
+      loadDraws().catch(() => {});
+    }, [loadDraws]),
+  );
 
   const [age, setAge] = useState(30);
   const [clb, setClb] = useState(9);
@@ -45,9 +68,11 @@ export default function PremiumAnalyticsScreen() {
         <AppHeader title="Analytics" />
       </View>
 
+      <View style={s.bodyWrap}>
       <ScrollView
         contentContainerStyle={[s.body, { paddingBottom: contentPaddingBottom }]}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={!noProfile && !locked}
       >
         {/* Pinned odds hero */}
         <Card style={[s.card, { borderTopWidth: 2, borderTopColor: accent }]}>
@@ -100,6 +125,56 @@ export default function PremiumAnalyticsScreen() {
           are unpredictable — always verify with the official tools.
         </Text>
       </ScrollView>
+
+        {/*
+          Locked overlay — dims the analytics behind it and blocks interaction.
+          Two gates, paywall takes priority over the CRS-score prompt:
+            • `locked`    → user hasn't bought the analytics unlock → paywall CTA
+            • `noProfile` → owns analytics but has no CRS score yet → calculator CTA
+        */}
+        {locked && (
+          <View style={[s.lockOverlay, { backgroundColor: c.surfacePrimary + 'E6' }]}>
+            <Card style={[s.lockCard, { borderColor: accent }]}>
+              <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
+                <Ionicons name="lock-closed" size={26} color={accent} />
+              </View>
+              <Text style={[s.lockTitle, { color: c.textPrimary }]}>Premium feature</Text>
+              <Text style={[s.lockBody, { color: c.textSecondary }]}>
+                Unlock live, personalised Express Entry analytics — your odds, forecasts, percentile
+                and what-if scenarios. One-time purchase, yours forever.
+              </Text>
+              <Button
+                title="See what's included"
+                fullWidth
+                icon={<Ionicons name="sparkles-outline" size={18} color={palette.white} />}
+                onPress={() => nav.navigate('Paywall')}
+                style={s.lockBtn}
+              />
+            </Card>
+          </View>
+        )}
+        {noProfile && (
+          <View style={[s.lockOverlay, { backgroundColor: c.surfacePrimary + 'E6' }]}>
+            <Card style={[s.lockCard, { borderColor: accent }]}>
+              <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
+                <Ionicons name="lock-closed" size={26} color={accent} />
+              </View>
+              <Text style={[s.lockTitle, { color: c.textPrimary }]}>Complete your CRS score</Text>
+              <Text style={[s.lockBody, { color: c.textSecondary }]}>
+                Analytics is personalised to your profile. Calculate your CRS score to unlock your
+                odds, percentile, forecast and what-if scenarios.
+              </Text>
+              <Button
+                title="Calculate my CRS"
+                fullWidth
+                icon={<Ionicons name="calculator-outline" size={18} color={palette.white} />}
+                onPress={() => nav.navigate('CrsCalculator')}
+                style={s.lockBtn}
+              />
+            </Card>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -262,7 +337,7 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
         {data.byScoreBand.map((r: any, idx: number) => {
-          const mine = r.band === '510–524';
+          const mine = r.mine;
           return (
             <View key={r.band} style={[s.bandRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
               <Text style={[s.bandScore, { color: mine ? accent : c.textPrimary, fontWeight: mine ? typography.bold : typography.medium }]}>{r.band}{mine ? '  ← you' : ''}</Text>
@@ -343,7 +418,7 @@ function TrendsTab({ c, accent, data }: any) {
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
         <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48} />
-        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>Jun</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>Aug</Text></Text>
+        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
       </Card>
 
       <View style={s.miniRow}>
@@ -362,7 +437,9 @@ function TrendsTab({ c, accent, data }: any) {
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF MOMENTUM · last 6</Text>
-          <Text style={[s.num, { color: palette.success }]}>trending down ↓</Text>
+          <Text style={[s.num, { color: data.momentumDown ? palette.success : palette.danger }]}>
+            {data.momentumDown ? 'trending down ↓' : 'trending up ↑'}
+          </Text>
         </View>
         <View style={s.chipRow}>
           {data.momentum.map((d: number, idx: number) => (
@@ -412,6 +489,17 @@ const s = StyleSheet.create({
   segText: { fontSize: typography.sm, fontWeight: typography.bold },
 
   card: { gap: spacing.xs },
+
+  bodyWrap: { flex: 1, position: 'relative' },
+  lockOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center',
+                 padding: spacing.xl, zIndex: 10 },
+  lockCard: { width: '100%', maxWidth: 360, borderWidth: 1, alignItems: 'center', gap: spacing.sm,
+              padding: spacing.lg },
+  lockIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center',
+              marginBottom: spacing.xs },
+  lockTitle: { fontSize: typography.lg, fontWeight: typography.black, letterSpacing: -0.3, textAlign: 'center' },
+  lockBody: { fontSize: typography.sm, lineHeight: 20, textAlign: 'center' },
+  lockBtn: { marginTop: spacing.sm },
   kicker: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
   opsBig: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, ...TAB },
   bodyText: { fontSize: typography.sm, lineHeight: 20, fontWeight: typography.medium },

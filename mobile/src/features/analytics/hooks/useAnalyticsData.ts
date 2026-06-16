@@ -170,6 +170,10 @@ export function useAnalyticsData() {
       const m = new Date(d.date).getMonth();
       if (!Number.isNaN(m)) byMonth[m] += 1;
     }
+    // Busiest / quietest month (only over months that actually had draws)
+    const activeMonths = byMonth.map((v, i) => ({ v, i })).filter((x) => x.v > 0);
+    const busiestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v > a.v ? b : a)).i]! : '—';
+    const quietestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v < a.v ? b : a)).i]! : '—';
 
     // Distribution of recent category cutoffs into 4 buckets, mark user's
     const lo = Math.min(...recentCutoffs), hi = Math.max(...recentCutoffs);
@@ -201,6 +205,19 @@ export function useAnalyticsData() {
     const trendMin = allTrendVals.length ? Math.min(...allTrendVals) - 10 : 300;
     const trendMax = allTrendVals.length ? Math.max(...allTrendVals) + 10 : 700;
 
+    // Momentum direction — falling cutoffs (sum of recent deltas ≤ 0) help the user
+    const momentumDown = momentum.length ? momentum.reduce((s, v) => s + v, 0) <= 0 : true;
+
+    // Mark which score band the user falls into (parses the static band labels)
+    const bandHasScore = (band: string) => {
+      const range = band.match(/(\d+)\s*[–-]\s*(\d+)/);
+      if (range) return score >= +range[1]! && score <= +range[2]!;
+      if (band.includes('+')) { const n = band.match(/(\d+)/); return n ? score >= +n[1]! : false; }
+      if (band.includes('<')) { const n = band.match(/(\d+)/); return n ? score < +n[1]! : false; }
+      return false;
+    };
+    const byScoreBand = DEFAULTS.byScoreBand.map((r) => ({ ...r, mine: bandHasScore(r.band) }));
+
     const pool = DEFAULTS.ircc.poolComposition.map((p) => ({
       ...p,
       mine: (() => {
@@ -227,6 +244,10 @@ export function useAnalyticsData() {
       trendMax,
       cadenceDays: avgGap,
       cadence: gaps.slice(0, 7).reverse(),
+      busiestMonth,
+      quietestMonth,
+      momentumDown,
+      byScoreBand,
       invitationsYtd: fmt(itaYtd),
       volume: sizes.slice(0, 6).reverse(),
       percentile,

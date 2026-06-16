@@ -73,6 +73,9 @@ module.exports = () => ({
     favicon: './assets/favicon.png',
   },
   plugins: [
+    // Google Play Billing (one-time analytics unlock). The plugin adds the
+    // com.android.vending.BILLING permission and the native billing client.
+    ['react-native-iap', { paymentProvider: 'Play Store' }],
     [
       'expo-build-properties',
       {

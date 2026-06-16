@@ -62,3 +62,14 @@ export const STORAGE_KEYS = {
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
   PREMIUM: 'crs_pulse.premium',
 } as const;
+
+/**
+ * Google Play in-app products. `ANALYTICS_UNLOCK` is a one-time, non-consumable
+ * managed product — buying it grants permanent access to the Analytics screen.
+ * The id must match the product id created in the Play Console exactly.
+ */
+export const IAP_PRODUCTS = {
+  ANALYTICS_UNLOCK: 'crs_pulse.analytics_unlock',
+} as const;
+
+export const IAP_SKUS: string[] = [IAP_PRODUCTS.ANALYTICS_UNLOCK];

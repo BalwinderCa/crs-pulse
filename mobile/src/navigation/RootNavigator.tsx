@@ -19,6 +19,8 @@ import FswCalculatorScreen from '@/features/fsw/screens/FswCalculatorScreen';
 import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScreen';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
+import PaywallScreen from '@/features/paywall/screens/PaywallScreen';
+import { usePremiumStore } from '@/store/premiumStore';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
@@ -39,6 +41,7 @@ export default function RootNavigator() {
     useApplicationStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
     useProcessingTimesStore.getState().load().catch(() => {});
+    usePremiumStore.getState().init().catch(() => {});
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))
@@ -97,6 +100,7 @@ export default function RootNavigator() {
         <Stack.Screen name="BcSirsCalculator" component={BcSirsCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ProcessingTimes" component={ProcessingTimesScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="Paywall" component={PaywallScreen} options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -46,6 +46,18 @@ jest.mock('react-native-reanimated', () =>
   require('react-native-reanimated/mock'),
 );
 
+jest.mock('react-native-iap', () => ({
+  initConnection: jest.fn(() => Promise.resolve(true)),
+  endConnection: jest.fn(() => Promise.resolve()),
+  flushFailedPurchasesCachedAsPendingAndroid: jest.fn(() => Promise.resolve()),
+  getProducts: jest.fn(() => Promise.resolve([])),
+  requestPurchase: jest.fn(() => Promise.resolve()),
+  getAvailablePurchases: jest.fn(() => Promise.resolve([])),
+  finishTransaction: jest.fn(() => Promise.resolve()),
+  purchaseUpdatedListener: jest.fn(() => ({ remove: jest.fn() })),
+  purchaseErrorListener: jest.fn(() => ({ remove: jest.fn() })),
+}));
+
 jest.mock('@expo/vector-icons', () => ({
   Ionicons: ({ name }: { name: string }) => name,
 }));
