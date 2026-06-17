@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS, IAP_PRODUCTS, IAP_SKUS } from '@/constants';
 import { connect, fetchProducts, buy, getOwnedSkus } from '@/services/iapService';
-import { fetchTrialStart } from '@/services/trialService';
 
 /**
  * Premium entitlement, backed by Google Play Billing (one-time unlock).
@@ -32,9 +31,6 @@ type PremiumStore = {
    */
   billingAvailable: boolean;
 
-  trialStartedAt: number | null; // ms epoch; null until resolved
-  trialChecked: boolean;         // trial resolution attempted at least once
-
   init: () => Promise<void>;
   purchase: () => Promise<void>;
   restore: () => Promise<void>;
@@ -48,32 +44,6 @@ async function cacheEntitlement(isPremium: boolean) {
   } catch {}
 }
 
-/**
- * Resolve the trial start. Server (worker) is authoritative and reinstall-proof;
- * the cached value gives an instant answer offline, and a local provisional
- * start (now) is used only if the trial has never been established and the
- * server is unreachable. A later online launch overwrites it with the canonical
- * server value, so a reinstall can't farm fresh trials once back online.
- */
-async function resolveTrialStart(): Promise<number> {
-  let cached: number | null = null;
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEYS.TRIAL_START);
-    if (raw) cached = Number(raw) || null;
-  } catch {}
-
-  let serverStart: number | null = null;
-  try {
-    serverStart = await fetchTrialStart();
-  } catch {}
-
-  const start = serverStart ?? cached ?? Date.now();
-  try {
-    await AsyncStorage.setItem(STORAGE_KEYS.TRIAL_START, String(start));
-  } catch {}
-  return start;
-}
-
 export const usePremiumStore = create<PremiumStore>((set, get) => ({
   isPremium: false,
   loaded: false,
@@ -81,8 +51,6 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
   price: null,
   error: null,
   billingAvailable: false,
-  trialStartedAt: null,
-  trialChecked: false,
 
   init: async () => {
     // 1. Optimistically hydrate from the cached flag so the gate is correct
@@ -110,8 +78,7 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
     if (!ok) {
       // Billing unavailable (iOS without StoreKit, emulator without Play, or a
       // transient outage). Keep the cached flag; the gate fails OPEN below.
-      const trialStartedAt = get().isPremium ? null : await resolveTrialStart();
-      set({ loaded: true, trialChecked: true, trialStartedAt, billingAvailable: false });
+      set({ loaded: true, billingAvailable: false });
       return;
     }
 
@@ -120,15 +87,10 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
     const product = products.find((p) => p.productId === UNLOCK_SKU);
     const isPremium = owned.includes(UNLOCK_SKU);
 
-    // 4. Non-paid users get a server-backed trial clock.
-    const trialStartedAt = isPremium ? null : await resolveTrialStart();
-
     set({
       price: product?.localizedPrice ?? null,
       isPremium,
       loaded: true,
-      trialChecked: true,
-      trialStartedAt,
       billingAvailable: true,
     });
     void cacheEntitlement(isPremium);

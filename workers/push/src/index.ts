@@ -88,11 +88,6 @@ const RL_PREFIX = 'rl:';
 const RL_WINDOW_SECONDS = 60;
 const RL_MAX_REQUESTS = 60;
 
-// Trial records self-expire after ~200 days (well past the 3-day trial) so no
-// device identifier is retained indefinitely. Users can also erase it on demand
-// via DELETE /trial (wired to the app's "Reset all data").
-const TRIAL_KV_TTL_SECONDS = 200 * 24 * 60 * 60;
-
 async function isRateLimited(kv: KVNamespace, request: Request, route: string): Promise<boolean> {
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
   const key = `${RL_PREFIX}${route}:${ip}`;
@@ -104,13 +99,6 @@ async function isRateLimited(kv: KVNamespace, request: Request, route: string): 
   } catch {
     return false; // fail open — never lock out a legitimate device on KV error
   }
-}
-
-/** SHA-256 hex digest — used to avoid storing raw device ids in KV. */
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /** Constant-time string comparison (length is not hidden, contents are). */
@@ -422,87 +410,6 @@ export default {
       await processReceipts(env.TOKENS_KV);
       const result = await checkAndNotify(env.TOKENS_KV);
       return json(result);
-    }
-
-    // ── Free-trial start, keyed to a hashed device id ───────────────────────
-    // Stores the first-seen timestamp per device so the 3-day Analytics trial
-    // cannot be reset by uninstalling/reinstalling the app (AsyncStorage clears,
-    // but ANDROID_ID — and therefore this KV entry — does not). The client ALREADY
-    // sends a SHA-256 hash of the OS identifier (the raw id never leaves the
-    // device); the worker hashes again here purely as defense-in-depth so any
-    // legacy/raw value is never persisted in the clear. The record self-expires
-    // (TRIAL_KV_TTL) and the user can erase it via DELETE /trial. The client
-    // computes remaining time from `startedAt`.
-    if (url.pathname === '/trial' && request.method === 'POST') {
-      if (!env.PUSH_API_SECRET) {
-        return json({ message: 'Service unavailable' }, 503);
-      }
-      if (!isAuthorized(request, env.PUSH_API_SECRET)) {
-        return json({ message: 'Unauthorized' }, 401);
-      }
-      if (await isRateLimited(env.TOKENS_KV, request, 'trial')) {
-        return json({ message: 'Too many requests' }, 429);
-      }
-
-      let body: { deviceId?: string };
-      try {
-        body = (await request.json()) as { deviceId?: string };
-      } catch {
-        return json({ message: 'Invalid JSON body' }, 400);
-      }
-
-      const deviceId = body.deviceId?.trim();
-      if (!deviceId || deviceId.length < 8 || deviceId.length > 128) {
-        return json({ message: 'deviceId is required' }, 422);
-      }
-
-      const key = `trial:${await sha256Hex(deviceId)}`;
-      try {
-        const existing = await env.TOKENS_KV.get(key);
-        if (existing) {
-          const data = JSON.parse(existing) as { startedAt: number };
-          return json({ startedAt: data.startedAt });
-        }
-        const startedAt = Date.now();
-        await env.TOKENS_KV.put(key, JSON.stringify({ startedAt }), {
-          expirationTtl: TRIAL_KV_TTL_SECONDS,
-        });
-        return json({ startedAt });
-      } catch {
-        return json({ message: 'Trial store unavailable' }, 503);
-      }
-    }
-
-    // ── Erase a device's trial record (user-initiated data deletion) ─────────
-    if (url.pathname === '/trial' && request.method === 'DELETE') {
-      if (!env.PUSH_API_SECRET) {
-        return json({ message: 'Service unavailable' }, 503);
-      }
-      if (!isAuthorized(request, env.PUSH_API_SECRET)) {
-        return json({ message: 'Unauthorized' }, 401);
-      }
-      if (await isRateLimited(env.TOKENS_KV, request, 'trial')) {
-        return json({ message: 'Too many requests' }, 429);
-      }
-
-      let body: { deviceId?: string };
-      try {
-        body = (await request.json()) as { deviceId?: string };
-      } catch {
-        return json({ message: 'Invalid JSON body' }, 400);
-      }
-
-      const deviceId = body.deviceId?.trim();
-      if (!deviceId || deviceId.length < 8 || deviceId.length > 128) {
-        return json({ message: 'deviceId is required' }, 422);
-      }
-
-      try {
-        await env.TOKENS_KV.delete(`trial:${await sha256Hex(deviceId)}`);
-        return json({ message: 'Trial record deleted.' });
-      } catch {
-        return json({ message: 'Trial store unavailable' }, 503);
-      }
     }
 
     return json({ message: 'Not found' }, 404);

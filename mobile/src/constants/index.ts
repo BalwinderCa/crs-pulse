@@ -75,13 +75,7 @@ export const STORAGE_KEYS = {
   DOC_CHECKLIST: 'crs_pulse.doc_checklist',
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
   PREMIUM: 'crs_pulse.premium',
-  TRIAL_START: 'crs_pulse.trial_start',
-  TRIAL_INTRO_SEEN: 'crs_pulse.trial_intro_seen',
 } as const;
-
-/** Free Analytics trial length before the one-time unlock is required. */
-export const TRIAL_DAYS = 3;
-export const TRIAL_MS = TRIAL_DAYS * 24 * 60 * 60 * 1000;
 
 /**
  * Google Play in-app products. `ANALYTICS_UNLOCK` is a one-time, non-consumable

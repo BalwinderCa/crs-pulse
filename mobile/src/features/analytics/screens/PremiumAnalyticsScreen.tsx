@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useCallback, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -12,7 +11,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import { STORAGE_KEYS, TRIAL_DAYS, TRIAL_MS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -28,17 +26,6 @@ import { calculateCRS, scoresToCLB, type TefScale } from '@/features/onboarding/
 
 const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
 const fmt = (n: number) => n.toLocaleString('en-CA');
-
-/** "2d 14h" / "14h 5m" / "8m" — compact trial countdown. */
-function fmtTimeLeft(ms: number): string {
-  const total = Math.max(0, ms);
-  const d = Math.floor(total / 86_400_000);
-  const h = Math.floor((total % 86_400_000) / 3_600_000);
-  const m = Math.floor((total % 3_600_000) / 60_000);
-  if (d > 0) return `${d}d ${h}h`;
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
-}
 
 type TabKey = 'ops' | 'improve' | 'trends';
 const TABS: { key: TabKey; label: string }[] = [
@@ -57,57 +44,14 @@ export default function PremiumAnalyticsScreen() {
   const isPremium = usePremiumStore((s) => s.isPremium);
   const premiumLoaded = usePremiumStore((s) => s.loaded);
   const billingAvailable = usePremiumStore((s) => s.billingAvailable);
-  const trialStartedAt = usePremiumStore((s) => s.trialStartedAt);
-  const trialChecked = usePremiumStore((s) => s.trialChecked);
-
-  // Live-ticking clock so the trial countdown updates while the screen is open.
-  // Paid users have no countdown, so don't tick (avoids a needless full-screen
-  // re-render every minute on this chart-heavy screen for the common case).
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (isPremium) return;
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, [isPremium]);
-
-  // Trial math. Paid users bypass it entirely. When no purchase path exists
-  // (iOS without StoreKit, emulator, billing outage) the gate fails OPEN — we
-  // never show a trial countdown or lock for an unlock the user can't buy.
-  const trialEndsAt = trialStartedAt != null ? trialStartedAt + TRIAL_MS : null;
-  const trialActive = billingAvailable && !isPremium && trialEndsAt != null && now < trialEndsAt;
-  const trialExpired = billingAvailable && !isPremium && trialEndsAt != null && now >= trialEndsAt;
-  const trialMsLeft = trialEndsAt != null ? trialEndsAt - now : 0;
 
   // Freemium model: Operations + Trends are free forever; the Improve tab (your
-  // personalised plan, what-if, forecast, percentile) is the paid unlock — and
-  // the 3-day trial unlocks it too. Fails OPEN when billing is unavailable, since
-  // trialExpired already requires billingAvailable. A CRS score is required for
-  // any analytics (everything is personalised to it).
-  const resolved = premiumLoaded && trialChecked;
-  const improveLocked = resolved && !isPremium && trialExpired;
+  // personalised plan, what-if, forecast, percentile) is the one-time unlock.
+  // Fails OPEN when billing is unavailable (iOS without StoreKit, emulator, or a
+  // transient outage) — never show a lock the user can't buy through. A CRS score
+  // is required for any analytics (everything is personalised to it).
+  const improveLocked = premiumLoaded && !isPremium && billingAvailable;
   const noProfile = data.userScore === 0;
-  // Loss-framed nudge in the trial's final stretch.
-  const trialEndingSoon = trialActive && trialMsLeft < 12 * 60 * 60 * 1000;
-
-  // One-time intro: "free for 3 days" modal on first in-trial visit.
-  const [showIntro, setShowIntro] = useState(false);
-  useEffect(() => {
-    if (!resolved || isPremium || !trialActive) return;
-    let cancelled = false;
-    AsyncStorage.getItem(STORAGE_KEYS.TRIAL_INTRO_SEEN)
-      .then((seen) => {
-        if (!cancelled && seen !== 'true') setShowIntro(true);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [resolved, isPremium, trialActive]);
-
-  const dismissIntro = useCallback(() => {
-    setShowIntro(false);
-    AsyncStorage.setItem(STORAGE_KEYS.TRIAL_INTRO_SEEN, 'true').catch(() => {});
-  }, []);
 
   // Refresh draws when the tab regains focus. load() is cache-first and
   // staleness-guarded (returns early if <1h old), so this is cheap and only
@@ -198,33 +142,6 @@ export default function PremiumAnalyticsScreen() {
         showsVerticalScrollIndicator={false}
         scrollEnabled={!noProfile}
       >
-        {/* Free-trial countdown — only while the trial is running and unpaid.
-            Switches to a loss-framed nudge in the final 12 hours. */}
-        {trialActive && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => nav.navigate('Paywall')}
-            accessibilityRole="button"
-            accessibilityLabel={
-              trialEndingSoon
-                ? `Your Improve plan locks in ${fmtTimeLeft(trialMsLeft)}. Tap to unlock forever.`
-                : `Free trial: ${fmtTimeLeft(trialMsLeft)} left. Tap to unlock forever.`
-            }
-          >
-            <View style={[s.trialBar, { backgroundColor: (trialEndingSoon ? palette.warning : accent) + '14', borderColor: (trialEndingSoon ? palette.warning : accent) + '55' }]}>
-              <Ionicons name={trialEndingSoon ? 'hourglass-outline' : 'time-outline'} size={16} color={trialEndingSoon ? palette.warning : accent} />
-              <Text style={[s.trialText, { color: c.textPrimary }]}>
-                {trialEndingSoon ? (
-                  <>Improve plan locks in <Text style={{ color: palette.warning, fontWeight: typography.bold }}>{fmtTimeLeft(trialMsLeft)}</Text></>
-                ) : (
-                  <>Free trial · <Text style={{ color: accent, fontWeight: typography.bold }}>{fmtTimeLeft(trialMsLeft)}</Text> left</>
-                )}
-              </Text>
-              <Text style={[s.trialCta, { color: trialEndingSoon ? palette.warning : accent }]}>Unlock →</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
         {/* Pinned odds hero */}
         <Card style={[s.card, { borderTopWidth: 2, borderTopColor: accent }]}>
           <Text style={[s.kicker, { color: c.textMuted }]}>YOUR ODDS · {data.category}</Text>
@@ -316,28 +233,6 @@ export default function PremiumAnalyticsScreen() {
           </View>
         )}
       </View>
-
-      {/* First-visit trial intro */}
-      <Modal visible={showIntro} transparent animationType="fade" onRequestClose={dismissIntro}>
-        <View style={s.modalScrim}>
-          <Card style={[s.modalCard, { borderColor: accent }]}>
-            <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
-              <Ionicons name="sparkles" size={26} color={accent} />
-            </View>
-            <Text style={[s.lockTitle, { color: c.textPrimary }]}>Your Improve plan is free for {TRIAL_DAYS} days</Text>
-            <Text style={[s.lockBody, { color: c.textSecondary }]}>
-              Draws, your odds and Operations stay free. For {TRIAL_DAYS} days you also get the full
-              Improve tab — your personalised plan, what-if scenarios, forecast and percentile. After
-              that, a one-time purchase keeps it forever (no subscription).
-            </Text>
-            <Text style={[s.modalCountdown, { color: accent }]}>{fmtTimeLeft(trialMsLeft)} left</Text>
-            <Button title="Start exploring" fullWidth onPress={dismissIntro} style={s.lockBtn} />
-            <TouchableOpacity onPress={() => { dismissIntro(); nav.navigate('Paywall'); }} style={s.modalLink}>
-              <Text style={[s.modalLinkText, { color: c.textSecondary }]}>See unlock options</Text>
-            </TouchableOpacity>
-          </Card>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -445,7 +340,7 @@ function OpsTab({ c, accent, data }: any) {
   );
 }
 
-// ─── Improve tab upsell (shown in place of ImproveTab once the trial ends) ────
+// ─── Improve tab upsell (shown in place of ImproveTab when not unlocked) ──────
 function ImproveUpsell({ c, accent, data, onUnlock }: any) {
   const topLever = data.paths?.[0];
   const FEATURES: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
@@ -736,16 +631,6 @@ const s = StyleSheet.create({
   lockBody: { fontSize: typography.sm, lineHeight: 20, textAlign: 'center' },
   lockBtn: { marginTop: spacing.sm },
 
-  trialBar: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderWidth: 1,
-              borderRadius: borderRadius.md, paddingVertical: spacing.sm, paddingHorizontal: spacing.base },
-  trialText: { flex: 1, fontSize: typography.sm },
-  trialCta: { fontSize: typography.sm, fontWeight: typography.bold },
-
-  modalScrim: { flex: 1, backgroundColor: '#000000B3', alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  modalCard: { width: '100%', maxWidth: 360, borderWidth: 1, alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
-  modalCountdown: { fontSize: typography.base, fontWeight: typography.black, ...TAB },
-  modalLink: { paddingVertical: spacing.xs },
-  modalLinkText: { fontSize: typography.sm, fontWeight: typography.medium, textDecorationLine: 'underline' },
   kicker: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
   opsBig: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, ...TAB },
   bodyText: { fontSize: typography.sm, lineHeight: 20, fontWeight: typography.medium },
