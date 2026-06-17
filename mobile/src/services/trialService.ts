@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import * as Application from 'expo-application';
+import { sha256Hex } from '@/utils/sha256';
 
 /**
  * Server-backed free-trial clock.
@@ -7,6 +8,11 @@ import * as Application from 'expo-application';
  * The trial start is pinned to a stable device id and stored in the push
  * worker's KV, so uninstalling/reinstalling the app cannot reset it (local
  * storage clears, but the device id — and the server record — survives).
+ *
+ * Privacy: the raw OS identifier NEVER leaves the device. It is hashed on-device
+ * with SHA-256 (see getHashedDeviceId) and only that one-way hash is sent to the
+ * worker — matching the privacy policy's "the app sends a one-way SHA-256 hash"
+ * promise. The worker treats the received value as an opaque key.
  *
  * Android: ANDROID_ID is stable across reinstalls for a given app signing key.
  * iOS: identifierForVendor (resets only when all vendor apps are removed).
@@ -20,6 +26,18 @@ export async function getDeviceId(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * The on-device SHA-256 hash of the raw OS identifier — the only device-derived
+ * value ever transmitted. Returns null if the raw id can't be read. Salted with
+ * a fixed app-scoped prefix so the digest isn't a bare hash of a value other
+ * apps could also compute, while staying deterministic across reinstalls.
+ */
+export async function getHashedDeviceId(): Promise<string | null> {
+  const raw = await getDeviceId();
+  if (!raw) return null;
+  return sha256Hex(`crs-pulse.trial.v1:${raw}`);
 }
 
 function pushBaseUrl(): string | null {
@@ -36,7 +54,7 @@ export async function fetchTrialStart(): Promise<number | null> {
   const base = pushBaseUrl();
   if (!base) return null;
 
-  const deviceId = await getDeviceId();
+  const deviceId = await getHashedDeviceId();
   if (!deviceId) return null;
 
   const apiKey = process.env.EXPO_PUBLIC_PUSH_API_KEY?.trim();
@@ -63,7 +81,7 @@ export async function deleteTrialRecord(): Promise<void> {
   const base = pushBaseUrl();
   if (!base) return;
 
-  const deviceId = await getDeviceId();
+  const deviceId = await getHashedDeviceId();
   if (!deviceId) return;
 
   const apiKey = process.env.EXPO_PUBLIC_PUSH_API_KEY?.trim();

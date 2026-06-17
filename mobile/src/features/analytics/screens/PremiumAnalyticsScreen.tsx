@@ -61,11 +61,14 @@ export default function PremiumAnalyticsScreen() {
   const trialChecked = usePremiumStore((s) => s.trialChecked);
 
   // Live-ticking clock so the trial countdown updates while the screen is open.
+  // Paid users have no countdown, so don't tick (avoids a needless full-screen
+  // re-render every minute on this chart-heavy screen for the common case).
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
+    if (isPremium) return;
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [isPremium]);
 
   // Trial math. Paid users bypass it entirely. When no purchase path exists
   // (iOS without StoreKit, emulator, billing outage) the gate fails OPEN — we
@@ -179,7 +182,12 @@ export default function PremiumAnalyticsScreen() {
         <Card style={[s.card, { borderTopWidth: 2, borderTopColor: accent }]}>
           <Text style={[s.kicker, { color: c.textMuted }]}>YOUR ODDS · {data.category}</Text>
           <View style={s.gaugeWrap}>
-            <OddsGauge fraction={data.oddsFraction} color={oddsColor} track={c.surfaceTertiary} />
+            <OddsGauge
+              fraction={data.oddsFraction}
+              color={oddsColor}
+              track={c.surfaceTertiary}
+              accessibilityLabel={`Invitation odds: ${data.oddsLabel}. Your score ${data.userScore} versus trend cutoff ${data.trendCutoff}. ${data.timeframe}.`}
+            />
             <View style={s.gaugeCenter}>
               <Text style={[s.oddsLabel, { color: oddsColor }]}>{data.oddsLabel}</Text>
               <Text style={[s.oddsTime, { color: c.textSecondary }]}>{data.timeframe}</Text>
@@ -426,7 +434,8 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT {data.category.toUpperCase()} DRAW</Text>
         <ForecastBandChart actual={data.forecast.actual} forecast={data.forecast.proj} band={data.forecast.band}
-          min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border} />
+          min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border}
+          accessibilityLabel={`Next ${data.category} draw forecast: likely cutoff ${data.forecast.likely}, ${data.forecast.confidence.toLowerCase()} confidence.`} />
         <Text style={[s.caption, { color: c.textSecondary }]}>
           Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · confidence {data.forecast.confidence.toLowerCase()}
         </Text>
@@ -472,7 +481,12 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
         <Text style={[s.kicker, { color: c.textMuted }]}>PERCENTILE</Text>
         <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} beats {data.percentile}% of recent draw cutoffs</Text>
         <View style={{ marginTop: spacing.sm }}>
-          <MarkerBar fraction={data.percentile / 100} color={accent} track={c.surfaceTertiary} />
+          <MarkerBar
+            fraction={data.percentile / 100}
+            color={accent}
+            track={c.surfaceTertiary}
+            accessibilityLabel={`Percentile: your score beats ${data.percentile} percent of recent draw cutoffs.`}
+          />
         </View>
       </Card>
     </>
@@ -491,6 +505,7 @@ function TrendsTab({ c, accent, data }: any) {
           gridColor={c.border} axisColor={c.textMuted}
           refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
           width={300} height={150}
+          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.trendMin} to ${data.trendMax}, compared against your score of ${data.userScore}.`}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
       </Card>
@@ -506,6 +521,7 @@ function TrendsTab({ c, accent, data }: any) {
           min={data.trendMin} max={data.trendMax}
           gridColor={c.border} axisColor={c.textMuted}
           width={300} height={150}
+          accessibilityLabel="Cutoff trend by category over recent draws: Canadian Experience Class, French, and Provincial Nominee Program."
         />
         <View style={s.legendRow}>
           {[['CEC', accent], ['French', palette.success], ['PNP', palette.warning]].map(([lbl, col]) => (
@@ -524,6 +540,7 @@ function TrendsTab({ c, accent, data }: any) {
           min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
           gridColor={c.border} axisColor={c.textMuted}
           width={300} height={140}
+          accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
       </Card>
@@ -538,19 +555,22 @@ function TrendsTab({ c, accent, data }: any) {
 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
-        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48} />
+        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48}
+          accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
         <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
       </Card>
 
       <View style={s.miniRow}>
         <Card style={s.miniCard}>
           <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
-          <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary} />
+          <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary}
+            accessibilityLabel={`Draw cadence: roughly every ${data.cadenceDays} days.`} />
           <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> days</Text>
         </Card>
         <Card style={s.miniCard}>
           <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
-          <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary} />
+          <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary}
+            accessibilityLabel={`Invitations per recent draw. ${data.invitationsYtd} issued year to date.`} />
           <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> YTD</Text>
         </Card>
       </View>
@@ -606,7 +626,7 @@ const s = StyleSheet.create({
 
   segWrap: { flexDirection: 'row', backgroundColor: 'transparent', borderRadius: borderRadius.md,
              padding: spacing.xs, gap: spacing.xs, borderWidth: 0.3, marginVertical: spacing.xs },
-  segBtn: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+  segBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
   segText: { fontSize: typography.sm, fontWeight: typography.bold },
 
   card: { gap: spacing.xs },

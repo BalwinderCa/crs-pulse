@@ -427,10 +427,12 @@ export default {
     // ── Free-trial start, keyed to a hashed device id ───────────────────────
     // Stores the first-seen timestamp per device so the 3-day Analytics trial
     // cannot be reset by uninstalling/reinstalling the app (AsyncStorage clears,
-    // but ANDROID_ID — and therefore this KV entry — does not). The device id is
-    // stored only as a SHA-256 hash, the record self-expires (TRIAL_KV_TTL), and
-    // the user can erase it via DELETE /trial. The client computes remaining time
-    // from `startedAt`.
+    // but ANDROID_ID — and therefore this KV entry — does not). The client ALREADY
+    // sends a SHA-256 hash of the OS identifier (the raw id never leaves the
+    // device); the worker hashes again here purely as defense-in-depth so any
+    // legacy/raw value is never persisted in the clear. The record self-expires
+    // (TRIAL_KV_TTL) and the user can erase it via DELETE /trial. The client
+    // computes remaining time from `startedAt`.
     if (url.pathname === '/trial' && request.method === 'POST') {
       if (!env.PUSH_API_SECRET) {
         return json({ message: 'Service unavailable' }, 503);

@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect } from 'react';
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,7 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { usePremiumStore } from '@/store/premiumStore';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants';
 import type { RootStackParamList } from '@/types';
 
 const BENEFITS: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string }[] = [
@@ -36,6 +37,10 @@ export default function PaywallScreen() {
   useEffect(() => {
     if (isPremium) nav.goBack();
   }, [isPremium, nav]);
+
+  const openUrl = useCallback((url: string) => {
+    Linking.openURL(url).catch(() => {});
+  }, []);
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['left', 'right']}>
@@ -80,7 +85,13 @@ export default function PaywallScreen() {
           style={s.cta}
         />
 
-        <TouchableOpacity onPress={restore} disabled={purchasing} style={s.restore} accessibilityRole="button">
+        <TouchableOpacity
+          onPress={restore}
+          disabled={purchasing}
+          style={s.restore}
+          accessibilityRole="button"
+          accessibilityLabel="Restore a previous purchase"
+        >
           <Text style={[s.restoreText, { color: accent }]}>Restore purchase</Text>
         </TouchableOpacity>
 
@@ -88,6 +99,26 @@ export default function PaywallScreen() {
           One-time purchase billed through Google Play. Restores automatically on your other devices signed in to the
           same Google account. Analytics are estimates, not guarantees.
         </Text>
+
+        <View style={s.legalLinks}>
+          <TouchableOpacity
+            onPress={() => openUrl(TERMS_OF_USE_URL)}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Open Terms of Use"
+          >
+            <Text style={[s.legalLink, { color: accent }]}>Terms of Use</Text>
+          </TouchableOpacity>
+          <Text style={[s.legalDot, { color: c.textMuted }]}>·</Text>
+          <TouchableOpacity
+            onPress={() => openUrl(PRIVACY_POLICY_URL)}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="Open Privacy Policy"
+          >
+            <Text style={[s.legalLink, { color: accent }]}>Privacy Policy</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -111,7 +142,11 @@ const s = StyleSheet.create({
 
   error: { fontSize: typography.sm, textAlign: 'center', fontWeight: typography.medium },
   cta: { marginTop: spacing.xs },
-  restore: { alignItems: 'center', paddingVertical: spacing.sm },
+  // min 44pt tap target (WCAG 2.5.5 / Apple HIG) for the text-only restore action.
+  restore: { alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: spacing.sm },
   restoreText: { fontSize: typography.sm, fontWeight: typography.bold },
   legal: { fontSize: typography.xs, lineHeight: 16, textAlign: 'center', paddingHorizontal: spacing.sm },
+  legalLinks: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs },
+  legalLink: { fontSize: typography.xs, fontWeight: typography.bold, textDecorationLine: 'underline', paddingVertical: spacing.xs },
+  legalDot: { fontSize: typography.xs },
 });

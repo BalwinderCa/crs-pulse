@@ -43,7 +43,7 @@ You can disable notifications and revoke your token at any time in Settings.
 
 ### Analytics free-trial integrity (optional Analytics feature)
 
-The Analytics screen is free for a 3-day trial, after which a one-time purchase unlocks it permanently. To stop the trial from being reset by uninstalling and reinstalling, the app sends a **one-way SHA-256 hash** of a device identifier (Android ID / iOS vendor ID) to our Cloudflare Worker, which stores only that hash and the trial's start timestamp. It is never linked to your CRS profile, name, or any contact detail, and is not used for tracking or advertising. The record **auto-expires after about 200 days**, and you can delete it immediately with **Reset all data** in Settings (which calls our delete endpoint).
+The Analytics screen is free for a 3-day trial, after which a one-time purchase unlocks it permanently. To stop the trial from being reset by uninstalling and reinstalling, the app computes a **one-way SHA-256 hash** of a device identifier (Android ID / iOS vendor ID) **on your device** and sends only that hash to our Cloudflare Worker — the raw identifier never leaves your device. The Worker stores only a hashed identifier and the trial's start timestamp. It is never linked to your CRS profile, name, or any contact detail, and is not used for tracking or advertising. The record **auto-expires after about 200 days**, and you can delete it immediately with **Reset all data** in Settings (which calls our delete endpoint).
 
 ### In-app purchase
 

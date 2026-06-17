@@ -2,6 +2,27 @@ import React from 'react';
 import { Text, View } from 'react-native';
 import Svg, { Path, Circle, Line, Polyline, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
+/**
+ * Wraps an otherwise screen-reader-invisible SVG chart in a single accessible
+ * node carrying a text summary of the data, so VoiceOver/TalkBack announce the
+ * chart's meaning instead of skipping it (WCAG 1.1.1). The inner SVG is hidden
+ * from assistive tech to avoid duplicate/empty announcements. No label → the
+ * chart renders exactly as before (backward compatible).
+ */
+function ChartA11y({ label, children }: { label: string | undefined; children: React.ReactNode }) {
+  if (!label) return <>{children}</>;
+  return (
+    <View
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={label}
+      importantForAccessibility="yes"
+    >
+      <View importantForAccessibility="no-hide-descendants">{children}</View>
+    </View>
+  );
+}
+
 // ─── Multi-series line trend (area fill, reference line, axis labels) ─────────
 
 export type TrendSeries = { points: number[]; color: string; dashed?: boolean; fill?: string };
@@ -15,6 +36,7 @@ export function TrendLineChart({
   refLine,
   width = 300,
   height = 140,
+  accessibilityLabel,
 }: {
   series: TrendSeries[];
   min: number;
@@ -24,6 +46,7 @@ export function TrendLineChart({
   refLine?: { value: number; color: string; label?: string };
   width?: number;
   height?: number;
+  accessibilityLabel?: string;
 }) {
   const padL = 34, padR = 8, padT = 10, padB = 8;
   const w = width - padL - padR;
@@ -33,6 +56,7 @@ export function TrendLineChart({
   const yAt = (v: number) => padT + h - (h * (v - min)) / span;
 
   return (
+    <ChartA11y label={accessibilityLabel}>
     <Svg width={width} height={height}>
       {/* gridlines + y labels */}
       {[0, 0.5, 1].map((g) => {
@@ -72,6 +96,7 @@ export function TrendLineChart({
         );
       })}
     </Svg>
+    </ChartA11y>
   );
 }
 
@@ -132,11 +157,13 @@ export function OddsGauge({
   color,
   track,
   width = 220,
+  accessibilityLabel,
 }: {
   fraction: number; // 0..1
   color: string;
   track: string;
   width?: number;
+  accessibilityLabel?: string;
 }) {
   const f = Math.max(0, Math.min(1, fraction));
   const stroke = 14;
@@ -147,6 +174,7 @@ export function OddsGauge({
   const valueEnd = 180 - 180 * f; // sweep left→right
 
   return (
+    <ChartA11y label={accessibilityLabel}>
     <Svg width={width} height={height}>
       <Path d={arcPath(cx, cy, r, 180, 0)} stroke={track} strokeWidth={stroke} strokeLinecap="round" fill="none" />
       {f > 0 && (
@@ -159,6 +187,7 @@ export function OddsGauge({
         />
       )}
     </Svg>
+    </ChartA11y>
   );
 }
 
@@ -175,6 +204,7 @@ export function ForecastBandChart({
   gridColor,
   width = 280,
   height = 120,
+  accessibilityLabel,
 }: {
   actual: number[];
   forecast: number[]; // continues from last actual
@@ -186,6 +216,7 @@ export function ForecastBandChart({
   gridColor: string;
   width?: number;
   height?: number;
+  accessibilityLabel?: string;
 }) {
   const pad = 6;
   const w = width - pad * 2;
@@ -204,6 +235,7 @@ export function ForecastBandChart({
   const bandPoly = [...hi, ...lo].join(' ');
 
   return (
+    <ChartA11y label={accessibilityLabel}>
     <Svg width={width} height={height}>
       {[0.25, 0.5, 0.75].map((g) => (
         <Line key={g} x1={pad} y1={pad + h * g} x2={width - pad} y2={pad + h * g} stroke={gridColor} strokeWidth={0.5} />
@@ -222,6 +254,7 @@ export function ForecastBandChart({
         <Circle key={i} cx={x(i)} cy={y(v)} r={2} fill={lineColor} />
       ))}
     </Svg>
+    </ChartA11y>
   );
 }
 
@@ -233,17 +266,20 @@ export function MiniBars({
   track,
   width = 130,
   height = 40,
+  accessibilityLabel,
 }: {
   values: number[];
   color: string;
   track: string;
   width?: number;
   height?: number;
+  accessibilityLabel?: string;
 }) {
   const max = Math.max(...values, 1);
   const gap = 3;
   const bw = (width - gap * (values.length - 1)) / values.length;
   return (
+    <ChartA11y label={accessibilityLabel}>
     <Svg width={width} height={height}>
       {values.map((v, i) => {
         const bh = Math.max(2, (height * v) / max);
@@ -260,15 +296,29 @@ export function MiniBars({
         );
       })}
     </Svg>
+    </ChartA11y>
   );
 }
 
 // ─── Percentile marker bar ────────────────────────────────────────────────────
 
-export function MarkerBar({ fraction, color, track }: { fraction: number; color: string; track: string }) {
+export function MarkerBar({
+  fraction,
+  color,
+  track,
+  accessibilityLabel,
+}: {
+  fraction: number;
+  color: string;
+  track: string;
+  accessibilityLabel?: string;
+}) {
   const f = Math.max(0, Math.min(1, fraction));
   return (
-    <View style={{ height: 10, borderRadius: 5, backgroundColor: track, justifyContent: 'center' }}>
+    <View
+      style={{ height: 10, borderRadius: 5, backgroundColor: track, justifyContent: 'center' }}
+      {...(accessibilityLabel ? { accessible: true, accessibilityRole: 'image' as const, accessibilityLabel } : {})}
+    >
       <View
         style={{
           position: 'absolute',
