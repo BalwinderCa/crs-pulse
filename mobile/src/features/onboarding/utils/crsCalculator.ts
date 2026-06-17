@@ -601,8 +601,10 @@ function additionalPoints(input: CRSInput, firstClb: LangScores, tefScale: TefSc
   if (frenchClb) {
     const minFrench = Math.min(frenchClb.speaking, frenchClb.listening, frenchClb.reading, frenchClb.writing);
     if (minFrench >= 7) {
-      // IRCC (2025-08-21): 50 pts when French NCLC 7+ and English below CLB 5 or no English test
-      //                     25 pts when French NCLC 7+ and English CLB 5+ on all four skills
+      // IRCC CRS additional points (stable since the Oct 2020 Francophone update):
+      //   50 pts — French NCLC 7+ AND English CLB 5+ on all four skills (bilingual bonus)
+      //   25 pts — French NCLC 7+ AND English CLB 4 or lower, or no English test
+      // Verified against canada.ca CRS criteria + the Oct 2020 news release (2026).
       let englishMinClb = 0;
       if (input.firstLangTest === 'TEF' || input.firstLangTest === 'TCF') {
         // French is first language; English is second (if provided and not another French test)
@@ -614,7 +616,7 @@ function additionalPoints(input: CRSInput, firstClb: LangScores, tefScale: TefSc
         // English is first language; French is second — English CLB comes from firstClb
         englishMinClb = Math.min(firstClb.speaking, firstClb.listening, firstClb.reading, firstClb.writing);
       }
-      pts += englishMinClb >= 5 ? 25 : 50;
+      pts += englishMinClb >= 5 ? 50 : 25;
     }
   }
 
