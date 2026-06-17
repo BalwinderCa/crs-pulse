@@ -22,8 +22,8 @@ import { useAnalyticsData } from '../hooks/useAnalyticsData';
 import { useProfileStore, DEFAULT_CALC_INPUTS, type CalcInputs } from '@/store/profileStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useEePoolStore } from '@/store/eePoolStore';
-import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
-import { calculateCRS } from '@/features/onboarding/utils/crsCalculator';
+import { buildCRSInput, LANG_TEST_MAP } from '@/features/onboarding/utils/buildCRSInput';
+import { calculateCRS, scoresToCLB, type TefScale } from '@/features/onboarding/utils/crsCalculator';
 
 
 const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
@@ -120,30 +120,64 @@ export default function PremiumAnalyticsScreen() {
   );
 
   // ── What-if: a REAL CRS recompute via the official calculator ──
-  // Anchored to the user's saved profile; the sliders override only age, first
-  // language (as CLB), French as a second language, and a provincial nomination.
+  // Anchored to the user's saved profile. The controls START at the user's real
+  // values (so the untouched baseline equals their actual CRS) and each override
+  // is applied ONLY once that control is moved off its profile value — otherwise
+  // forcing a uniform CLB would drop a 539 to ~530 before the user touches anything.
   const baseInputs = useProfileStore((s) => s.profile?.calculatorInputs) ?? DEFAULT_CALC_INPUTS;
+
+  // The user's representative first-language level = the lowest of their four
+  // per-skill CLBs (the binding skill for CRS), clamped to the slider's 4–10 range.
+  const profileClb = useMemo(() => {
+    const test = LANG_TEST_MAP[baseInputs.firstLangTest] ?? 'IELTS';
+    const clbs = scoresToCLB(
+      test,
+      {
+        speaking: Number(baseInputs.firstLangSpeaking) || 0,
+        listening: Number(baseInputs.firstLangListening) || 0,
+        reading: Number(baseInputs.firstLangReading) || 0,
+        writing: Number(baseInputs.firstLangWriting) || 0,
+      },
+      (baseInputs.tefScale ?? 'current') as TefScale,
+    );
+    const minClb = Math.min(clbs.speaking, clbs.listening, clbs.reading, clbs.writing);
+    return Math.min(10, Math.max(4, minClb || 9));
+  }, [baseInputs]);
+
   const [age, setAge] = useState(() => baseInputs.age || 30);
-  const [clb, setClb] = useState(9);
-  const [french, setFrench] = useState(false);
-  const [pnp, setPnp] = useState(false);
+  const [clb, setClb] = useState(profileClb);
+  const [french, setFrench] = useState(baseInputs.hasSecondLang);
+  const [pnp, setPnp] = useState(baseInputs.hasProvincialNomination);
+
   const whatIfScore = useMemo(() => {
+    const langChanged = clb !== profileClb;
+    const frenchChanged = french !== baseInputs.hasSecondLang;
     const di: CalcInputs = {
       ...baseInputs,
       age,
-      firstLangTest: 'CLB',
-      firstLangSpeaking: clb, firstLangListening: clb, firstLangReading: clb, firstLangWriting: clb,
       hasProvincialNomination: pnp,
-      hasSecondLang: french || baseInputs.hasSecondLang,
-      secondLangTest: french ? 'TCF' : baseInputs.secondLangTest,
-      // NCLC 7 thresholds on the TCF scale (triggers the French bonus correctly).
-      secondLangSpeaking:  french ? 10  : baseInputs.secondLangSpeaking,
-      secondLangListening: french ? 458 : baseInputs.secondLangListening,
-      secondLangReading:   french ? 453 : baseInputs.secondLangReading,
-      secondLangWriting:   french ? 10  : baseInputs.secondLangWriting,
+      // Only flatten the first language to a uniform CLB once the slider moves —
+      // otherwise keep the real per-skill scores so the baseline matches the profile.
+      ...(langChanged
+        ? {
+            firstLangTest: 'CLB',
+            firstLangSpeaking: clb, firstLangListening: clb, firstLangReading: clb, firstLangWriting: clb,
+          }
+        : {}),
+      // French toggle overrides only when flipped from the user's real status.
+      // NCLC 7 thresholds on the TCF scale trigger the French bonus correctly.
+      ...(frenchChanged
+        ? french
+          ? {
+              hasSecondLang: true,
+              secondLangTest: 'TCF',
+              secondLangSpeaking: 10, secondLangListening: 458, secondLangReading: 453, secondLangWriting: 10,
+            }
+          : { hasSecondLang: false }
+        : {}),
     };
     return calculateCRS(buildCRSInput(di)).total;
-  }, [baseInputs, age, clb, french, pnp]);
+  }, [baseInputs, age, clb, french, pnp, profileClb]);
   const whatIfLabel = whatIfScore - data.trendCutoff >= 10 ? 'High' : whatIfScore - data.trendCutoff >= -10 ? 'Moderate' : 'Low';
 
   const oddsColor = ODDS_COLOR[data.oddsLabel] ?? palette.warning;
@@ -316,7 +350,7 @@ function OpsTab({ c, accent, data }: any) {
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
         <View style={s.rowBetween}>
-          <Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.nextDrawWindow}</Text>
+          <Text style={[s.opsBig, { color: c.textPrimary }]}>{i.nextDrawWindow}</Text>
           <View style={[s.tagPill, { backgroundColor: accent + '18' }]}>
             <Text style={[s.tagText, { color: accent }]}>{i.nextDrawLikely}</Text>
           </View>
@@ -342,10 +376,8 @@ function OpsTab({ c, accent, data }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>YOUR PLACE IN LINE · {data.category}</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · {data.category}</Text>
         <View style={s.statGrid}>
-          <View style={s.statCell}><Text style={[s.opsBig, { color: accent }]}>{fmt(i.peopleAhead)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>ahead of you</Text></View>
-          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
           <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text></View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
           <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text></View>

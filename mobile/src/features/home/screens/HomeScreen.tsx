@@ -6,10 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useApplicationStore } from '@/store/applicationStore';
-import {
-  findApplicationType,
-  getApplicationStages,
-} from '@/features/tracker/data/processingTimes';
+import { findApplicationType } from '@/features/tracker/data/processingTimes';
 import { useProcessingTimes } from '@/features/tracker/hooks/useProcessingTimes';
 import { Card } from '@/components/common/Card';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -40,17 +37,15 @@ export default function HomeScreen() {
     if (!application) return null;
     const found = findApplicationType(application.categoryId, application.typeId, categories);
     if (!found) return null;
-    const stages = getApplicationStages(application.categoryId, application.typeId);
     const totalDays = Math.round(found.type.months * 30.44);
     if (!application.appliedDate) {
-      return { ...found, stages, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
+      return { ...found, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
     }
     const applied = new Date(application.appliedDate);
     const daysIn = Math.max(0, daysBetween(applied, new Date()));
     const decisionDate = new Date(applied.getTime() + totalDays * DAY_MS);
     return {
       ...found,
-      stages,
       applied,
       daysIn,
       totalDays,
@@ -177,45 +172,6 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {/* Estimated stage */}
-              <View style={s.stageRow}>
-                {tracked.stages.map((stage, i) => {
-                  const reached = tracked.progress >= stage.at;
-                  const isCurrent =
-                    reached && (i === tracked.stages.length - 1 || tracked.progress < tracked.stages[i + 1]!.at);
-                  return (
-                    <View key={stage.label} style={s.stageItem}>
-                      <View
-                        style={[
-                          s.stageDot,
-                          { backgroundColor: reached ? accent : c.surfaceTertiary },
-                          isCurrent && { borderWidth: 2, borderColor: accent + '55' },
-                        ]}
-                      >
-                        <Ionicons
-                          name={(reached ? stage.icon : 'ellipse-outline') as any}
-                          size={12}
-                          color={reached ? '#fff' : c.textMuted}
-                        />
-                      </View>
-                      <Text
-                        style={[
-                          s.stageLabel,
-                          { color: isCurrent ? c.textPrimary : c.textMuted },
-                          isCurrent && { fontWeight: typography.bold },
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {stage.label}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </View>
-              <Text style={[s.stageNote, { color: c.textMuted }]}>
-                Typical stage for time elapsed — actual progress shows in your IRCC account
-              </Text>
-
               {tracked.progress >= 1 ? (
                 <View style={[s.overdueRow, { backgroundColor: palette.warning + '14' }]}>
                   <Ionicons name="alert-circle-outline" size={15} color={palette.warning} />
@@ -338,13 +294,6 @@ const s = StyleSheet.create({
   appDecision:  { fontSize: typography.sm, lineHeight: 20, marginTop: spacing.xs },
   appProgressRow:  { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.xs },
   appProgressText: { fontSize: typography.xs, fontWeight: typography.medium },
-
-  // Stage tracker
-  stageRow:   { flexDirection: 'row', marginTop: spacing.sm, gap: spacing.xs },
-  stageItem:  { flex: 1, alignItems: 'center', gap: spacing.xs },
-  stageDot:   { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  stageLabel: { fontSize: 10, lineHeight: 13, textAlign: 'center' },
-  stageNote:  { fontSize: 10, lineHeight: 14, textAlign: 'center', marginTop: spacing.xs },
 
   overdueRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
                  borderRadius: borderRadius.md, padding: spacing.sm, marginTop: spacing.xs },

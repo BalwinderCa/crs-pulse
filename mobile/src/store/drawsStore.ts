@@ -49,7 +49,9 @@ function parseRound(r: Record<string, string>): Draw | null {
     category: mapCategory(r.drawName ?? '') as Category,
     cutoff_score: cutoff,
     invitations_issued: size || 0,
-    tie_breaking_rule: r.drawCRSTie ?? null,
+    // IRCC publishes the tie-break as `drawCutOff` — the "submitted before" date/
+    // time that decides ties at the cutoff score (there is no `drawCRSTie` field).
+    tie_breaking_rule: r.drawCutOff ?? null,
     notes: r.drawName ?? null,
     created_at: date,
   };

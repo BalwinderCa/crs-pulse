@@ -153,15 +153,26 @@ export function useAnalyticsData() {
     const momentum: number[] = [];
     for (let k = 0; k < Math.min(6, series.length - 1); k++) momentum.push(series[k]!.cutoff_score - series[k + 1]!.cutoff_score);
 
-    // Cadence (gaps between draw dates, all categories)
+    // Cadence between draw ROUNDS. IRCC frequently runs 2–3 category draws in the
+    // same week (e.g. CEC, French and PNP on consecutive days), which would
+    // collapse a naive day-to-day gap to ~1 day. Ignore sub-3-day gaps so the
+    // cadence reflects the ~2-week spacing between rounds, not intra-week clusters.
     const uniqDates = [...new Set(draws.slice(0, 12).map((d) => d.date))].map((d) => new Date(d).getTime()).sort((a, b) => b - a);
     const gaps: number[] = [];
     for (let k = 0; k < uniqDates.length - 1; k++) gaps.push(Math.round((uniqDates[k]! - uniqDates[k + 1]!) / DAY));
-    const avgGap = median(gaps);
+    const roundGaps = gaps.filter((g) => g >= 3);
+    const avgGap = median(roundGaps.length ? roundGaps : gaps);
     const lastTime = uniqDates[0] ?? Date.now();
     const daysSinceLast = Math.max(0, Math.round((Date.now() - lastTime) / DAY));
-    const nd = new Date(lastTime + avgGap * DAY);
-    const nextDrawWindow = avgGap ? `${MONTHS[nd.getMonth()]} ${nd.getDate()}` : '—';
+    // Predicted next round = last draw + cadence. If that date has already passed
+    // (IRCC is overdue), don't show a stale past date — surface "Any day now".
+    const predictedTs = lastTime + avgGap * DAY;
+    const nd = new Date(predictedTs);
+    const nextDrawWindow = !avgGap
+      ? '—'
+      : predictedTs < Date.now()
+        ? 'Any day now'
+        : `~${MONTHS[nd.getMonth()]} ${nd.getDate()}`;
 
     // Next-draw likelihood — the most frequent categories in the recent rounds.
     const recentCatCount = new Map<string, number>();
