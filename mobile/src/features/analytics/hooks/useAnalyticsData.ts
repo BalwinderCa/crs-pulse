@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import { useDrawsStore } from '@/store/drawsStore';
-import { useProfileStore } from '@/store/profileStore';
+import { useProfileStore, DEFAULT_CALC_INPUTS, type CalcInputs } from '@/store/profileStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useEePoolStore } from '@/store/eePoolStore';
 import { computePoolPosition } from '@/features/analytics/data/eePool';
+import { buildCRSInput, LANG_TEST_MAP } from '@/features/onboarding/utils/buildCRSInput';
+import { calculateCRS, scoresToCLB, type TefScale } from '@/features/onboarding/utils/crsCalculator';
 import { CATEGORY_LABELS } from '@/constants';
 
 /**
@@ -45,12 +47,94 @@ const EE_PROC_FALLBACK: Record<string, { months: number; peopleWaiting: number }
 
 const drawCategoryFor = (cat: string) => (cat === 'FSW' ? 'General' : cat === 'FST' ? 'Trades' : cat);
 
-// Static, factual CRS levers (real IRCC point values — not data about the user).
-const IMPROVE_PATHS = [
-  { label: 'French (NCLC 7+)', delta: '+50' },
-  { label: 'Listening → CLB 9', delta: '+6' },
-  { label: 'Provincial nomination', delta: '+600' },
-];
+const SKILL_LABEL = { speaking: 'Speaking', listening: 'Listening', reading: 'Reading', writing: 'Writing' } as const;
+type Skill = keyof typeof SKILL_LABEL;
+
+/**
+ * Personalised "how to improve" levers — each is a REAL CRS recompute via the
+ * official calculator against the user's saved profile, so the shown delta is
+ * exactly what that change would add. Levers already achieved (Δ ≤ 0, e.g. a
+ * skill that's already maxed) are dropped, and the rest are ranked by impact.
+ */
+function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[] {
+  const score = (di: CalcInputs) => calculateCRS(buildCRSInput(di)).total;
+  const base = score(inputs);
+
+  const firstTest = LANG_TEST_MAP[inputs.firstLangTest] ?? 'IELTS';
+  const tefScale = (inputs.tefScale ?? 'current') as TefScale;
+  const firstClb = scoresToCLB(
+    firstTest,
+    {
+      speaking: Number(inputs.firstLangSpeaking) || 0,
+      listening: Number(inputs.firstLangListening) || 0,
+      reading: Number(inputs.firstLangReading) || 0,
+      writing: Number(inputs.firstLangWriting) || 0,
+    },
+    tefScale,
+  );
+  // Lossless CLB form of the first language so a single skill can be bumped
+  // without re-deriving raw test thresholds (toCLB('CLB', …) is the identity).
+  const clbBase: CalcInputs = {
+    ...inputs,
+    firstLangTest: 'CLB',
+    firstLangSpeaking: firstClb.speaking,
+    firstLangListening: firstClb.listening,
+    firstLangReading: firstClb.reading,
+    firstLangWriting: firstClb.writing,
+  };
+
+  const candidates: { label: string; total: number }[] = [];
+
+  // Raise the single weakest English skill by one CLB level (if any room left).
+  const skills: Skill[] = ['speaking', 'listening', 'reading', 'writing'];
+  const weakest: Skill = skills.reduce((w, s) => (firstClb[s] < firstClb[w] ? s : w), skills[0]!);
+  const weakestClb = firstClb[weakest];
+  if (weakestClb < 10) {
+    const di: CalcInputs = { ...clbBase };
+    (di as Record<string, unknown>)[`firstLang${SKILL_LABEL[weakest]}`] = weakestClb + 1;
+    candidates.push({ label: `${SKILL_LABEL[weakest]} → CLB ${weakestClb + 1}`, total: score(di) });
+  }
+
+  // Add NCLC 7 French (only if the user isn't already taking a French test).
+  const hasFrench =
+    firstTest === 'TEF' ||
+    firstTest === 'TCF' ||
+    (inputs.hasSecondLang && (inputs.secondLangTest === 'TEF' || inputs.secondLangTest === 'TCF'));
+  if (!hasFrench) {
+    candidates.push({
+      label: 'French (NCLC 7+)',
+      total: score({
+        ...inputs,
+        hasSecondLang: true,
+        secondLangTest: 'TCF',
+        secondLangSpeaking: 10,
+        secondLangListening: 458,
+        secondLangReading: 453,
+        secondLangWriting: 10,
+      }),
+    });
+  }
+
+  // One more year of Canadian work experience (CRS caps the factor at 5 years).
+  if (inputs.canadianWorkExp < 5) {
+    candidates.push({
+      label: `${inputs.canadianWorkExp + 1} yrs Canadian work`,
+      total: score({ ...inputs, canadianWorkExp: (inputs.canadianWorkExp + 1) as CalcInputs['canadianWorkExp'] }),
+    });
+  }
+
+  // Provincial nomination (the single biggest lever, if not already held).
+  if (!inputs.hasProvincialNomination) {
+    candidates.push({ label: 'Provincial nomination', total: score({ ...inputs, hasProvincialNomination: true }) });
+  }
+
+  return candidates
+    .map((c) => ({ label: c.label, delta: c.total - base }))
+    .filter((c) => c.delta > 0)
+    .sort((a, b) => b.delta - a.delta)
+    .slice(0, 3)
+    .map((c) => ({ label: c.label, delta: `+${c.delta}` }));
+}
 
 export function useAnalyticsData() {
   const draws = useDrawsStore((s) => s.draws);
@@ -61,6 +145,9 @@ export function useAnalyticsData() {
   return useMemo(() => {
     const score = profile?.crs_score ?? 0;
     const categoryCode = profile?.category ?? 'CEC';
+    // Personalised improvement levers (independent of draws — uses the profile).
+    const inputs = profile?.calculatorInputs ?? DEFAULT_CALC_INPUTS;
+    const paths = improvementPaths(inputs);
 
     // ── Place in line + pool + annual targets (live mirror, dated snapshot) ──
     const position = computePoolPosition(eePool, score);
@@ -92,9 +179,8 @@ export function useAnalyticsData() {
         oddsFraction: 0.5,
         oddsLabel: 'Moderate',
         timeframe: '—',
-        gapTo: 'High',
-        gapPoints: 0,
-        paths: IMPROVE_PATHS,
+        gapText: '—',
+        paths,
         forecast: { actual: [] as number[], proj: [] as number[], band: [] as { lo: number; hi: number }[], min: 450, max: 550, likely: '—', confidence: 'Low' },
         trend: [] as number[],
         categoryTrends: { CEC: [] as number[], French: [] as number[], PNP: [] as number[] },
@@ -106,7 +192,7 @@ export function useAnalyticsData() {
         invitationsYtd: '—',
         volume: [] as number[],
         percentile: 0,
-        streams: [] as { label: string; value: number }[],
+        streams: [] as { label: string; cutoff: number; margin: number }[],
         byMonth: new Array(12).fill(0) as number[],
         distribution: [] as { label: string; value: number; mine?: boolean }[],
         byScoreBand: [] as { band: string; wait: string; mine?: boolean }[],
@@ -136,16 +222,30 @@ export function useAnalyticsData() {
 
     const diff = score - trendCutoff;
     const oddsLabel = diff >= 10 ? 'High' : diff >= -10 ? 'Moderate' : 'Low';
+    // Honest gap badge: points to the next odds tier, or a clear-cut message when
+    // the user already beats the trend (no invented "+14 to High").
+    const gapText =
+      diff >= 10
+        ? 'You clear the current trend'
+        : diff >= -10
+          ? `+${Math.ceil(10 - diff)} to High odds`
+          : `+${Math.ceil(-10 - diff)} to Moderate odds`;
     const timeframe =
       oddsLabel === 'High' ? 'Likely next 1–2 draws'
       : oddsLabel === 'Moderate' ? '~2–4 draws · a few weeks'
       : 'Several draws away';
 
-    // Forecast — recent cutoffs (oldest→newest) + flat projection + widening band
+    // Forecast — recent cutoffs (oldest→newest) + a naive "last value holds"
+    // projection. The band width AND the confidence label are derived from the
+    // ACTUAL volatility (std-dev) of recent cutoffs, not hardcoded.
     const actual = [...recentCutoffs.slice(0, 5)].reverse();
     const last = actual[actual.length - 1] ?? trendCutoff;
     const proj = [last, last, last];
-    const band = proj.map((v, idx) => ({ lo: v - idx * 6, hi: v + idx * 6 }));
+    const fcMean = avg(actual);
+    const fcSd = actual.length ? Math.sqrt(actual.reduce((s, v) => s + (v - fcMean) ** 2, 0) / actual.length) : 0;
+    const fcHalf = Math.max(4, Math.round(fcSd));
+    const band = proj.map((v, idx) => ({ lo: v - (idx + 1) * fcHalf, hi: v + (idx + 1) * fcHalf }));
+    const fcConfidence = fcSd <= 5 ? 'High' : fcSd <= 12 ? 'Medium' : 'Low';
     const allC = [...actual, ...proj];
     const fMin = (allC.length ? Math.min(...allC) : 450) - 12;
     const fMax = (allC.length ? Math.max(...allC) : 550) + 12;
@@ -227,16 +327,16 @@ export function useAnalyticsData() {
       { label: 'Canadian Experience', cat: 'CEC' },
       { label: 'Federal Skilled Worker', cat: 'General' },
     ];
+    // Real margin (your CRS minus the stream's latest live cutoff), not a
+    // fabricated "odds %". Positive = you'd have cleared that stream's last draw.
     const streams = streamDefs
       .map((sd) => {
         const cutoff = latestByCat.get(sd.cat);
         if (cutoff == null) return null;
-        // Odds proxy: how far the user's CRS sits above/below that cutoff.
-        const value = Math.round(Math.max(5, Math.min(99, 50 + (score - cutoff))));
-        return { label: sd.label, value };
+        return { label: sd.label, cutoff, margin: score - cutoff };
       })
-      .filter((x): x is { label: string; value: number } => x !== null)
-      .sort((a, b) => b.value - a.value);
+      .filter((x): x is { label: string; cutoff: number; margin: number } => x !== null)
+      .sort((a, b) => b.margin - a.margin);
 
     // Months histogram
     const byMonth = new Array(12).fill(0) as number[];
@@ -310,10 +410,9 @@ export function useAnalyticsData() {
       oddsFraction: clamp01(0.5 + diff / 100),
       oddsLabel,
       timeframe,
-      gapTo: 'High',
-      gapPoints: diff < 0 ? Math.ceil(Math.abs(diff)) + 10 : 14,
-      paths: IMPROVE_PATHS,
-      forecast: { actual, proj, band, min: fMin, max: fMax, likely: `${last - 7}–${last + 7}`, confidence: 'Medium' },
+      gapText,
+      paths,
+      forecast: { actual, proj, band, min: fMin, max: fMax, likely: `${last - fcHalf}–${last + fcHalf}`, confidence: fcConfidence },
       trend: [...recentCutoffs].reverse().slice(-9),
       categoryTrends,
       invitationsTrend,

@@ -395,7 +395,7 @@ function OpsTab({ c, accent, data }: any) {
             }))} />
         </View>
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          ≈<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.candidatesAtOrAbove)}</Text> score at or above you · pool ~{fmt(i.poolTotal)} · as of {i.poolAsOf}
+          Pool ~<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.poolTotal)}</Text> candidates · IRCC snapshot as of {i.poolAsOf}
         </Text>
       </Card>
 
@@ -452,15 +452,22 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
-          <Text style={[s.gapBadge, { color: accent }]}>+{data.gapPoints} to “{data.gapTo}”</Text>
+          <Text style={[s.gapBadge, { color: accent }]}>{data.gapText}</Text>
         </View>
-        {data.paths.map((p: any, idx: number) => (
-          <View key={p.label} style={[s.gapRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-            <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
-            <Text style={[s.gapLabel, { color: c.textPrimary }]}>{p.label}</Text>
-            <Text style={[s.gapDelta, { color: palette.success }]}>{p.delta}</Text>
-          </View>
-        ))}
+        {data.paths.length > 0 ? (
+          data.paths.map((p: any, idx: number) => (
+            <View key={p.label} style={[s.gapRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+              <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
+              <Text style={[s.gapLabel, { color: c.textPrimary }]}>{p.label}</Text>
+              <Text style={[s.gapDelta, { color: palette.success }]}>{p.delta}</Text>
+            </View>
+          ))
+        ) : (
+          <Text style={[s.bodyText, { color: c.textSecondary, marginTop: spacing.xs }]}>
+            Your profile already maxes the common CRS levers — a provincial nomination is the main
+            remaining boost.
+          </Text>
+        )}
       </Card>
 
       <Card style={s.card}>
@@ -488,12 +495,19 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · est. odds</Text>
-        <View style={{ marginTop: spacing.xs }}>
-          <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
-            items={data.streams.map((st: any, idx: number) => ({ label: st.label, value: st.value, max: 100, suffix: '%', color: idx === 0 ? palette.success : accent, highlight: idx === 0 }))} />
-        </View>
-        <Text style={[s.caption, { color: c.textMuted }]}>Based on your profile vs each stream’s recent cutoffs</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
+        {data.streams.map((st: any, idx: number) => (
+          <View key={st.label} style={[s.bandRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+            <Text style={[s.bandScore, { color: idx === 0 ? accent : c.textPrimary, fontWeight: idx === 0 ? typography.bold : typography.medium }]}>{st.label}</Text>
+            <Text style={[s.bandWait, { color: c.textSecondary }]}>
+              cutoff {st.cutoff}{'   '}
+              <Text style={{ color: st.margin >= 0 ? palette.success : palette.danger, fontWeight: typography.bold }}>
+                {st.margin >= 0 ? `+${st.margin}` : st.margin}
+              </Text>
+            </Text>
+          </View>
+        ))}
+        <Text style={[s.caption, { color: c.textMuted }]}>Points your CRS sits above (+) or below (−) each stream’s most recent live cutoff</Text>
       </Card>
 
       <Card style={s.card}>
@@ -510,14 +524,14 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>PERCENTILE</Text>
-        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} beats {data.percentile}% of recent draw cutoffs</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
+        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} clears {data.percentile}% of recent draw cutoffs</Text>
         <View style={{ marginTop: spacing.sm }}>
           <MarkerBar
             fraction={data.percentile / 100}
             color={accent}
             track={c.surfaceTertiary}
-            accessibilityLabel={`Percentile: your score beats ${data.percentile} percent of recent draw cutoffs.`}
+            accessibilityLabel={`Your score clears ${data.percentile} percent of recent draw cutoffs.`}
           />
         </View>
       </Card>
