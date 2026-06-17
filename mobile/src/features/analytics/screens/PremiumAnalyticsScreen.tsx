@@ -78,12 +78,16 @@ export default function PremiumAnalyticsScreen() {
   const trialExpired = billingAvailable && !isPremium && trialEndsAt != null && now >= trialEndsAt;
   const trialMsLeft = trialEndsAt != null ? trialEndsAt - now : 0;
 
-  // Gate priority: paywall (paid or in-trial only) → then "add your CRS score".
-  // Locked once the trial has expired and the user hasn't bought. Resolution
-  // flags guard against flashing the paywall before billing/trial settle.
+  // Freemium model: Operations + Trends are free forever; the Improve tab (your
+  // personalised plan, what-if, forecast, percentile) is the paid unlock — and
+  // the 3-day trial unlocks it too. Fails OPEN when billing is unavailable, since
+  // trialExpired already requires billingAvailable. A CRS score is required for
+  // any analytics (everything is personalised to it).
   const resolved = premiumLoaded && trialChecked;
-  const locked = resolved && !isPremium && trialExpired;
-  const noProfile = !locked && data.userScore === 0;
+  const improveLocked = resolved && !isPremium && trialExpired;
+  const noProfile = data.userScore === 0;
+  // Loss-framed nudge in the trial's final stretch.
+  const trialEndingSoon = trialActive && trialMsLeft < 12 * 60 * 60 * 1000;
 
   // One-time intro: "free for 3 days" modal on first in-trial visit.
   const [showIntro, setShowIntro] = useState(false);
@@ -192,22 +196,31 @@ export default function PremiumAnalyticsScreen() {
       <ScrollView
         contentContainerStyle={[s.body, { paddingBottom: contentPaddingBottom }]}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={!noProfile && !locked}
+        scrollEnabled={!noProfile}
       >
-        {/* Free-trial countdown — only while the trial is running and unpaid */}
+        {/* Free-trial countdown — only while the trial is running and unpaid.
+            Switches to a loss-framed nudge in the final 12 hours. */}
         {trialActive && (
           <TouchableOpacity
             activeOpacity={0.85}
             onPress={() => nav.navigate('Paywall')}
             accessibilityRole="button"
-            accessibilityLabel={`Free trial: ${fmtTimeLeft(trialMsLeft)} left. Tap to unlock forever.`}
+            accessibilityLabel={
+              trialEndingSoon
+                ? `Your Improve plan locks in ${fmtTimeLeft(trialMsLeft)}. Tap to unlock forever.`
+                : `Free trial: ${fmtTimeLeft(trialMsLeft)} left. Tap to unlock forever.`
+            }
           >
-            <View style={[s.trialBar, { backgroundColor: accent + '14', borderColor: accent + '55' }]}>
-              <Ionicons name="time-outline" size={16} color={accent} />
+            <View style={[s.trialBar, { backgroundColor: (trialEndingSoon ? palette.warning : accent) + '14', borderColor: (trialEndingSoon ? palette.warning : accent) + '55' }]}>
+              <Ionicons name={trialEndingSoon ? 'hourglass-outline' : 'time-outline'} size={16} color={trialEndingSoon ? palette.warning : accent} />
               <Text style={[s.trialText, { color: c.textPrimary }]}>
-                Free trial · <Text style={{ color: accent, fontWeight: typography.bold }}>{fmtTimeLeft(trialMsLeft)}</Text> left
+                {trialEndingSoon ? (
+                  <>Improve plan locks in <Text style={{ color: palette.warning, fontWeight: typography.bold }}>{fmtTimeLeft(trialMsLeft)}</Text></>
+                ) : (
+                  <>Free trial · <Text style={{ color: accent, fontWeight: typography.bold }}>{fmtTimeLeft(trialMsLeft)}</Text> left</>
+                )}
               </Text>
-              <Text style={[s.trialCta, { color: accent }]}>Unlock →</Text>
+              <Text style={[s.trialCta, { color: trialEndingSoon ? palette.warning : accent }]}>Unlock →</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -238,6 +251,7 @@ export default function PremiumAnalyticsScreen() {
         <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
           {TABS.map((t) => {
             const active = tab === t.key;
+            const showLock = t.key === 'improve' && improveLocked;
             return (
               <TouchableOpacity
                 key={t.key}
@@ -246,21 +260,27 @@ export default function PremiumAnalyticsScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{t.label}</Text>
+                <View style={s.segLabelRow}>
+                  <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{t.label}</Text>
+                  {showLock && <Ionicons name="lock-closed" size={11} color={active ? palette.white : c.textMuted} />}
+                </View>
               </TouchableOpacity>
             );
           })}
         </View>
 
         {tab === 'ops' && <OpsTab c={c} accent={accent} data={data} />}
-        {tab === 'improve' && (
-          <ImproveTab
-            c={c} accent={accent} data={data}
-            age={age} setAge={setAge} clb={clb} setClb={setClb}
-            french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
-            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
-          />
-        )}
+        {tab === 'improve' &&
+          (improveLocked ? (
+            <ImproveUpsell c={c} accent={accent} data={data} onUnlock={() => nav.navigate('Paywall')} />
+          ) : (
+            <ImproveTab
+              c={c} accent={accent} data={data}
+              age={age} setAge={setAge} clb={clb} setClb={setClb}
+              french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
+              whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
+            />
+          ))}
         {tab === 'trends' && <TrendsTab c={c} accent={accent} data={data} />}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
@@ -270,31 +290,10 @@ export default function PremiumAnalyticsScreen() {
       </ScrollView>
 
         {/*
-          Locked overlay — dims the analytics behind it and blocks interaction.
-          Shown only once the free trial has expired and the user hasn't bought.
-          `noProfile` is the secondary gate (owns/in-trial but no CRS score yet).
+          Only the "add your CRS score" gate is a full-screen overlay now — a
+          score is required for any analytics. The paid Improve tab gates itself
+          inline (ImproveUpsell) so Operations + Trends stay free and usable.
         */}
-        {locked && (
-          <View style={[s.lockOverlay, { backgroundColor: c.surfacePrimary + 'E6' }]}>
-            <Card style={[s.lockCard, { borderColor: accent }]}>
-              <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
-                <Ionicons name="lock-closed" size={26} color={accent} />
-              </View>
-              <Text style={[s.lockTitle, { color: c.textPrimary }]}>Your free trial has ended</Text>
-              <Text style={[s.lockBody, { color: c.textSecondary }]}>
-                Your {TRIAL_DAYS}-day free trial of Analytics is over. Unlock it forever with a
-                one-time purchase — your odds, forecasts, percentile and what-if scenarios.
-              </Text>
-              <Button
-                title="Unlock forever"
-                fullWidth
-                icon={<Ionicons name="sparkles-outline" size={18} color={palette.white} />}
-                onPress={() => nav.navigate('Paywall')}
-                style={s.lockBtn}
-              />
-            </Card>
-          </View>
-        )}
         {noProfile && (
           <View style={[s.lockOverlay, { backgroundColor: c.surfacePrimary + 'E6' }]}>
             <Card style={[s.lockCard, { borderColor: accent }]}>
@@ -325,10 +324,11 @@ export default function PremiumAnalyticsScreen() {
             <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
               <Ionicons name="sparkles" size={26} color={accent} />
             </View>
-            <Text style={[s.lockTitle, { color: c.textPrimary }]}>Analytics is free for {TRIAL_DAYS} days</Text>
+            <Text style={[s.lockTitle, { color: c.textPrimary }]}>Your Improve plan is free for {TRIAL_DAYS} days</Text>
             <Text style={[s.lockBody, { color: c.textSecondary }]}>
-              Explore your live odds, forecasts, percentile and what-if scenarios — free for{' '}
-              {TRIAL_DAYS} days. After that, a one-time purchase unlocks it forever (no subscription).
+              Draws, your odds and Operations stay free. For {TRIAL_DAYS} days you also get the full
+              Improve tab — your personalised plan, what-if scenarios, forecast and percentile. After
+              that, a one-time purchase keeps it forever (no subscription).
             </Text>
             <Text style={[s.modalCountdown, { color: accent }]}>{fmtTimeLeft(trialMsLeft)} left</Text>
             <Button title="Start exploring" fullWidth onPress={dismissIntro} style={s.lockBtn} />
@@ -445,6 +445,45 @@ function OpsTab({ c, accent, data }: any) {
   );
 }
 
+// ─── Improve tab upsell (shown in place of ImproveTab once the trial ends) ────
+function ImproveUpsell({ c, accent, data, onUnlock }: any) {
+  const topLever = data.paths?.[0];
+  const FEATURES: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
+    { icon: 'flag-outline', text: 'Your exact improvement plan — the precise CRS points each move adds' },
+    { icon: 'options-outline', text: 'What-if: model French, a nomination or a higher CLB and watch your score move' },
+    { icon: 'trending-up-outline', text: 'Cutoff forecast for your category, with confidence' },
+    { icon: 'podium-outline', text: 'Your percentile, expected wait by score and best stream' },
+  ];
+  return (
+    <Card style={[s.upsellCard, { borderColor: accent }]}>
+      <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
+        <Ionicons name="sparkles" size={26} color={accent} />
+      </View>
+      <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock your improvement plan</Text>
+      <Text style={[s.lockBody, { color: c.textSecondary }]}>
+        {topLever
+          ? `Your biggest move: ${topLever.label} (${topLever.delta} CRS). Unlock to see your full plan, what-if scenarios, forecast and percentile.`
+          : 'See exactly how to raise your CRS — plus what-if scenarios, forecast and percentile.'}
+      </Text>
+      <View style={s.upsellList}>
+        {FEATURES.map((f) => (
+          <View key={f.text} style={s.upsellRow}>
+            <Ionicons name={f.icon} size={16} color={accent} />
+            <Text style={[s.upsellText, { color: c.textSecondary }]}>{f.text}</Text>
+          </View>
+        ))}
+      </View>
+      <Button
+        title="Unlock forever"
+        fullWidth
+        icon={<Ionicons name="sparkles-outline" size={18} color={palette.white} />}
+        onPress={onUnlock}
+        style={s.lockBtn}
+      />
+    </Card>
+  );
+}
+
 // ─── Improve tab (score-centric) ──────────────────────────────────────────────
 function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
   return (
@@ -547,11 +586,11 @@ function TrendsTab({ c, accent, data }: any) {
         <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF vs YOUR SCORE · last {data.trend.length} draws</Text>
         <TrendLineChart
           series={[{ points: data.trend, color: accent }]}
-          min={data.trendMin} max={data.trendMax}
+          min={data.selfTrendMin} max={data.selfTrendMax}
           gridColor={c.border} axisColor={c.textMuted}
           refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
           width={300} height={150}
-          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.trendMin} to ${data.trendMax}, compared against your score of ${data.userScore}.`}
+          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
       </Card>
@@ -577,6 +616,9 @@ function TrendsTab({ c, accent, data }: any) {
             </View>
           ))}
         </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>
+          Each line is that category’s own recent draws (categories draw on different days, so points aren’t date-aligned).
+        </Text>
       </Card>
 
       <Card style={s.card}>
@@ -673,9 +715,15 @@ const s = StyleSheet.create({
   segWrap: { flexDirection: 'row', backgroundColor: 'transparent', borderRadius: borderRadius.md,
              padding: spacing.xs, gap: spacing.xs, borderWidth: 0.3, marginVertical: spacing.xs },
   segBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+  segLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   segText: { fontSize: typography.sm, fontWeight: typography.bold },
 
   card: { gap: spacing.xs },
+
+  upsellCard: { borderWidth: 1, alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
+  upsellList: { alignSelf: 'stretch', gap: spacing.sm, marginTop: spacing.xs },
+  upsellRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
+  upsellText: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
 
   bodyWrap: { flex: 1, position: 'relative' },
   lockOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center',

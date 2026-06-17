@@ -187,6 +187,8 @@ export function useAnalyticsData() {
         invitationsTrend: [] as number[],
         trendMin: 300,
         trendMax: 700,
+        selfTrendMin: 300,
+        selfTrendMax: 700,
         cadenceDays: 0,
         cadence: [] as number[],
         invitationsYtd: '—',
@@ -338,9 +340,14 @@ export function useAnalyticsData() {
       .filter((x): x is { label: string; cutoff: number; margin: number } => x !== null)
       .sort((a, b) => b.margin - a.margin);
 
-    // Months histogram
+    // Months histogram — only the last ~12 months, so calendar-month buckets
+    // aren't conflated across years (the old slice(0,60) spanned ~2 years of
+    // draws and double-counted e.g. March 2025 + March 2026 into one bucket).
+    const yearAgo = lastTime - 365 * DAY;
     const byMonth = new Array(12).fill(0) as number[];
-    for (const d of draws.slice(0, 60)) {
+    for (const d of draws) {
+      const t = new Date(d.date).getTime();
+      if (Number.isNaN(t) || t < yearAgo) continue;
       const m = new Date(d.date).getMonth();
       if (!Number.isNaN(m)) byMonth[m] += 1;
     }
@@ -348,15 +355,19 @@ export function useAnalyticsData() {
     const busiestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v > a.v ? b : a)).i]! : '—';
     const quietestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v < a.v ? b : a)).i]! : '—';
 
-    // Distribution of recent category cutoffs into 4 buckets, mark user's
+    // Distribution of recent category cutoffs into 4 buckets, mark the user's.
+    // Clamp: a score above the highest recent cutoff maps to the top bucket (and
+    // below the lowest to the bottom one) so "Where you stand" always marks you —
+    // otherwise an above-cutoff applicant gets no marker at all.
     const lo = Math.min(...recentCutoffs), hi = Math.max(...recentCutoffs);
     const span = Math.max(1, hi - lo);
     const edges = [lo, lo + span / 4, lo + span / 2, lo + (3 * span) / 4, hi + 0.001];
+    const myBucket =
+      score >= hi ? 3 : score < lo ? 0 : [0, 1, 2, 3].find((bi) => score >= edges[bi]! && score < edges[bi + 1]!) ?? 0;
     const distribution = [0, 1, 2, 3].map((bi) => {
       const from = Math.round(edges[bi]!), to = Math.round(edges[bi + 1]!);
       const count = recentCutoffs.filter((cv) => cv >= edges[bi]! && cv < edges[bi + 1]!).length;
-      const mine = score >= edges[bi]! && score < edges[bi + 1]!;
-      return { label: `${from}–${to}`, value: count, mine };
+      return { label: `${from}–${to}`, value: count, mine: bi === myBucket };
     });
 
     const beats = recentCutoffs.filter((cv) => score >= cv).length;
@@ -401,6 +412,13 @@ export function useAnalyticsData() {
     const trendMin = allTrendVals.length ? Math.min(...allTrendVals) - 10 : 300;
     const trendMax = allTrendVals.length ? Math.max(...allTrendVals) + 10 : 700;
 
+    // Tight axis for the single-series "cutoff vs your score" chart — scaled to
+    // its OWN data (this category's cutoffs + your score), NOT the all-category
+    // range, so a high PNP cutoff (~805) doesn't squash the CEC line to the floor.
+    const selfTrendVals = [...recentCutoffs, score].filter((v) => v > 0);
+    const selfTrendMin = selfTrendVals.length ? Math.min(...selfTrendVals) - 8 : 300;
+    const selfTrendMax = selfTrendVals.length ? Math.max(...selfTrendVals) + 8 : 700;
+
     const momentumDown = momentum.length ? momentum.reduce((s, v) => s + v, 0) <= 0 : true;
 
     return {
@@ -418,8 +436,12 @@ export function useAnalyticsData() {
       invitationsTrend,
       trendMin,
       trendMax,
+      selfTrendMin,
+      selfTrendMax,
       cadenceDays: avgGap,
-      cadence: gaps.slice(0, 7).reverse(),
+      // Show round-to-round gaps (matches the ~Nd cadence label); fall back to
+      // raw gaps only if every recent gap was an intra-week cluster.
+      cadence: (roundGaps.length ? roundGaps : gaps).slice(0, 7).reverse(),
       busiestMonth,
       quietestMonth,
       momentumDown,

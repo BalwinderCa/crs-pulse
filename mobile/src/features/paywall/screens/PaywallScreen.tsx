@@ -15,10 +15,10 @@ import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants';
 import type { RootStackParamList } from '@/types';
 
 const BENEFITS: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string }[] = [
-  { icon: 'speedometer-outline', title: 'Your live odds', body: 'See your real-time chance of an invitation against the current trend cutoff.' },
-  { icon: 'trending-up-outline', title: 'Forecasts & trends', body: 'Cutoff forecasts, category trends, momentum and draw cadence — all from live IRCC data.' },
-  { icon: 'options-outline', title: 'What-if scenarios', body: 'Model how French, a nomination or a higher CLB would move your score and odds.' },
-  { icon: 'podium-outline', title: 'Where you stand', body: 'Your percentile, expected wait by score band, and best stream for your profile.' },
+  { icon: 'flag-outline', title: 'The exact points to climb', body: 'Your personalised plan — the precise CRS each move adds: French, a nomination, a higher CLB.' },
+  { icon: 'options-outline', title: 'What-if, instantly', body: 'Model French, a nomination or higher language scores and watch your score and odds move.' },
+  { icon: 'trending-up-outline', title: 'Forecast your category', body: 'Where the cutoff is heading for your draw category, with a confidence read.' },
+  { icon: 'podium-outline', title: 'Where you really stand', body: 'Your percentile, expected wait by score, and the best stream for your profile.' },
 ];
 
 export default function PaywallScreen() {
@@ -51,10 +51,16 @@ export default function PaywallScreen() {
           <View style={[s.heroIcon, { backgroundColor: accent + '1F' }]}>
             <Ionicons name="analytics" size={30} color={accent} />
           </View>
-          <Text style={[s.heroTitle, { color: c.textPrimary }]}>CRS Pulse Analytics</Text>
+          <Text style={[s.heroTitle, { color: c.textPrimary }]}>Know your real odds</Text>
           <Text style={[s.heroSub, { color: c.textSecondary }]}>
-            A one-time unlock for personalised, live Express Entry analytics. Yours forever — no subscription.
+            Unlock your personalised plan — the exact points to your next ITA, plus what-if scenarios and
+            forecasts. One-time purchase, yours forever. No subscription.
           </Text>
+        </View>
+
+        <View style={[s.trustBadge, { borderColor: palette.success + '55', backgroundColor: palette.success + '12' }]}>
+          <Ionicons name="checkmark-circle" size={15} color={palette.success} />
+          <Text style={[s.trustText, { color: c.textSecondary }]}>Matches the official IRCC CRS calculator</Text>
         </View>
 
         <Card style={s.benefits}>
@@ -132,6 +138,10 @@ const s = StyleSheet.create({
   heroIcon: { width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
   heroTitle: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, textAlign: 'center' },
   heroSub: { fontSize: typography.sm, lineHeight: 20, textAlign: 'center' },
+
+  trustBadge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
+                paddingVertical: spacing.sm, paddingHorizontal: spacing.base, borderRadius: borderRadius.md, borderWidth: 1 },
+  trustText: { fontSize: typography.xs, fontWeight: typography.semibold },
 
   benefits: { padding: 0, overflow: 'hidden' },
   benefitRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.base },
