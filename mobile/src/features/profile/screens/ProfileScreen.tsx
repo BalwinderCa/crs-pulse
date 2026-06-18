@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -49,12 +50,6 @@ function workExpLabel(years: number): string {
   if (years === 0) return 'None';
   if (years === 1) return '1 year';
   return `${years}+ years`;
-}
-
-function jobOfferLabel(j: string): string {
-  if (j === 'noc_00') return 'NOC TEER 0 Major Group 00';
-  if (j === 'noc_a')  return 'NOC TEER 1/2/3';
-  return 'None';
 }
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -256,9 +251,10 @@ export default function ProfileScreen() {
     },
     {
       title: 'Additional',
+      // Note: a job offer no longer scores CRS points (IRCC removed it Mar 2025),
+      // so it is intentionally not shown here.
       rows: [
         { label: 'Provincial Nom.', value: inp.hasProvincialNomination ? 'Yes ✓' : 'No' },
-        { label: 'Job Offer',       value: jobOfferLabel(inp.jobOffer) },
         { label: 'Sibling in Canada',value: inp.hasSiblingInCanada ? 'Yes' : 'No' },
       ],
     },
@@ -359,6 +355,9 @@ export default function ProfileScreen() {
                 key={t.value}
                 onPress={() => save({ theme: t.value })}
                 style={[styles.themeBtn, selected && styles.themeBtnActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={`${t.label} theme`}
               >
                 <Ionicons
                   name={t.icon as any}
@@ -389,8 +388,13 @@ export default function ProfileScreen() {
                 {
                   text: 'Reset Everything',
                   style: 'destructive',
-                  onPress: () => {
-                    void resetAllData();
+                  onPress: async () => {
+                    try {
+                      await resetAllData();
+                      Toast.show({ type: 'success', text1: 'All data reset.' });
+                    } catch {
+                      Toast.show({ type: 'error', text1: 'Reset failed', text2: 'Please try again.' });
+                    }
                   },
                 },
               ],

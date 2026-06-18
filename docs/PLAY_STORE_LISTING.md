@@ -14,7 +14,7 @@ CRS Pulse helps Canadian immigration applicants track their Express Entry journe
 
 **Live Draw History** — View official Express Entry draw results fetched directly from IRCC.
 
-**Analytics (free 3-day trial, then a one-time unlock)** — Your odds versus the current trend cutoff, cutoff forecasts, category trends, draw cadence and momentum, your place in the pool, percentile, and what-if scenarios. Figures are derived from official IRCC draw data, the IRCC processing-times feed, and IRCC's published Express Entry pool composition; pool composition and annual targets are periodic IRCC snapshots (dated in-app), not real-time. Estimates only — not guarantees.
+**Analytics (free, with an optional one-time unlock)** — The Draws section — live IRCC market data, draw history, category trends, draw cadence and momentum — is free. Your Plan unlocks your odds versus the current trend cutoff, cutoff forecasts, your place in the pool, percentile, and what-if scenarios with a one-time purchase (no subscription, no trial). Figures are derived from official IRCC draw data, the IRCC processing-times feed, and IRCC's published Express Entry pool composition; pool composition and annual targets are periodic IRCC snapshots (dated in-app), not real-time. Estimates only — not guarantees.
 
 **Timeline** — Track your immigration milestones locally.
 

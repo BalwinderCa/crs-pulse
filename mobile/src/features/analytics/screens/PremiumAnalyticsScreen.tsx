@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,6 +52,17 @@ export default function PremiumAnalyticsScreen() {
   // required for any analytics (everything is personalised to it).
   const planLocked = premiumLoaded && !isPremium && billingAvailable;
   const noProfile = data.userScore === 0;
+  // When locked, the "Your Plan" tab opens the paywall directly (see the tab
+  // onPress), so the plan only renders as active content once actually unlocked.
+  const showPlan = tab === 'plan' && !planLocked;
+
+  // After a successful purchase/restore this session, reveal the plan the user
+  // just unlocked (the Paywall closes itself once the entitlement is granted).
+  const wasPremium = useRef(isPremium);
+  useEffect(() => {
+    if (isPremium && !wasPremium.current) setTab('plan');
+    wasPremium.current = isPremium;
+  }, [isPremium]);
 
   // Refresh draws when the tab regains focus. load() is cache-first and
   // staleness-guarded (returns early if <1h old), so this is cheap and only
@@ -173,7 +184,11 @@ export default function PremiumAnalyticsScreen() {
               <TouchableOpacity
                 key={t.key}
                 style={[s.segBtn, active && { backgroundColor: accent }]}
-                onPress={() => setTab(t.key)}
+                onPress={() => {
+                  // Locked → straight to the full paywall, skipping the inline upsell.
+                  if (t.key === 'plan' && planLocked) { nav.navigate('Paywall'); return; }
+                  setTab(t.key);
+                }}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
@@ -186,18 +201,16 @@ export default function PremiumAnalyticsScreen() {
           })}
         </View>
 
-        {tab === 'draws' && <DrawsTab c={c} accent={accent} data={data} />}
-        {tab === 'plan' &&
-          (planLocked ? (
-            <ImproveUpsell c={c} accent={accent} data={data} onUnlock={() => nav.navigate('Paywall')} />
-          ) : (
-            <PlanTab
-              c={c} accent={accent} data={data}
-              age={age} setAge={setAge} clb={clb} setClb={setClb}
-              french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
-              whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
-            />
-          ))}
+        {showPlan ? (
+          <PlanTab
+            c={c} accent={accent} data={data}
+            age={age} setAge={setAge} clb={clb} setClb={setClb}
+            french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
+            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
+          />
+        ) : (
+          <DrawsTab c={c} accent={accent} data={data} />
+        )}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
           Estimates, not guarantees. Based on historical IRCC draw data and your profile. IRCC draws
@@ -407,45 +420,6 @@ function DrawsTab({ c, accent, data }: any) {
   );
 }
 
-// ─── Your Plan upsell (shown in place of PlanTab when not unlocked) ───────────
-function ImproveUpsell({ c, accent, data, onUnlock }: any) {
-  const topLever = data.paths?.[0];
-  const FEATURES: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
-    { icon: 'flag-outline', text: 'Your exact improvement plan — the precise CRS points each move adds' },
-    { icon: 'options-outline', text: 'What-if: model French, a nomination or a higher CLB and watch your score move' },
-    { icon: 'trending-up-outline', text: 'Cutoff forecast for your category, with confidence' },
-    { icon: 'podium-outline', text: 'Your percentile, expected wait by score and best stream' },
-  ];
-  return (
-    <Card style={[s.upsellCard, { borderColor: accent }]}>
-      <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
-        <Ionicons name="sparkles" size={26} color={accent} />
-      </View>
-      <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock your improvement plan</Text>
-      <Text style={[s.lockBody, { color: c.textSecondary }]}>
-        {topLever
-          ? `Your biggest move: ${topLever.label} (${topLever.delta} CRS). Unlock to see your full plan, what-if scenarios, forecast and percentile.`
-          : 'See exactly how to raise your CRS — plus what-if scenarios, forecast and percentile.'}
-      </Text>
-      <View style={s.upsellList}>
-        {FEATURES.map((f) => (
-          <View key={f.text} style={s.upsellRow}>
-            <Ionicons name={f.icon} size={16} color={accent} />
-            <Text style={[s.upsellText, { color: c.textSecondary }]}>{f.text}</Text>
-          </View>
-        ))}
-      </View>
-      <Button
-        title="Unlock forever"
-        fullWidth
-        icon={<Ionicons name="sparkles-outline" size={18} color={palette.white} />}
-        onPress={onUnlock}
-        style={s.lockBtn}
-      />
-    </Card>
-  );
-}
-
 // ─── Your Plan tab (premium: personalised, predictive + prescriptive) ─────────
 function PlanTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
   const i = data.ircc;
@@ -609,10 +583,6 @@ const s = StyleSheet.create({
 
   card: { gap: spacing.xs },
 
-  upsellCard: { borderWidth: 1, alignItems: 'center', gap: spacing.sm, padding: spacing.lg },
-  upsellList: { alignSelf: 'stretch', gap: spacing.sm, marginTop: spacing.xs },
-  upsellRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  upsellText: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
 
   bodyWrap: { flex: 1, position: 'relative' },
   lockOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center',

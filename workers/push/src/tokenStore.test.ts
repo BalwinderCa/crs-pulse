@@ -77,7 +77,8 @@ test('receipts: store, list, and delete round-trip', async () => {
     { id: 'r1', token: 'ExpoPushToken[a]' },
     { id: 'r2', token: 'ExpoPushToken[b]' },
   ]);
-  assert.equal(store.store.get(`${RECEIPT_PREFIX}r1`), 'ExpoPushToken[a]');
+  // Token is encoded into the key (value is a sentinel) so listReceipts needs no get.
+  assert.equal(store.store.get(`${RECEIPT_PREFIX}r1:ExpoPushToken[a]`), '1');
 
   const listed = await listReceipts(k);
   assert.deepEqual(
@@ -88,9 +89,23 @@ test('receipts: store, list, and delete round-trip', async () => {
     ],
   );
 
-  await deleteReceipt(k, 'r1');
+  await deleteReceipt(k, 'r1', 'ExpoPushToken[a]');
   const after = await listReceipts(k);
   assert.deepEqual(after, [{ id: 'r2', token: 'ExpoPushToken[b]' }]);
+});
+
+test('receipts: legacy `receipt:<id>` (token-as-value) keys still list and delete', async () => {
+  const store = new MockKV();
+  const k = store as unknown as KVNamespace;
+
+  // Simulate a receipt parked by the previous (token-as-value) format.
+  store.store.set(`${RECEIPT_PREFIX}legacy1`, 'ExpoPushToken[old]');
+
+  const listed = await listReceipts(k);
+  assert.deepEqual(listed, [{ id: 'legacy1', token: 'ExpoPushToken[old]' }]);
+
+  await deleteReceipt(k, 'legacy1', 'ExpoPushToken[old]');
+  assert.deepEqual(await listReceipts(k), []);
 });
 
 test('concurrent registrations never lose writes (race regression)', async () => {

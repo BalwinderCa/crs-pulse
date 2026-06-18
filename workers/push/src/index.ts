@@ -239,7 +239,7 @@ async function processReceipts(kv: KVNamespace): Promise<void> {
   if (pending.length === 0) return;
 
   const toRevoke: string[] = [];
-  const resolved: string[] = [];
+  const resolved: { id: string; token: string }[] = [];
 
   // Expo accepts up to 1000 receipt ids per request.
   for (let i = 0; i < pending.length; i += 1000) {
@@ -248,7 +248,7 @@ async function processReceipts(kv: KVNamespace): Promise<void> {
     for (const { id, token } of batch) {
       const receipt = receipts[id];
       if (!receipt) continue; // not resolved yet — keep for next poll
-      resolved.push(id);
+      resolved.push({ id, token });
       if (receipt.status === 'error' && receipt.details?.error === 'DeviceNotRegistered') {
         toRevoke.push(token);
       }
@@ -256,7 +256,7 @@ async function processReceipts(kv: KVNamespace): Promise<void> {
   }
 
   if (toRevoke.length > 0) await revokeTokens(kv, toRevoke);
-  await Promise.all(resolved.map((id) => deleteReceipt(kv, id)));
+  await Promise.all(resolved.map((r) => deleteReceipt(kv, r.id, r.token)));
 }
 
 async function checkAndNotify(kv: KVNamespace): Promise<{

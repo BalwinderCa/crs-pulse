@@ -24,10 +24,12 @@ type PremiumStore = {
   error: string | null;
 
   /**
-   * Whether a real purchase path exists on this device (Play Billing connected).
-   * false on iOS (no StoreKit product configured), emulators without Play, or a
-   * transient billing outage. The gate MUST fail open when this is false — never
-   * show a locked paywall the user cannot actually buy through.
+   * Whether a real, buyable product exists on this device — i.e. billing
+   * connected AND the unlock product actually loaded from the store. false
+   * whenever nothing is purchasable: iOS/region without a configured product,
+   * emulators without Play, or a transient billing/products outage. The gate
+   * MUST fail open when this is false — never show a locked paywall the user
+   * cannot actually buy through.
    */
   billingAvailable: boolean;
 
@@ -91,7 +93,11 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       price: product?.localizedPrice ?? null,
       isPremium,
       loaded: true,
-      billingAvailable: true,
+      // Only treat billing as available when a buyable product actually loaded.
+      // initConnection() succeeds on iOS even with no StoreKit product, and a
+      // transient products outage can return []; in either case there is nothing
+      // to purchase, so the gate must fail OPEN rather than show a dead paywall.
+      billingAvailable: !!product,
     });
     void cacheEntitlement(isPremium);
   },

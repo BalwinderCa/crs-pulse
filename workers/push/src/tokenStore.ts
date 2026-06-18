@@ -90,36 +90,65 @@ export async function revokeTokens(kv: KVNamespace, tokens: string[]): Promise<v
 // arrives in a "receipt" minutes later. We park each ticket id -> token here so
 // a later poll can fetch the receipts and prune tokens that failed to deliver.
 
-/** Parks ticket ids (mapped to their token) for a later receipt poll. */
+/**
+ * Parks ticket ids (mapped to their token) for a later receipt poll.
+ *
+ * The token is encoded into the KEY (`receipt:<id>:<token>`, value `1`) rather
+ * than stored as the value, so `listReceipts` can recover it from `kv.list`
+ * alone — no per-key `kv.get`. Expo ticket ids are colon-free UUIDs, so the
+ * first `:` after the prefix unambiguously separates id from token.
+ */
 export async function storeReceipts(
   kv: KVNamespace,
   receipts: { id: string; token: string }[],
 ): Promise<void> {
   await Promise.all(
     receipts.map((r) =>
-      kv.put(RECEIPT_PREFIX + r.id, r.token, { expirationTtl: RECEIPT_TTL_SECONDS }),
+      kv.put(`${RECEIPT_PREFIX}${r.id}:${r.token}`, '1', { expirationTtl: RECEIPT_TTL_SECONDS }),
     ),
   );
 }
 
-/** Lists every pending receipt as `{ id, token }`, paginating through KV. */
+/**
+ * Lists every pending receipt as `{ id, token }`, paginating through KV.
+ *
+ * Reads the id+token straight from each key name (no per-key `get`). Falls back
+ * to a `get` only for legacy `receipt:<id>` keys (token-as-value) that may still
+ * be parked in KV from before the key-encoded format — these TTL-expire within
+ * a day, after which the fallback is never taken.
+ */
 export async function listReceipts(kv: KVNamespace): Promise<{ id: string; token: string }[]> {
   const out: { id: string; token: string }[] = [];
   let cursor: string | undefined;
   do {
     const res = await kv.list({ prefix: RECEIPT_PREFIX, cursor });
     for (const key of res.keys) {
-      const token = await kv.get(key.name);
-      if (token) out.push({ id: key.name.slice(RECEIPT_PREFIX.length), token });
+      const rest = key.name.slice(RECEIPT_PREFIX.length);
+      const sep = rest.indexOf(':');
+      if (sep === -1) {
+        // Legacy format: token is the value. Back-compat read during transition.
+        const token = await kv.get(key.name);
+        if (token) out.push({ id: rest, token });
+      } else {
+        out.push({ id: rest.slice(0, sep), token: rest.slice(sep + 1) });
+      }
     }
     cursor = res.list_complete ? undefined : res.cursor;
   } while (cursor);
   return out;
 }
 
-/** Drops a resolved (or abandoned) receipt. */
-export async function deleteReceipt(kv: KVNamespace, id: string): Promise<void> {
-  await kv.delete(RECEIPT_PREFIX + id);
+/**
+ * Drops a resolved (or abandoned) receipt. Deletes both the key-encoded form
+ * (`receipt:<id>:<token>`) and the legacy `receipt:<id>` form so a receipt
+ * parked under either layout is cleaned up. `token` is optional only so legacy
+ * callers keep compiling; always pass it for the key-encoded format.
+ */
+export async function deleteReceipt(kv: KVNamespace, id: string, token?: string): Promise<void> {
+  await Promise.all([
+    token ? kv.delete(`${RECEIPT_PREFIX}${id}:${token}`) : Promise.resolve(),
+    kv.delete(RECEIPT_PREFIX + id),
+  ]);
 }
 
 /**

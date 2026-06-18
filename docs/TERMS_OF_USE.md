@@ -16,16 +16,17 @@ The app does not require an account. Your profile and calculator inputs are stor
 
 ## 3. In-app purchase ("Analytics unlock")
 
-The Analytics screen is free for a **3-day trial**, after which a **one-time, non-consumable in-app purchase** unlocks it permanently. There is **no subscription** and no recurring charge.
+The Analytics tab has two sections. **Draws** — live IRCC market data, draw history and trends — is **free**. **Your Plan** — your odds, improvement plan, what-if scenarios, cutoff forecast and percentile — is unlocked with a **one-time, non-consumable in-app purchase**. There is **no trial**, **no subscription**, and no recurring charge.
 
 - Purchases are processed and billed by the app store (Google Play, and where offered, the App Store). We do not receive or store your payment details.
-- The purchase unlocks the Analytics feature on devices signed in to the same store account; use **Restore purchase** on the paywall to re-grant it on a new device or reinstall.
+- The purchase unlocks the feature on devices signed in to the same store account; use **Restore purchase** on the paywall to re-grant it on a new device or reinstall.
+- Where no in-app purchase is offered or available (for example, on a platform or region without a configured product), these features are provided free.
 - **Refunds** are handled by the app store under its applicable policy (for example, Google Play's refund window). We do not separately process refunds.
 - Prices are shown by the store in your local currency and may change; any change applies only to future purchases.
 
 ## 4. Acceptable use
 
-You agree not to misuse the app, including attempting to bypass the trial or purchase mechanism, reverse-engineer the billing flow, or interfere with our push-notification or trial services.
+You agree not to misuse the app, including attempting to circumvent the in-app purchase or entitlement mechanism, reverse-engineer the billing flow, or interfere with our push-notification service.
 
 ## 5. Disclaimer of warranties and limitation of liability
 

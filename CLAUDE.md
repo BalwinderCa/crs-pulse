@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics, tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker.
+CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (a freemium split — free draw insights plus a one-time in-app purchase that unlocks the personalised "Your Plan" analytics), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker; the in-app purchase is processed entirely by the app store (no payment data reaches us).
 
 The repository has two independent workspaces:
 - `mobile/` — Expo React Native app
@@ -70,6 +70,7 @@ Stores in `src/store/`:
 | `drawsStore` | `Draw[]`, cache timestamp | IRCC draw data; refreshes with 3× exponential backoff |
 | `timelineStore` | `Milestone[]` | Application timeline milestones, sorted by date |
 | `applicationStore` | `TrackedApplication` | The IRCC category/type the user is tracking + applied date |
+| `premiumStore` | `isPremium`, `billingAvailable`, `price` | Google Play one-time "Analytics unlock" entitlement. Play is the source of truth; the gate fails OPEN when no product is purchasable (iOS without a configured product, emulator, transient outage) |
 
 These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`.
 
@@ -83,7 +84,7 @@ Each screen area lives under `src/features/<name>/` and contains its own compone
 - `draws`, `analytics`, `timeline` — live draws, on-device trends, milestone timeline
 - `tracker` — application setup + IRCC processing-time estimates
 - `checklist` — per-program document checklists
-- `notifications`, `profile`, `settings`, `onboarding`, `faq`, `support`
+- `notifications`, `paywall`, `profile`, `onboarding`, `faq`, `support` (the "Settings" bottom tab renders `profile`'s `ProfileScreen`)
 
 Calculator logic lives in each feature's `utils/` (each documents its IRCC/provincial source and is "estimate only"):
 
@@ -98,7 +99,7 @@ Static reference data: `features/checklist/data/checklists.ts` (document checkli
 
 ### Navigation
 
-`RootNavigator` (stack) loads profile and draws on boot, then renders `MainNavigator` (bottom tabs): Dashboard → Timeline → Draws → Analytics → Settings. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist`(+`Detail`), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`.
+`RootNavigator` (stack) loads profile and draws on boot, then renders `MainNavigator` (bottom tabs): Dashboard → Timeline → Draws → Analytics → Settings. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist`(+`Detail`), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`, `Paywall` (modal).
 
 ### Theme System
 
@@ -136,7 +137,7 @@ Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`.
 
 ### Services & Observability
 
-`src/services/` holds cross-feature services: `pushService.ts` (Expo token register/revoke against the worker) and `errorReporter.ts` (production-safe error reporter — no-ops/console in dev).
+`src/services/` holds cross-feature services: `pushService.ts` (Expo token register/revoke against the worker), `iapService.ts` (a thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock"), and `errorReporter.ts` (production-safe error reporter — no-ops/console in dev).
 
 ### Testing
 
