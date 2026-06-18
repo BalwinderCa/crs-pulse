@@ -27,11 +27,10 @@ import { calculateCRS, scoresToCLB, type TefScale } from '@/features/onboarding/
 const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
 const fmt = (n: number) => n.toLocaleString('en-CA');
 
-type TabKey = 'ops' | 'improve' | 'trends';
+type TabKey = 'draws' | 'plan';
 const TABS: { key: TabKey; label: string }[] = [
-  { key: 'ops', label: 'Operations' },
-  { key: 'improve', label: 'Improve' },
-  { key: 'trends', label: 'Trends' },
+  { key: 'draws', label: 'Draws' },
+  { key: 'plan', label: 'Your Plan' },
 ];
 
 export default function PremiumAnalyticsScreen() {
@@ -39,18 +38,19 @@ export default function PremiumAnalyticsScreen() {
   const accent = useAccentColor();
   const { contentPaddingBottom } = useTabBarLayout();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const [tab, setTab] = useState<TabKey>('ops');
+  const [tab, setTab] = useState<TabKey>('draws');
   const data = useAnalyticsData();
   const isPremium = usePremiumStore((s) => s.isPremium);
   const premiumLoaded = usePremiumStore((s) => s.loaded);
   const billingAvailable = usePremiumStore((s) => s.billingAvailable);
 
-  // Freemium model: Operations + Trends are free forever; the Improve tab (your
-  // personalised plan, what-if, forecast, percentile) is the one-time unlock.
-  // Fails OPEN when billing is unavailable (iOS without StoreKit, emulator, or a
-  // transient outage) — never show a lock the user can't buy through. A CRS score
-  // is required for any analytics (everything is personalised to it).
-  const improveLocked = premiumLoaded && !isPremium && billingAvailable;
+  // Freemium model: the Draws tab (live IRCC market + history) is free forever;
+  // the "Your Plan" tab (next-draw prediction, improvement plan, what-if,
+  // forecast, percentile, decision outlook) is the one-time unlock. Fails OPEN
+  // when billing is unavailable (iOS without StoreKit, emulator, or a transient
+  // outage) — never show a lock the user can't buy through. A CRS score is
+  // required for any analytics (everything is personalised to it).
+  const planLocked = premiumLoaded && !isPremium && billingAvailable;
   const noProfile = data.userScore === 0;
 
   // Refresh draws when the tab regains focus. load() is cache-first and
@@ -168,7 +168,7 @@ export default function PremiumAnalyticsScreen() {
         <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
           {TABS.map((t) => {
             const active = tab === t.key;
-            const showLock = t.key === 'improve' && improveLocked;
+            const showLock = t.key === 'plan' && planLocked;
             return (
               <TouchableOpacity
                 key={t.key}
@@ -186,19 +186,18 @@ export default function PremiumAnalyticsScreen() {
           })}
         </View>
 
-        {tab === 'ops' && <OpsTab c={c} accent={accent} data={data} />}
-        {tab === 'improve' &&
-          (improveLocked ? (
+        {tab === 'draws' && <DrawsTab c={c} accent={accent} data={data} />}
+        {tab === 'plan' &&
+          (planLocked ? (
             <ImproveUpsell c={c} accent={accent} data={data} onUnlock={() => nav.navigate('Paywall')} />
           ) : (
-            <ImproveTab
+            <PlanTab
               c={c} accent={accent} data={data}
               age={age} setAge={setAge} clb={clb} setClb={setClb}
               french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
               whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
             />
           ))}
-        {tab === 'trends' && <TrendsTab c={c} accent={accent} data={data} />}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
           Estimates, not guarantees. Based on historical IRCC draw data and your profile. IRCC draws
@@ -237,23 +236,23 @@ export default function PremiumAnalyticsScreen() {
   );
 }
 
-// ─── Operations tab (IRCC operational data) ───────────────────────────────────
-function OpsTab({ c, accent, data }: any) {
+// ─── Draws tab (free: live IRCC market data + history) ────────────────────────
+function DrawsTab({ c, accent, data }: any) {
   const i = data.ircc;
   return (
     <>
+      {/* Free teaser: where your score sits vs the live cutoff trend */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
-        <View style={s.rowBetween}>
-          <Text style={[s.opsBig, { color: c.textPrimary }]}>{i.nextDrawWindow}</Text>
-          <View style={[s.tagPill, { backgroundColor: accent + '18' }]}>
-            <Text style={[s.tagText, { color: accent }]}>{i.nextDrawLikely}</Text>
-          </View>
-        </View>
-        <Text style={[s.caption, { color: c.textSecondary }]}>
-          <Text style={[s.num, { color: c.textPrimary }]}>{i.daysSinceLast}</Text> days since last · avg gap{' '}
-          <Text style={[s.num, { color: c.textPrimary }]}>{i.avgGap}</Text> days · typically ~<Text style={[s.num, { color: c.textPrimary }]}>{i.typicalSize}</Text> ITAs
-        </Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF vs YOUR SCORE · last {data.trend.length} draws</Text>
+        <TrendLineChart
+          series={[{ points: data.trend, color: accent }]}
+          min={data.selfTrendMin} max={data.selfTrendMax}
+          gridColor={c.border} axisColor={c.textMuted}
+          refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
+          width={300} height={150}
+          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
+        />
+        <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
       </Card>
 
       <Card style={s.card}>
@@ -268,15 +267,6 @@ function OpsTab({ c, accent, data }: any) {
         <Text style={[s.caption, { color: c.textMuted }]}>
           ~{fmt(i.itaProjected)} projected · past {i.prevYear}’s {fmt(i.itaPrevYear)} pace · PR target {fmt(i.prTarget)}
         </Text>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · {data.category}</Text>
-        <View style={s.statGrid}>
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text></View>
-          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text></View>
-        </View>
       </Card>
 
       <Card style={s.card}>
@@ -336,11 +326,88 @@ function OpsTab({ c, accent, data }: any) {
           At the cutoff, only profiles submitted before this time were invited. Submit early to win ties.
         </Text>
       </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF BY CATEGORY · trend</Text>
+        <TrendLineChart
+          series={[
+            { points: data.categoryTrends.CEC, color: accent },
+            { points: data.categoryTrends.French, color: palette.success },
+            { points: data.categoryTrends.PNP, color: palette.warning },
+          ]}
+          min={data.trendMin} max={data.trendMax}
+          gridColor={c.border} axisColor={c.textMuted}
+          width={300} height={150}
+          accessibilityLabel="Cutoff trend by category over recent draws: Canadian Experience Class, French, and Provincial Nominee Program."
+        />
+        <View style={s.legendRow}>
+          {[['CEC', accent], ['French', palette.success], ['PNP', palette.warning]].map(([lbl, col]) => (
+            <View key={lbl} style={s.legendItem}>
+              <View style={[s.legendDot, { backgroundColor: col as string }]} />
+              <Text style={[s.legendText, { color: c.textSecondary }]}>{lbl}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>
+          Each line is that category’s own recent draws (categories draw on different days, so points aren’t date-aligned).
+        </Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS PER DRAW · last {data.invitationsTrend.length}</Text>
+        <TrendLineChart
+          series={[{ points: data.invitationsTrend, color: palette.success, fill: palette.success + '22' }]}
+          min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
+          gridColor={c.border} axisColor={c.textMuted}
+          width={300} height={140}
+          accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
+        />
+        <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
+        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48}
+          accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
+        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
+      </Card>
+
+      <View style={s.miniRow}>
+        <Card style={s.miniCard}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
+          <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary}
+            accessibilityLabel={`Draw cadence: roughly every ${data.cadenceDays} days.`} />
+          <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> days</Text>
+        </Card>
+        <Card style={s.miniCard}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
+          <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary}
+            accessibilityLabel={`Invitations per recent draw. ${data.invitationsYtd} issued year to date.`} />
+          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> YTD</Text>
+        </Card>
+      </View>
+
+      <Card style={s.card}>
+        <View style={s.rowBetween}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF MOMENTUM · last 6</Text>
+          <Text style={[s.num, { color: data.momentumDown ? palette.success : palette.danger }]}>
+            {data.momentumDown ? 'trending down ↓' : 'trending up ↑'}
+          </Text>
+        </View>
+        <View style={s.chipRow}>
+          {data.momentum.map((d: number, idx: number) => (
+            <View key={idx} style={[s.chip, { backgroundColor: (d <= 0 ? palette.success : palette.danger) + '18' }]}>
+              <Text style={[s.chipText, { color: d <= 0 ? palette.success : palette.danger }]}>{d > 0 ? `+${d}` : d}</Text>
+            </View>
+          ))}
+        </View>
+        <Text style={[s.caption, { color: c.textMuted }]}>Falling cutoffs improve your odds · avg {data.avgInvitations} ITAs/draw</Text>
+      </Card>
     </>
   );
 }
 
-// ─── Improve tab upsell (shown in place of ImproveTab when not unlocked) ──────
+// ─── Your Plan upsell (shown in place of PlanTab when not unlocked) ───────────
 function ImproveUpsell({ c, accent, data, onUnlock }: any) {
   const topLever = data.paths?.[0];
   const FEATURES: { icon: keyof typeof Ionicons.glyphMap; text: string }[] = [
@@ -379,10 +446,25 @@ function ImproveUpsell({ c, accent, data, onUnlock }: any) {
   );
 }
 
-// ─── Improve tab (score-centric) ──────────────────────────────────────────────
-function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
+// ─── Your Plan tab (premium: personalised, predictive + prescriptive) ─────────
+function PlanTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
+  const i = data.ircc;
   return (
     <>
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
+        <View style={s.rowBetween}>
+          <Text style={[s.opsBig, { color: c.textPrimary }]}>{i.nextDrawWindow}</Text>
+          <View style={[s.tagPill, { backgroundColor: accent + '18' }]}>
+            <Text style={[s.tagText, { color: accent }]}>{i.nextDrawLikely}</Text>
+          </View>
+        </View>
+        <Text style={[s.caption, { color: c.textSecondary }]}>
+          <Text style={[s.num, { color: c.textPrimary }]}>{i.daysSinceLast}</Text> days since last · avg gap{' '}
+          <Text style={[s.num, { color: c.textPrimary }]}>{i.avgGap}</Text> days · typically ~<Text style={[s.num, { color: c.textPrimary }]}>{i.typicalSize}</Text> ITAs
+        </Text>
+      </Card>
+
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
@@ -469,64 +551,6 @@ function ImproveTab({ c, accent, data, age, setAge, clb, setClb, french, setFren
           />
         </View>
       </Card>
-    </>
-  );
-}
-
-// ─── Trends tab (historical patterns) ─────────────────────────────────────────
-function TrendsTab({ c, accent, data }: any) {
-  return (
-    <>
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF vs YOUR SCORE · last {data.trend.length} draws</Text>
-        <TrendLineChart
-          series={[{ points: data.trend, color: accent }]}
-          min={data.selfTrendMin} max={data.selfTrendMax}
-          gridColor={c.border} axisColor={c.textMuted}
-          refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
-          width={300} height={150}
-          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
-        />
-        <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF BY CATEGORY · trend</Text>
-        <TrendLineChart
-          series={[
-            { points: data.categoryTrends.CEC, color: accent },
-            { points: data.categoryTrends.French, color: palette.success },
-            { points: data.categoryTrends.PNP, color: palette.warning },
-          ]}
-          min={data.trendMin} max={data.trendMax}
-          gridColor={c.border} axisColor={c.textMuted}
-          width={300} height={150}
-          accessibilityLabel="Cutoff trend by category over recent draws: Canadian Experience Class, French, and Provincial Nominee Program."
-        />
-        <View style={s.legendRow}>
-          {[['CEC', accent], ['French', palette.success], ['PNP', palette.warning]].map(([lbl, col]) => (
-            <View key={lbl} style={s.legendItem}>
-              <View style={[s.legendDot, { backgroundColor: col as string }]} />
-              <Text style={[s.legendText, { color: c.textSecondary }]}>{lbl}</Text>
-            </View>
-          ))}
-        </View>
-        <Text style={[s.caption, { color: c.textMuted }]}>
-          Each line is that category’s own recent draws (categories draw on different days, so points aren’t date-aligned).
-        </Text>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS PER DRAW · last {data.invitationsTrend.length}</Text>
-        <TrendLineChart
-          series={[{ points: data.invitationsTrend, color: palette.success, fill: palette.success + '22' }]}
-          min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
-          gridColor={c.border} axisColor={c.textMuted}
-          width={300} height={140}
-          accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
-        />
-        <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
-      </Card>
 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
@@ -537,42 +561,12 @@ function TrendsTab({ c, accent, data }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
-        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48}
-          accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
-        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
-      </Card>
-
-      <View style={s.miniRow}>
-        <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
-          <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary}
-            accessibilityLabel={`Draw cadence: roughly every ${data.cadenceDays} days.`} />
-          <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> days</Text>
-        </Card>
-        <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
-          <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary}
-            accessibilityLabel={`Invitations per recent draw. ${data.invitationsYtd} issued year to date.`} />
-          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> YTD</Text>
-        </Card>
-      </View>
-
-      <Card style={s.card}>
-        <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF MOMENTUM · last 6</Text>
-          <Text style={[s.num, { color: data.momentumDown ? palette.success : palette.danger }]}>
-            {data.momentumDown ? 'trending down ↓' : 'trending up ↑'}
-          </Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · {data.category}</Text>
+        <View style={s.statGrid}>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text></View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text></View>
         </View>
-        <View style={s.chipRow}>
-          {data.momentum.map((d: number, idx: number) => (
-            <View key={idx} style={[s.chip, { backgroundColor: (d <= 0 ? palette.success : palette.danger) + '18' }]}>
-              <Text style={[s.chipText, { color: d <= 0 ? palette.success : palette.danger }]}>{d > 0 ? `+${d}` : d}</Text>
-            </View>
-          ))}
-        </View>
-        <Text style={[s.caption, { color: c.textMuted }]}>Falling cutoffs improve your odds · avg {data.avgInvitations} ITAs/draw</Text>
       </Card>
     </>
   );
