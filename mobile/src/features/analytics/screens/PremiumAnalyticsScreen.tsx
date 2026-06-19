@@ -200,7 +200,7 @@ export default function PremiumAnalyticsScreen() {
 
         {showPlan ? (
           planLocked ? (
-            <PlanTabSkeleton c={c} accent={accent} />
+            <PlanTabSkeleton c={c} accent={accent} userScore={data.userScore} />
           ) : (
             <PlanTab
               c={c} accent={accent} data={data}
@@ -550,14 +550,14 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
 }
 
 // ─── Your Plan skeleton (locked preview with shimmer + unlock CTA) ────────────
-function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
+function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; userScore: number }) {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const shimmer = useRef(new Animated.Value(0.35)).current;
 
   useEffect(() => {
     const anim = Animated.loop(
       Animated.sequence([
-        Animated.timing(shimmer, { toValue: 0.85, duration: 950, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0.9, duration: 950, useNativeDriver: true }),
         Animated.timing(shimmer, { toValue: 0.35, duration: 950, useNativeDriver: true }),
       ]),
     );
@@ -565,10 +565,25 @@ function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
     return () => anim.stop();
   }, [shimmer]);
 
-  // Plain inline helper — not a React component
+  // Shimmer block — numbers/values only
   const sh = (h: number, w: number | `${number}%` = '100%') => (
-    <Animated.View style={{ height: h, width: w, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer, marginTop: spacing.xs }} />
+    <Animated.View style={{ height: h, width: w, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
   );
+
+  const IMPROVE_PATHS = [
+    'Improve language score (CLB)',
+    'Learn French (NCLC 7+)',
+    'Get provincial nomination',
+  ];
+
+  const STREAMS = [
+    'Canadian Experience Class',
+    'French Language',
+    'Provincial Nominee',
+    'RNIP / Agri-Food',
+  ];
+
+  const SCORE_BANDS = ['530–559  ← you', '500–529', '470–499', '440–469', '< 440'];
 
   return (
     <>
@@ -590,124 +605,156 @@ function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
         />
       </Card>
 
-      {/* ── NEXT DRAW: date range + likely badge + caption row ── */}
+      {/* ── NEXT DRAW: label + shimmered date & badge ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
-        <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
-          {sh(30, '48%')}
-          {sh(26, '28%')}
+        <View style={[s.rowBetween, { marginTop: spacing.sm }]}>
+          <View style={{ gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>Expected window</Text>
+            {sh(28, 130)}
+          </View>
+          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>Likelihood</Text>
+            {sh(26, 80)}
+          </View>
         </View>
-        {sh(12)}
+        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>
+          Based on draw cadence · avg gap and size included
+        </Text>
       </Card>
 
-      {/* ── HOW TO IMPROVE: badge header + 3 icon/label/delta rows ── */}
+      {/* ── HOW TO IMPROVE: real strategy labels, shimmered point gains ── */}
       <Card style={s.card}>
-        <View style={s.rowBetween}>
+        <View style={[s.rowBetween, { marginBottom: spacing.xs }]}>
           <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
-          {sh(16, '24%')}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>You need</Text>
+            {sh(16, 44)}
+            <Text style={[s.caption, { color: c.textSecondary }]}>pts</Text>
+          </View>
         </View>
-        {[0, 1, 2].map((i) => (
-          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Animated.View style={{ height: 16, width: 16, borderRadius: 8, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ flex: 1, height: 14, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ height: 14, width: 42, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        {IMPROVE_PATHS.map((label, i) => (
+          <View key={label} style={[s.gapRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+            <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
+            <Text style={[s.gapLabel, { color: c.textPrimary }]}>{label}</Text>
+            {sh(18, 52)}
           </View>
         ))}
       </Card>
 
-      {/* ── FORECAST: band chart + "Likely X · confidence Y" caption ── */}
+      {/* ── FORECAST: chart shimmer + descriptive caption ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT DRAW</Text>
-        {sh(110)}
+        <View style={{ marginTop: spacing.xs }}>
+          {sh(110)}
+        </View>
         <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
-          {sh(12, '38%')}
-          {sh(12, '30%')}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>Likely cutoff</Text>
+            {sh(14, 44)}
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>confidence</Text>
+            {sh(14, 52)}
+          </View>
         </View>
       </Card>
 
-      {/* ── WHAT IF: score header, 2 slider rows, 2 switch rows, output pill ── */}
+      {/* ── WHAT IF: real control labels, shimmered values & tracks ── */}
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
-          {sh(24, '22%')}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Text style={[s.caption, { color: c.textSecondary }]}>CRS</Text>
+            {sh(22, 44)}
+          </View>
         </View>
-        {/* Slider rows */}
-        {[0, 1].map((i) => (
-          <View key={i} style={{ marginTop: spacing.sm }}>
+        {/* Slider rows with real labels */}
+        {(['Age', 'Language (CLB)'] as const).map((label) => (
+          <View key={label} style={{ marginTop: spacing.sm }}>
             <View style={s.rowBetween}>
-              <Animated.View style={{ height: 13, width: '42%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-              <Animated.View style={{ height: 13, width: '18%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+              <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
+              {sh(14, 52)}
             </View>
-            <Animated.View style={{ height: 5, width: '100%', borderRadius: 3, backgroundColor: c.surfaceTertiary, opacity: shimmer, marginTop: 8 }} />
+            {sh(5, '100%')}
           </View>
         ))}
-        {/* Switch rows */}
-        {[0, 1].map((i) => (
-          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
-            <Animated.View style={{ height: 13, width: '52%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ height: 22, width: 42, borderRadius: 11, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        {/* Switch rows with real labels */}
+        {(['French (NCLC 7+)', 'Provincial nomination'] as const).map((label) => (
+          <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
+            <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
+            {sh(22, 42)}
           </View>
         ))}
-        {/* Output badge */}
-        {sh(36)}
+        <View style={[{ borderRadius: borderRadius.md, paddingVertical: spacing.sm, alignItems: 'center', marginTop: spacing.sm }, { backgroundColor: c.surfaceTertiary + '40' }]}>
+          <Text style={[s.caption, { color: c.textMuted }]}>Projected odds: </Text>
+          <View style={{ marginTop: 2 }}>{sh(16, 80)}</View>
+        </View>
       </Card>
 
-      {/* ── BEST STREAM: 4 label/cutoff+margin rows ── */}
+      {/* ── BEST STREAM: real stream names, shimmered cutoff & margin ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
-        {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: i > 0 ? spacing.sm : 0, borderTopWidth: i > 0 ? StyleSheet.hairlineWidth : 0, borderTopColor: c.border }}>
-            <Animated.View style={{ height: 14, width: '42%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ height: 14, width: '38%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        {STREAMS.map((stream, i) => (
+          <View key={stream} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+            <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{stream}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+              <Text style={[s.caption, { color: c.textSecondary }]}>cutoff</Text>
+              {sh(14, 34)}
+              {sh(16, 36)}
+            </View>
           </View>
         ))}
-        {sh(12)}
+        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>Points above (+) or below (−) each stream's live cutoff</Text>
       </Card>
 
-      {/* ── EXPECTED WAIT: 5 score-band/wait rows ── */}
+      {/* ── EXPECTED WAIT: real score bands, shimmered wait times ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: i > 0 ? spacing.sm : 0, borderTopWidth: i > 0 ? StyleSheet.hairlineWidth : 0, borderTopColor: c.border }}>
-            <Animated.View style={{ height: 14, width: i === 2 ? '52%' : '36%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ height: 14, width: '22%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        {SCORE_BANDS.map((band, i) => (
+          <View key={band} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
+            <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
+            {sh(14, 64)}
           </View>
         ))}
       </Card>
 
-      {/* ── VS RECENT CUTOFFS: text + marker progress bar ── */}
+      {/* ── VS RECENT CUTOFFS: user score shown, percentile shimmered ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
-        {sh(18, '75%')}
-        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm }]}>
-          <Animated.View style={{ height: '100%', width: '76%', borderRadius: 4, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, flexWrap: 'wrap' }}>
+          <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {userScore} clears</Text>
+          {sh(20, 44)}
+          <Text style={[s.bodyText, { color: c.textPrimary }]}>% of recent draw cutoffs</Text>
         </View>
-        {sh(12, '45%')}
+        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm }]}>
+          <Animated.View style={{ height: '100%', width: '60%', borderRadius: 4, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        </View>
       </Card>
 
-      {/* ── WHERE YOU STAND: horizontal bars (5 score bands) ── */}
+      {/* ── WHERE YOU STAND: real score labels, shimmered bar widths ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
-        {(['72%', '55%', '40%', '28%', '16%'] as const).map((barW, i) => (
-          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Animated.View style={{ height: 14, width: '22%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
-            <Animated.View style={{ height: 14, width: barW, borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        {SCORE_BANDS.map((band, i) => (
+          <View key={band} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+            <Text style={[{ width: 90, fontSize: typography.xs, color: i === 0 ? accent : c.textSecondary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
+            <Animated.View style={{ flex: 1, height: 14, borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
           </View>
         ))}
       </Card>
 
-      {/* ── DECISION OUTLOOK: 2-cell stat grid ── */}
+      {/* ── DECISION OUTLOOK: stat labels shown, numbers shimmered ── */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK</Text>
-        <View style={[s.statGrid, { marginTop: spacing.xs }]}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · CEC</Text>
+        <View style={[s.statGrid, { marginTop: spacing.sm }]}>
           <View style={[s.statCell, { gap: spacing.xs }]}>
-            {sh(30, '60%')}
-            {sh(11, '75%')}
+            {sh(30, '65%')}
+            <Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text>
           </View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
           <View style={[s.statCell, { gap: spacing.xs }]}>
-            {sh(30, '60%')}
-            {sh(11, '75%')}
+            {sh(30, '65%')}
+            <Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text>
           </View>
         </View>
       </Card>
