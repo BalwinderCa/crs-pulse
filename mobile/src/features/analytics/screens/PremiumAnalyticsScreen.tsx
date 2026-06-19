@@ -555,7 +555,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
 
   const lv = () => (
     <View style={[s.lockVal, { backgroundColor: c.surfaceTertiary }]}>
-      <Ionicons name="lock-closed" size={10} color={c.textMuted} />
+      <Text style={[s.lockValText, { color: c.textMuted }]}>-</Text>
     </View>
   );
 
@@ -786,6 +786,7 @@ const s = StyleSheet.create({
               marginBottom: spacing.xs },
   lockVal: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 5,
              paddingHorizontal: 7, paddingVertical: 3 },
+  lockValText: { fontSize: 12, fontWeight: typography.semibold },
   lockBlock: { borderRadius: borderRadius.md, borderWidth: StyleSheet.hairlineWidth,
                alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
                marginTop: spacing.xs },
