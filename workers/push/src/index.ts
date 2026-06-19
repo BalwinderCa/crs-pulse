@@ -427,9 +427,28 @@ async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
 
   await kv.put(LAST_DRAW_KEY, String(latest.draw_number));
 
+  // Dispatch email FIRST, independent of push tokens — email subscribers must
+  // never be skipped just because no device is push-registered (no-op when
+  // RESEND_API_KEY is unset).
+  if (env) {
+    const rows = [
+      { label: 'Category', value: latest.name || latest.category },
+      { label: 'CRS cutoff', value: String(latest.cutoff) },
+    ];
+    if (latest.date) rows.push({ label: 'Date', value: latest.date });
+    await sendEmailNotifications(kv, env, {
+      subject: `New Express Entry Draw #${latest.draw_number} — CRS ${latest.cutoff}`,
+      kicker: 'EXPRESS ENTRY DRAW',
+      heading: `Draw #${latest.draw_number}`,
+      intro: 'IRCC just published a new round of invitations. Here are the details:',
+      rows,
+      ctaLabel: 'View on CRS Pulse',
+    });
+  }
+
   const tokens = await listTokens(kv);
   if (tokens.length === 0) {
-    return { notified: false, draw_number: latest.draw_number, token_count: 0 };
+    return { notified: true, draw_number: latest.draw_number, token_count: 0 };
   }
 
   const title = `New Express Entry Draw #${latest.draw_number}`;
@@ -448,23 +467,6 @@ async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
   // Park accepted tickets so a later poll can prune devices that fail delivery.
   if (receipts.length > 0) {
     await storeReceipts(kv, receipts);
-  }
-
-  // Also dispatch email notifications (no-op when RESEND_API_KEY is unset).
-  if (env) {
-    const rows = [
-      { label: 'Category', value: latest.name || latest.category },
-      { label: 'CRS cutoff', value: String(latest.cutoff) },
-    ];
-    if (latest.date) rows.push({ label: 'Date', value: latest.date });
-    await sendEmailNotifications(kv, env, {
-      subject: `New Express Entry Draw #${latest.draw_number} — CRS ${latest.cutoff}`,
-      kicker: 'EXPRESS ENTRY DRAW',
-      heading: `Draw #${latest.draw_number}`,
-      intro: 'IRCC just published a new round of invitations. Here are the details:',
-      rows,
-      ctaLabel: 'View on CRS Pulse',
-    });
   }
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
