@@ -62,6 +62,10 @@ interface LatestDraw {
   draw_number: number;
   cutoff: number;
   category: string;
+  /** Full official round name, e.g. "French-Language proficiency 2026-Version 2". */
+  name: string;
+  /** Draw date as published (YYYY-MM-DD), or '' if absent. */
+  date: string;
 }
 
 function mapCategory(name: string): string {
@@ -156,9 +160,14 @@ async function fetchLatestDraw(): Promise<LatestDraw | null> {
   });
   if (!res.ok) return null;
 
-  let r: { drawNumber?: string; drawCRS?: string; drawName?: string };
+  let r: { drawNumber?: string; drawCRS?: string; drawName?: string; drawDate?: string };
   try {
-    r = (await res.json()) as { drawNumber?: string; drawCRS?: string; drawName?: string };
+    r = (await res.json()) as {
+      drawNumber?: string;
+      drawCRS?: string;
+      drawName?: string;
+      drawDate?: string;
+    };
   } catch {
     return null;
   }
@@ -167,7 +176,14 @@ async function fetchLatestDraw(): Promise<LatestDraw | null> {
   const cutoff = parseInt((r.drawCRS ?? '').replace(/,/g, ''), 10);
   if (!num || !cutoff) return null;
 
-  return { draw_number: num, cutoff, category: mapCategory(r.drawName ?? '') };
+  const name = (r.drawName ?? '').trim();
+  return {
+    draw_number: num,
+    cutoff,
+    category: mapCategory(name),
+    name,
+    date: (r.drawDate ?? '').trim(),
+  };
 }
 
 interface ProcessingTimesFeed {
@@ -301,17 +317,75 @@ async function processReceipts(kv: KVNamespace): Promise<void> {
   await Promise.all(resolved.map((r) => deleteReceipt(kv, r.id, r.token)));
 }
 
-async function sendEmailNotifications(
-  kv: KVNamespace,
-  env: Env,
-  subject: string,
-  body: string,
-): Promise<void> {
+const SITE_URL = 'https://crspulse.com';
+const BRAND_ACCENT = '#1A6DFF'; // matches the app's notification accent
+
+interface EmailContent {
+  subject: string;
+  /** Small uppercase kicker above the heading, e.g. "EXPRESS ENTRY DRAW". */
+  kicker: string;
+  heading: string;
+  /** Lead paragraph under the heading. */
+  intro: string;
+  /** Optional label/value detail rows, rendered as a table (used for draws). */
+  rows?: { label: string; value: string }[];
+  /** Call-to-action button label; the button always links to SITE_URL. */
+  ctaLabel: string;
+}
+
+/** Escapes user/feed-derived strings before interpolating into HTML. */
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+const FOOTER_TEXT =
+  "You're receiving this because Email Alerts are on in CRS Pulse — turn them off in the app to unsubscribe. Estimates only; always verify with the official IRCC tools.";
+
+function renderEmailHtml(c: EmailContent): string {
+  const rows = (c.rows ?? [])
+    .map(
+      (r) =>
+        `<tr><td style="padding:7px 0;color:#64748b;font-size:14px;">${esc(r.label)}</td>` +
+        `<td style="padding:7px 0;color:#0f172a;font-size:14px;font-weight:600;text-align:right;">${esc(r.value)}</td></tr>`,
+    )
+    .join('');
+  const table = rows
+    ? `<table role="presentation" width="100%" style="border-collapse:collapse;margin:18px 0;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">${rows}</table>`
+    : '';
+
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+<table role="presentation" width="100%" style="border-collapse:collapse;background:#f1f5f9;padding:24px 0;"><tr><td align="center">
+<table role="presentation" width="100%" style="max-width:480px;border-collapse:collapse;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+<tr><td style="background:${BRAND_ACCENT};padding:18px 24px;"><span style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:-0.3px;">CRS Pulse</span></td></tr>
+<tr><td style="padding:24px;">
+<div style="color:${BRAND_ACCENT};font-size:12px;font-weight:700;letter-spacing:0.8px;">${esc(c.kicker)}</div>
+<h1 style="margin:6px 0 10px;color:#0f172a;font-size:20px;font-weight:800;">${esc(c.heading)}</h1>
+<p style="margin:0;color:#475569;font-size:15px;line-height:22px;">${esc(c.intro)}</p>
+${table}
+<a href="${SITE_URL}" style="display:inline-block;margin-top:8px;background:${BRAND_ACCENT};color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:12px 22px;border-radius:8px;">${esc(c.ctaLabel)} &rarr;</a>
+</td></tr>
+<tr><td style="padding:16px 24px;border-top:1px solid #e2e8f0;"><p style="margin:0;color:#94a3b8;font-size:12px;line-height:18px;">${FOOTER_TEXT}</p></td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function renderEmailText(c: EmailContent): string {
+  const lines = [c.heading, '', c.intro];
+  for (const r of c.rows ?? []) lines.push(`${r.label}: ${r.value}`);
+  lines.push('', `${c.ctaLabel}: ${SITE_URL}`, '', FOOTER_TEXT);
+  return lines.join('\n');
+}
+
+async function sendEmailNotifications(kv: KVNamespace, env: Env, content: EmailContent): Promise<void> {
   if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return;
   const emails = await listEmails(kv);
   if (emails.length === 0) return;
 
-  const html = `<p>${body}</p><p style="font-size:12px;color:#888">To unsubscribe, turn off Email Alerts in the CRS Pulse app.</p>`;
+  const html = renderEmailHtml(content);
+  const text = renderEmailText(content); // plain-text fallback aids deliverability
 
   await Promise.allSettled(
     emails.map((to) =>
@@ -321,7 +395,7 @@ async function sendEmailNotifications(
           Authorization: `Bearer ${env.RESEND_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ from: env.EMAIL_FROM, to: [to], subject, html }),
+        body: JSON.stringify({ from: env.EMAIL_FROM, to: [to], subject: content.subject, html, text }),
       }),
     ),
   );
@@ -377,7 +451,21 @@ async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
   }
 
   // Also dispatch email notifications (no-op when RESEND_API_KEY is unset).
-  if (env) await sendEmailNotifications(kv, env, title, body);
+  if (env) {
+    const rows = [
+      { label: 'Category', value: latest.name || latest.category },
+      { label: 'CRS cutoff', value: String(latest.cutoff) },
+    ];
+    if (latest.date) rows.push({ label: 'Date', value: latest.date });
+    await sendEmailNotifications(kv, env, {
+      subject: `New Express Entry Draw #${latest.draw_number} — CRS ${latest.cutoff}`,
+      kicker: 'EXPRESS ENTRY DRAW',
+      heading: `Draw #${latest.draw_number}`,
+      intro: 'IRCC just published a new round of invitations. Here are the details:',
+      rows,
+      ctaLabel: 'View on CRS Pulse',
+    });
+  }
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
 }
@@ -413,12 +501,14 @@ async function checkProcessingTimes(kv: KVNamespace, env: Env): Promise<{ change
 
   const emails = await listEmails(kv);
   if (emails.length > 0) {
-    await sendEmailNotifications(
-      kv,
-      env,
-      'IRCC processing times updated',
-      'IRCC has updated its Express Entry processing-time estimates. Open CRS Pulse to see the latest timelines for your application.',
-    );
+    await sendEmailNotifications(kv, env, {
+      subject: 'IRCC processing times updated',
+      kicker: 'PROCESSING TIMES',
+      heading: 'Processing times updated',
+      intro:
+        'IRCC has updated its Express Entry processing-time estimates. Open CRS Pulse to see the latest timelines for your application.',
+      ctaLabel: 'See the latest times',
+    });
   }
   return { changed: true };
 }
