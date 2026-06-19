@@ -124,6 +124,34 @@ export async function unregisterPushNotifications(): Promise<void> {
   }
 }
 
+export async function registerEmailNotification(email: string): Promise<void> {
+  const pushUrl = getPushUrl();
+  if (!pushUrl) return;
+  try {
+    await fetch(`${pushUrl}/register-email`, {
+      method: 'POST',
+      headers: buildPushHeaders(),
+      body: JSON.stringify({ email }),
+    });
+  } catch (err) {
+    if (__DEV__) console.warn('Email register failed:', err);
+  }
+}
+
+export async function unregisterEmailNotification(email: string): Promise<void> {
+  const pushUrl = getPushUrl();
+  if (!pushUrl) return;
+  try {
+    await fetch(`${pushUrl}/revoke-email`, {
+      method: 'DELETE',
+      headers: buildPushHeaders(),
+      body: JSON.stringify({ email }),
+    });
+  } catch (err) {
+    if (__DEV__) console.warn('Email unregister failed:', err);
+  }
+}
+
 export function setupPushListeners(onNewDraw: () => void): () => void {
   const foregroundSub = Notifications.addNotificationReceivedListener((notification) => {
     const type = notification.request.content.data?.type;

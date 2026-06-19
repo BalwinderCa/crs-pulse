@@ -576,12 +576,12 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
         <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
           <Ionicons name="analytics-outline" size={24} color={accent} />
         </View>
-        <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock Your Plan</Text>
+        <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock Premium</Text>
         <Text style={[s.lockBody, { color: c.textSecondary }]}>
           Personalised predictions, improvement paths, what-if scenarios and decision outlook — one-time purchase.
         </Text>
         <Button
-          title="Unlock Analytics"
+          title="Unlock Premium"
           fullWidth
           icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
           onPress={() => nav.navigate('Paywall')}

@@ -79,6 +79,8 @@ export type LocalProfile = {
   language: AppLanguage;
   notifications_enabled: boolean;
   weekly_summary_enabled: boolean;
+  email_notifications_enabled: boolean;
+  notification_email: string;
   calculatorInputs: CalcInputs;
 };
 
@@ -90,6 +92,8 @@ export const DEFAULT_PROFILE: LocalProfile = {
   language: 'en',
   notifications_enabled: true,
   weekly_summary_enabled: true,
+  email_notifications_enabled: false,
+  notification_email: '',
   calculatorInputs: DEFAULT_CALC_INPUTS,
 };
 

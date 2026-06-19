@@ -15,6 +15,7 @@ export const TOKEN_PREFIX = 'token:';
 export const LEGACY_TOKENS_KEY = 'tokens';
 export const REVOKED_PREFIX = 'revoked:';
 export const RECEIPT_PREFIX = 'receipt:';
+export const EMAIL_PREFIX = 'email:';
 
 /**
  * How long a pending push receipt is kept before it's given up on. Expo retains
@@ -149,6 +150,32 @@ export async function deleteReceipt(kv: KVNamespace, id: string, token?: string)
     token ? kv.delete(`${RECEIPT_PREFIX}${id}:${token}`) : Promise.resolve(),
     kv.delete(RECEIPT_PREFIX + id),
   ]);
+}
+
+// ─── Email registry ──────────────────────────────────────────────────────────
+
+/** Stores an email address for draw notifications. Idempotent. */
+export async function registerEmail(kv: KVNamespace, email: string): Promise<void> {
+  await kv.put(EMAIL_PREFIX + email.toLowerCase(), '1');
+}
+
+/** Removes an email address from the registry. */
+export async function revokeEmail(kv: KVNamespace, email: string): Promise<void> {
+  await kv.delete(EMAIL_PREFIX + email.toLowerCase());
+}
+
+/** Lists every registered email address. */
+export async function listEmails(kv: KVNamespace): Promise<string[]> {
+  const emails: string[] = [];
+  let cursor: string | undefined;
+  do {
+    const res = await kv.list({ prefix: EMAIL_PREFIX, cursor });
+    for (const key of res.keys) {
+      emails.push(key.name.slice(EMAIL_PREFIX.length));
+    }
+    cursor = res.list_complete ? undefined : res.cursor;
+  } while (cursor);
+  return emails;
 }
 
 /**

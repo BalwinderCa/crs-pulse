@@ -18,10 +18,9 @@ import type { RootStackParamList } from '@/types';
 type Benefit = { icon: keyof typeof Ionicons.glyphMap; titleKey: string; bodyKey: string };
 
 const BENEFITS: Benefit[] = [
-  { icon: 'flag-outline',      titleKey: 'paywall.benefit0Title', bodyKey: 'paywall.benefit0Body' },
-  { icon: 'options-outline',   titleKey: 'paywall.benefit1Title', bodyKey: 'paywall.benefit1Body' },
-  { icon: 'trending-up-outline', titleKey: 'paywall.benefit2Title', bodyKey: 'paywall.benefit2Body' },
-  { icon: 'podium-outline',    titleKey: 'paywall.benefit3Title', bodyKey: 'paywall.benefit3Body' },
+  { icon: 'analytics-outline', titleKey: 'paywall.benefit0Title', bodyKey: 'paywall.benefit0Body' },
+  { icon: 'mail-outline',      titleKey: 'paywall.benefit1Title', bodyKey: 'paywall.benefit1Body' },
+  { icon: 'eye-off-outline',   titleKey: 'paywall.benefit2Title', bodyKey: 'paywall.benefit2Body' },
 ];
 
 export default function PaywallScreen() {

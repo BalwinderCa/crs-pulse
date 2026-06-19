@@ -8,6 +8,9 @@ import {
   storeReceipts,
   listReceipts,
   deleteReceipt,
+  registerEmail,
+  revokeEmail,
+  listEmails,
 } from './tokenStore';
 import { validateTokenWithExpo } from './expoValidate';
 import { fetchExpoReceipts } from './expoReceipts';
@@ -44,6 +47,10 @@ export interface Env {
   PUSH_API_SECRET?: string;
   /** Protects POST /sync. Set via `wrangler secret put SYNC_SECRET`. */
   SYNC_SECRET?: string;
+  /** Resend API key for email draw notifications. Optional — email dispatch is skipped when unset. */
+  RESEND_API_KEY?: string;
+  /** From address for email notifications, e.g. "CRS Pulse <alerts@yourdomain.com>". */
+  EMAIL_FROM?: string;
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -259,7 +266,33 @@ async function processReceipts(kv: KVNamespace): Promise<void> {
   await Promise.all(resolved.map((r) => deleteReceipt(kv, r.id, r.token)));
 }
 
-async function checkAndNotify(kv: KVNamespace): Promise<{
+async function sendEmailNotifications(
+  kv: KVNamespace,
+  env: Env,
+  subject: string,
+  body: string,
+): Promise<void> {
+  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return;
+  const emails = await listEmails(kv);
+  if (emails.length === 0) return;
+
+  const html = `<p>${body}</p><p style="font-size:12px;color:#888">To unsubscribe, turn off Email Draw Alerts in the CRS Pulse app.</p>`;
+
+  await Promise.allSettled(
+    emails.map((to) =>
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ from: env.EMAIL_FROM, to: [to], subject, html }),
+      }),
+    ),
+  );
+}
+
+async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
   notified: boolean;
   draw_number?: number;
   token_count?: number;
@@ -307,6 +340,9 @@ async function checkAndNotify(kv: KVNamespace): Promise<{
   if (receipts.length > 0) {
     await storeReceipts(kv, receipts);
   }
+
+  // Also dispatch email notifications (no-op when RESEND_API_KEY is unset).
+  if (env) await sendEmailNotifications(kv, env, title, body);
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
 }
@@ -399,6 +435,44 @@ export default {
       return json({ message: 'Push token revoked.' });
     }
 
+    if (url.pathname === '/register-email' && request.method === 'POST') {
+      if (!env.PUSH_API_SECRET) return json({ message: 'Service unavailable' }, 503);
+      if (!isAuthorized(request, env.PUSH_API_SECRET)) return json({ message: 'Unauthorized' }, 401);
+      if (await isRateLimited(env.TOKENS_KV, request, 'register-email')) {
+        return json({ message: 'Too many requests' }, 429);
+      }
+
+      let body: { email?: string };
+      try { body = (await request.json()) as { email?: string }; }
+      catch { return json({ message: 'Invalid JSON body' }, 400); }
+
+      const email = (body.email ?? '').trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) {
+        return json({ message: 'Invalid email address' }, 422);
+      }
+
+      await registerEmail(env.TOKENS_KV, email);
+      return json({ message: 'Email registered.' });
+    }
+
+    if (url.pathname === '/revoke-email' && request.method === 'DELETE') {
+      if (!env.PUSH_API_SECRET) return json({ message: 'Service unavailable' }, 503);
+      if (!isAuthorized(request, env.PUSH_API_SECRET)) return json({ message: 'Unauthorized' }, 401);
+      if (await isRateLimited(env.TOKENS_KV, request, 'revoke-email')) {
+        return json({ message: 'Too many requests' }, 429);
+      }
+
+      let body: { email?: string };
+      try { body = (await request.json()) as { email?: string }; }
+      catch { return json({ message: 'Invalid JSON body' }, 400); }
+
+      const email = (body.email ?? '').trim().toLowerCase();
+      if (!email) return json({ message: 'email is required' }, 422);
+
+      await revokeEmail(env.TOKENS_KV, email);
+      return json({ message: 'Email revoked.' });
+    }
+
     if (url.pathname === '/sync' && request.method === 'POST') {
       if (!env.SYNC_SECRET) {
         return json({ message: 'SYNC_SECRET not configured' }, 503);
@@ -408,7 +482,7 @@ export default {
       }
       // Resolve any outstanding delivery receipts, then check for a new draw.
       await processReceipts(env.TOKENS_KV);
-      const result = await checkAndNotify(env.TOKENS_KV);
+      const result = await checkAndNotify(env.TOKENS_KV, env);
       return json(result);
     }
 
@@ -418,6 +492,6 @@ export default {
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     // Prune devices that failed delivery on the previous draw, then notify.
     await processReceipts(env.TOKENS_KV);
-    await checkAndNotify(env.TOKENS_KV);
+    await checkAndNotify(env.TOKENS_KV, env);
   },
 };
