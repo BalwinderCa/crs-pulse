@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -552,42 +552,27 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
 // ─── Your Plan skeleton (locked preview with shimmer + unlock CTA) ────────────
 function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; userScore: number }) {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const shimmer = useRef(new Animated.Value(0.35)).current;
 
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(shimmer, { toValue: 0.9, duration: 950, useNativeDriver: true }),
-        Animated.timing(shimmer, { toValue: 0.35, duration: 950, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [shimmer]);
-
-  // Shimmer block — numbers/values only
-  const sh = (h: number, w: number | `${number}%` = '100%') => (
-    <Animated.View style={{ height: h, width: w, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+  const lv = () => (
+    <View style={[s.lockVal, { backgroundColor: c.surfaceTertiary }]}>
+      <Ionicons name="lock-closed" size={9} color={c.textMuted} />
+      <Text style={[s.lockValText, { color: c.textMuted }]}>{'\u2014\u2014'}</Text>
+    </View>
   );
 
-  const IMPROVE_PATHS = [
-    'Improve language score (CLB)',
-    'Learn French (NCLC 7+)',
-    'Get provincial nomination',
-  ];
+  const lb = (h: number) => (
+    <View style={[s.lockBlock, { height: h, borderColor: c.border }]}>
+      <Ionicons name="lock-closed" size={20} color={c.textMuted} />
+      <Text style={[s.caption, { color: c.textMuted }]}>Unlock to view</Text>
+    </View>
+  );
 
-  const STREAMS = [
-    'Canadian Experience Class',
-    'French Language',
-    'Provincial Nominee',
-    'RNIP / Agri-Food',
-  ];
-
-  const SCORE_BANDS = ['530–559  ← you', '500–529', '470–499', '440–469', '< 440'];
+  const IMPROVE_PATHS = ['Improve language score (CLB)', 'Learn French (NCLC 7+)', 'Get provincial nomination'];
+  const STREAMS       = ['Canadian Experience Class', 'French Language', 'Provincial Nominee', 'RNIP / Agri-Food'];
+  const SCORE_BANDS   = ['530\u2013559  \u2190 you', '500\u2013529', '470\u2013499', '440\u2013469', '< 440'];
 
   return (
     <>
-      {/* ── Unlock CTA ── */}
       <Card style={[s.card, { borderWidth: 1, borderColor: accent }]}>
         <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
           <Ionicons name="analytics-outline" size={24} color={accent} />
@@ -605,31 +590,27 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
         />
       </Card>
 
-      {/* ── NEXT DRAW: label + shimmered date & badge ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
         <View style={[s.rowBetween, { marginTop: spacing.sm }]}>
-          <View style={{ gap: 4 }}>
+          <View style={{ gap: 5 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>Expected window</Text>
-            {sh(28, 130)}
+            {lv()}
           </View>
-          <View style={{ alignItems: 'flex-end', gap: 4 }}>
+          <View style={{ alignItems: 'flex-end', gap: 5 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>Likelihood</Text>
-            {sh(26, 80)}
+            {lv()}
           </View>
         </View>
-        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>
-          Based on draw cadence · avg gap and size included
-        </Text>
+        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>Based on draw cadence · avg gap and size included</Text>
       </Card>
 
-      {/* ── HOW TO IMPROVE: real strategy labels, shimmered point gains ── */}
       <Card style={s.card}>
         <View style={[s.rowBetween, { marginBottom: spacing.xs }]}>
           <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>You need</Text>
-            {sh(16, 44)}
+            {lv()}
             <Text style={[s.caption, { color: c.textSecondary }]}>pts</Text>
           </View>
         </View>
@@ -637,62 +618,59 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
           <View key={label} style={[s.gapRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
             <Text style={[s.gapLabel, { color: c.textPrimary }]}>{label}</Text>
-            {sh(18, 52)}
+            {lv()}
           </View>
         ))}
       </Card>
 
-      {/* ── FORECAST: chart shimmer + descriptive caption ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT DRAW</Text>
-        <View style={{ marginTop: spacing.xs }}>
-          {sh(110)}
-        </View>
+        {lb(110)}
         <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>Likely cutoff</Text>
-            {sh(14, 44)}
+            {lv()}
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>confidence</Text>
-            {sh(14, 52)}
+            {lv()}
           </View>
         </View>
       </Card>
 
-      {/* ── WHAT IF: real control labels, shimmered values & tracks ── */}
       <Card style={s.card}>
         <View style={s.rowBetween}>
           <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>CRS</Text>
-            {sh(22, 44)}
+            {lv()}
           </View>
         </View>
-        {/* Slider rows with real labels */}
         {(['Age', 'Language (CLB)'] as const).map((label) => (
           <View key={label} style={{ marginTop: spacing.sm }}>
             <View style={s.rowBetween}>
               <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
-              {sh(14, 52)}
+              {lv()}
             </View>
-            {sh(5, '100%')}
+            <View style={{ height: 5, backgroundColor: c.surfaceTertiary, borderRadius: 3, marginTop: 8 }} />
           </View>
         ))}
-        {/* Switch rows with real labels */}
         {(['French (NCLC 7+)', 'Provincial nomination'] as const).map((label) => (
           <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
             <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
-            {sh(22, 42)}
+            <View style={[s.lockSwitch, { backgroundColor: c.surfaceTertiary }]}>
+              <Ionicons name="lock-closed" size={10} color={c.textMuted} />
+            </View>
           </View>
         ))}
-        <View style={[{ borderRadius: borderRadius.md, paddingVertical: spacing.sm, alignItems: 'center', marginTop: spacing.sm }, { backgroundColor: c.surfaceTertiary + '40' }]}>
-          <Text style={[s.caption, { color: c.textMuted }]}>Projected odds: </Text>
-          <View style={{ marginTop: 2 }}>{sh(16, 80)}</View>
+        <View style={[s.whatIfOut, { backgroundColor: c.surfaceTertiary + '50' }]}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Text style={[s.caption, { color: c.textMuted }]}>Projected odds:</Text>
+            {lv()}
+          </View>
         </View>
       </Card>
 
-      {/* ── BEST STREAM: real stream names, shimmered cutoff & margin ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
         {STREAMS.map((stream, i) => (
@@ -700,60 +678,55 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
             <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{stream}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
               <Text style={[s.caption, { color: c.textSecondary }]}>cutoff</Text>
-              {sh(14, 34)}
-              {sh(16, 36)}
+              {lv()}{lv()}
             </View>
           </View>
         ))}
         <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>Points above (+) or below (−) each stream's live cutoff</Text>
       </Card>
 
-      {/* ── EXPECTED WAIT: real score bands, shimmered wait times ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
         {SCORE_BANDS.map((band, i) => (
           <View key={band} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
-            {sh(14, 64)}
+            {lv()}
           </View>
         ))}
       </Card>
 
-      {/* ── VS RECENT CUTOFFS: user score shown, percentile shimmered ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.sm, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, flexWrap: 'wrap' }}>
           <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {userScore} clears</Text>
-          {sh(20, 44)}
+          {lv()}
           <Text style={[s.bodyText, { color: c.textPrimary }]}>% of recent draw cutoffs</Text>
         </View>
-        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm }]}>
-          <Animated.View style={{ height: '100%', width: '60%', borderRadius: 4, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm, alignItems: 'center', justifyContent: 'center' }]}>
+          <Ionicons name="lock-closed" size={11} color={c.textMuted} />
         </View>
       </Card>
 
-      {/* ── WHERE YOU STAND: real score labels, shimmered bar widths ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
         {SCORE_BANDS.map((band, i) => (
           <View key={band} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Text style={[{ width: 90, fontSize: typography.xs, color: i === 0 ? accent : c.textSecondary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
-            <Animated.View style={{ flex: 1, height: 14, borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Text style={{ width: 92, fontSize: typography.xs, color: i === 0 ? accent : c.textSecondary, fontWeight: i === 0 ? typography.bold : typography.medium }}>{band}</Text>
+            {lv()}
           </View>
         ))}
       </Card>
 
-      {/* ── DECISION OUTLOOK: stat labels shown, numbers shimmered ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · CEC</Text>
         <View style={[s.statGrid, { marginTop: spacing.sm }]}>
           <View style={[s.statCell, { gap: spacing.xs }]}>
-            {sh(30, '65%')}
+            {lv()}
             <Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text>
           </View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
           <View style={[s.statCell, { gap: spacing.xs }]}>
-            {sh(30, '65%')}
+            {lv()}
             <Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text>
           </View>
         </View>
@@ -812,6 +785,13 @@ const s = StyleSheet.create({
   lockBtn: { marginTop: spacing.sm },
   skimIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
               marginBottom: spacing.xs },
+  lockVal: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 5,
+             paddingHorizontal: 7, paddingVertical: 3 },
+  lockValText: { fontSize: 12, fontWeight: typography.semibold, letterSpacing: 1 },
+  lockBlock: { borderRadius: borderRadius.md, borderWidth: StyleSheet.hairlineWidth,
+               alignItems: 'center', justifyContent: 'center', gap: spacing.xs,
+               marginTop: spacing.xs },
+  lockSwitch: { height: 22, width: 42, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 
   kicker: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
   opsBig: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, ...TAB },
