@@ -15,3 +15,6 @@ crons = ["*/15 * * * *"]
 # Production secrets (set via wrangler, never commit):
 #   wrangler secret put PUSH_API_SECRET   # protects /register and /revoke
 #   wrangler secret put SYNC_SECRET       # protects POST /sync
+#   wrangler secret put RESEND_API_KEY    # Resend key for email alerts (draws + processing-time changes)
+#   wrangler secret put EMAIL_FROM        # verified sender, e.g. CRS Pulse <alerts@send.crspulse.com>
+# Email dispatch is skipped entirely unless BOTH RESEND_API_KEY and EMAIL_FROM are set.
