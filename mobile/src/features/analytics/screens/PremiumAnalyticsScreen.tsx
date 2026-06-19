@@ -565,12 +565,14 @@ function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
     return () => anim.stop();
   }, [shimmer]);
 
+  // Plain inline helper — not a React component
   const sh = (h: number, w: number | `${number}%` = '100%') => (
     <Animated.View style={{ height: h, width: w, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer, marginTop: spacing.xs }} />
   );
 
   return (
     <>
+      {/* ── Unlock CTA ── */}
       <Card style={[s.card, { borderWidth: 1, borderColor: accent }]}>
         <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
           <Ionicons name="analytics-outline" size={24} color={accent} />
@@ -588,47 +590,125 @@ function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
         />
       </Card>
 
+      {/* ── NEXT DRAW: date range + likely badge + caption row ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
-        {sh(28, '55%')}
-        {sh(14)}
+        <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
+          {sh(30, '48%')}
+          {sh(26, '28%')}
+        </View>
+        {sh(12)}
       </Card>
 
+      {/* ── HOW TO IMPROVE: badge header + 3 icon/label/delta rows ── */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
-        {sh(14)}{sh(14)}{sh(14)}
+        <View style={s.rowBetween}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
+          {sh(16, '24%')}
+        </View>
+        {[0, 1, 2].map((i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+            <Animated.View style={{ height: 16, width: 16, borderRadius: 8, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ flex: 1, height: 14, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ height: 14, width: 42, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+          </View>
+        ))}
       </Card>
 
+      {/* ── FORECAST: band chart + "Likely X · confidence Y" caption ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT DRAW</Text>
-        {sh(100)}
-        {sh(14, '45%')}
+        {sh(110)}
+        <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
+          {sh(12, '38%')}
+          {sh(12, '30%')}
+        </View>
       </Card>
 
+      {/* ── WHAT IF: score header, 2 slider rows, 2 switch rows, output pill ── */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
-        {sh(14)}{sh(14)}{sh(14)}{sh(14)}
+        <View style={s.rowBetween}>
+          <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
+          {sh(24, '22%')}
+        </View>
+        {/* Slider rows */}
+        {[0, 1].map((i) => (
+          <View key={i} style={{ marginTop: spacing.sm }}>
+            <View style={s.rowBetween}>
+              <Animated.View style={{ height: 13, width: '42%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+              <Animated.View style={{ height: 13, width: '18%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            </View>
+            <Animated.View style={{ height: 5, width: '100%', borderRadius: 3, backgroundColor: c.surfaceTertiary, opacity: shimmer, marginTop: 8 }} />
+          </View>
+        ))}
+        {/* Switch rows */}
+        {[0, 1].map((i) => (
+          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
+            <Animated.View style={{ height: 13, width: '52%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ height: 22, width: 42, borderRadius: 11, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+          </View>
+        ))}
+        {/* Output badge */}
+        {sh(36)}
       </Card>
 
+      {/* ── BEST STREAM: 4 label/cutoff+margin rows ── */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU</Text>
-        {sh(16)}{sh(16)}{sh(16)}{sh(16)}
+        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
+        {[0, 1, 2, 3].map((i) => (
+          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: i > 0 ? spacing.sm : 0, borderTopWidth: i > 0 ? StyleSheet.hairlineWidth : 0, borderTopColor: c.border }}>
+            <Animated.View style={{ height: 14, width: '42%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ height: 14, width: '38%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+          </View>
+        ))}
+        {sh(12)}
       </Card>
 
+      {/* ── EXPECTED WAIT: 5 score-band/wait rows ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
-        {sh(16)}{sh(16)}{sh(16)}{sh(16)}
+        {[0, 1, 2, 3, 4].map((i) => (
+          <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: i > 0 ? spacing.sm : 0, borderTopWidth: i > 0 ? StyleSheet.hairlineWidth : 0, borderTopColor: c.border }}>
+            <Animated.View style={{ height: 14, width: i === 2 ? '52%' : '36%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ height: 14, width: '22%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+          </View>
+        ))}
       </Card>
 
+      {/* ── VS RECENT CUTOFFS: text + marker progress bar ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
-        {sh(18)}{sh(12)}
+        {sh(18, '75%')}
+        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm }]}>
+          <Animated.View style={{ height: '100%', width: '76%', borderRadius: 4, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+        </View>
+        {sh(12, '45%')}
       </Card>
 
+      {/* ── WHERE YOU STAND: horizontal bars (5 score bands) ── */}
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
+        {(['72%', '55%', '40%', '28%', '16%'] as const).map((barW, i) => (
+          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
+            <Animated.View style={{ height: 14, width: '22%', borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+            <Animated.View style={{ height: 14, width: barW, borderRadius: 5, backgroundColor: c.surfaceTertiary, opacity: shimmer }} />
+          </View>
+        ))}
+      </Card>
+
+      {/* ── DECISION OUTLOOK: 2-cell stat grid ── */}
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK</Text>
-        <View style={[s.statGrid, { gap: spacing.sm }]}>
-          {sh(40, '46%')}{sh(40, '46%')}
+        <View style={[s.statGrid, { marginTop: spacing.xs }]}>
+          <View style={[s.statCell, { gap: spacing.xs }]}>
+            {sh(30, '60%')}
+            {sh(11, '75%')}
+          </View>
+          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
+          <View style={[s.statCell, { gap: spacing.xs }]}>
+            {sh(30, '60%')}
+            {sh(11, '75%')}
+          </View>
         </View>
       </Card>
     </>
