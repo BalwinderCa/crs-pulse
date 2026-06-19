@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -13,6 +13,7 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import type { Colors } from '@/theme/colors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { OddsGauge, ForecastBandChart, MiniBars, MarkerBar, HorizontalBars, TrendLineChart } from '../components/PremiumCharts';
@@ -53,9 +54,7 @@ export default function PremiumAnalyticsScreen() {
   // required for any analytics (everything is personalised to it).
   const planLocked = premiumLoaded && !isPremium && billingAvailable;
   const noProfile = data.userScore === 0;
-  // When locked, the "Your Plan" tab opens the paywall directly (see the tab
-  // onPress), so the plan only renders as active content once actually unlocked.
-  const showPlan = tab === 'plan' && !planLocked;
+  const showPlan = tab === 'plan';
 
   // After a successful purchase/restore this session, reveal the plan the user
   // just unlocked (the Paywall closes itself once the entitlement is granted).
@@ -186,11 +185,7 @@ export default function PremiumAnalyticsScreen() {
               <TouchableOpacity
                 key={t.key}
                 style={[s.segBtn, active && { backgroundColor: accent }]}
-                onPress={() => {
-                  // Locked → straight to the full paywall, skipping the inline upsell.
-                  if (t.key === 'plan' && planLocked) { nav.navigate('Paywall'); return; }
-                  setTab(t.key);
-                }}
+                onPress={() => setTab(t.key)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: active }}
               >
@@ -204,13 +199,17 @@ export default function PremiumAnalyticsScreen() {
         </View>
 
         {showPlan ? (
-          <PlanTab
-            c={c} accent={accent} data={data}
-            chartWidth={chartWidth}
-            age={age} setAge={setAge} clb={clb} setClb={setClb}
-            french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
-            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
-          />
+          planLocked ? (
+            <PlanTabSkeleton c={c} accent={accent} />
+          ) : (
+            <PlanTab
+              c={c} accent={accent} data={data}
+              chartWidth={chartWidth}
+              age={age} setAge={setAge} clb={clb} setClb={setClb}
+              french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
+              whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
+            />
+          )
         ) : (
           <DrawsTab c={c} accent={accent} data={data} chartWidth={chartWidth} />
         )}
@@ -550,6 +549,92 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
   );
 }
 
+// ─── Your Plan skeleton (locked preview with shimmer + unlock CTA) ────────────
+function PlanTabSkeleton({ c, accent }: { c: Colors; accent: string }) {
+  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const shimmer = useRef(new Animated.Value(0.35)).current;
+
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(shimmer, { toValue: 0.85, duration: 950, useNativeDriver: true }),
+        Animated.timing(shimmer, { toValue: 0.35, duration: 950, useNativeDriver: true }),
+      ]),
+    );
+    anim.start();
+    return () => anim.stop();
+  }, [shimmer]);
+
+  const sh = (h: number, w: number | `${number}%` = '100%') => (
+    <Animated.View style={{ height: h, width: w, borderRadius: 6, backgroundColor: c.surfaceTertiary, opacity: shimmer, marginTop: spacing.xs }} />
+  );
+
+  return (
+    <>
+      <Card style={[s.card, { borderWidth: 1, borderColor: accent }]}>
+        <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
+          <Ionicons name="analytics-outline" size={24} color={accent} />
+        </View>
+        <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock Your Plan</Text>
+        <Text style={[s.lockBody, { color: c.textSecondary }]}>
+          Personalised predictions, improvement paths, what-if scenarios and decision outlook — one-time purchase.
+        </Text>
+        <Button
+          title="Unlock Analytics"
+          fullWidth
+          icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
+          onPress={() => nav.navigate('Paywall')}
+          style={{ marginTop: spacing.xs }}
+        />
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
+        {sh(28, '55%')}
+        {sh(14)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
+        {sh(14)}{sh(14)}{sh(14)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT DRAW</Text>
+        {sh(100)}
+        {sh(14, '45%')}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
+        {sh(14)}{sh(14)}{sh(14)}{sh(14)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU</Text>
+        {sh(16)}{sh(16)}{sh(16)}{sh(16)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
+        {sh(16)}{sh(16)}{sh(16)}{sh(16)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
+        {sh(18)}{sh(12)}
+      </Card>
+
+      <Card style={s.card}>
+        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK</Text>
+        <View style={[s.statGrid, { gap: spacing.sm }]}>
+          {sh(40, '46%')}{sh(40, '46%')}
+        </View>
+      </Card>
+    </>
+  );
+}
+
 function SliderRow({ c, accent, label, value, min, max, step, onChange, display }: any) {
   return (
     <View style={s.sliderRow}>
@@ -595,9 +680,11 @@ const s = StyleSheet.create({
               padding: spacing.lg },
   lockIcon: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center',
               marginBottom: spacing.xs },
-  lockTitle: { fontSize: typography.lg, fontWeight: typography.black, letterSpacing: -0.3, textAlign: 'center' },
-  lockBody: { fontSize: typography.sm, lineHeight: 20, textAlign: 'center' },
+  lockTitle: { fontSize: typography.lg, fontWeight: typography.black, letterSpacing: -0.3 },
+  lockBody: { fontSize: typography.sm, lineHeight: 20 },
   lockBtn: { marginTop: spacing.sm },
+  skimIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center',
+              marginBottom: spacing.xs },
 
   kicker: { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
   opsBig: { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.5, ...TAB },
