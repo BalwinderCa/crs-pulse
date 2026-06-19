@@ -76,6 +76,20 @@ module.exports = () => ({
     // Google Play Billing (one-time analytics unlock). The plugin adds the
     // com.android.vending.BILLING permission and the native billing client.
     ['react-native-iap', { paymentProvider: 'Play Store' }],
+    // Google AdMob banner ads (shown to free users only; Premium removes them).
+    // The IDs below are Google's PUBLIC TEST app IDs — replace with your real
+    // AdMob app IDs (env GOOGLE_ADMOB_ANDROID_APP_ID / _IOS_APP_ID) before
+    // shipping, or the build serves only test ads. Changing these requires a
+    // native rebuild.
+    [
+      'react-native-google-mobile-ads',
+      {
+        androidAppId:
+          process.env.GOOGLE_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713',
+        iosAppId:
+          process.env.GOOGLE_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511',
+      },
+    ],
     [
       'expo-build-properties',
       {

@@ -87,3 +87,19 @@ export const IAP_PRODUCTS = {
 } as const;
 
 export const IAP_SKUS: string[] = [IAP_PRODUCTS.ANALYTICS_UNLOCK];
+
+/**
+ * AdMob banner ad-unit IDs (shown to free users; Premium removes ads).
+ *
+ * Defaults are Google's PUBLIC TEST ad units, which always fill in dev/preview.
+ * Set the EXPO_PUBLIC_ADMOB_BANNER_* env vars to your real ad-unit IDs for
+ * production. In __DEV__ the AdBanner component always forces the test unit
+ * regardless of these values, so debug builds never request live ads.
+ */
+const TEST_BANNER_ANDROID = 'ca-app-pub-3940256099942544/9214589741';
+const TEST_BANNER_IOS = 'ca-app-pub-3940256099942544/2435281174';
+
+export const ADMOB_BANNER_AD_UNIT = {
+  android: process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID || TEST_BANNER_ANDROID,
+  ios: process.env.EXPO_PUBLIC_ADMOB_BANNER_IOS || TEST_BANNER_IOS,
+} as const;

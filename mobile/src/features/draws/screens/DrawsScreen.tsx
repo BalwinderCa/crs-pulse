@@ -6,6 +6,7 @@ import { DrawCard } from '../components/DrawCard';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ErrorState } from '@/components/common/ErrorState';
 import { EmptyState } from '@/components/common/EmptyState';
+import { AdBanner } from '@/components/common/AdBanner';
 import { useDraws } from '../hooks/useDraws';
 import { DRAW_FILTERS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -105,7 +106,12 @@ export default function DrawsScreen() {
         <FlatList
           data={draws}
           keyExtractor={(item) => String(item.draw_number)}
-          renderItem={({ item }) => <DrawCard draw={item} />}
+          renderItem={({ item, index }) => (
+            <>
+              <DrawCard draw={item} />
+              {(index + 1) % 5 === 0 && <AdBanner />}
+            </>
+          )}
           contentContainerStyle={listContentStyle}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}

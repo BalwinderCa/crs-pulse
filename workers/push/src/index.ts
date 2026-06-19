@@ -20,8 +20,11 @@ import { fetchExpoReceipts } from './expoReceipts';
 // rather than polling IRCC directly. See .github/workflows/ircc-mirror.yml.
 const DRAW_MIRROR_URL =
   'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/latest-draw.json';
+const PROCESSING_TIMES_MIRROR_URL =
+  'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/processing-times.json';
 const EXPO_PUSH_URL = 'https://exp.host/--/api/v2/push/send';
 const LAST_DRAW_KEY = 'last_draw_number';
+const PROCESSING_TIMES_KEY = 'processing_times_months';
 
 const CATEGORY_MAP: Record<string, string> = {
   'No Program Specified': 'General',
@@ -167,6 +170,38 @@ async function fetchLatestDraw(): Promise<LatestDraw | null> {
   return { draw_number: num, cutoff, category: mapCategory(r.drawName ?? '') };
 }
 
+interface ProcessingTimesFeed {
+  times?: Record<string, { months?: number }>;
+}
+
+/**
+ * Fetches the processing-times mirror and reduces it to a stable id→months map.
+ * `peopleWaiting` is deliberately dropped — it drifts on every refresh and would
+ * make each poll look like a change. Returns null on any fetch/parse failure or
+ * an empty/unexpected payload, so callers treat it as "no signal".
+ */
+async function fetchProcessingTimesMonths(): Promise<Record<string, number> | null> {
+  const res = await fetch(PROCESSING_TIMES_MIRROR_URL, {
+    headers: { Accept: 'application/json' },
+    cf: { cacheTtl: 60, cacheEverything: true },
+  });
+  if (!res.ok) return null;
+
+  let feed: ProcessingTimesFeed;
+  try {
+    feed = (await res.json()) as ProcessingTimesFeed;
+  } catch {
+    return null;
+  }
+  if (!feed.times || typeof feed.times !== 'object') return null;
+
+  const months: Record<string, number> = {};
+  for (const [id, value] of Object.entries(feed.times)) {
+    if (value && typeof value.months === 'number') months[id] = value.months;
+  }
+  return Object.keys(months).length > 0 ? months : null;
+}
+
 interface ExpoTicket {
   status: 'ok' | 'error';
   id?: string;
@@ -276,7 +311,7 @@ async function sendEmailNotifications(
   const emails = await listEmails(kv);
   if (emails.length === 0) return;
 
-  const html = `<p>${body}</p><p style="font-size:12px;color:#888">To unsubscribe, turn off Email Draw Alerts in the CRS Pulse app.</p>`;
+  const html = `<p>${body}</p><p style="font-size:12px;color:#888">To unsubscribe, turn off Email Alerts in the CRS Pulse app.</p>`;
 
   await Promise.allSettled(
     emails.map((to) =>
@@ -345,6 +380,47 @@ async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
   if (env) await sendEmailNotifications(kv, env, title, body);
 
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
+}
+
+/**
+ * Emails subscribers when IRCC's Express Entry processing-time estimates change.
+ *
+ * Email-only by design: there is no free push channel for processing times (the
+ * free push notification is draw-only), so this no-ops entirely when email
+ * dispatch isn't configured. It compares a key-sorted snapshot of id→months
+ * against the KV baseline; the first run records the baseline silently so
+ * existing subscribers aren't alerted on rollout.
+ */
+async function checkProcessingTimes(kv: KVNamespace, env: Env): Promise<{ changed: boolean }> {
+  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return { changed: false };
+
+  const current = await fetchProcessingTimesMonths();
+  if (!current) return { changed: false };
+
+  // An array replacer both whitelists and orders the keys, so the signature is
+  // deterministic regardless of the order the mirror serialises them in.
+  const signature = JSON.stringify(current, Object.keys(current).sort());
+  const previous = await kv.get(PROCESSING_TIMES_KEY);
+
+  // First run: record the baseline without alerting existing subscribers.
+  if (previous === null) {
+    await kv.put(PROCESSING_TIMES_KEY, signature);
+    return { changed: false };
+  }
+  if (previous === signature) return { changed: false };
+
+  await kv.put(PROCESSING_TIMES_KEY, signature);
+
+  const emails = await listEmails(kv);
+  if (emails.length > 0) {
+    await sendEmailNotifications(
+      kv,
+      env,
+      'IRCC processing times updated',
+      'IRCC has updated its Express Entry processing-time estimates. Open CRS Pulse to see the latest timelines for your application.',
+    );
+  }
+  return { changed: true };
 }
 
 export default {
@@ -480,18 +556,22 @@ export default {
       if (!isAuthorized(request, env.SYNC_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
-      // Resolve any outstanding delivery receipts, then check for a new draw.
+      // Resolve any outstanding delivery receipts, then check for a new draw
+      // and a processing-times change.
       await processReceipts(env.TOKENS_KV);
       const result = await checkAndNotify(env.TOKENS_KV, env);
-      return json(result);
+      const proc = await checkProcessingTimes(env.TOKENS_KV, env);
+      return json({ ...result, processing_times_changed: proc.changed });
     }
 
     return json({ message: 'Not found' }, 404);
   },
 
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
-    // Prune devices that failed delivery on the previous draw, then notify.
+    // Prune devices that failed delivery on the previous draw, then notify on a
+    // new draw and on any IRCC processing-times change (email subscribers only).
     await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV, env);
+    await checkProcessingTimes(env.TOKENS_KV, env);
   },
 };

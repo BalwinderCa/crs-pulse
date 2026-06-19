@@ -730,6 +730,19 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
           </View>
         </View>
       </Card>
+
+      <Card style={[s.card, { borderWidth: 1, borderColor: accent, alignItems: 'center' }]}>
+        <Text style={[s.lockBody, { color: c.textSecondary, textAlign: 'center' }]}>
+          Unlock everything above — one-time purchase, yours forever.
+        </Text>
+        <Button
+          title="Unlock Premium"
+          fullWidth
+          icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
+          onPress={() => nav.navigate('Paywall')}
+          style={{ marginTop: spacing.xs }}
+        />
+      </Card>
     </>
   );
 }

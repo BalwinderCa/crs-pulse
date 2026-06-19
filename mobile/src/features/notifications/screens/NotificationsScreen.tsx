@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import Toast from 'react-native-toast-message';
 import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
+import { AdBanner } from '@/components/common/AdBanner';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useDrawNotifications } from '@/hooks/useDrawNotifications';
@@ -60,11 +61,17 @@ export default function NotificationsScreen() {
       Toast.show({ type: 'error', text1: t('paywall.emailInvalid') });
       return;
     }
-    await save({ email_notifications_enabled: on });
-    if (on && emailValue) {
+    if (on) {
+      // Persist the current field value too, so the saved address never goes
+      // stale behind the toggle (e.g. user edits the email then flips it on).
+      if (savedEmail && savedEmail !== emailValue) {
+        void unregisterEmailNotification(savedEmail);
+      }
+      await save({ email_notifications_enabled: true, notification_email: emailValue });
       void registerEmailNotification(emailValue);
-    } else if (!on && savedEmail) {
-      void unregisterEmailNotification(savedEmail);
+    } else {
+      await save({ email_notifications_enabled: false });
+      if (savedEmail) void unregisterEmailNotification(savedEmail);
     }
   };
 
@@ -173,25 +180,25 @@ export default function NotificationsScreen() {
             No draws yet — alerts will appear here when IRCC publishes rounds of invitations.
           </Text>
         ) : (
-          items.map((draw) => (
-            <View
-              key={draw.draw_number}
-              style={[s.item, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
-            >
-              <View style={[s.itemIcon, { backgroundColor: accent + '14' }]}>
-                <Ionicons name="flash-outline" size={17} color={accent} />
+          items.map((draw, index) => (
+            <Fragment key={draw.draw_number}>
+              <View style={[s.item, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
+                <View style={[s.itemIcon, { backgroundColor: accent + '14' }]}>
+                  <Ionicons name="flash-outline" size={17} color={accent} />
+                </View>
+                <View style={s.itemText}>
+                  <Text style={[s.itemTitle, { color: c.textPrimary }]}>
+                    New Express Entry Draw #{draw.draw_number}
+                  </Text>
+                  <Text style={[s.itemBody, { color: c.textSecondary }]}>
+                    {CATEGORY_LABELS[draw.category] ?? draw.category} — Cutoff:{' '}
+                    {draw.cutoff_score} points · {draw.invitations_issued.toLocaleString()} invitations
+                  </Text>
+                  <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(draw.date)}</Text>
+                </View>
               </View>
-              <View style={s.itemText}>
-                <Text style={[s.itemTitle, { color: c.textPrimary }]}>
-                  New Express Entry Draw #{draw.draw_number}
-                </Text>
-                <Text style={[s.itemBody, { color: c.textSecondary }]}>
-                  {CATEGORY_LABELS[draw.category] ?? draw.category} — Cutoff:{' '}
-                  {draw.cutoff_score} points · {draw.invitations_issued.toLocaleString()} invitations
-                </Text>
-                <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(draw.date)}</Text>
-              </View>
-            </View>
+              {(index + 1) % 5 === 0 && <AdBanner />}
+            </Fragment>
           ))
         )}
       </ScrollView>

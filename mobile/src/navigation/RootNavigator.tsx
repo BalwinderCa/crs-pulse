@@ -22,6 +22,7 @@ import NotificationsScreen from '@/features/notifications/screens/NotificationsS
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
 import PaywallScreen from '@/features/paywall/screens/PaywallScreen';
 import { usePremiumStore } from '@/store/premiumStore';
+import { initAds } from '@/services/adsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
@@ -46,6 +47,7 @@ export default function RootNavigator() {
     useProcessingTimesStore.getState().load().catch(() => {});
     useEePoolStore.getState().load().catch(() => {});
     usePremiumStore.getState().init().catch(() => {});
+    void initAds();
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))
