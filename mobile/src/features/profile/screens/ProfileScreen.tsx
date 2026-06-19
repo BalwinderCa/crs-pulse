@@ -5,9 +5,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
 import type { RootStackParamList } from '@/types';
 import { useProfileStore } from '@/store/profileStore';
-import type { ThemeMode } from '@/store/profileStore';
+import type { ThemeMode, AppLanguage } from '@/store/profileStore';
 import { resetAllData } from '@/utils/resetAllData';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -27,30 +29,6 @@ import { exportProfilePdf } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-const EDU_LABELS: Record<string, string> = {
-  less_than_secondary: 'Less than high school',
-  secondary:           'High school diploma',
-  '1year':             '1-year post-secondary',
-  '2year':             '2-year post-secondary',
-  bachelors:           "Bachelor's degree",
-  two_or_more:         'Two or more degrees',
-  masters:             "Master's degree",
-  phd:                 'PhD / Doctorate',
-};
-
-const MARITAL_LABELS: Record<string, string> = {
-  single:                   'Single',
-  married:                  'Married / CLP',
-  married_not_accompanying: 'Married (not accompanying)',
-};
-
-function workExpLabel(years: number): string {
-  if (years === 0) return 'None';
-  if (years === 1) return '1 year';
-  return `${years}+ years`;
-}
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function makeStyles(c: Colors, accent: string) {
@@ -108,7 +86,7 @@ function makeStyles(c: Colors, accent: string) {
     notifText:  { flex: 1, gap: 2 },
     notifLabel: { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.semibold },
 
-    // Appearance
+    // Appearance / Language
     themeRow:   { flexDirection: 'row', gap: spacing.xs },
     themeBtn: {
       flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
@@ -134,27 +112,60 @@ function makeStyles(c: Colors, accent: string) {
   });
 }
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
-  { label: 'System', value: 'system', icon: 'phone-portrait-outline' },
-  { label: 'Light',  value: 'light',  icon: 'sunny-outline'          },
-  { label: 'Dark',   value: 'dark',   icon: 'moon-outline'           },
-];
-
-
 export default function ProfileScreen() {
   const colors  = useColors();
   const accent  = useAccentColor();
   const styles  = makeStyles(colors, accent);
   const { profile, save } = useProfileStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
   const [exporting,  setExporting]  = useState(false);
+
+  // ── Translation helpers ────────────────────────────────────────────────────
+  const EDU_LABELS: Record<string, string> = {
+    less_than_secondary: t('profile.eduLessThanSecondary'),
+    secondary:           t('profile.eduSecondary'),
+    '1year':             t('profile.eduOneYear'),
+    '2year':             t('profile.eduTwoYear'),
+    bachelors:           t('profile.eduBachelors'),
+    two_or_more:         t('profile.eduTwoOrMore'),
+    masters:             t('profile.eduMasters'),
+    phd:                 t('profile.eduPhd'),
+  };
+
+  const MARITAL_LABELS: Record<string, string> = {
+    single:                   t('profile.single'),
+    married:                  t('profile.married'),
+    married_not_accompanying: t('profile.marriedNotAccompanying'),
+  };
+
+  function workExpLabel(years: number): string {
+    if (years === 0) return t('profile.workNone');
+    if (years === 1) return t('profile.workOneYear');
+    return t('profile.workYearsPlus', { years });
+  }
+
+  const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
+    { label: t('profile.themeSystem'), value: 'system', icon: 'phone-portrait-outline' },
+    { label: t('profile.themeLight'),  value: 'light',  icon: 'sunny-outline'          },
+    { label: t('profile.themeDark'),   value: 'dark',   icon: 'moon-outline'           },
+  ];
+
+  const LANG_OPTIONS: { label: string; value: AppLanguage; icon: string }[] = [
+    { label: t('profile.english'), value: 'en', icon: 'language-outline' },
+    { label: t('profile.french'),  value: 'fr', icon: 'chatbubble-outline' },
+  ];
+
+  const handleLanguageChange = async (lang: AppLanguage) => {
+    await i18n.changeLanguage(lang);
+    await save({ language: lang });
+  };
 
   if (!profile) {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.headerWrap}>
-          <AppHeader title="Profile" />
+          <AppHeader title={t('profile.title')} />
         </View>
         <View style={styles.skeletons}><SkeletonCard /><SkeletonCard /></View>
       </SafeAreaView>
@@ -210,52 +221,55 @@ export default function ProfileScreen() {
     try {
       const shared = await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
       if (!shared) {
-        Alert.alert('Sharing unavailable', 'This device cannot share files. Your PDF could not be exported.');
+        Alert.alert(t('profile.sharingUnavailable'), t('profile.sharingUnavailableMsg'));
       }
     } catch {
-      Alert.alert('Export failed', 'Could not generate PDF. Please try again.');
+      Alert.alert(t('profile.exportFailed'), t('profile.exportFailedMsg'));
     } finally {
       setExporting(false);
     }
   };
 
+  const canEduValue = (v: string) =>
+    v === 'none' ? t('profile.eduNone') :
+    v === '1_2year' ? t('profile.edu1to2Year') :
+    t('profile.edu3PlusYear');
+
   const infoGroups = [
     {
-      title: 'Personal',
+      title: t('profile.personal'),
       rows: [
-        { label: 'Age',           value: String(inp.age) },
-        { label: 'Marital Status',value: MARITAL_LABELS[inp.maritalStatus] ?? inp.maritalStatus },
+        { label: t('profile.age'),           value: String(inp.age) },
+        { label: t('profile.maritalStatus'), value: MARITAL_LABELS[inp.maritalStatus] ?? inp.maritalStatus },
       ],
     },
     {
-      title: 'Education',
+      title: t('profile.education'),
       rows: [
-        { label: 'Highest Level',      value: EDU_LABELS[inp.education] ?? inp.education },
-        { label: 'Canadian Education', value: inp.canadianEducation === 'none' ? 'None' : inp.canadianEducation === '1_2year' ? '1–2 yr program' : '3+ yr program' },
+        { label: t('profile.highestLevel'),      value: EDU_LABELS[inp.education] ?? inp.education },
+        { label: t('profile.canadianEducation'), value: canEduValue(inp.canadianEducation) },
       ],
     },
     {
-      title: 'Language',
+      title: t('profile.languageSection'),
       rows: [
-        { label: 'First Test',    value: inp.firstLangTest },
-        { label: 'Second Test',   value: inp.hasSecondLang ? inp.secondLangTest : 'None' },
+        { label: t('profile.firstTest'),  value: inp.firstLangTest },
+        { label: t('profile.secondTest'), value: inp.hasSecondLang ? inp.secondLangTest : t('profile.workNone') },
       ],
     },
     {
-      title: 'Work Experience',
+      title: t('profile.workExperience'),
       rows: [
-        { label: 'Canadian',          value: workExpLabel(inp.canadianWorkExp) },
-        { label: 'Foreign',           value: workExpLabel(inp.foreignWorkExp) },
-        { label: 'Trade Certificate', value: inp.hasTradeCert ? 'Yes' : 'No' },
+        { label: t('profile.canadian'),          value: workExpLabel(inp.canadianWorkExp) },
+        { label: t('profile.foreign'),           value: workExpLabel(inp.foreignWorkExp) },
+        { label: t('profile.tradeCertificate'),  value: inp.hasTradeCert ? t('profile.yes') : t('profile.no') },
       ],
     },
     {
-      title: 'Additional',
-      // Note: a job offer no longer scores CRS points (IRCC removed it Mar 2025),
-      // so it is intentionally not shown here.
+      title: t('profile.additional'),
       rows: [
-        { label: 'Provincial Nom.', value: inp.hasProvincialNomination ? 'Yes ✓' : 'No' },
-        { label: 'Sibling in Canada',value: inp.hasSiblingInCanada ? 'Yes' : 'No' },
+        { label: t('profile.provincialNom'),    value: inp.hasProvincialNomination ? t('profile.yesCheck') : t('profile.no') },
+        { label: t('profile.siblingInCanada'),  value: inp.hasSiblingInCanada ? t('profile.yes') : t('profile.no') },
       ],
     },
   ];
@@ -263,17 +277,17 @@ export default function ProfileScreen() {
   return (
     <ScreenWrapper scrollable keyboardAvoiding>
       <View style={styles.headerWrap}>
-        <AppHeader title="Profile" />
+        <AppHeader title={t('profile.title')} />
       </View>
 
       {/* ── CRS Score Hero ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>CRS Score</Text>
+        <Text style={styles.sectionTitle}>{t('profile.crsScore')}</Text>
         <View style={styles.scoreHero}>
           <Text style={[styles.scoreNum, { color: scoreColor }]}>
             {scoreReady ? score : '—'}
           </Text>
-          <Text style={styles.scoreLabel}>Comprehensive Ranking System</Text>
+          <Text style={styles.scoreLabel}>{t('profile.comprehensiveRanking')}</Text>
           {cat && (
             <View style={styles.catBadge}>
               <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
@@ -282,12 +296,8 @@ export default function ProfileScreen() {
         </View>
 
         {!scoreReady && (
-          <Text style={styles.hint}>
-            Enter CLB 4+ scores in all four language skills on the Home tab to see your CRS score.
-          </Text>
+          <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>
         )}
-
-
       </Card>
 
       {/* ── Profile Details (grouped) ── */}
@@ -307,21 +317,19 @@ export default function ProfileScreen() {
 
       {/* ── Profile Report ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Profile Report</Text>
-        <Text style={styles.hint}>
-          Download a PDF summary of your CRS score and profile details.
-        </Text>
+        <Text style={styles.sectionTitle}>{t('profile.profileReport')}</Text>
+        <Text style={styles.hint}>{t('profile.downloadPdfHint')}</Text>
         <View style={styles.exportRow}>
           <TouchableOpacity
             style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
             onPress={handleExportPdf}
             disabled={exporting}
             activeOpacity={0.7}
-            accessibilityLabel="Export CRS profile as PDF"
+            accessibilityLabel={t('profile.exportPdf')}
           >
             <Ionicons name="document-outline" size={18} color={accent} />
             <Text style={[styles.exportBtnText, { color: accent }]}>
-              {exporting ? 'Generating…' : 'Export Profile as PDF'}
+              {exporting ? t('profile.generating') : t('profile.exportPdf')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -334,11 +342,11 @@ export default function ProfileScreen() {
           onPress={() => navigation.navigate('Notifications')}
           activeOpacity={0.7}
           accessibilityRole="button"
-          accessibilityLabel="Open notification settings"
+          accessibilityLabel={t('profile.notifications')}
         >
           <View style={styles.notifText}>
-            <Text style={styles.notifLabel}>Notifications</Text>
-            <Text style={styles.hint}>Manage draw alerts and view recent draws</Text>
+            <Text style={styles.notifLabel}>{t('profile.notifications')}</Text>
+            <Text style={styles.hint}>{t('profile.manageNotifs')}</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
@@ -346,26 +354,55 @@ export default function ProfileScreen() {
 
       {/* ── Appearance ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>Appearance</Text>
+        <Text style={styles.sectionTitle}>{t('profile.appearance')}</Text>
         <View style={styles.themeRow}>
-          {THEME_OPTIONS.map((t) => {
-            const selected = (profile.theme ?? 'system') === t.value;
+          {THEME_OPTIONS.map((opt) => {
+            const selected = (profile.theme ?? 'system') === opt.value;
             return (
               <TouchableOpacity
-                key={t.value}
-                onPress={() => save({ theme: t.value })}
+                key={opt.value}
+                onPress={() => save({ theme: opt.value })}
                 style={[styles.themeBtn, selected && styles.themeBtnActive]}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
-                accessibilityLabel={`${t.label} theme`}
+                accessibilityLabel={`${opt.label} theme`}
               >
                 <Ionicons
-                  name={t.icon as any}
+                  name={opt.icon as any}
                   size={15}
                   color={selected ? accent : colors.textSecondary}
                 />
                 <Text style={[styles.themeBtnText, selected && styles.themeBtnTextActive]}>
-                  {t.label}
+                  {opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Card>
+
+      {/* ── Language ── */}
+      <Card style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('profile.appLanguage')}</Text>
+        <View style={styles.themeRow}>
+          {LANG_OPTIONS.map((opt) => {
+            const selected = (profile.language ?? 'en') === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                onPress={() => { void handleLanguageChange(opt.value); }}
+                style={[styles.themeBtn, selected && styles.themeBtnActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={opt.label}
+              >
+                <Ionicons
+                  name={opt.icon as any}
+                  size={15}
+                  color={selected ? accent : colors.textSecondary}
+                />
+                <Text style={[styles.themeBtnText, selected && styles.themeBtnTextActive]}>
+                  {opt.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -375,25 +412,25 @@ export default function ProfileScreen() {
 
       {/* ── Danger Zone ── */}
       <Card style={styles.section}>
-        <Text style={styles.dangerTitle}>Danger Zone</Text>
+        <Text style={styles.dangerTitle}>{t('profile.dangerZone')}</Text>
         <Button
-          title="Reset All Data"
+          title={t('profile.resetAllData')}
           variant="danger"
           onPress={() => {
             Alert.alert(
-              'Reset All Data',
-              'This permanently erases your CRS profile, tracked application, timeline milestones, checklist progress, and notification settings on this device. This cannot be undone.',
+              t('profile.resetTitle'),
+              t('profile.resetMsg'),
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('profile.cancel'), style: 'cancel' },
                 {
-                  text: 'Reset Everything',
+                  text: t('profile.resetEverything'),
                   style: 'destructive',
                   onPress: async () => {
                     try {
                       await resetAllData();
-                      Toast.show({ type: 'success', text1: 'All data reset.' });
+                      Toast.show({ type: 'success', text1: t('profile.resetSuccess') });
                     } catch {
-                      Toast.show({ type: 'error', text1: 'Reset failed', text2: 'Please try again.' });
+                      Toast.show({ type: 'error', text1: t('profile.resetFailed'), text2: t('profile.resetFailedMsg') });
                     }
                   },
                 },

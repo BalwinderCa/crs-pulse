@@ -69,12 +69,14 @@ export const DEFAULT_CALC_INPUTS: CalcInputs = {
 
 // ─── Profile ──────────────────────────────────────────────────────────────────
 export type ThemeMode = 'system' | 'light' | 'dark';
+export type AppLanguage = 'en' | 'fr';
 
 export type LocalProfile = {
   crs_score: number;
   category: ProgramCategory;
   accent_color: string;
   theme: ThemeMode;
+  language: AppLanguage;
   notifications_enabled: boolean;
   weekly_summary_enabled: boolean;
   calculatorInputs: CalcInputs;
@@ -85,6 +87,7 @@ export const DEFAULT_PROFILE: LocalProfile = {
   category: 'CEC',
   accent_color: '#DC2626',
   theme: 'system',
+  language: 'en',
   notifications_enabled: true,
   weekly_summary_enabled: true,
   calculatorInputs: DEFAULT_CALC_INPUTS,
@@ -112,6 +115,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       const profile: LocalProfile = {
         ...DEFAULT_PROFILE,
         ...parsed,
+        language: (parsed.language === 'fr') ? 'fr' : 'en',
         calculatorInputs: { ...DEFAULT_CALC_INPUTS, ...(parsed.calculatorInputs ?? {}) },
       };
       set({ profile });

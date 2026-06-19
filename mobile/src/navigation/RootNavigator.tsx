@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import i18n from '@/i18n';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
@@ -36,6 +37,7 @@ export default function RootNavigator() {
   const loadDraws = useDrawsStore((s) => s.load);
   const [ready, setReady] = useState(false);
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
+  const syncedLang = useRef<string | null>(null);
 
   useEffect(() => {
     loadDraws().catch(() => {});
@@ -69,6 +71,15 @@ export default function RootNavigator() {
 
     return () => clearTimeout(timeout);
   }, [loadProfile, loadDraws]);
+
+  // Sync i18n language whenever the profile language changes.
+  useEffect(() => {
+    const lang = profile?.language ?? 'en';
+    if (lang !== syncedLang.current) {
+      syncedLang.current = lang;
+      i18n.changeLanguage(lang).catch(() => {});
+    }
+  }, [profile?.language]);
 
   // Hide splash as soon as ready — don't gate on profile, as loadProfile()
   // always sets a non-null value and the null guard below handles the brief gap.

@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { Platform, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { typography, spacing, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -25,18 +26,19 @@ const TAB_ICONS: Record<keyof MainTabParamList, { active: TabIconName; inactive:
   Settings:  { active: 'person',    inactive: 'person-outline' },
 };
 
-const TAB_LABELS: Record<keyof MainTabParamList, string> = {
-  Dashboard: 'Home',
-  Timeline:  'Timeline',
-  Draws:     'Draws',
-  Analytics: 'Analytics',
-  Settings:  'Profile',
-};
-
 export default function MainNavigator() {
   const colors = useColors();
   const accent = useAccentColor();
   const { tabBarHeight, tabBarBottomPadding } = useTabBarLayout();
+  const { t } = useTranslation();
+
+  const TAB_LABELS: Record<keyof MainTabParamList, string> = {
+    Dashboard: t('tabs.home'),
+    Timeline:  t('tabs.timeline'),
+    Draws:     t('tabs.draws'),
+    Analytics: t('tabs.analytics'),
+    Settings:  t('tabs.profile'),
+  };
 
   return (
     <Tab.Navigator

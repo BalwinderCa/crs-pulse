@@ -54,11 +54,14 @@ GitHub Actions mirror (data/latest-draw.json) → Cloudflare Worker (every 15 mi
               Mobile App (push alert)
 
 Mobile App → IRCC JSON feed (direct fetch, 1-hour stale cache in drawsStore)
+
+GitHub Actions mirror (data/processing-times.json) → processingTimesStore (7-day cache)
+GitHub Actions mirror (data/ee-pool.json) → eePoolStore (7-day cache)
 ```
 
 The worker reads draws from a GitHub-hosted mirror (`raw.githubusercontent.com/.../data/latest-draw.json`), not IRCC directly — canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520. The mobile app still fetches the IRCC JSON feed directly.
 
-The worker also exposes HTTP endpoints (`/register`, `/revoke`) that `pushService.ts` calls to manage Expo push tokens stored in Cloudflare KV.
+The worker also exposes HTTP endpoints (`/register`, `/revoke`, `/health`, `/sync`) that `pushService.ts` calls to manage Expo push tokens stored in Cloudflare KV.
 
 ### Mobile State Management (Zustand + AsyncStorage)
 
@@ -67,10 +70,12 @@ Stores in `src/store/`:
 | Store | Key State | Purpose |
 |---|---|---|
 | `profileStore` | `CalcInputs`, `LocalProfile` | CRS calculator inputs, theme, notifications, accent color |
-| `drawsStore` | `Draw[]`, cache timestamp | IRCC draw data; refreshes with 3× exponential backoff |
+| `drawsStore` | `Draw[]`, cache timestamp | IRCC draw data; refreshes with 3× exponential backoff; 1-hour cache |
 | `timelineStore` | `Milestone[]` | Application timeline milestones, sorted by date |
 | `applicationStore` | `TrackedApplication` | The IRCC category/type the user is tracking + applied date |
 | `premiumStore` | `isPremium`, `billingAvailable`, `price` | Google Play one-time "Analytics unlock" entitlement. Play is the source of truth; the gate fails OPEN when no product is purchasable (iOS without a configured product, emulator, transient outage) |
+| `processingTimesStore` | `LiveProcessingTimes` | IRCC processing times by category/type; 7-day cache with bundled fallback |
+| `eePoolStore` | `EePoolData` | Express Entry pool distribution + Immigration Levels Plan; 7-day cache with bundled fallback |
 
 These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`.
 
@@ -78,37 +83,53 @@ These stores are persisted via `zustand/middleware` + AsyncStorage. Profile stor
 
 Each screen area lives under `src/features/<name>/` and contains its own components, hooks, and utils co-located together. Features:
 
-- `home` — landing screen (application tracker hub)
-- `dashboard` — CRS calculator screen
+- `home` — landing screen (application tracker hub with latest draw and progress)
+- `dashboard` — CRS calculator screen with score card and prediction
 - `calculators` — hub linking to all calculators
-- `draws`, `analytics`, `timeline` — live draws, on-device trends, milestone timeline
+- `draws` — live IRCC draws with category filters
+- `analytics` — premium analytics (2 tabs: free draw trends + paid personal odds)
+- `timeline` — milestone tracker with add/edit/delete
 - `tracker` — application setup + IRCC processing-time estimates
-- `checklist` — per-program document checklists
-- `notifications`, `paywall`, `profile`, `onboarding`, `faq`, `support` (the "Settings" bottom tab renders `profile`'s `ProfileScreen`)
+- `checklist` — per-program document checklists with progress tracking
+- `notifications` — draw notifications history with unread badge
+- `paywall` — one-time IAP modal for analytics unlock
+- `profile` — settings (the "Settings" bottom tab renders `profile`'s `ProfileScreen`)
+- `onboarding` — first-time 4-slide welcome flow
+- `faq` — accordion FAQ screen
+- `support` — contact / report issue form
+- `fsw` — Federal Skilled Worker 67-point calculator
+- `bcpnp` — BC PNP SIRS 200-point calculator
+- `sinp` — Saskatchewan EOI 110-point calculator
 
 Calculator logic lives in each feature's `utils/` (each documents its IRCC/provincial source and is "estimate only"):
 
 | Calculator | File | Notes |
 |---|---|---|
-| CRS | `features/onboarding/utils/crsCalculator.ts` | Official IRCC formula; all language tests (IELTS, CELPIP, PTE, TEF, CLB) |
+| CRS | `features/onboarding/utils/crsCalculator.ts` | Official IRCC formula; all language tests (IELTS, CELPIP, PTE Core, TEF/TCF, CLB) |
 | FSW 67-point | `features/fsw/utils/fswCalculator.ts` | Six selection factors, min 67 to be eligible |
 | BC PNP SIRS | `features/bcpnp/utils/sirsCalculator.ts` | 200-point SIRS grid |
 | SINP EOI | `features/sinp/utils/sinpCalculator.ts` | 110-point Saskatchewan EOI grid, min 60 |
 
-Static reference data: `features/checklist/data/checklists.ts` (document checklists by program), `features/tracker/data/processingTimes.ts` (IRCC category/type processing times).
+Static reference data: `features/checklist/data/checklists.ts` (document checklists by program), `features/tracker/data/processingTimes.ts` (bundled IRCC processing times fallback).
 
 ### Navigation
 
-`RootNavigator` (stack) loads profile and draws on boot, then renders `MainNavigator` (bottom tabs): Dashboard → Timeline → Draws → Analytics → Settings. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist`(+`Detail`), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`, `Paywall` (modal).
+`RootNavigator` (stack) loads all stores on boot (profile, draws, timeline, application, processing times, EE pool, premium), hides splash screen when ready, then renders `MainNavigator` (5 bottom tabs): **Home → Timeline → Draws → Analytics → Settings**. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist` (hub + detail), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`, `Paywall` (modal).
 
 ### Theme System
 
 `src/theme/` exports `colors` (dark/light palettes with WCAG AA contrast ratios), `spacing`, `typography`, and `shadows`. Use the `useColors()` hook to get the current theme's color palette — never hardcode colors.
 
-### Push Worker (`workers/push/src/index.ts`)
+### Push Worker (`workers/push/src/`)
+
+Four source files:
+- `index.ts` — HTTP handler (`/register`, `/revoke`, `/health`, `/sync`) + scheduled cron entry point
+- `tokenStore.ts` — KV token storage (register/revoke/list/migrate legacy single-array format)
+- `expoValidate.ts` — Validates Expo push tokens with Expo API before storing
+- `expoReceipts.ts` — Polls Expo receipt API for async delivery status; revokes failed tokens
 
 Two entry points:
-- `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, and `/sync` (manual trigger)
+- `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, `/health`, and `/sync` (manual trigger)
 - `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected
 
 Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). KV binding: `TOKENS_KV`.
@@ -133,11 +154,18 @@ Copy `mobile/.env.example` to `mobile/.env.local`. Required vars:
 | `EXPO_PUBLIC_PUSH_API_KEY` | Bearer token matching worker's `PUSH_API_SECRET` |
 | `EAS_PROJECT_ID` | From `eas init` or expo.dev |
 
-Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`.
+Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_ERROR_REPORT_URL`.
 
 ### Services & Observability
 
-`src/services/` holds cross-feature services: `pushService.ts` (Expo token register/revoke against the worker), `iapService.ts` (a thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock"), and `errorReporter.ts` (production-safe error reporter — no-ops/console in dev).
+`src/services/` holds cross-feature services:
+- `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
+- `iapService.ts` — Thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock" (`crs_pulse.analytics_unlock`); handles connect/buy/restore/entitlement check
+- `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
+
+### Premium / IAP Gate
+
+The analytics "Your Plan" tab is gated behind a one-time Google Play managed product (`crs_pulse.analytics_unlock`). `premiumStore` is the source of truth — it connects to billing on init, verifies entitlement, and mirrors to AsyncStorage for fast cold starts. The gate **fails open**: when billing is unavailable (iOS without StoreKit configured, emulator, transient Play outage) `isPremium` is set to `true` so the feature is never accidentally locked for real users.
 
 ### Testing
 

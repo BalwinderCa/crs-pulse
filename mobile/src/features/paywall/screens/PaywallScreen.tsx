@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -14,17 +15,20 @@ import { usePremiumStore } from '@/store/premiumStore';
 import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants';
 import type { RootStackParamList } from '@/types';
 
-const BENEFITS: { icon: keyof typeof Ionicons.glyphMap; title: string; body: string }[] = [
-  { icon: 'flag-outline', title: 'The exact points to climb', body: 'Your personalised plan — the precise CRS each move adds: French, a nomination, a higher CLB.' },
-  { icon: 'options-outline', title: 'What-if, instantly', body: 'Model French, a nomination or higher language scores and watch your score and odds move.' },
-  { icon: 'trending-up-outline', title: 'Forecast your category', body: 'Where the cutoff is heading for your draw category, with a confidence read.' },
-  { icon: 'podium-outline', title: 'Where you really stand', body: 'Your percentile, expected wait by score, and the best stream for your profile.' },
+type Benefit = { icon: keyof typeof Ionicons.glyphMap; titleKey: string; bodyKey: string };
+
+const BENEFITS: Benefit[] = [
+  { icon: 'flag-outline',      titleKey: 'paywall.benefit0Title', bodyKey: 'paywall.benefit0Body' },
+  { icon: 'options-outline',   titleKey: 'paywall.benefit1Title', bodyKey: 'paywall.benefit1Body' },
+  { icon: 'trending-up-outline', titleKey: 'paywall.benefit2Title', bodyKey: 'paywall.benefit2Body' },
+  { icon: 'podium-outline',    titleKey: 'paywall.benefit3Title', bodyKey: 'paywall.benefit3Body' },
 ];
 
 export default function PaywallScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
 
   const isPremium = usePremiumStore((s) => s.isPremium);
   const purchasing = usePremiumStore((s) => s.purchasing);
@@ -33,7 +37,6 @@ export default function PaywallScreen() {
   const purchase = usePremiumStore((s) => s.purchase);
   const restore = usePremiumStore((s) => s.restore);
 
-  // Close automatically once the entitlement is granted (purchase or restore).
   useEffect(() => {
     if (isPremium) nav.goBack();
   }, [isPremium, nav]);
@@ -42,39 +45,42 @@ export default function PaywallScreen() {
     Linking.openURL(url).catch(() => {});
   }, []);
 
+  const ctaTitle = purchasing
+    ? t('paywall.processing')
+    : price
+    ? t('paywall.unlockFor', { price })
+    : t('paywall.unlockAnalytics');
+
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['left', 'right']}>
-      <AppHeader title="Unlock Analytics" variant="stack" />
+      <AppHeader title={t('paywall.title')} variant="stack" />
 
       <ScrollView contentContainerStyle={s.body} showsVerticalScrollIndicator={false}>
         <View style={[s.hero, { backgroundColor: accent + '14', borderColor: accent }]}>
           <View style={[s.heroIcon, { backgroundColor: accent + '1F' }]}>
             <Ionicons name="analytics" size={30} color={accent} />
           </View>
-          <Text style={[s.heroTitle, { color: c.textPrimary }]}>Know your real odds</Text>
-          <Text style={[s.heroSub, { color: c.textSecondary }]}>
-            Unlock your personalised plan — the exact points to your next ITA, plus what-if scenarios and
-            forecasts. One-time purchase, yours forever. No subscription.
-          </Text>
+          <Text style={[s.heroTitle, { color: c.textPrimary }]}>{t('paywall.heroTitle')}</Text>
+          <Text style={[s.heroSub, { color: c.textSecondary }]}>{t('paywall.heroSub')}</Text>
         </View>
 
         <View style={[s.trustBadge, { borderColor: palette.success + '55', backgroundColor: palette.success + '12' }]}>
           <Ionicons name="checkmark-circle" size={15} color={palette.success} />
-          <Text style={[s.trustText, { color: c.textSecondary }]}>Matches the official IRCC CRS calculator</Text>
+          <Text style={[s.trustText, { color: c.textSecondary }]}>{t('paywall.trustBadge')}</Text>
         </View>
 
         <Card style={s.benefits}>
           {BENEFITS.map((b, idx) => (
             <View
-              key={b.title}
+              key={b.titleKey}
               style={[s.benefitRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}
             >
               <View style={[s.benefitIcon, { backgroundColor: accent + '14' }]}>
                 <Ionicons name={b.icon} size={20} color={accent} />
               </View>
               <View style={s.benefitText}>
-                <Text style={[s.benefitTitle, { color: c.textPrimary }]}>{b.title}</Text>
-                <Text style={[s.benefitBody, { color: c.textSecondary }]}>{b.body}</Text>
+                <Text style={[s.benefitTitle, { color: c.textPrimary }]}>{t(b.titleKey)}</Text>
+                <Text style={[s.benefitBody, { color: c.textSecondary }]}>{t(b.bodyKey)}</Text>
               </View>
             </View>
           ))}
@@ -83,7 +89,7 @@ export default function PaywallScreen() {
         {error && <Text style={[s.error, { color: palette.danger }]}>{error}</Text>}
 
         <Button
-          title={purchasing ? 'Processing…' : price ? `Unlock for ${price}` : 'Unlock Analytics'}
+          title={ctaTitle}
           fullWidth
           loading={purchasing}
           onPress={purchase}
@@ -96,33 +102,30 @@ export default function PaywallScreen() {
           disabled={purchasing}
           style={s.restore}
           accessibilityRole="button"
-          accessibilityLabel="Restore a previous purchase"
+          accessibilityLabel={t('paywall.restorePurchase')}
         >
-          <Text style={[s.restoreText, { color: accent }]}>Restore purchase</Text>
+          <Text style={[s.restoreText, { color: accent }]}>{t('paywall.restorePurchase')}</Text>
         </TouchableOpacity>
 
-        <Text style={[s.legal, { color: c.textMuted }]}>
-          One-time purchase billed through Google Play. Restores automatically on your other devices signed in to the
-          same Google account. Analytics are estimates, not guarantees.
-        </Text>
+        <Text style={[s.legal, { color: c.textMuted }]}>{t('paywall.legalText')}</Text>
 
         <View style={s.legalLinks}>
           <TouchableOpacity
             onPress={() => openUrl(TERMS_OF_USE_URL)}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Open Terms of Use"
+            accessibilityLabel={t('paywall.termsOfUse')}
           >
-            <Text style={[s.legalLink, { color: accent }]}>Terms of Use</Text>
+            <Text style={[s.legalLink, { color: accent }]}>{t('paywall.termsOfUse')}</Text>
           </TouchableOpacity>
           <Text style={[s.legalDot, { color: c.textMuted }]}>·</Text>
           <TouchableOpacity
             onPress={() => openUrl(PRIVACY_POLICY_URL)}
             hitSlop={8}
             accessibilityRole="link"
-            accessibilityLabel="Open Privacy Policy"
+            accessibilityLabel={t('paywall.privacyPolicy')}
           >
-            <Text style={[s.legalLink, { color: accent }]}>Privacy Policy</Text>
+            <Text style={[s.legalLink, { color: accent }]}>{t('paywall.privacyPolicy')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -152,7 +155,6 @@ const s = StyleSheet.create({
 
   error: { fontSize: typography.sm, textAlign: 'center', fontWeight: typography.medium },
   cta: { marginTop: spacing.xs },
-  // min 44pt tap target (WCAG 2.5.5 / Apple HIG) for the text-only restore action.
   restore: { alignItems: 'center', justifyContent: 'center', minHeight: 44, paddingVertical: spacing.sm },
   restoreText: { fontSize: typography.sm, fontWeight: typography.bold },
   legal: { fontSize: typography.xs, lineHeight: 16, textAlign: 'center', paddingHorizontal: spacing.sm },

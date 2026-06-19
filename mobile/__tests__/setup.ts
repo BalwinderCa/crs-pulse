@@ -1,6 +1,28 @@
 // NOTE: extend-expect is loaded via setupFilesAfterEnv in package.json —
 // this file runs in the setupFiles phase, before jest globals exist.
 
+// Mock react-i18next so components using useTranslation work in tests.
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, opts?: Record<string, unknown>) => {
+      // Return the last segment of the key with basic interpolation
+      const base = key.split('.').pop() ?? key;
+      if (!opts) return base;
+      return Object.entries(opts).reduce(
+        (s, [k, v]) => s.replace(`{{${k}}}`, String(v)),
+        base,
+      );
+    },
+    i18n: { changeLanguage: jest.fn() },
+    ready: true,
+  }),
+  initReactI18next: { type: '3rdParty', init: jest.fn() },
+}));
+
+jest.mock('@/i18n', () => ({
+  default: { changeLanguage: jest.fn().mockResolvedValue(undefined) },
+}));
+
 // Mock Expo modules
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),

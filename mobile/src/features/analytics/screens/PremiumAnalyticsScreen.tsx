@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -36,6 +36,7 @@ const TABS: { key: TabKey; label: string }[] = [
 export default function PremiumAnalyticsScreen() {
   const c = useColors();
   const accent = useAccentColor();
+  const { width: windowWidth } = useWindowDimensions();
   const { contentPaddingBottom } = useTabBarLayout();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [tab, setTab] = useState<TabKey>('draws');
@@ -140,6 +141,7 @@ export default function PremiumAnalyticsScreen() {
   const whatIfLabel = whatIfScore - data.trendCutoff >= 10 ? 'High' : whatIfScore - data.trendCutoff >= -10 ? 'Moderate' : 'Low';
 
   const oddsColor = ODDS_COLOR[data.oddsLabel] ?? palette.warning;
+  const chartWidth = Math.max(220, Math.min(300, windowWidth - spacing.base * 4));
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
@@ -204,12 +206,13 @@ export default function PremiumAnalyticsScreen() {
         {showPlan ? (
           <PlanTab
             c={c} accent={accent} data={data}
+            chartWidth={chartWidth}
             age={age} setAge={setAge} clb={clb} setClb={setClb}
             french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
             whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
           />
         ) : (
-          <DrawsTab c={c} accent={accent} data={data} />
+          <DrawsTab c={c} accent={accent} data={data} chartWidth={chartWidth} />
         )}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
@@ -250,7 +253,7 @@ export default function PremiumAnalyticsScreen() {
 }
 
 // ─── Draws tab (free: live IRCC market data + history) ────────────────────────
-function DrawsTab({ c, accent, data }: any) {
+function DrawsTab({ c, accent, data, chartWidth }: any) {
   const i = data.ircc;
   return (
     <>
@@ -262,7 +265,7 @@ function DrawsTab({ c, accent, data }: any) {
           min={data.selfTrendMin} max={data.selfTrendMax}
           gridColor={c.border} axisColor={c.textMuted}
           refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
-          width={300} height={150}
+          width={chartWidth} height={150}
           accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
@@ -350,7 +353,7 @@ function DrawsTab({ c, accent, data }: any) {
           ]}
           min={data.trendMin} max={data.trendMax}
           gridColor={c.border} axisColor={c.textMuted}
-          width={300} height={150}
+          width={chartWidth} height={150}
           accessibilityLabel="Cutoff trend by category over recent draws: Canadian Experience Class, French, and Provincial Nominee Program."
         />
         <View style={s.legendRow}>
@@ -372,7 +375,7 @@ function DrawsTab({ c, accent, data }: any) {
           series={[{ points: data.invitationsTrend, color: palette.success, fill: palette.success + '22' }]}
           min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
           gridColor={c.border} axisColor={c.textMuted}
-          width={300} height={140}
+          width={chartWidth} height={140}
           accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
@@ -380,7 +383,7 @@ function DrawsTab({ c, accent, data }: any) {
 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
-        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={300} height={48}
+        <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={chartWidth} height={48}
           accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
         <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
       </Card>
@@ -421,7 +424,7 @@ function DrawsTab({ c, accent, data }: any) {
 }
 
 // ─── Your Plan tab (premium: personalised, predictive + prescriptive) ─────────
-function PlanTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
+function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
   const i = data.ircc;
   return (
     <>
@@ -464,6 +467,7 @@ function PlanTab({ c, accent, data, age, setAge, clb, setClb, french, setFrench,
         <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT {data.category.toUpperCase()} DRAW</Text>
         <ForecastBandChart actual={data.forecast.actual} forecast={data.forecast.proj} band={data.forecast.band}
           min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border}
+          width={Math.min(280, chartWidth)}
           accessibilityLabel={`Next ${data.category} draw forecast: likely cutoff ${data.forecast.likely}, ${data.forecast.confidence.toLowerCase()} confidence.`} />
         <Text style={[s.caption, { color: c.textSecondary }]}>
           Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · confidence {data.forecast.confidence.toLowerCase()}

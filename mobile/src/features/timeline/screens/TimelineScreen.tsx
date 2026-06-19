@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, useColorScheme, View,
@@ -57,11 +58,14 @@ const SAMPLE_MILESTONES: { type: MilestoneType; when: string }[] = [
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function daysLabel(dateStr: string): { value: string; sub: string; future: boolean } {
-  const diff = differenceInDays(new Date(), parseISO(dateStr));
-  if (diff === 0) return { value: 'Today', sub: '', future: false };
-  if (diff > 0)  return { value: String(diff), sub: diff === 1 ? 'day ago' : 'days ago', future: false };
-  return { value: String(Math.abs(diff)), sub: 'days left', future: true };
+function useDaysLabel() {
+  const { t } = useTranslation();
+  return (dateStr: string): { value: string; sub: string; future: boolean } => {
+    const diff = differenceInDays(new Date(), parseISO(dateStr));
+    if (diff === 0) return { value: t('timeline.today'), sub: '', future: false };
+    if (diff > 0)  return { value: String(diff), sub: diff === 1 ? t('timeline.dayAgo') : t('timeline.daysAgo'), future: false };
+    return { value: String(Math.abs(diff)), sub: t('timeline.daysLeft'), future: true };
+  };
 }
 
 
@@ -71,7 +75,8 @@ function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; 
   const c = useColors();
   const meta = MILESTONE_META[item.type];
   const label = item.type === 'Custom' && item.customLabel ? item.customLabel : item.type;
-  const dl = daysLabel(item.date);
+  const getDaysLabel = useDaysLabel();
+  const dl = getDaysLabel(item.date);
 
   return (
     <TouchableOpacity
@@ -120,6 +125,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
   const accent = useAccentColor();
   const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const add    = useTimelineStore((s) => s.add);
   const update = useTimelineStore((s) => s.update);
   const remove = useTimelineStore((s) => s.remove);
@@ -153,7 +159,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 
   async function handleSave() {
     if (type === 'Custom' && !customLabel.trim()) {
-      Alert.alert('Label required', 'Please enter a label for your custom milestone.');
+      Alert.alert(t('timeline.labelRequired'), t('timeline.labelRequiredMsg'));
       return;
     }
     const payload = {
@@ -171,9 +177,9 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 
   async function handleDelete() {
     if (!editing) return;
-    Alert.alert('Delete milestone', 'Remove this milestone?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(editing.id); reset(); onClose(); } },
+    Alert.alert(t('timeline.deleteConfirmTitle'), t('timeline.deleteConfirmMsg'), [
+      { text: t('timeline.cancel'), style: 'cancel' },
+      { text: t('timeline.delete'), style: 'destructive', onPress: async () => { await remove(editing.id); reset(); onClose(); } },
     ]);
   }
 
@@ -190,11 +196,11 @@ function AddMilestoneModal({ visible, onClose, editing }: {
         {/* Top bar */}
         <View style={[s.modalBar, { borderBottomColor: c.border }]}>
           <TouchableOpacity onPress={() => { reset(); onClose(); }} style={[s.modalBtn, { borderColor: c.border }]}>
-            <Text style={[s.modalBtnTxt, { color: c.textMuted }]}>Cancel</Text>
+            <Text style={[s.modalBtnTxt, { color: c.textMuted }]}>{t('timeline.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[s.modalTitle, { color: c.textPrimary }]}>{editing ? 'Edit Milestone' : 'Add Milestone'}</Text>
+          <Text style={[s.modalTitle, { color: c.textPrimary }]}>{editing ? t('timeline.editMilestone') : t('timeline.addMilestone')}</Text>
           <TouchableOpacity onPress={handleSave} style={[s.modalBtn, { borderColor: accent }]}>
-            <Text style={[s.modalBtnTxt, { color: accent, fontWeight: typography.bold }]}>Save</Text>
+            <Text style={[s.modalBtnTxt, { color: accent, fontWeight: typography.bold }]}>{t('timeline.save')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -205,7 +211,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             onPress={handleDelete}
           >
             <Ionicons name="trash-outline" size={16} color={palette.danger} />
-            <Text style={[s.deleteTxt, { color: palette.danger }]}>Delete Milestone</Text>
+            <Text style={[s.deleteTxt, { color: palette.danger }]}>{t('timeline.deleteMilestone')}</Text>
           </TouchableOpacity>
         )}
 
@@ -216,7 +222,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
         >
 
           {/* Type */}
-          <Text style={[s.fieldLabel, { color: c.textMuted }]}>TYPE</Text>
+          <Text style={[s.fieldLabel, { color: c.textMuted }]}>{t('timeline.fieldType')}</Text>
           <TouchableOpacity
             style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
             onPress={() => setPickingType(true)}
@@ -233,16 +239,16 @@ function AddMilestoneModal({ visible, onClose, editing }: {
           {/* Custom label + emoji */}
           {type === 'Custom' && (
             <>
-              <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>LABEL</Text>
+              <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>{t('timeline.fieldLabel')}</Text>
               <TextInput
                 style={[s.input, { backgroundColor: c.surfaceCard, borderColor: c.border, color: c.textPrimary }]}
-                placeholder="e.g. Background Check"
+                placeholder={t('timeline.labelPlaceholder')}
                 placeholderTextColor={c.textMuted}
                 value={customLabel}
                 onChangeText={setCustomLabel}
                 maxLength={60}
               />
-              <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>EMOJI (OPTIONAL)</Text>
+              <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>{t('timeline.fieldEmoji')}</Text>
               <TouchableOpacity
                 activeOpacity={1}
                 style={[s.emojiPickerRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
@@ -252,9 +258,8 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                   ref={emojiInputRef}
                   style={[s.emojiPickerInput, { color: c.textPrimary, borderColor: customEmoji ? accent : c.border }]}
                   value={customEmoji}
-                  onChangeText={t => {
-                    // keep only the last grapheme cluster (one emoji)
-                    const chars = [...t];
+                  onChangeText={v => {
+                    const chars = [...v];
                     setCustomEmoji(chars[chars.length - 1] ?? '');
                   }}
                   placeholderTextColor={c.textMuted}
@@ -262,15 +267,14 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                   keyboardType="default"
                 />
                 <Text style={[s.emojiPickerHint, { color: c.textMuted }]}>
-                  Tap here to open the keyboard, then use the emoji button — the
-                  🌐 globe key on iOS, or the 🙂 emoji key on Android — to pick one.
+                  {t('timeline.emojiHint')}
                 </Text>
               </TouchableOpacity>
             </>
           )}
 
           {/* Date */}
-          <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>DATE</Text>
+          <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>{t('timeline.fieldDate')}</Text>
           <TouchableOpacity
             style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
             onPress={() => setShowPicker(true)}
@@ -304,10 +308,10 @@ function AddMilestoneModal({ visible, onClose, editing }: {
           )}
 
           {/* Note */}
-          <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>NOTE (OPTIONAL)</Text>
+          <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>{t('timeline.fieldNote')}</Text>
           <TextInput
             style={[s.noteInput, { backgroundColor: c.surfaceCard, borderColor: c.border, color: c.textPrimary }]}
-            placeholder="Add a note..."
+            placeholder={t('timeline.notePlaceholder')}
             placeholderTextColor={c.textMuted}
             value={note}
             onChangeText={setNote}
@@ -379,6 +383,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 export default function TimelineScreen() {
   const c = useColors();
   const accent = useAccentColor();
+  const { t } = useTranslation();
   const { contentPaddingBottom } = useTabBarLayout();
   const { contentFrameStyle } = useResponsiveLayout();
   const { milestones, load, remove } = useTimelineStore();
@@ -394,7 +399,7 @@ export default function TimelineScreen() {
 
       {/* Header */}
       <View style={[s.header, { borderBottomColor: c.border }]}>
-        <AppHeader title="Timeline" />
+        <AppHeader title={t('timeline.title')} />
       </View>
 
       {milestones.length === 0 ? (
@@ -402,14 +407,11 @@ export default function TimelineScreen() {
           <View style={[s.emptyIcon, { backgroundColor: accent + '18' }]}>
             <Ionicons name="time-outline" size={36} color={accent} />
           </View>
-          <Text style={[s.emptyTitle, { color: c.textPrimary }]}>No milestones yet</Text>
-          <Text style={[s.emptySub,   { color: c.textMuted }]}>
-            Track your immigration journey — log key dates like your ITA, AOR,
-            biometrics, medical, and passport request.
-          </Text>
+          <Text style={[s.emptyTitle, { color: c.textPrimary }]}>{t('timeline.noMilestonesYet')}</Text>
+          <Text style={[s.emptySub,   { color: c.textMuted }]}>{t('timeline.noMilestonesDesc')}</Text>
 
           {/* Example rows so users can see what they can add */}
-          <Text style={[s.sampleHint, { color: c.textMuted }]}>FOR EXAMPLE</Text>
+          <Text style={[s.sampleHint, { color: c.textMuted }]}>{t('timeline.forExample')}</Text>
           <View style={s.sampleList}>
             {SAMPLE_MILESTONES.map(({ type, when }) => {
               const m = MILESTONE_META[type];
@@ -430,10 +432,10 @@ export default function TimelineScreen() {
             onPress={() => setModalMilestone(undefined)}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Add milestone"
+            accessibilityLabel={t('timeline.addFirstMilestone')}
           >
             <Ionicons name="add" size={18} color="#fff" />
-            <Text style={s.addBtnTxt}>Add Your First Milestone</Text>
+            <Text style={s.addBtnTxt}>{t('timeline.addFirstMilestone')}</Text>
           </TouchableOpacity>
         </ScrollView>
       ) : (
@@ -448,10 +450,10 @@ export default function TimelineScreen() {
             onPress={() => setModalMilestone(undefined)}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Add milestone"
+            accessibilityLabel={t('timeline.addMilestone')}
           >
             <Ionicons name="add-circle-outline" size={18} color={accent} />
-            <Text style={[s.bottomAddTxt, { color: accent }]}>Add Milestone</Text>
+            <Text style={[s.bottomAddTxt, { color: accent }]}>{t('timeline.addMilestone')}</Text>
           </TouchableOpacity>
         </ScrollView>
       )}

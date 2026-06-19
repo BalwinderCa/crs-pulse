@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import {
   FlatList, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions,
   type NativeScrollEvent, type NativeSyntheticEvent,
@@ -8,6 +8,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/i18n';
+import { useProfileStore } from '@/store/profileStore';
+import type { AppLanguage } from '@/store/profileStore';
 import { STORAGE_KEYS } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -19,29 +23,6 @@ type Slide = {
   title: string;
   body: string;
 };
-
-const SLIDES: Slide[] = [
-  {
-    icon: 'earth-outline',
-    title: 'Welcome to CRS Pulse',
-    body: 'Your free Express Entry companion. Track draws, know your score, and plan your path to Canadian permanent residency.',
-  },
-  {
-    icon: 'flash-outline',
-    title: 'Live Draw Tracking',
-    body: 'Official IRCC draw results the moment they are published — with push alerts so you never miss a round of invitations.',
-  },
-  {
-    icon: 'calculator-outline',
-    title: 'Know Your Score',
-    body: 'The full IRCC CRS grid runs on your device. See your score breakdown, which draw categories fit you, and tools like the SINP calculator.',
-  },
-  {
-    icon: 'lock-closed-outline',
-    title: 'Private by Design',
-    body: 'Everything stays on your phone. No accounts, no trackers, no ads — completely free, built for aspiring Canadians.',
-  },
-];
 
 export async function markOnboardingSeen(): Promise<void> {
   try {
@@ -55,10 +36,20 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { t } = useTranslation();
+  const save = useProfileStore((s) => s.save);
+  const profile = useProfileStore((s) => s.profile);
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
 
-  const isLast = index === SLIDES.length - 1;
+  const slides: Slide[] = useMemo(() => [
+    { icon: 'earth-outline',       title: t('onboarding.slide0Title'), body: t('onboarding.slide0Body') },
+    { icon: 'flash-outline',       title: t('onboarding.slide1Title'), body: t('onboarding.slide1Body') },
+    { icon: 'calculator-outline',  title: t('onboarding.slide2Title'), body: t('onboarding.slide2Body') },
+    { icon: 'lock-closed-outline', title: t('onboarding.slide3Title'), body: t('onboarding.slide3Body') },
+  ], [t]);
+
+  const isLast = index === slides.length - 1;
 
   const finish = () => {
     markOnboardingSeen();
@@ -77,13 +68,24 @@ export default function OnboardingScreen() {
     setIndex(Math.round(e.nativeEvent.contentOffset.x / width));
   };
 
+  const toggleLanguage = async () => {
+    const next: AppLanguage = (profile?.language ?? 'en') === 'en' ? 'fr' : 'en';
+    await i18n.changeLanguage(next);
+    await save({ language: next });
+  };
+
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      {/* Skip */}
+      {/* Top row: language toggle (left) + skip (right) */}
       <View style={[s.topRow, { paddingTop: insets.top + spacing.sm }]}>
+        <TouchableOpacity onPress={toggleLanguage} hitSlop={12} style={s.langBtn}>
+          <Ionicons name="globe-outline" size={18} color={accent} />
+          <Text style={[s.langText, { color: accent }]}>{t('onboarding.languageBtn')}</Text>
+        </TouchableOpacity>
+
         {!isLast ? (
           <TouchableOpacity onPress={finish} hitSlop={12}>
-            <Text style={[s.skip, { color: c.textMuted }]}>Skip</Text>
+            <Text style={[s.skip, { color: c.textMuted }]}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         ) : (
           <View />
@@ -92,8 +94,8 @@ export default function OnboardingScreen() {
 
       <FlatList
         ref={listRef}
-        data={SLIDES}
-        keyExtractor={(item) => item.title}
+        data={slides}
+        keyExtractor={(_, i) => String(i)}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -113,9 +115,9 @@ export default function OnboardingScreen() {
       {/* Dots + CTA */}
       <View style={[s.footer, { paddingBottom: insets.bottom + spacing.xl }]}>
         <View style={s.dots}>
-          {SLIDES.map((slide, i) => (
+          {slides.map((_, i) => (
             <View
-              key={slide.title}
+              key={i}
               style={[
                 s.dot,
                 { backgroundColor: i === index ? accent : c.surfaceTertiary },
@@ -129,7 +131,7 @@ export default function OnboardingScreen() {
           onPress={next}
           activeOpacity={0.8}
         >
-          <Text style={s.ctaText}>{isLast ? 'Get Started' : 'Next'}</Text>
+          <Text style={s.ctaText}>{isLast ? t('onboarding.getStarted') : t('onboarding.next')}</Text>
           <Ionicons name={isLast ? 'checkmark' : 'arrow-forward'} size={18} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -139,7 +141,10 @@ export default function OnboardingScreen() {
 
 const s = StyleSheet.create({
   wrap:   { flex: 1 },
-  topRow: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.base, minHeight: 44 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+            paddingHorizontal: spacing.base, minHeight: 44 },
+  langBtn:  { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, padding: spacing.xs },
+  langText: { fontSize: typography.sm, fontWeight: typography.semibold },
   skip:   { fontSize: typography.base, fontWeight: typography.semibold, padding: spacing.xs },
 
   slide: {

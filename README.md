@@ -7,12 +7,13 @@ No accounts. No self-hosted backend. Profile data stays on your device.
 ## Features
 
 - **Calculators** — CRS (official IRCC formula), FSW 67-point grid, BC PNP SIRS (200-pt), and SINP EOI (110-pt), all computed on-device
-- **Live draws** — fetched directly from the IRCC public JSON feed
-- **Trends & analytics** — cutoff averages, charts, and trends computed on-device
-- **Application tracker** — track the IRCC program you applied to, with typical processing-time estimates
-- **Document checklists** — per-program document checklists compiled from IRCC requirements
-- **Application timeline** — track milestones locally
+- **Live draws** — fetched directly from the IRCC public JSON feed with pull-to-refresh and category filters
+- **Trends & analytics** — cutoff averages, charts, and trends (free); personal odds calculator and CRS forecast bands (premium one-time unlock)
+- **Application tracker** — track the IRCC program you applied to, with live processing-time estimates from a GitHub-mirrored IRCC feed
+- **Document checklists** — per-program document checklists compiled from IRCC requirements, with per-item progress tracking
+- **Application timeline** — add/edit/delete milestones (ITA, AOR, Biometrics, Medical, Passport, etc.) with notes and custom entries
 - **Push notifications** — Cloudflare Worker checks for new draws every 15 minutes and sends Expo push when a new draw appears
+- **Premium analytics** — one-time in-app purchase unlocks personal odds gauge, EE pool forecast chart, and CRS position relative to historical cutoffs
 
 All calculators are estimates for planning — each screen points to the official IRCC/provincial tool. Profile data stays on-device.
 
@@ -22,14 +23,19 @@ All calculators are estimates for planning — each screen points to the officia
 |---------|--------|
 | Draws (app) | Mobile app → [IRCC JSON feed](https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json) |
 | Draws (worker) | Cloudflare Worker → GitHub Actions mirror (`data/latest-draw.json`)¹ |
-| Trends | Computed on-device from cached draws |
+| Processing times | Mobile app → GitHub Actions mirror (`data/processing-times.json`), 7-day cache |
+| EE pool / levels | Mobile app → GitHub Actions mirror (`data/ee-pool.json`), 7-day cache |
+| Trends & analytics | Computed on-device from cached draws + EE pool data |
 | Push alerts | [Cloudflare Worker](workers/push/) → Expo Push API |
+| Premium unlock | Google Play Billing (one-time managed product: `crs_pulse.analytics_unlock`) |
 
 ¹ canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the worker reads the latest draw from a GitHub-hosted mirror instead of IRCC directly.
 
 ```
 mobile/          Expo React Native app
 workers/push/    Cloudflare Worker (KV + cron)
+data/            GitHub Actions mirrors (draws, processing times, EE pool)
+docs/            Privacy policy
 ```
 
 ## Prerequisites
@@ -107,12 +113,12 @@ curl https://crs-pulse-push.balwinderxcode.workers.dev/health
 
 ### Worker API
 
-| Method | Path | Body |
-|--------|------|------|
-| GET | `/health` | — |
-| POST | `/register` | `{ "token": "ExponentPushToken[...]", "platform": "ios" \| "android" }` |
-| DELETE | `/revoke` | `{ "token": "ExponentPushToken[...]" }` |
-| POST | `/sync` | optional `Authorization: Bearer SYNC_SECRET` |
+| Method | Path | Auth | Body |
+|--------|------|------|------|
+| GET | `/health` | None | — |
+| POST | `/register` | `Bearer PUSH_API_SECRET` | `{ "token": "ExponentPushToken[...]", "platform": "ios" \| "android" }` |
+| DELETE | `/revoke` | `Bearer PUSH_API_SECRET` | `{ "token": "ExponentPushToken[...]" }` |
+| POST | `/sync` | `Bearer SYNC_SECRET` | — |
 
 Cron runs every 15 minutes after deploy.
 
@@ -128,6 +134,7 @@ Local dev: `npm run dev` → `http://localhost:8787`
 | `npm run ios` | Run on iOS simulator |
 | `npm run android` | Run on Android emulator |
 | `npm test` | Run Jest tests |
+| `npm run test:coverage` | Run Jest with coverage thresholds |
 | `npm run type-check` | TypeScript check |
 | `npm run lint` | ESLint |
 
@@ -137,7 +144,7 @@ Local dev: `npm run dev` → `http://localhost:8787`
 |---------|-------------|
 | `npm run dev` | Local worker at `:8787` |
 | `npm run deploy` | Deploy to Cloudflare |
-| `npm run tail` | Stream live logs |
+| `npm run type-check` | TypeScript check |
 
 ## iOS App Store release
 
@@ -211,19 +218,34 @@ express-entry-calculator/
 │   ├── src/
 │   │   ├── features/       # home, dashboard, calculators, fsw, bcpnp, sinp,
 │   │   │                   #   draws, analytics, timeline, tracker, checklist,
-│   │   │                   #   notifications, profile, settings, onboarding, faq, support
-│   │   ├── store/          # Zustand stores (profile, draws, timeline, application)
-│   │   ├── services/       # pushService, errorReporter
-│   │   └── navigation/
+│   │   │                   #   notifications, paywall, profile, onboarding, faq, support
+│   │   ├── store/          # Zustand stores (profile, draws, timeline, application,
+│   │   │                   #   premium, processingTimes, eePool)
+│   │   ├── services/       # pushService, iapService, errorReporter
+│   │   ├── components/     # shared UI (Card, Button, Badge, Input, SkeletonCard, etc.)
+│   │   ├── hooks/          # useColors, useAccentColor, useTabBarLayout, etc.
+│   │   ├── theme/          # colors, spacing, typography, shadows
+│   │   ├── navigation/     # RootNavigator, MainNavigator
+│   │   ├── types/          # TypeScript types (Draw, Category, RootStackParamList, etc.)
+│   │   └── constants/      # STORAGE_KEYS, IAP_PRODUCTS, CATEGORY_LABELS, etc.
 │   └── app.config.js
 ├── workers/push/
-│   └── src/index.ts        # draw-mirror poll + Expo push
-├── data/latest-draw.json   # GitHub Actions mirror the worker reads
+│   └── src/
+│       ├── index.ts        # HTTP handlers + scheduled cron entry point
+│       ├── tokenStore.ts   # KV token storage (register/revoke/list/migrate)
+│       ├── expoValidate.ts # Token validation against Expo API
+│       └── expoReceipts.ts # Async delivery receipt polling
+├── data/
+│   ├── latest-draw.json       # GitHub Actions mirror → worker reads this
+│   ├── processing-times.json  # IRCC processing times mirror
+│   └── ee-pool.json           # Express Entry pool + levels plan mirror
+└── docs/
+    └── PRIVACY_POLICY.md
 ```
 
 ## Privacy
 
-All CRS inputs and profile settings are stored locally on the device. The push worker only stores anonymous Expo device tokens — no personal immigration data is sent to any server.
+All CRS inputs and profile settings are stored locally on the device. The push worker only stores anonymous Expo device tokens — no personal immigration data is sent to any server. The in-app purchase is processed entirely by Google Play; no payment data reaches us.
 
 ## License
 

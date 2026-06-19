@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawCard } from '../components/DrawCard';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
@@ -44,7 +45,14 @@ export default function DrawsScreen() {
   const { contentPaddingBottom } = useTabBarLayout();
   const { contentFrameStyle } = useResponsiveLayout();
   const styles = makeStyles(colors, accent);
+  const { t } = useTranslation();
   const { draws, isLoading, isRefreshing, isError, error, refetch } = useDraws({ filter: activeFilter });
+
+  const filterLabel = (value: string): string => {
+    if (value === 'last_month') return t('draws.filterLastMonth');
+    if (value === 'last_year')  return t('draws.filterLastYear');
+    return t('draws.filterAll');
+  };
 
   const listContentStyle = [styles.listContent, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
 
@@ -52,7 +60,7 @@ export default function DrawsScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
         <View style={styles.header}>
-          <AppHeader title="Draws" />
+          <AppHeader title={t('draws.title')} />
         </View>
         <View style={styles.skeletons}>{[1,2,3].map((k) => <SkeletonCard key={k} />)}</View>
       </SafeAreaView>
@@ -70,8 +78,8 @@ export default function DrawsScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <AppHeader title="Draws" />
-        <Text style={styles.subtitle}>{draws.length} draws found</Text>
+        <AppHeader title={t('draws.title')} />
+        <Text style={styles.subtitle}>{t('draws.drawsFound', { count: draws.length })}</Text>
       </View>
 
       {/* Segmented filter control */}
@@ -85,14 +93,14 @@ export default function DrawsScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: activeFilter === f.value }}
             >
-              <Text style={[styles.filterText, activeFilter === f.value && styles.filterTextActive]}>{f.label}</Text>
+              <Text style={[styles.filterText, activeFilter === f.value && styles.filterTextActive]}>{filterLabel(f.value)}</Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
 
       {draws.length === 0 ? (
-        <EmptyState icon="flash-outline" title="No draws found" description="Try changing the filter or check back after a new draw is published." />
+        <EmptyState icon="flash-outline" title={t('draws.noDrawsFound')} description={t('draws.noDrawsDesc')} />
       ) : (
         <FlatList
           data={draws}
