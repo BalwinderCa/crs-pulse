@@ -31,7 +31,7 @@ export function UpgradeBanner() {
       <View style={s.text}>
         <Text style={[s.title, { color: c.textPrimary }]}>Upgrade to Premium</Text>
         <Text style={[s.sub, { color: c.textSecondary }]}>
-          Analytics · Email alerts · Ad-free
+          Analytics · Ad-free experience
         </Text>
       </View>
       <Ionicons name="chevron-forward" size={16} color={accent} />

@@ -1,25 +1,19 @@
-import { Fragment, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Fragment, useEffect } from 'react';
+import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Toast from 'react-native-toast-message';
-import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 import { AdBanner } from '@/components/common/AdBanner';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useDrawNotifications } from '@/hooks/useDrawNotifications';
-import { useProfileStore } from '@/store/profileStore';
-import { usePremiumStore } from '@/store/premiumStore';
-import { registerEmailNotification, unregisterEmailNotification } from '@/services/pushService';
 import { CATEGORY_LABELS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 
 const MAX_ITEMS = 15;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function timeAgo(dateStr: string): string {
   const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
@@ -34,18 +28,9 @@ export default function NotificationsScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
   const { draws } = useDrawsStore();
   const { seenDraw, markSeen } = useNotificationsStore();
   const { enabled: alertsEnabled, toggle: toggleAlerts } = useDrawNotifications();
-  const { profile, save } = useProfileStore();
-  const isPremium = usePremiumStore((s) => s.isPremium);
-
-  const [emailValue, setEmailValue] = useState(profile?.notification_email ?? '');
-  const [saving, setSaving] = useState(false);
-
-  const emailEnabled = profile?.email_notifications_enabled ?? false;
-  const savedEmail = profile?.notification_email ?? '';
 
   const items = draws.slice(0, MAX_ITEMS);
   const latest = draws[0];
@@ -55,43 +40,6 @@ export default function NotificationsScreen() {
       markSeen(latest.draw_number);
     }
   }, [latest, seenDraw, markSeen]);
-
-  const handleEmailToggle = async (on: boolean) => {
-    if (on && !EMAIL_RE.test(emailValue)) {
-      Toast.show({ type: 'error', text1: t('paywall.emailInvalid') });
-      return;
-    }
-    if (on) {
-      // Persist the current field value too, so the saved address never goes
-      // stale behind the toggle (e.g. user edits the email then flips it on).
-      if (savedEmail && savedEmail !== emailValue) {
-        void unregisterEmailNotification(savedEmail);
-      }
-      await save({ email_notifications_enabled: true, notification_email: emailValue });
-      void registerEmailNotification(emailValue);
-    } else {
-      await save({ email_notifications_enabled: false });
-      if (savedEmail) void unregisterEmailNotification(savedEmail);
-    }
-  };
-
-  const handleSaveEmail = async () => {
-    if (!EMAIL_RE.test(emailValue)) {
-      Toast.show({ type: 'error', text1: t('paywall.emailInvalid') });
-      return;
-    }
-    setSaving(true);
-    try {
-      if (savedEmail && savedEmail !== emailValue) {
-        void unregisterEmailNotification(savedEmail);
-      }
-      await save({ notification_email: emailValue, email_notifications_enabled: true });
-      void registerEmailNotification(emailValue);
-      Toast.show({ type: 'success', text1: 'Email saved' });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
@@ -127,51 +75,6 @@ export default function NotificationsScreen() {
             />
           </View>
         </View>
-
-        {/* Email alerts — premium only */}
-        {isPremium && (
-          <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-            <View style={s.toggleRow}>
-              <View style={[s.bellBox, { backgroundColor: accent + '18' }]}>
-                <Ionicons name="mail-outline" size={20} color={accent} />
-              </View>
-              <View style={s.toggleText}>
-                <Text style={[s.toggleLabel, { color: c.textPrimary }]}>{t('paywall.emailAlertsLabel')}</Text>
-                <Text style={[s.toggleHint, { color: c.textMuted }]}>
-                  {emailEnabled && savedEmail
-                    ? `${t('paywall.emailAlertsHintOn')}: ${savedEmail}`
-                    : t('paywall.emailAlertsHintOff')}
-                </Text>
-              </View>
-              <Switch
-                value={emailEnabled}
-                onValueChange={handleEmailToggle}
-                trackColor={{ false: c.surfaceTertiary, true: accent }}
-                thumbColor={palette.white}
-              />
-            </View>
-            <View style={[s.emailRow, { borderTopColor: c.border }]}>
-              <TextInput
-                style={[s.emailInput, { color: c.textPrimary, borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
-                placeholder={t('paywall.emailPlaceholder')}
-                placeholderTextColor={c.textMuted}
-                value={emailValue}
-                onChangeText={setEmailValue}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-              <TouchableOpacity
-                style={[s.saveBtn, { backgroundColor: accent, opacity: saving ? 0.6 : 1 }]}
-                onPress={handleSaveEmail}
-                disabled={saving}
-                activeOpacity={0.8}
-              >
-                <Text style={s.saveBtnText}>{t('paywall.emailSave')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
 
         <Text style={[s.sectionTitle, { color: c.textMuted }]}>RECENT DRAW ALERTS</Text>
 
@@ -217,21 +120,6 @@ const s = StyleSheet.create({
   toggleText:  { flex: 1, gap: 2 },
   toggleLabel: { fontSize: typography.base, fontWeight: typography.bold },
   toggleHint:  { fontSize: typography.xs, lineHeight: 16 },
-
-  emailRow: {
-    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-    marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth,
-  },
-  emailInput: {
-    flex: 1, height: 40, borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: borderRadius.md, paddingHorizontal: spacing.sm,
-    fontSize: typography.sm,
-  },
-  saveBtn: {
-    height: 40, paddingHorizontal: spacing.md, borderRadius: borderRadius.md,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  saveBtnText: { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
   sectionTitle: { fontSize: typography.xs, fontWeight: typography.bold,
                   letterSpacing: 0.8, marginTop: spacing.sm },
