@@ -68,6 +68,34 @@ function withNode20ForCodegen(config) {
   });
 }
 
+// Inline config plugin: injects the real AdMob App ID into AndroidManifest with
+// tools:replace so it wins over RNGMA's empty placeholder value.
+function withAdMobManifest(config) {
+  const { withAndroidManifest } = require('@expo/config-plugins');
+  const appId =
+    process.env.GOOGLE_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713';
+  return withAndroidManifest(config, (mod) => {
+    const app = mod.modResults.manifest.application?.[0];
+    if (!app) return mod;
+    const metaData = (app['meta-data'] ??= []);
+    const existing = metaData.find(
+      (m) => m.$['android:name'] === 'com.google.android.gms.ads.APPLICATION_ID',
+    );
+    const entry = {
+      $: {
+        'android:name': 'com.google.android.gms.ads.APPLICATION_ID',
+        'android:value': appId,
+        'tools:replace': 'android:value',
+      },
+    };
+    if (existing) Object.assign(existing.$, entry.$);
+    else metaData.push(entry);
+    // Ensure tools namespace is declared on the root manifest element.
+    mod.modResults.manifest.$['xmlns:tools'] = 'http://schemas.android.com/tools';
+    return mod;
+  });
+}
+
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = () => ({
   // Launcher/home-screen label. Store listing names are set in Play Console /
@@ -119,6 +147,7 @@ module.exports = () => ({
   plugins: [
     withKotlinMetadataVersionSkip,
     withNode20ForCodegen,
+    withAdMobManifest,
     // Google Play Billing (one-time analytics unlock). The plugin adds the
     // com.android.vending.BILLING permission and the native billing client.
     ['react-native-iap', { paymentProvider: 'Play Store' }],
