@@ -24,6 +24,50 @@ const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md';
 
+// Inline config plugin: adds -Xskip-metadata-version-check to all subproject
+// Kotlin compile tasks. Required because play-services-ads 25.0.0 (pulled in
+// by react-native-google-mobile-ads 16.x) ships Kotlin metadata compiled with
+// Kotlin 2.2, but the project targets Kotlin 1.9.x. Remove once RNGMA bumps
+// their minimum Kotlin or we upgrade the project to Kotlin 2.x.
+function withKotlinMetadataVersionSkip(config) {
+  const { withProjectBuildGradle } = require('@expo/config-plugins');
+  return withProjectBuildGradle(config, (mod) => {
+    const MARKER = '-Xskip-metadata-version-check';
+    if (!mod.modResults.contents.includes(MARKER)) {
+      mod.modResults.contents += `
+// play-services-ads ≥25 ships Kotlin 2.2 metadata; project uses Kotlin 1.9.x.
+subprojects {
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions { freeCompilerArgs += ["-Xskip-metadata-version-check"] }
+    }
+}
+`;
+    }
+    return mod;
+  });
+}
+
+// Inline config plugin: pins the node executable to Node 20 for codegen tasks.
+// Node 26 (default brew install) breaks RN codegen for RNGMA specs.
+// Only applied when /usr/local/Cellar/node@20 exists (local dev); EAS images
+// ship Node 18/20 already.
+function withNode20ForCodegen(config) {
+  const { withAppBuildGradle } = require('@expo/config-plugins');
+  const node20 = '/usr/local/Cellar/node@20/20.20.2/bin/node';
+  const { existsSync } = require('node:fs');
+  if (!existsSync(node20)) return config;
+  return withAppBuildGradle(config, (mod) => {
+    const MARKER = 'nodeExecutableAndArgs';
+    if (!mod.modResults.contents.includes(MARKER)) {
+      mod.modResults.contents = mod.modResults.contents.replace(
+        /^(react \{)/m,
+        `$1\n    nodeExecutableAndArgs = ["${node20}"]`,
+      );
+    }
+    return mod;
+  });
+}
+
 /** @type {import('expo/config').ExpoConfig} */
 module.exports = () => ({
   // Launcher/home-screen label. Store listing names are set in Play Console /
@@ -32,7 +76,7 @@ module.exports = () => ({
   slug: 'crs-pulse',
   owner: 'balwinder98',
   version: '1.0.1',
-  newArchEnabled: false,
+  newArchEnabled: true,
   orientation: 'portrait',
   icon: './assets/icon.png',
   userInterfaceStyle: 'automatic',
@@ -73,6 +117,8 @@ module.exports = () => ({
     favicon: './assets/favicon.png',
   },
   plugins: [
+    withKotlinMetadataVersionSkip,
+    withNode20ForCodegen,
     // Google Play Billing (one-time analytics unlock). The plugin adds the
     // com.android.vending.BILLING permission and the native billing client.
     ['react-native-iap', { paymentProvider: 'Play Store' }],

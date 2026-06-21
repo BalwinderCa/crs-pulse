@@ -17,7 +17,8 @@
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit",
-    "prebuild": "expo prebuild"
+    "prebuild": "expo prebuild",
+    "postinstall": "node scripts/patch-rngma-codegen.js"
   },
   "dependencies": {
     "@expo/vector-icons": "~14.0.4",
