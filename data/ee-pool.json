@@ -1,16 +1,46 @@
 {
-  "updated": "January 8, 2026",
+  "updated": "June 22, 2026",
   "source": "IRCC Express Entry pool composition (rounds of invitations) + 2025–2027 Immigration Levels Plan",
-  "note": "Pool composition is a periodic IRCC snapshot, not a real-time feed. Refresh from the latest IRCC 'rounds of invitations' pool-composition table when published. Levels Plan targets update annually.",
+  "note": "Pool composition is auto-mirrored from the IRCC rounds feed (dd fields, as of the latest draw date). Immigration Levels Plan targets update annually and are maintained manually.",
   "pool": {
-    "total": 241600,
+    "total": 239645,
     "distribution": [
-      { "band": "601–1200", "min": 601, "max": 1200, "count": 4600 },
-      { "band": "501–600", "min": 501, "max": 600, "count": 24000 },
-      { "band": "451–500", "min": 451, "max": 500, "count": 70000 },
-      { "band": "401–450", "min": 401, "max": 450, "count": 78000 },
-      { "band": "351–400", "min": 351, "max": 400, "count": 47000 },
-      { "band": "0–350", "min": 0, "max": 350, "count": 18000 }
+      {
+        "band": "601–1200",
+        "min": 601,
+        "max": 1200,
+        "count": 941
+      },
+      {
+        "band": "501–600",
+        "min": 501,
+        "max": 600,
+        "count": 20012
+      },
+      {
+        "band": "451–500",
+        "min": 451,
+        "max": 500,
+        "count": 75938
+      },
+      {
+        "band": "401–450",
+        "min": 401,
+        "max": 450,
+        "count": 64807
+      },
+      {
+        "band": "351–400",
+        "min": 351,
+        "max": 400,
+        "count": 51897
+      },
+      {
+        "band": "0–350",
+        "min": 0,
+        "max": 350,
+        "count": 26050
+      }
     ]
   },
   "levels": {

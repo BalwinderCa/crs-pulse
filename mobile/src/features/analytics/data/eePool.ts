@@ -57,18 +57,18 @@ export interface EePoolData {
  * newer pool composition. Keep `updated`/`source` honest.
  */
 export const EE_POOL_FALLBACK: EePoolData = {
-  updated: 'January 8, 2026',
+  updated: 'June 22, 2026',
   source:
     'IRCC Express Entry pool composition (rounds of invitations) + 2025–2027 Immigration Levels Plan',
   pool: {
-    total: 241_600,
+    total: 239_645,
     distribution: [
-      { band: '601–1200', min: 601, max: 1200, count: 4_600 },
-      { band: '501–600', min: 501, max: 600, count: 24_000 },
-      { band: '451–500', min: 451, max: 500, count: 70_000 },
-      { band: '401–450', min: 401, max: 450, count: 78_000 },
-      { band: '351–400', min: 351, max: 400, count: 47_000 },
-      { band: '0–350', min: 0, max: 350, count: 18_000 },
+      { band: '601–1200', min: 601, max: 1200, count: 941 },
+      { band: '501–600', min: 501, max: 600, count: 20_012 },
+      { band: '451–500', min: 451, max: 500, count: 75_938 },
+      { band: '401–450', min: 401, max: 450, count: 64_807 },
+      { band: '351–400', min: 351, max: 400, count: 51_897 },
+      { band: '0–350', min: 0, max: 350, count: 26_050 },
     ],
   },
   levels: {
