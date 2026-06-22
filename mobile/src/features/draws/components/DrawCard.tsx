@@ -1,7 +1,7 @@
 import React from 'react';
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 
 const IRCC_ROUNDS_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations.html';
@@ -73,7 +73,7 @@ export function DrawCard({ draw, userScore }: Props) {
       activeOpacity={0.7}
       accessible={true}
       accessibilityRole="link"
-      accessibilityLabel={`Draw ${draw.draw_number}, ${draw.category}, cutoff ${draw.cutoff_score}, ${format(new Date(draw.date), 'MMMM d yyyy')}, ${draw.invitations_issued.toLocaleString()} invitations`}
+      accessibilityLabel={`Draw ${draw.draw_number}, ${draw.category}, cutoff ${draw.cutoff_score}, ${format(parseISO(draw.date.slice(0, 10)), 'MMMM d yyyy')}, ${draw.invitations_issued.toLocaleString()} invitations`}
     >
       <View style={styles.card}>
         {/* Colored left border by category */}
@@ -91,7 +91,7 @@ export function DrawCard({ draw, userScore }: Props) {
             </View>
           </View>
 
-          <Text style={styles.date}>{format(new Date(draw.date), 'MMMM d, yyyy')}</Text>
+          <Text style={styles.date}>{format(parseISO(draw.date.slice(0, 10)), 'MMMM d, yyyy')}</Text>
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>

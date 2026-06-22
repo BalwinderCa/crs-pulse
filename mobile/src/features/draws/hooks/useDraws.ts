@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { parseISO } from 'date-fns';
 import { useDrawsStore } from '@/store/drawsStore';
 import type { Draw, DrawFilter } from '@/types';
 
@@ -14,7 +15,7 @@ function applyFilter(draws: Draw[], filter?: DrawFilter): Draw[] {
   const cutoff = new Date(now);
   if (filter === 'last_month') cutoff.setMonth(cutoff.getMonth() - 1);
   if (filter === 'last_year')  cutoff.setFullYear(cutoff.getFullYear() - 1);
-  return draws.filter(d => new Date(d.date) >= cutoff);
+  return draws.filter(d => parseISO(d.date) >= cutoff);
 }
 
 export function useDraws({ filter, category }: Params = {}) {

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { parseISO } from 'date-fns';
 import { useDrawsStore } from '@/store/drawsStore';
 import { downsample, MAX_CHART_POINTS } from '@/utils/downsample';
 import type { Analytics, Category, ChartDataPoint } from '@/types';
@@ -11,7 +12,7 @@ function filterByPeriod<T extends { date: string }>(items: T[], period: string):
   if (period === '3m') cutoff.setMonth(cutoff.getMonth() - 3);
   if (period === '6m') cutoff.setMonth(cutoff.getMonth() - 6);
   if (period === '1y') cutoff.setFullYear(cutoff.getFullYear() - 1);
-  return items.filter(d => new Date(d.date) >= cutoff);
+  return items.filter(d => parseISO(d.date) >= cutoff);
 }
 
 export function useAnalytics({ category = 'all', period = 'all' }: Params = {}) {

@@ -40,7 +40,10 @@ function parseRound(r: Record<string, string>): Draw | null {
   const num = parseInt(r.drawNumber ?? '', 10);
   const cutoff = parseInt((r.drawCRS ?? '').replace(/,/g, ''), 10);
   const size = parseInt((r.drawSize ?? '').replace(/,/g, ''), 10);
-  const date = r.drawDate ?? '';
+  // IRCC publishes drawDate as a calendar date. Strip any time/zone component
+  // so it's always YYYY-MM-DD — parsing the full value as UTC would shift the
+  // displayed date back a day in timezones behind UTC (e.g. all of Canada).
+  const date = (r.drawDate ?? '').slice(0, 10);
   if (!num || !cutoff || !date) return null;
   return {
     id: num,

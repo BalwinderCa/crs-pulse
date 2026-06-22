@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { format } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -31,8 +31,9 @@ import type { RootStackParamList, MainTabParamList } from '@/types';
 
 const DAY_MS = 86_400_000;
 
+// Whole calendar days from `a` to `b` (today → 0), timezone-safe.
 function daysBetween(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / DAY_MS);
+  return differenceInCalendarDays(b, a);
 }
 
 export default function HomeScreen() {
@@ -47,6 +48,14 @@ export default function HomeScreen() {
   const { categories, updatedLabel } = useProcessingTimes();
   const milestones = useTimelineStore((s) => s.milestones);
   const lastMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
+
+  // "Today" / "1 day ago" / "N days ago" from a YYYY-MM-DD string (timezone-safe).
+  const relativeDays = (iso: string): string => {
+    const d = daysBetween(parseISO(iso.slice(0, 10)), new Date());
+    if (d <= 0) return t('home.today');
+    if (d === 1) return t('home.dayAgo');
+    return t('home.daysAgo', { days: d });
+  };
   const lastMilestoneLabel = lastMilestone
     ? (lastMilestone.type === 'Custom' ? (lastMilestone.customLabel ?? 'Custom') : lastMilestone.type)
     : null;
@@ -60,7 +69,7 @@ export default function HomeScreen() {
     if (!application.appliedDate) {
       return { ...found, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
     }
-    const applied = new Date(application.appliedDate);
+    const applied = parseISO(application.appliedDate);
     const daysIn = Math.max(0, daysBetween(applied, new Date()));
     const decisionDate = new Date(applied.getTime() + totalDays * DAY_MS);
     return {
@@ -262,7 +271,7 @@ export default function HomeScreen() {
             <View style={{ flex: 1 }}>
               <Text style={[s.setupTitle, { color: c.textPrimary }]}>{lastMilestoneLabel}</Text>
               <Text style={[s.setupSub, { color: c.textSecondary }]}>
-                {t('home.lastMilestone', { days: daysBetween(new Date(lastMilestone.date), new Date()) })}
+                {t('home.lastMilestone', { rel: relativeDays(lastMilestone.date) })}
               </Text>
             </View>
           ) : (
@@ -285,7 +294,7 @@ export default function HomeScreen() {
                 <Ionicons name="time-outline" size={13} color={c.textMuted} />
                 <Text style={[s.sinceChipLabel, { color: c.textMuted }]}>{t('home.lastDraw')}</Text>
                 <Text style={[s.sinceChipValue, { color: c.textSecondary }]}>
-                  {t('home.daysAgo', { days: daysBetween(new Date(draws[0].date), new Date()) })}
+                  {relativeDays(draws[0].date)}
                 </Text>
               </View>
             )}
@@ -304,7 +313,7 @@ export default function HomeScreen() {
                       </Text>
                     </View>
                     <Text style={[s.recentMeta, { color: c.textMuted }]}>
-                      {draw.invitations_issued.toLocaleString()} {t('home.invited')} · {format(new Date(draw.date), 'MMM d, yyyy')}
+                      {draw.invitations_issued.toLocaleString()} {t('home.invited')} · {format(parseISO(draw.date.slice(0, 10)), 'MMM d, yyyy')}
                     </Text>
                   </View>
                   <View style={s.recentRight}>

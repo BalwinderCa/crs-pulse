@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { parseISO } from 'date-fns';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useProfileStore, DEFAULT_CALC_INPUTS, type CalcInputs } from '@/store/profileStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
@@ -259,7 +260,7 @@ export function useAnalyticsData() {
     // same week (e.g. CEC, French and PNP on consecutive days), which would
     // collapse a naive day-to-day gap to ~1 day. Ignore sub-3-day gaps so the
     // cadence reflects the ~2-week spacing between rounds, not intra-week clusters.
-    const uniqDates = [...new Set(draws.slice(0, 12).map((d) => d.date))].map((d) => new Date(d).getTime()).sort((a, b) => b - a);
+    const uniqDates = [...new Set(draws.slice(0, 12).map((d) => d.date))].map((d) => parseISO(d).getTime()).sort((a, b) => b - a);
     const gaps: number[] = [];
     for (let k = 0; k < uniqDates.length - 1; k++) gaps.push(Math.round((uniqDates[k]! - uniqDates[k + 1]!) / DAY));
     const roundGaps = gaps.filter((g) => g >= 3);
@@ -285,10 +286,10 @@ export function useAnalyticsData() {
     // YTD volume + prior-year total (live, dynamic years)
     const curYear = new Date(lastTime).getFullYear();
     const prevYear = curYear - 1;
-    const ytd = draws.filter((d) => new Date(d.date).getFullYear() === curYear);
+    const ytd = draws.filter((d) => parseISO(d.date).getFullYear() === curYear);
     const itaYtd = ytd.reduce((s, d) => s + (d.invitations_issued || 0), 0);
     const itaPrevYear = draws
-      .filter((d) => new Date(d.date).getFullYear() === prevYear)
+      .filter((d) => parseISO(d.date).getFullYear() === prevYear)
       .reduce((s, d) => s + (d.invitations_issued || 0), 0);
     const sizes = ytd.map((d) => d.invitations_issued).filter((n) => n > 0);
 
@@ -346,9 +347,9 @@ export function useAnalyticsData() {
     const yearAgo = lastTime - 365 * DAY;
     const byMonth = new Array(12).fill(0) as number[];
     for (const d of draws) {
-      const t = new Date(d.date).getTime();
+      const t = parseISO(d.date).getTime();
       if (Number.isNaN(t) || t < yearAgo) continue;
-      const m = new Date(d.date).getMonth();
+      const m = parseISO(d.date).getMonth();
       if (!Number.isNaN(m)) byMonth[m] += 1;
     }
     const activeMonths = byMonth.map((v, i) => ({ v, i })).filter((x) => x.v > 0);
