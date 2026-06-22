@@ -83,11 +83,10 @@ function DetailView({ title, body, onClose }: {
     <View style={[dv.wrap, { backgroundColor: c.surfacePrimary }]}>
       <View style={[dv.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={onClose} hitSlop={16} style={dv.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[dv.backLabel, { color: c.textPrimary }]}>Back</Text>
+          <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
         <Text style={[dv.title, { color: c.textPrimary }]}>{title}</Text>
-        <View style={{ width: 60 }} />
+        <View style={{ width: 44 }} />
       </View>
       <ScrollView
         contentContainerStyle={[dv.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
@@ -123,11 +122,10 @@ function ContactView({ onClose }: { onClose: () => void }) {
     <View style={[dv.wrap, { backgroundColor: c.surfacePrimary }]}>
       <View style={[dv.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
         <TouchableOpacity onPress={onClose} hitSlop={16} style={dv.backBtn}>
-          <Ionicons name="chevron-back" size={22} color={c.textPrimary} />
-          <Text style={[dv.backLabel, { color: c.textPrimary }]}>Back</Text>
+          <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
         <Text style={[dv.title, { color: c.textPrimary }]}>Contact Us</Text>
-        <View style={{ width: 60 }} />
+        <View style={{ width: 44 }} />
       </View>
       <View style={dv.body}>
         <Text style={[dv.text, { color: c.textSecondary, marginBottom: spacing.lg }]}>
@@ -173,9 +171,8 @@ const dv = StyleSheet.create({
   wrap:      { flex: 1 },
   topBar:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                paddingHorizontal: spacing.base, paddingBottom: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth },
-  backBtn:   { flexDirection: 'row', alignItems: 'center', gap: 2, width: 60 },
-  backLabel: { fontSize: typography.base, fontWeight: typography.medium },
-  title:     { fontSize: typography.base, fontWeight: typography.semibold, flex: 1, textAlign: 'center' },
+  backBtn:   { flexDirection: 'row', alignItems: 'center', gap: 2, width: 44 },
+  title:     { fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3, flex: 1, textAlign: 'center' },
   body:      { padding: spacing.base, paddingTop: spacing.xl },
   text:      { fontSize: typography.base, lineHeight: 26 },
 });

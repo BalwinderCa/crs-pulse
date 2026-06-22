@@ -60,24 +60,27 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
         },
       ]}
     >
-      {/* Left — nav button + screen name */}
-      <View style={s.sideLeft}>
-        {isStack ? (
-          // Chevron + screen name are one tappable back target
+      {isStack ? (
+        /* Internal page: back chevron (left) · centered title (flex) · right slot */
+        <>
           <TouchableOpacity
             onPress={onBackPress ?? (() => navigation.goBack())}
-            hitSlop={12}
-            style={s.backRow}
+            hitSlop={16}
+            style={[s.iconBtn, s.stackSide]}
             accessibilityRole="button"
             accessibilityLabel={`Go back from ${title}`}
           >
-            <Ionicons name="chevron-back" size={24} color={c.textPrimary} />
-            <Text style={[s.stackTitle, { color: c.textPrimary }]} numberOfLines={1}>
-              {title}
-            </Text>
+            <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
           </TouchableOpacity>
-        ) : (
-          <>
+          <Text style={[s.stackTitle, { color: c.textPrimary }]} numberOfLines={1}>
+            {title}
+          </Text>
+          <View style={[s.stackSide, s.stackRight]}>{right}</View>
+        </>
+      ) : (
+        /* Main tab page: menu + label (left) · brand lockup (center) · actions (right) */
+        <>
+          <View style={s.sideLeft}>
             <TouchableOpacity
               onPress={() => setMenuOpen(true)}
               hitSlop={12}
@@ -90,39 +93,33 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
             <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
               {title}
             </Text>
-          </>
-        )}
-      </View>
+          </View>
 
-      {/* Center — brand lockup (main tab pages only, not internal/stack pages) */}
-      {!isStack && (
-        <View style={s.brandCenter}>
-          <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
-          <Logo size={20} />
-          {isPremium && (
-            <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
-              <Text style={s.proText}>👑 PRO</Text>
-            </View>
-          )}
-        </View>
+          <View style={s.brandCenter}>
+            <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
+            <Logo size={20} />
+            {isPremium && (
+              <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
+                <Text style={s.proText}>👑 PRO</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={s.sideRight}>
+            {right}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Notifications')}
+              hitSlop={12}
+              style={s.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Notifications"
+            >
+              <Ionicons name="notifications-outline" size={23} color={c.textPrimary} />
+              {hasUnseen && <View style={[s.badge, { backgroundColor: palette.danger }]} />}
+            </TouchableOpacity>
+          </View>
+        </>
       )}
-
-      {/* Right — actions */}
-      <View style={s.sideRight}>
-        {right}
-        {!isStack && (
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Notifications')}
-            hitSlop={12}
-            style={s.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Notifications"
-          >
-            <Ionicons name="notifications-outline" size={23} color={c.textPrimary} />
-            {hasUnseen && <View style={[s.badge, { backgroundColor: palette.danger }]} />}
-          </TouchableOpacity>
-        )}
-      </View>
       <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </View>
   );
@@ -136,8 +133,9 @@ const s = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   sideLeft:    { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minWidth: 0 },
-  backRow:     { flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 1, paddingVertical: 4, paddingRight: spacing.sm },
-  stackTitle:  { flexShrink: 1, fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3 },
+  stackTitle:  { flex: 1, textAlign: 'center', fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3 },
+  stackSide:   { minWidth: 40, flexDirection: 'row', alignItems: 'center' },
+  stackRight:  { justifyContent: 'flex-end' },
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
   brandIcon:   { width: 38, height: 38, marginRight: -7 },
   proBadge: {
