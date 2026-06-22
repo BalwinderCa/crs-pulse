@@ -174,7 +174,7 @@ EXPO_PUBLIC_PUSH_URL=https://crs-pulse-push.balwinderxcode.workers.dev
 ### App Store Connect
 
 1. Create app at [App Store Connect](https://appstoreconnect.apple.com) with bundle ID `com.crspulse.app`
-2. Fill **App Privacy** questionnaire: no tracking; data stored on device; optional push token sent to server
+2. Fill **App Privacy** questionnaire: profile data stored on device; optional push token sent to server; the free version uses Google AdMob — declare the advertising identifier / ad-related data collection (and "Tracking" if you serve personalized ads)
 3. Set privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
 4. Export compliance: app uses standard HTTPS only (`ITSAppUsesNonExemptEncryption` is false)
 
@@ -245,7 +245,7 @@ express-entry-calculator/
 
 ## Privacy
 
-All CRS inputs and profile settings are stored locally on the device. The push worker only stores anonymous Expo device tokens — no personal immigration data is sent to any server. The in-app purchase is processed entirely by Google Play; no payment data reaches us.
+All CRS inputs and profile settings are stored locally on the device. The push worker only stores anonymous Expo device tokens — no personal immigration data is sent to any server. The in-app purchase is processed entirely by Google Play; no payment data reaches us. The free version shows Google AdMob banner ads (which may collect device/ad identifiers); the one-time Premium unlock removes them.
 
 ## License
 

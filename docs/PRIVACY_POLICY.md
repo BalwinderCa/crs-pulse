@@ -45,10 +45,14 @@ You can disable notifications and revoke your token at any time in Settings.
 
 The Analytics "Improve" features are unlocked with an optional **one-time, non-consumable** in-app purchase, processed entirely by Google Play (and, where offered, the App Store). Payment is handled by the store — we never receive or store your card or payment information, and we do not collect any device identifier for entitlement (ownership is read back from the store).
 
+### Advertising
+
+The free version of the app displays banner ads through **Google AdMob**. AdMob is a third-party service that may collect device identifiers (such as the advertising ID) and usage data to serve and measure ads, as described in [Google's Privacy Policy](https://policies.google.com/privacy). Purchasing the one-time Premium unlock removes all ads. We do not use any other third-party analytics or trackers, and your CRS profile data is never shared with the ad network.
+
 ## What we do not collect
 
 - No user accounts or login
-- No analytics trackers or advertising SDKs
+- No analytics trackers (aside from Google AdMob, which serves ads in the free version — see Advertising above)
 - No sale of personal data
 - No immigration profile data on our servers
 - No payment information (purchases are handled by the app store)

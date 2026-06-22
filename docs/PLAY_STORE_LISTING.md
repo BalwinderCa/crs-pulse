@@ -20,7 +20,7 @@ CRS Pulse helps Canadian immigration applicants track their Express Entry journe
 
 **Draw Alerts** — Optional push notifications when IRCC publishes a new draw.
 
-Your CRS profile stays on your device. No account required. No ads. No analytics trackers.
+Your CRS profile stays on your device. No account required. No analytics trackers. The free version is ad-supported (Google AdMob); the one-time Premium unlock removes all ads.
 
 **In-app purchases:** Contains one optional in-app purchase — a one-time "Analytics unlock" (no subscription). The rest of the app is free.
 

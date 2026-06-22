@@ -30,13 +30,13 @@ Thank you for trusting CRS Pulse on your immigration journey. Keep going — Can
 
 const PRIVACY_TEXT = `CRS Pulse respects your privacy.
 
-All data you enter (age, education, language scores, work experience) is stored locally on your device only. We do not collect, transmit, or share any personal information with third parties.
+All data you enter (age, education, language scores, work experience) is stored locally on your device only. We never collect, transmit, or share the profile information you enter with anyone.
 
 Push notifications (if enabled) register your device with our server so we can alert you when IRCC publishes a new draw. No personal profile data is sent — only an anonymous device token.
 
 Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
-We do not use analytics trackers, advertising SDKs, or any third-party data collection tools.
+The free version shows ads through Google AdMob, which may collect device identifiers and usage data to deliver ads under Google's privacy policy. Buying Premium removes all ads. We use no other third-party analytics or trackers.
 
 Full policy: ${PRIVACY_POLICY_URL}
 
