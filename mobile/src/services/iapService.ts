@@ -41,6 +41,13 @@ type Handlers = {
 /** Open the billing connection and wire purchase listeners. Idempotent. */
 export async function connect(handlers: Handlers): Promise<boolean> {
   if (connected) return true;
+
+  // Billing is Google Play only. There is no App Store product on iOS, and
+  // calling initConnection() there triggers a StoreKit "Sign in to Apple
+  // Account" prompt on every launch. Skip billing on non-Android platforms —
+  // premiumStore then reports billing unavailable and the gate fails open.
+  if (Platform.OS !== 'android') return false;
+
   try {
     await initConnection();
     // Recommended on Android: clear out any stuck pending purchases.
