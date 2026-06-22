@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  FlatList, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions,
+  FlatList, Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions,
   type NativeScrollEvent, type NativeSyntheticEvent,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,9 +13,11 @@ import i18n from '@/i18n';
 import { useProfileStore } from '@/store/profileStore';
 import type { AppLanguage } from '@/store/profileStore';
 import { STORAGE_KEYS } from '@/constants';
-import { spacing, typography, borderRadius } from '@/theme';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useDrawNotifications } from '@/hooks/useDrawNotifications';
+import { Toggle } from '@/components/common/Toggle';
 import type { RootStackParamList } from '@/types';
 
 type Slide = {
@@ -23,6 +25,18 @@ type Slide = {
   title: string;
   body: string;
 };
+
+type WelcomeFeature = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  tint: string;
+  labelKey: string;
+};
+
+const WELCOME_FEATURES: WelcomeFeature[] = [
+  { icon: 'flash-outline',         tint: palette.blue,      labelKey: 'onboarding.welcomeFeat0' },
+  { icon: 'calculator-outline',    tint: palette.success,   labelKey: 'onboarding.welcomeFeat1' },
+  { icon: 'stats-chart-outline',   tint: palette.warning,   labelKey: 'onboarding.welcomeFeat2' },
+];
 
 export async function markOnboardingSeen(): Promise<void> {
   try {
@@ -39,13 +53,13 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
   const save = useProfileStore((s) => s.save);
   const profile = useProfileStore((s) => s.profile);
+  const { enabled: notifyEnabled, toggle: toggleNotify } = useDrawNotifications();
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
 
   const slides: Slide[] = useMemo(() => [
     { icon: 'earth-outline',       title: t('onboarding.slide0Title'), body: t('onboarding.slide0Body') },
     { icon: 'flash-outline',       title: t('onboarding.slide1Title'), body: t('onboarding.slide1Body') },
-    { icon: 'calculator-outline',  title: t('onboarding.slide2Title'), body: t('onboarding.slide2Body') },
     { icon: 'lock-closed-outline', title: t('onboarding.slide3Title'), body: t('onboarding.slide3Body') },
   ], [t]);
 
@@ -101,15 +115,65 @@ export default function OnboardingScreen() {
         showsHorizontalScrollIndicator={false}
         onMomentumScrollEnd={onScrollEnd}
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
-        renderItem={({ item }) => (
-          <View style={[s.slide, { width }]}>
-            <View style={[s.iconCircle, { backgroundColor: accent + '15', borderColor: accent + '30' }]}>
-              <Ionicons name={item.icon} size={56} color={accent} />
+        renderItem={({ item, index: i }) =>
+          i === 0 ? (
+            <View style={[s.slide, s.welcomeSlide, { width }]}>
+              <Image
+                source={require('../../../../assets/logo.png')}
+                style={s.welcomeLogo}
+                resizeMode="contain"
+              />
+              <Text style={[s.welcomeTitle, { color: c.textPrimary }]}>{item.title}</Text>
+              <Text style={[s.welcomeSub, { color: c.textSecondary }]}>{t('onboarding.welcomeSub')}</Text>
+
+              <View style={[s.featCard, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+                {WELCOME_FEATURES.map((f, idx) => (
+                  <View
+                    key={f.labelKey}
+                    style={[
+                      s.featRow,
+                      idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth },
+                    ]}
+                  >
+                    <View style={[s.featIcon, { backgroundColor: f.tint + '1A' }]}>
+                      <Ionicons name={f.icon} size={18} color={f.tint} />
+                    </View>
+                    <Text style={[s.featLabel, { color: c.textPrimary }]}>{t(f.labelKey)}</Text>
+                    <Ionicons name="checkmark-circle" size={18} color={palette.success} />
+                  </View>
+                ))}
+              </View>
+
+              <Text style={[s.disclaimer, { color: c.textMuted }]}>{t('onboarding.disclaimer')}</Text>
             </View>
-            <Text style={[s.title, { color: c.textPrimary }]}>{item.title}</Text>
-            <Text style={[s.body, { color: c.textSecondary }]}>{item.body}</Text>
-          </View>
-        )}
+          ) : (
+            <View style={[s.slide, s.welcomeSlide, { width }]}>
+              <View style={[s.iconCircle, { backgroundColor: accent + '15', borderColor: accent + '30' }]}>
+                <Ionicons name={item.icon} size={42} color={accent} />
+              </View>
+              <Text style={[s.welcomeTitle, { color: c.textPrimary }]}>{item.title}</Text>
+              <Text style={[s.welcomeSub, { color: c.textSecondary }]}>{item.body}</Text>
+
+              {i === 1 && (
+                <View style={[s.notifCard, { backgroundColor: accent + '16', borderColor: accent + '66' }]}>
+                  <View style={[s.notifIcon, { backgroundColor: accent + '18' }]}>
+                    <Ionicons name="notifications-outline" size={20} color={accent} />
+                  </View>
+                  <View style={s.notifText}>
+                    <Text style={[s.notifTitle, { color: c.textPrimary }]}>{t('onboarding.notifyTitle')}</Text>
+                    <Text style={[s.notifSub, { color: c.textSecondary }]}>{t('onboarding.notifySub')}</Text>
+                  </View>
+                  <Toggle
+                    value={notifyEnabled}
+                    onValueChange={toggleNotify}
+                    activeColor={accent}
+                    accessibilityLabel={t('onboarding.notifyTitle')}
+                  />
+                </View>
+              )}
+            </View>
+          )
+        }
       />
 
       {/* Dots + CTA */}
@@ -152,16 +216,48 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing['2xl'], gap: spacing.base,
   },
   iconCircle: {
-    width: 128, height: 128, borderRadius: 64, borderWidth: 1,
-    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.md,
+    width: 96, height: 96, borderRadius: 48, borderWidth: 1,
+    alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs,
   },
-  title: {
-    fontSize: typography['3xl'], fontWeight: typography.black,
+  /* Welcome slide (paywall-style) */
+  welcomeSlide: { justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg },
+  welcomeLogo: { width: 96, height: 96, marginBottom: spacing.xs },
+  welcomeTitle: {
+    fontSize: typography['2xl'], fontWeight: typography.black,
     letterSpacing: -0.5, textAlign: 'center',
   },
-  body: {
-    fontSize: typography.base, lineHeight: 24, textAlign: 'center',
+  welcomeSub: {
+    fontSize: typography.base, lineHeight: 22, textAlign: 'center',
+    paddingHorizontal: spacing.sm, marginBottom: spacing.xs,
   },
+  featCard: {
+    alignSelf: 'stretch', borderRadius: borderRadius.lg,
+    borderWidth: StyleSheet.hairlineWidth, overflow: 'hidden',
+  },
+  featRow: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm + 2,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.base,
+  },
+  featIcon: { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  featLabel: { flex: 1, fontSize: typography.sm, fontWeight: typography.semibold },
+  disclaimer: {
+    fontSize: typography.xs, lineHeight: 16, textAlign: 'center',
+    paddingHorizontal: spacing.sm, marginTop: spacing.sm,
+  },
+
+  notifCard: {
+    flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
+    alignSelf: 'stretch', marginTop: spacing.lg,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2,
+    borderRadius: borderRadius.md, borderWidth: 1,
+  },
+  notifIcon: {
+    width: 36, height: 36, borderRadius: 10,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  notifText:  { flex: 1, gap: 2 },
+  notifTitle: { fontSize: typography.sm, fontWeight: typography.bold, textAlign: 'left' },
+  notifSub:   { fontSize: typography.xs, lineHeight: 16, textAlign: 'left' },
 
   footer: { paddingHorizontal: spacing.xl, gap: spacing.lg, alignItems: 'center' },
   dots:   { flexDirection: 'row', gap: spacing.xs },
