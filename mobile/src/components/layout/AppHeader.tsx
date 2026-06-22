@@ -8,6 +8,7 @@ import { Logo } from '@/components/common/Logo';
 import { SideMenu } from '@/features/dashboard/components/SideMenu';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useDrawsStore } from '@/store/drawsStore';
+import { usePremiumStore } from '@/store/premiumStore';
 import { spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { palette } from '@/theme';
@@ -34,6 +35,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
   const isStack = variant === 'stack';
 
   const latestDraw = useDrawsStore((s) => s.draws[0]);
+  const isPremium = usePremiumStore((s) => s.isPremium);
   const { seenDraw, loaded, markSeen } = useNotificationsStore();
 
   // First run: initialize quietly so a fresh install doesn't start with a badge
@@ -61,36 +63,49 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
       {/* Left — nav button + screen name */}
       <View style={s.sideLeft}>
         {isStack ? (
+          // Chevron + screen name are one tappable back target
           <TouchableOpacity
             onPress={onBackPress ?? (() => navigation.goBack())}
-            hitSlop={16}
-            style={s.iconBtn}
+            hitSlop={12}
+            style={s.backRow}
             accessibilityRole="button"
-            accessibilityLabel="Go back"
+            accessibilityLabel={`Go back from ${title}`}
           >
             <Ionicons name="chevron-back" size={24} color={c.textPrimary} />
+            <Text style={[s.stackTitle, { color: c.textPrimary }]} numberOfLines={1}>
+              {title}
+            </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity
-            onPress={() => setMenuOpen(true)}
-            hitSlop={12}
-            style={s.iconBtn}
-            accessibilityRole="button"
-            accessibilityLabel="Open menu"
-          >
-            <Ionicons name="menu" size={26} color={c.textPrimary} />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              onPress={() => setMenuOpen(true)}
+              hitSlop={12}
+              style={s.iconBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Open menu"
+            >
+              <Ionicons name="menu" size={26} color={c.textPrimary} />
+            </TouchableOpacity>
+            <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
+              {title}
+            </Text>
+          </>
         )}
-        <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
-          {title}
-        </Text>
       </View>
 
-      {/* Center — brand lockup */}
-      <View style={s.brandCenter}>
-        <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
-        <Logo size={20} />
-      </View>
+      {/* Center — brand lockup (main tab pages only, not internal/stack pages) */}
+      {!isStack && (
+        <View style={s.brandCenter}>
+          <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
+          <Logo size={20} />
+          {isPremium && (
+            <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
+              <Text style={s.proText}>👑 PRO</Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Right — actions */}
       <View style={s.sideRight}>
@@ -121,8 +136,17 @@ const s = StyleSheet.create({
     paddingBottom: spacing.md,
   },
   sideLeft:    { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minWidth: 0 },
+  backRow:     { flexDirection: 'row', alignItems: 'center', gap: 2, flexShrink: 1, paddingVertical: 4, paddingRight: spacing.sm },
+  stackTitle:  { flexShrink: 1, fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3 },
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
   brandIcon:   { width: 38, height: 38, marginRight: -7 },
+  proBadge: {
+    alignSelf: 'flex-start',
+    marginTop: -4, marginLeft: 3,
+    paddingHorizontal: 5, paddingVertical: 1,
+    borderRadius: 6,
+  },
+  proText: { fontSize: 9, fontWeight: typography.black, letterSpacing: 0.3, color: palette.navyDark },
   sideRight:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.md },
   iconBtn:     { padding: 2 },
   badge: {
