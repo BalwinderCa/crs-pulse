@@ -10,7 +10,15 @@ const IRCC_URL =
   'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
 const OUT = 'data/latest-draw.json';
 
-const res = await fetch(IRCC_URL, { headers: { Accept: 'application/json' } });
+const res = await fetch(IRCC_URL, {
+  headers: {
+    // canada.ca (Akamai) is more permissive to browser-like requests.
+    'User-Agent':
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+    Accept: 'application/json, text/plain, */*',
+    'Accept-Language': 'en-CA,en;q=0.9',
+  },
+});
 if (!res.ok) {
   console.error(`IRCC fetch failed: HTTP ${res.status}`);
   process.exit(1);
