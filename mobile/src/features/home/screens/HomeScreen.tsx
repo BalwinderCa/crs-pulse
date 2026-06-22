@@ -369,17 +369,17 @@ const s = StyleSheet.create({
 
   // Recent draws
   recentCard:        { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden' },
-  recentRow:         { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
-                       paddingVertical: spacing.sm + 2, paddingHorizontal: spacing.base },
-  recentDot:         { width: 7, height: 7, borderRadius: 4, marginTop: 2 },
-  recentInfo:        { flex: 1, gap: 2 },
-  recentTopLine:     { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  recentNum:         { fontSize: typography.xs, fontWeight: typography.semibold },
-  recentCat:         { fontSize: typography.sm, fontWeight: typography.semibold },
-  recentMeta:        { fontSize: typography.xs, lineHeight: 16 },
-  recentRight:       { alignItems: 'flex-end', gap: 1 },
-  recentCutoffLabel: { fontSize: 9, fontWeight: typography.bold, letterSpacing: 0.6 },
-  recentCutoff:      { fontSize: typography.lg, fontWeight: typography.black, letterSpacing: -0.5 },
+  recentRow:         { flexDirection: 'row', alignItems: 'center', gap: spacing.md,
+                       paddingVertical: spacing.base, paddingHorizontal: spacing.base },
+  recentDot:         { width: 10, height: 10, borderRadius: 5, marginTop: 2 },
+  recentInfo:        { flex: 1, gap: 4 },
+  recentTopLine:     { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  recentNum:         { fontSize: typography.sm, fontWeight: typography.semibold },
+  recentCat:         { fontSize: typography.base, fontWeight: typography.semibold },
+  recentMeta:        { fontSize: typography.sm, lineHeight: 18 },
+  recentRight:       { alignItems: 'flex-end', gap: 2 },
+  recentCutoffLabel: { fontSize: 10, fontWeight: typography.bold, letterSpacing: 0.6 },
+  recentCutoff:      { fontSize: typography['2xl'], fontWeight: typography.black, letterSpacing: -0.5 },
   recentDivider:     { height: StyleSheet.hairlineWidth, marginHorizontal: spacing.base },
 
   // Shared

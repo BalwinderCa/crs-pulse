@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated, Dimensions, Linking, Modal, Platform,
+  Animated, Dimensions, Image, Linking, Modal, Platform,
   ScrollView, Share, StyleSheet, Text, TouchableOpacity,
   TouchableWithoutFeedback, View,
 } from 'react-native';
@@ -11,9 +11,10 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '@/types';
 import { GITHUB_REPO_URL, PRIVACY_POLICY_URL } from '@/constants';
-import { spacing, typography, borderRadius } from '@/theme';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { Logo } from '@/components/common/Logo';
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ These terms may be updated from time to time. Continued use of the app after an 
 
 Questions? Contact: balwinderxcode@gmail.com`;
 
-const MENU_WIDTH = Dimensions.get('window').width * 0.75;
+const MENU_WIDTH = Dimensions.get('window').width;
 
 type DetailModal = 'about' | 'privacy' | 'terms' | 'contact' | null;
 
@@ -105,7 +106,7 @@ function ContactView({ onClose }: { onClose: () => void }) {
 
   const rows = [
     {
-      icon: 'mail-outline' as const,
+      icon: 'mail' as const,
       label: 'Email us',
       sub: 'balwinderxcode@gmail.com',
       onPress: () => Linking.openURL('mailto:balwinderxcode@gmail.com?subject=CRS%20Pulse'),
@@ -240,23 +241,23 @@ export function SideMenu({ visible, onClose }: Props) {
   };
 
   const groupOne: MenuItem[] = [
-    { icon: 'help-circle-outline',     label: 'FAQ',                    onPress: navigateTo('Faq') },
-    { icon: 'checkbox-outline',        label: 'Document Checklists',    onPress: navigateTo('DocumentChecklist') },
-    { icon: 'hourglass-outline',       label: 'Check Processing Times', onPress: navigateTo('ProcessingTimes') },
+    { icon: 'checkbox',        label: 'Document Checklists',    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
+    { icon: 'hourglass',       label: 'Check Processing Times', onPress: navigateTo('ProcessingTimes'),  accent: palette.warning },
   ];
 
   const groupAbout: MenuItem[] = [
-    { icon: 'information-circle-outline', label: 'About Us',           onPress: () => setDetail('about') },
-    { icon: 'lock-closed-outline',        label: 'Privacy Policy',     onPress: () => setDetail('privacy') },
-    { icon: 'document-text-outline',      label: 'Terms & Conditions', onPress: () => setDetail('terms') },
+    { icon: 'help-circle',       label: 'FAQ',                onPress: navigateTo('Faq'),          accent: palette.blue },
+    { icon: 'information-circle', label: 'About Us',           onPress: () => setDetail('about'),   accent: '#A78BFA' },
+    { icon: 'lock-closed',        label: 'Privacy Policy',     onPress: () => setDetail('privacy'), accent: palette.success },
+    { icon: 'document-text',      label: 'Terms & Conditions', onPress: () => setDetail('terms'),   accent: palette.blue },
   ];
 
   const groupTwo: MenuItem[] = [
-    { icon: 'bug-outline',   label: 'Report an Issue', onPress: navigateTo('ReportIssue') },
-    { icon: 'mail-outline',  label: 'Contact Us',      onPress: () => setDetail('contact') },
-    { icon: 'share-outline', label: 'Share App', onPress: handleShare },
+    { icon: 'bug',   label: 'Report an Issue', onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
+    { icon: 'mail',  label: 'Contact Us',      onPress: () => setDetail('contact'), accent: palette.blue },
+    { icon: 'share', label: 'Share App',       onPress: handleShare,                accent: palette.success },
     ...(Platform.OS === 'ios' && appStoreId
-      ? [{ icon: 'star-outline' as const, label: 'Review on App Store', onPress: handleRate }]
+      ? [{ icon: 'star' as const, label: 'Review on App Store', onPress: handleRate, accent: palette.warning }]
       : []),
   ];
 
@@ -307,11 +308,9 @@ export function SideMenu({ visible, onClose }: Props) {
             {/* Header */}
             <View style={[s.header, { paddingTop: insets.top + spacing.md, borderBottomColor: c.border }]}>
               <View style={s.headerInner}>
-                <View style={[s.logoBox, { backgroundColor: accent + '20' }]}>
-                  <Ionicons name="earth-outline" size={20} color={accent} />
-                </View>
+                <Image source={require('../../../../assets/logo.png')} style={s.logoBox} resizeMode="contain" />
                 <View>
-                  <Text style={[s.appName, { color: c.textPrimary }]}>CRS Pulse</Text>
+                  <Logo size={20} />
                   <Text style={[s.appSub,  { color: c.textMuted }]}>IRCC Tracker</Text>
                 </View>
               </View>
@@ -380,8 +379,7 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoBox:     { width: 38, height: 38, borderRadius: borderRadius.md,
-                 alignItems: 'center', justifyContent: 'center' },
+  logoBox:     { width: 38, height: 38, borderRadius: borderRadius.md, overflow: 'hidden' },
   appName:     { fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3 },
   appSub:      { fontSize: typography.xs, marginTop: 1 },
   closeBtn:    { padding: spacing.xs },

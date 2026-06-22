@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -58,8 +58,9 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
         },
       ]}
     >
-      <View style={s.left}>
-        {isStack && (
+      {/* Left — nav button + screen name */}
+      <View style={s.sideLeft}>
+        {isStack ? (
           <TouchableOpacity
             onPress={onBackPress ?? (() => navigation.goBack())}
             hitSlop={16}
@@ -69,8 +70,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
           >
             <Ionicons name="chevron-back" size={24} color={c.textPrimary} />
           </TouchableOpacity>
-        )}
-        {!isStack && (
+        ) : (
           <TouchableOpacity
             onPress={() => setMenuOpen(true)}
             hitSlop={12}
@@ -81,14 +81,19 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
             <Ionicons name="menu" size={26} color={c.textPrimary} />
           </TouchableOpacity>
         )}
-        <View>
-          <Logo size={20} />
-          <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
-            {title}
-          </Text>
-        </View>
+        <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
+          {title}
+        </Text>
       </View>
-      <View style={s.rightWrap}>
+
+      {/* Center — brand lockup */}
+      <View style={s.brandCenter}>
+        <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
+        <Logo size={20} />
+      </View>
+
+      {/* Right — actions */}
+      <View style={s.sideRight}>
         {right}
         {!isStack && (
           <TouchableOpacity
@@ -112,20 +117,21 @@ const s = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
     paddingTop: spacing.base,
     paddingBottom: spacing.md,
   },
-  left:      { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexShrink: 1 },
-  rightWrap: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  iconBtn:   { padding: 2 },
+  sideLeft:    { flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs, minWidth: 0 },
+  brandCenter: { flexDirection: 'row', alignItems: 'center' },
+  brandIcon:   { width: 38, height: 38, marginRight: -7 },
+  sideRight:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.md },
+  iconBtn:     { padding: 2 },
   badge: {
     position: 'absolute', top: 1, right: 1,
     width: 9, height: 9, borderRadius: 5,
   },
   titleText: {
+    flexShrink: 1,
     fontSize: typography.xs, fontWeight: typography.semibold,
-    letterSpacing: 0.6, textTransform: 'uppercase', marginTop: 1,
+    letterSpacing: 0.6, textTransform: 'uppercase',
   },
 });
