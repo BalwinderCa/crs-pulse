@@ -3,8 +3,10 @@ import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 
+// Official IRCC "Express Entry rounds of invitations" page. Appending ?q=<draw
+// number> opens that specific round (e.g. ...invitations.html?q=418).
 const IRCC_ROUNDS_URL =
-  'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations.html';
+  'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds/invitations.html';
 import { Badge } from '@/components/common/Badge';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -69,7 +71,7 @@ export function DrawCard({ draw, userScore }: Props) {
 
   return (
     <TouchableOpacity
-      onPress={() => Linking.openURL(IRCC_ROUNDS_URL)}
+      onPress={() => Linking.openURL(`${IRCC_ROUNDS_URL}?q=${draw.draw_number}`)}
       activeOpacity={0.7}
       accessible={true}
       accessibilityRole="link"
