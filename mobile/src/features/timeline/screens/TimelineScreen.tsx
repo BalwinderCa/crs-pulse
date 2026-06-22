@@ -7,7 +7,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -145,7 +145,8 @@ function AddMilestoneModal({ visible, onClose, editing }: {
       setType(editing.type);
       setCustomLabel(editing.customLabel ?? '');
       setCustomEmoji(editing.customEmoji ?? '');
-      setDate(parseISO(editing.date));
+      const parsed = parseISO(editing.date);
+      setDate(isValid(parsed) ? parsed : new Date());
       setNote(editing.note ?? '');
     } else {
       reset();
@@ -275,36 +276,43 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 
           {/* Date */}
           <Text style={[s.fieldLabel, { color: c.textMuted, marginTop: spacing.lg }]}>{t('timeline.fieldDate')}</Text>
-          <TouchableOpacity
-            style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
-            onPress={() => setShowPicker(true)}
-          >
-            <Ionicons name="calendar-outline" size={18} color={accent} />
-            <Text style={[s.fieldVal, { color: c.textPrimary, flex: 1 }]}>
-              {format(date, 'MMM d, yyyy')}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
-          </TouchableOpacity>
 
-          {/* iOS: inline spinner below the row */}
-          {showPicker && Platform.OS === 'ios' && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="spinner"
-              onChange={(_e, d) => { if (d) setDate(d); }}
-              themeVariant={scheme}
-            />
-          )}
-
-          {/* Android: native modal dialog */}
-          {showPicker && Platform.OS === 'android' && (
-            <DateTimePicker
-              value={date}
-              mode="date"
-              display="default"
-              onChange={(_e, d) => { setShowPicker(false); if (d) setDate(d); }}
-            />
+          {Platform.OS === 'ios' ? (
+            /* iOS: compact chip that opens a native calendar popover on tap.
+               Use space-between (not a flex spacer) so the native picker keeps
+               its natural width — squeezing it makes it misrender the value. */
+            <View style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border, justifyContent: 'space-between' }]}>
+              <Ionicons name="calendar-outline" size={18} color={accent} />
+              <DateTimePicker
+                value={isValid(date) ? date : new Date()}
+                mode="date"
+                display="compact"
+                onChange={(_e, d) => { if (d && d.getFullYear() > 2000) setDate(d); }}
+                themeVariant={scheme}
+              />
+            </View>
+          ) : (
+            /* Android: tap row → native calendar dialog */
+            <>
+              <TouchableOpacity
+                style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
+                onPress={() => setShowPicker(true)}
+              >
+                <Ionicons name="calendar-outline" size={18} color={accent} />
+                <Text style={[s.fieldVal, { color: c.textPrimary, flex: 1 }]}>
+                  {format(date, 'MMM d, yyyy')}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+              </TouchableOpacity>
+              {showPicker && (
+                <DateTimePicker
+                  value={isValid(date) ? date : new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(_e, d) => { setShowPicker(false); if (d) setDate(d); }}
+                />
+              )}
+            </>
           )}
 
           {/* Note */}

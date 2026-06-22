@@ -27,10 +27,11 @@ export default function ApplicationSetupScreen() {
   const [step, setStep] = useState(0);
   const [categoryId, setCategoryId] = useState<string | null>(application?.categoryId ?? null);
   const [typeId, setTypeId] = useState<string | null>(application?.typeId ?? null);
-  const [date, setDate] = useState<Date>(
-    application?.appliedDate ? new Date(application.appliedDate) : new Date(),
-  );
-  const [showPicker, setShowPicker] = useState(Platform.OS === 'ios');
+  const [date, setDate] = useState<Date>(() => {
+    const d = application?.appliedDate ? new Date(application.appliedDate) : new Date();
+    return Number.isNaN(d.getTime()) ? new Date() : d;
+  });
+  const [showPicker, setShowPicker] = useState(false);
 
   const category: ApplicationCategory | undefined =
     APPLICATION_CATEGORIES.find((cat) => cat.id === categoryId);
@@ -61,7 +62,7 @@ export default function ApplicationSetupScreen() {
 
   const onDateChange = (event: DateTimePickerEvent, selected?: Date) => {
     if (Platform.OS === 'android') setShowPicker(false);
-    if (event.type !== 'dismissed' && selected) setDate(selected);
+    if (event.type !== 'dismissed' && selected && selected.getFullYear() > 2000) setDate(selected);
   };
 
   const progress = ((step + 1) / STEPS) * 100;
@@ -154,27 +155,43 @@ export default function ApplicationSetupScreen() {
         {step === 2 && (
           <>
             <Text style={[s.question, { color: c.textPrimary }]}>When did you apply?</Text>
-            {Platform.OS === 'android' && (
-              <TouchableOpacity
-                style={[s.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
-                onPress={() => setShowPicker(true)}
-                activeOpacity={0.65}
-              >
+            {Platform.OS === 'ios' ? (
+              /* iOS: compact chip that opens a native calendar popover on tap */
+              <View style={[s.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceCard, justifyContent: 'space-between' }]}>
                 <Ionicons name="calendar-outline" size={18} color={accent} />
-                <Text style={[s.dateText, { color: c.textPrimary }]}>
-                  {date.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {showPicker && (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                maximumDate={new Date()}
-                onChange={onDateChange}
-                themeVariant={scheme}
-              />
+                <DateTimePicker
+                  value={Number.isNaN(date.getTime()) ? new Date() : date}
+                  mode="date"
+                  display="compact"
+                  maximumDate={new Date()}
+                  onChange={onDateChange}
+                  themeVariant={scheme}
+                />
+              </View>
+            ) : (
+              /* Android: tap row → native calendar dialog */
+              <>
+                <TouchableOpacity
+                  style={[s.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
+                  onPress={() => setShowPicker(true)}
+                  activeOpacity={0.65}
+                >
+                  <Ionicons name="calendar-outline" size={18} color={accent} />
+                  <Text style={[s.dateText, { color: c.textPrimary }]}>
+                    {date.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </Text>
+                </TouchableOpacity>
+                {showPicker && (
+                  <DateTimePicker
+                    value={Number.isNaN(date.getTime()) ? new Date() : date}
+                    mode="date"
+                    display="default"
+                    maximumDate={new Date()}
+                    onChange={onDateChange}
+                    themeVariant={scheme}
+                  />
+                )}
+              </>
             )}
             <TouchableOpacity
               style={[s.notAppliedBtn, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
