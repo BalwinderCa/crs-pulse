@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography, borderRadius } from '@/theme';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useApplicationStore } from '@/store/applicationStore';
@@ -17,6 +17,7 @@ const STEPS = 3;
 export default function ApplicationSetupScreen() {
   const c = useColors();
   const accent = useAccentColor();
+  const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { application, save } = useApplicationStore();
@@ -172,6 +173,7 @@ export default function ApplicationSetupScreen() {
                 display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 maximumDate={new Date()}
                 onChange={onDateChange}
+                themeVariant={scheme}
               />
             )}
             <TouchableOpacity

@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text,
-  TextInput, TouchableOpacity, useColorScheme, View,
+  TextInput, TouchableOpacity, View,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { palette, spacing, typography, borderRadius } from '@/theme';
-import { useColors } from '@/hooks/useColors';
+import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTimelineStore, type Milestone, type MilestoneType } from '@/store/timelineStore';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -123,7 +123,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 }) {
   const c = useColors();
   const accent = useAccentColor();
-  const scheme = useColorScheme();
+  const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const add    = useTimelineStore((s) => s.add);
@@ -293,7 +293,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
               mode="date"
               display="spinner"
               onChange={(_e, d) => { if (d) setDate(d); }}
-              themeVariant={scheme === 'dark' ? 'dark' : 'light'}
+              themeVariant={scheme}
             />
           )}
 
