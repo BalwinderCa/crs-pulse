@@ -1,6 +1,6 @@
 # CRS Pulse
 
-Express Entry tracker for Canada immigration applicants. Calculate your CRS score, follow live IRCC draws, view trends, and get push alerts when new draws are published.
+IRCC Tracker for Canada immigration applicants. Calculate your CRS score, follow live IRCC draws, view trends, and get push alerts when new draws are published.
 
 No accounts. No self-hosted backend. Profile data stays on your device.
 

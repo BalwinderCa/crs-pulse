@@ -17,7 +17,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
-const ABOUT_TEXT = `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate Express Entry tracker built for aspiring Canadians like you.
+const ABOUT_TEXT = `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate IRCC Tracker built for aspiring Canadians like you.
 
 After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.
 
@@ -312,7 +312,7 @@ export function SideMenu({ visible, onClose }: Props) {
                 </View>
                 <View>
                   <Text style={[s.appName, { color: c.textPrimary }]}>CRS Pulse</Text>
-                  <Text style={[s.appSub,  { color: c.textMuted }]}>Express Entry Tracker</Text>
+                  <Text style={[s.appSub,  { color: c.textMuted }]}>IRCC Tracker</Text>
                 </View>
               </View>
               <TouchableOpacity onPress={onClose} hitSlop={16} style={s.closeBtn}>
