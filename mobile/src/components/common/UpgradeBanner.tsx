@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,7 +8,7 @@ import { usePremiumStore } from '@/store/premiumStore';
 import { spacing, typography, borderRadius } from '@/theme';
 import type { RootStackParamList } from '@/types';
 
-export function UpgradeBanner() {
+export function UpgradeBanner({ style }: { style?: StyleProp<ViewStyle> }) {
   const c = useColors();
   const accent = useAccentColor();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -19,7 +19,7 @@ export function UpgradeBanner() {
 
   return (
     <TouchableOpacity
-      style={[s.banner, { backgroundColor: accent + '12', borderColor: accent + '40' }]}
+      style={[s.banner, { backgroundColor: accent + '12', borderColor: accent + '40' }, style]}
       onPress={() => nav.navigate('Paywall')}
       activeOpacity={0.8}
       accessibilityRole="button"

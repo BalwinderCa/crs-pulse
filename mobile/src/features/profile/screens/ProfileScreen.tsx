@@ -30,7 +30,6 @@ import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
-import { AdBanner } from '@/components/common/AdBanner';
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function makeStyles(c: Colors, accent: string) {
@@ -302,7 +301,7 @@ export default function ProfileScreen() {
         )}
       </Card>
 
-      <UpgradeBanner />
+      <UpgradeBanner style={{ marginBottom: spacing.sm }} />
 
       {/* ── Profile Details (grouped) ── */}
       {infoGroups.map((group) => (
@@ -338,10 +337,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </Card>
-
-      {/* Single, non-repeating ad — placed low between settings groups so it
-          doesn't crowd the score hero or profile details (free users only). */}
-      <AdBanner />
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>
