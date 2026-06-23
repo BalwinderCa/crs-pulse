@@ -1,18 +1,18 @@
 /**
  * Express Entry pool composition + Immigration Levels Plan targets.
  *
- * IRCC does NOT expose a real-time JSON feed for pool composition (the CRS
- * distribution of candidates in the pool) or for the annual Levels Plan. Both
- * are *periodic* publications:
- *   - Pool composition: published on the "rounds of invitations" page and in the
- *     year-end report, refreshed every few weeks.
- *   - Levels Plan: published once a year (the 2025–2027 plan, Oct 2024).
+ * Both are *periodic* publications:
+ *   - Pool composition: embedded in every round of the IRCC "rounds of
+ *     invitations" feed (dd1..dd18), refreshed every few weeks. `eePoolStore`
+ *     derives it live from that feed via `derivePoolFromRounds` — the same feed
+ *     the app fetches directly for draws (works on device IPs).
+ *   - Levels Plan: published once a year (the 2025–2027 plan, Oct 2024) and NOT
+ *     in the feed, so it ships bundled below.
  *
- * So they are mirrored to `data/ee-pool.json` (same pattern as latest-draw and
- * processing-times) and fetched cache-first by `eePoolStore`. The values below
- * are the bundled fallback used when the mirror is unreachable — a dated, sourced
- * snapshot, NOT per-user invented numbers. The user's position (people ahead,
- * candidates at/above) is computed from THIS distribution against their real CRS.
+ * The values below are the bundled fallback/seed used until the live feed loads
+ * (and for the always-bundled Levels Plan) — a dated, sourced snapshot, NOT
+ * per-user invented numbers. The user's position (people ahead, candidates
+ * at/above) is computed from THIS distribution against their real CRS.
  */
 
 export interface PoolBand {
@@ -52,9 +52,10 @@ export interface EePoolData {
 }
 
 /**
- * Bundled fallback — last verified IRCC pool snapshot + 2025–2027 Levels Plan.
- * Refresh `data/ee-pool.json` (and, ideally, this seed) when IRCC publishes a
- * newer pool composition. Keep `updated`/`source` honest.
+ * Bundled fallback/seed — last verified IRCC pool snapshot + 2025–2027 Levels
+ * Plan. The pool is normally derived live from the rounds feed; refresh the
+ * `levels` here when IRCC publishes a new annual plan. Keep `updated`/`source`
+ * honest.
  */
 export const EE_POOL_FALLBACK: EePoolData = {
   updated: 'June 22, 2026',

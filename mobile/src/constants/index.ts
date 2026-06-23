@@ -58,15 +58,10 @@ export const PROCESSING_TIMES_URL =
 /** Official IRCC "rounds of invitations" feed. The app fetches this directly
  *  (device IPs are accepted by canada.ca/Akamai, unlike datacenter egress). It
  *  carries both the draws and the pool composition (dd1..dd18 per round), so the
- *  pool is derived from it rather than the datacenter-blocked GitHub mirror. */
+ *  pool is derived from it. The Immigration Levels Plan (annual, not in the
+ *  feed) ships bundled in features/analytics/data/eePool.ts. */
 export const IRCC_ROUNDS_FEED_URL =
   'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
-
-/** Bundled Immigration Levels Plan targets ship in features/analytics/data/
- *  eePool.ts (annual, not in the rounds feed). This GitHub mirror is retained
- *  for reference but no longer required for live pool data. */
-export const EE_POOL_URL =
-  'https://raw.githubusercontent.com/BalwinderCa/crs-pulse/main/data/ee-pool.json';
 
 export const STORAGE_KEYS = {
   USER_PROFILE: 'crs_pulse.user_profile',
