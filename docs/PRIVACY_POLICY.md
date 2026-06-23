@@ -6,7 +6,7 @@
 
 ## Summary
 
-CRS Pulse is a local-first mobile app. Your CRS profile data stays on your device. We do not operate user accounts. The only data that ever leaves your device is an anonymous push token (and only if you enable draw alerts). We do not collect any device identifier.
+CRS Pulse is a local-first mobile app. Your CRS profile data stays on your device, and we do not operate user accounts. The only personal data we send to **our own** servers is an anonymous push token, and only if you enable draw alerts. The **free** version also displays banner ads through Google AdMob, which may access your device's advertising identifier to serve and measure ads — see [Advertising](#advertising) below. Purchasing the one-time **Premium** unlock removes all ads. We never collect your CRS profile or immigration data off-device.
 
 ## Data stored on your device
 
@@ -25,8 +25,8 @@ This data is not transmitted to our servers.
 When completing Apple's App Privacy questionnaire:
 
 - **Data Not Linked to You:** CRS calculator inputs and timeline data (stored on device only)
-- **Data Used to Track You:** None
-- **Identifiers:** Push notification token (only if you enable draw alerts)
+- **Data Used to Track You:** In the **free** version, the advertising identifier (IDFA) and ad-interaction/usage data are processed by Google AdMob to serve and measure ads. We request App Tracking Transparency permission first; if you decline, ads are served non-personalized. The Premium version shows no ads and tracks nothing.
+- **Identifiers:** Push notification token (only if you enable draw alerts); advertising identifier (free version only, accessed by Google AdMob)
 - **Purchases:** A one-time, non-consumable in-app purchase ("Analytics unlock") processed by the app store. We do not receive or store your payment details.
 
 ## Data sent to third parties
@@ -43,7 +43,7 @@ You can disable notifications and revoke your token at any time in Settings.
 
 ### In-app purchase
 
-The Analytics "Improve" features are unlocked with an optional **one-time, non-consumable** in-app purchase, processed entirely by Google Play (and, where offered, the App Store). Payment is handled by the store — we never receive or store your card or payment information, and we do not collect any device identifier for entitlement (ownership is read back from the store).
+The Analytics "Improve" features are unlocked with an optional **one-time, non-consumable** in-app purchase, processed entirely by Google Play (and, where offered, the App Store). Payment is handled by the store — we never receive or store your card or payment information, and we do not use any device identifier to verify your purchase (ownership is read back from the store).
 
 ### Advertising
 

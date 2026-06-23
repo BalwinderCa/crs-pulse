@@ -119,10 +119,10 @@
     ],
     "coverageThreshold": {
       "global": {
-        "branches": 4,
-        "functions": 4,
-        "lines": 6,
-        "statements": 6
+        "branches": 9,
+        "functions": 8,
+        "lines": 14,
+        "statements": 14
       },
       "./src/features/onboarding/utils/crsCalculator.ts": {
         "branches": 85,

@@ -3,7 +3,15 @@
 ## Pre-build
 
 - [ ] `cd mobile && eas init` — set `EAS_PROJECT_ID` in `.env.local` and EAS secrets
-- [ ] `wrangler secret put PUSH_API_SECRET` — set same value as `EXPO_PUBLIC_PUSH_API_KEY` in EAS secrets
+- [ ] **Push API key — never committed.** `eas.json` no longer carries a value for
+      `EXPO_PUBLIC_PUSH_API_KEY`; create it as an EAS env secret so the production
+      build can authenticate to the worker:
+      `eas env:create --name EXPO_PUBLIC_PUSH_API_KEY --type sensitive --value "<random-strong-secret>" --environment production`
+      (NOTE: `EXPO_PUBLIC_*` vars are bundled into the JS and are therefore *not*
+      truly secret — they only deter casual abuse on top of the worker's per-IP
+      rate limiter and Expo token validation. Rotate it if leaked.)
+- [ ] `wrangler secret put PUSH_API_SECRET` — set the **same value** as the
+      `EXPO_PUBLIC_PUSH_API_KEY` EAS secret above (worker rejects mismatches with 401)
 - [ ] `wrangler secret put SYNC_SECRET` — for manual `/sync` only
 - [ ] `cd workers/push && npm run deploy`
 - [ ] `google-play-service-account.json` in `mobile/` (gitignored) for `eas submit`
@@ -19,7 +27,12 @@
 ## Play Console
 
 - [ ] Privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
-- [ ] Data safety: device-stored CRS data; optional push token to Cloudflare Worker
+- [ ] Data safety form (must match PRIVACY_POLICY.md):
+  - Device-stored CRS data (not collected off-device)
+  - Optional anonymous push token → Cloudflare Worker
+  - **Free version only:** Google AdMob collects the **advertising ID** + app-interaction
+    data for advertising ("Data shared", purpose: Advertising/Marketing). Declare
+    "Yes" to data collection/sharing and to the advertising-ID question.
 - [ ] Content rating (IARC): reference / immigration information
 - [ ] Target API 35 (Expo SDK 52 production build)
 - [ ] Store listing copy from `docs/PLAY_STORE_LISTING.md`

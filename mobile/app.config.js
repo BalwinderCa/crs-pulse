@@ -125,6 +125,12 @@ module.exports = () => ({
       UIBackgroundModes: ['remote-notification'],
       CFBundleDisplayName: 'CRS Pulse',
       ITSAppUsesNonExemptEncryption: false,
+      // REQUIRED: adsService.ts calls requestTrackingPermissionsAsync() on iOS.
+      // Without this purpose string the ATT prompt no-ops and App Review rejects
+      // the binary (and older iOS can crash). Kept here directly (not only via a
+      // plugin) so it is guaranteed present regardless of plugin version.
+      NSUserTrackingUsageDescription:
+        'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
     },
   },
   android: {
@@ -163,6 +169,11 @@ module.exports = () => ({
           process.env.GOOGLE_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713',
         iosAppId:
           process.env.GOOGLE_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511',
+        // Mirrors the infoPlist NSUserTrackingUsageDescription above; this also
+        // makes the plugin inject the SKAdNetworkItems needed for iOS ad
+        // attribution under App Tracking Transparency.
+        userTrackingUsageDescription:
+          'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
       },
     ],
     [

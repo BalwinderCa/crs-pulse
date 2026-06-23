@@ -47,7 +47,10 @@ export function AdBanner() {
   const premiumLoaded = usePremiumStore((s) => s.loaded);
   const [failed, setFailed] = useState(false);
 
-  if (!ads?.BannerAd || !ads.BannerAdSize || !premiumLoaded || isPremium || failed) {
+  // UNIT_ID is empty in a release build whose EXPO_PUBLIC_ADMOB_BANNER_* env
+  // vars weren't set — render nothing rather than fall back to Google's test
+  // ad units (an AdMob policy violation). __DEV__ always has a TestIds unit.
+  if (!UNIT_ID || !ads?.BannerAd || !ads.BannerAdSize || !premiumLoaded || isPremium || failed) {
     return null;
   }
 

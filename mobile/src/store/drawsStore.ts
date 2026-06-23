@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import type { Draw, Category } from '@/types';
 import { syncLastSeenDraw } from '@/hooks/useDrawNotifications';
+import { reportError } from '@/services/errorReporter';
 import { useEePoolStore } from './eePoolStore';
 
 // Official IRCC public draw data feed
@@ -138,13 +139,16 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         .filter((d): d is Draw => d !== null)
         .sort((a, b) => b.draw_number - a.draw_number); // newest first
 
-      // TEMP(remove me): confirm what the device actually receives.
-      console.log('[draws] fetched', draws.length, 'rounds; latest #' + draws[0]?.draw_number, draws[0]?.date);
-
       // A 200 response with an unexpected/changed shape (IRCC has reshaped this
       // feed before) yields zero parseable rounds. Treat that as a failure so we
       // keep the existing cache instead of overwriting good history with [].
+      // Report it so a silent IRCC-feed reshape surfaces in observability rather
+      // than failing invisibly behind the stale-cache fallback.
       if (draws.length === 0) {
+        void reportError(
+          new Error(`IRCC feed returned no parseable draws (rounds=${rounds.length})`),
+          { source: 'drawsStore.refresh' },
+        );
         throw new Error('IRCC feed returned no parseable draws');
       }
 

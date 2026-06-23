@@ -14,8 +14,13 @@ export function UpgradeBanner({ style }: { style?: StyleProp<ViewStyle> }) {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isPremium = usePremiumStore((s) => s.isPremium);
   const premiumLoaded = usePremiumStore((s) => s.loaded);
+  const billingAvailable = usePremiumStore((s) => s.billingAvailable);
 
-  if (!premiumLoaded || isPremium) return null;
+  // Only advertise the upgrade where it can actually be bought. When billing is
+  // unavailable (iOS without a StoreKit product, emulator, outage) the gate
+  // already fails OPEN, so showing "Upgrade to Premium" here would dead-end in a
+  // Paywall whose purchase can never complete — an App Review rejection.
+  if (!premiumLoaded || isPremium || !billingAvailable) return null;
 
   return (
     <TouchableOpacity
