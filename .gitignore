@@ -54,6 +54,9 @@ google-play-service-account.json
 fcm-v1-service-account.json
 *firebase-adminsdk*.json
 *.jks
+*keystore*.zip
+credentials.json
+mobile/credentials/
 *.p8
 *.p12
 *.key
