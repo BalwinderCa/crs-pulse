@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GITHUB_REPO_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 
@@ -25,6 +26,7 @@ export default function ReportIssueScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
 
   const actions = [
     {
@@ -46,7 +48,7 @@ export default function ReportIssueScreen() {
       <AppHeader title="Report an Issue" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>

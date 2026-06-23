@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useProcessingTimes } from '../hooks/useProcessingTimes';
 
@@ -20,6 +21,7 @@ export default function ProcessingTimesScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const { categories, updatedLabel } = useProcessingTimes();
   const [open, setOpen] = useState<string | null>(categories[0]?.id ?? null);
 
@@ -28,7 +30,7 @@ export default function ProcessingTimesScreen() {
       <AppHeader title="Processing Times" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>

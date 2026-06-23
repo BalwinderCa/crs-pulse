@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import {
@@ -80,6 +81,7 @@ export default function BcSirsCalculatorScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const [input, setInput] = useState<SirsInput>(DEFAULT_INPUT);
   const [wageText, setWageText] = useState(String(DEFAULT_INPUT.hourlyWage));
 
@@ -154,7 +156,7 @@ export default function BcSirsCalculatorScreen() {
       <AppHeader title="BC PNP — SIRS" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >

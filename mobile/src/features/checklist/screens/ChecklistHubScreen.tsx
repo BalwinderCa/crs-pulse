@@ -9,6 +9,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { CHECKLIST_PROGRAMS, type ChecklistProgram } from '../data/checklists';
 import type { RootStackParamList } from '@/types';
@@ -26,6 +27,7 @@ export default function ChecklistHubScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [progress, setProgress] = useState<Record<string, number>>({});
 
@@ -52,7 +54,7 @@ export default function ChecklistHubScreen() {
       <AppHeader title="Document Checklists" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>

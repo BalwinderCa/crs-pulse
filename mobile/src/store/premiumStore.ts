@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS, IAP_PRODUCTS, IAP_SKUS } from '@/constants';
 import { connect, fetchProducts, buy, getOwnedSkus } from '@/services/iapService';
@@ -122,6 +123,12 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       set({ isPremium, purchasing: false });
       void cacheEntitlement(isPremium);
       if (!isPremium) set({ error: 'No previous purchase found to restore.' });
+    } catch {
+      set({ purchasing: false, error: 'Could not restore purchases.' });
+    }
+  },
+}));
+nd to restore.' });
     } catch {
       set({ purchasing: false, error: 'Could not restore purchases.' });
     }

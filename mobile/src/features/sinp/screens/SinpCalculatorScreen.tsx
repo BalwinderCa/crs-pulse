@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import {
@@ -82,6 +83,7 @@ export default function SinpCalculatorScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const [input, setInput] = useState<SinpInput>(DEFAULT_INPUT);
 
   const result = useMemo(() => calculateSinp(input), [input]);
@@ -153,7 +155,7 @@ export default function SinpCalculatorScreen() {
       <AppHeader title="SINP Calculator" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Score hero */}

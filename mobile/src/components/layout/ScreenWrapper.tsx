@@ -70,7 +70,7 @@ export function ScreenWrapper({
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.flat, horizontalPadding && styles.hPad, contentStyle]}>
+        <View style={[styles.flat, horizontalPadding && styles.hPad, contentFrameStyle, contentStyle]}>
           {children}
         </View>
       )}

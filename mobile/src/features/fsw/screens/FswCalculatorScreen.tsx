@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { AppHeader } from '@/components/layout/AppHeader';
 import {
   calculateFsw,
@@ -78,6 +79,7 @@ export default function FswCalculatorScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const [input, setInput] = useState<FswInput>(DEFAULT_INPUT);
 
   const result = useMemo(() => calculateFsw(input), [input]);
@@ -102,7 +104,7 @@ export default function FswCalculatorScreen() {
       <AppHeader title="FSW Eligibility" variant="stack" />
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         {/* Score hero */}
@@ -170,6 +172,8 @@ export default function FswCalculatorScreen() {
               <Text style={[s.stepUnit, { color: c.textMuted }]}>years</Text>
             </View>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Increase age"
               style={[s.stepBtn, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
               onPress={() => set('age', Math.min(60, input.age + 1))}
             >
@@ -189,6 +193,9 @@ export default function FswCalculatorScreen() {
             return (
               <TouchableOpacity
                 key={opt.value}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active }}
+                accessibilityLabel={`${opt.label}, ${opt.pts} points`}
                 style={[
                   s.option,
                   { borderColor: c.border, backgroundColor: c.surfaceSecondary },
@@ -221,6 +228,9 @@ export default function FswCalculatorScreen() {
                   return (
                     <TouchableOpacity
                       key={opt.value}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: active }}
+                      accessibilityLabel={opt.label}
                       style={[
                         s.chip,
                         { borderColor: c.border, backgroundColor: c.surfaceSecondary },
@@ -266,6 +276,9 @@ export default function FswCalculatorScreen() {
               return (
                 <TouchableOpacity
                   key={opt.value}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  accessibilityLabel={opt.label}
                   style={[
                     s.chip,
                     { borderColor: c.border, backgroundColor: c.surfaceSecondary },

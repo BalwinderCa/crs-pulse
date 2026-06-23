@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { findChecklistProgram } from '../data/checklists';
@@ -16,6 +17,7 @@ export default function DocumentChecklistScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { contentFrameStyle } = useResponsiveLayout();
   const route = useRoute<RouteProp<RootStackParamList, 'DocumentChecklistDetail'>>();
   const programId = route.params?.programId ?? 'express_entry';
   const program = findChecklistProgram(programId) ?? findChecklistProgram('express_entry')!;
@@ -71,7 +73,7 @@ export default function DocumentChecklistScreen() {
       </View>
 
       <ScrollView
-        contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
+        contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>{program.intro}</Text>

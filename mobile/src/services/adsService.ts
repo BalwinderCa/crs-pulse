@@ -1,3 +1,5 @@
+import { Platform } from 'react-native';
+
 // `require` is provided by the Metro runtime; declare it for the TS compiler.
 declare const require: (module: string) => unknown;
 
@@ -9,6 +11,13 @@ declare const require: (module: string) => unknown;
  */
 export async function initAds(): Promise<void> {
   try {
+    if (Platform.OS === 'ios') {
+      const { requestTrackingPermissionsAsync } = require('expo-tracking-transparency') as {
+        requestTrackingPermissionsAsync: () => Promise<{ status: string }>;
+      };
+      await requestTrackingPermissionsAsync();
+    }
+
     const mod = require('react-native-google-mobile-ads') as {
       default: () => { initialize: () => Promise<unknown> };
     };
