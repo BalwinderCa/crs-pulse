@@ -80,6 +80,63 @@ export const EE_POOL_FALLBACK: EePoolData = {
   },
 };
 
+/**
+ * Derive the live pool composition from the IRCC "rounds of invitations" feed —
+ * the same feed the app already fetches directly for draws (works on device
+ * IPs, unlike the datacenter-blocked GitHub mirror). Every round carries the
+ * candidate counts by CRS range in dd1..dd18, "as of" that draw date.
+ *
+ * Verified mapping (sub-bands sum to their parent; all top bands sum to dd18):
+ *   dd1 601–1200 · dd2 501–600 · dd3 451–500 · dd9 401–450
+ *   dd15 351–400 · dd16 301–350 · dd17 0–300 · dd18 total
+ *
+ * The Levels Plan is not in the feed, so callers keep their own. Returns null
+ * on a malformed/incomplete feed so the caller can keep its last-good data.
+ */
+export function derivePoolFromRounds(
+  rounds: unknown,
+): { updated: string; pool: EePoolData['pool'] } | null {
+  if (!Array.isArray(rounds)) return null;
+
+  let latest: Record<string, string> | null = null;
+  for (const r of rounds as Record<string, string>[]) {
+    const n = parseInt(r?.drawNumber ?? '', 10);
+    if (!n) continue;
+    if (!latest || n > parseInt(latest.drawNumber ?? '', 10)) latest = r;
+  }
+  if (!latest) return null;
+
+  const num = (s: unknown) => parseInt(String(s ?? '').replace(/,/g, ''), 10);
+  const b601 = num(latest.dd1);   // 601–1200
+  const b501 = num(latest.dd2);   // 501–600
+  const b451 = num(latest.dd3);   // 451–500
+  const b401 = num(latest.dd9);   // 401–450
+  const b351 = num(latest.dd15);  // 351–400
+  const b301 = num(latest.dd16);  // 301–350
+  const b0 = num(latest.dd17);    // 0–300
+  const total = num(latest.dd18);
+
+  const parts = [b601, b501, b451, b401, b351, b301, b0, total];
+  if (parts.some((c) => !Number.isFinite(c))) return null;
+  // Sanity: published bands must add up to the published total.
+  if (b601 + b501 + b451 + b401 + b351 + b301 + b0 !== total) return null;
+
+  return {
+    updated: String(latest.drawDateFull || latest.drawDate || ''),
+    pool: {
+      total,
+      distribution: [
+        { band: '601–1200', min: 601, max: 1200, count: b601 },
+        { band: '501–600', min: 501, max: 600, count: b501 },
+        { band: '451–500', min: 451, max: 500, count: b451 },
+        { band: '401–450', min: 401, max: 450, count: b401 },
+        { band: '351–400', min: 351, max: 400, count: b351 },
+        { band: '0–350', min: 0, max: 350, count: b301 + b0 },
+      ],
+    },
+  };
+}
+
 export interface PoolPosition {
   /** Candidates strictly ranked above the user (higher CRS), estimated. */
   peopleAhead: number;

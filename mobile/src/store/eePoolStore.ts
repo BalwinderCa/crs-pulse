@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { EE_POOL_URL, STORAGE_KEYS } from '@/constants';
-import { EE_POOL_FALLBACK, isEePoolData, type EePoolData } from '@/features/analytics/data/eePool';
+import { IRCC_ROUNDS_FEED_URL, STORAGE_KEYS } from '@/constants';
+import {
+  EE_POOL_FALLBACK,
+  derivePoolFromRounds,
+  isEePoolData,
+  type EePoolData,
+} from '@/features/analytics/data/eePool';
 
 /**
- * Express Entry pool composition + Levels Plan, mirrored to GitHub and fetched
- * cache-first. `data` is never null — it starts at the bundled snapshot and is
- * upgraded to the live mirror when reachable. IRCC publishes these only
- * periodically, so a 7-day stale window is plenty.
+ * Express Entry pool composition + Levels Plan, cache-first. `data` is never
+ * null — it starts at the bundled snapshot and is upgraded to the live pool,
+ * which is derived from the IRCC rounds feed the app already fetches directly
+ * (reliable on device IPs). The Levels Plan is annual and not in that feed, so
+ * it stays bundled. IRCC updates the pool ~biweekly, so a 7-day window is fine.
  */
 type EePoolStore = {
   data: EePoolData;
@@ -37,12 +43,23 @@ export const useEePoolStore = create<EePoolStore>((set, get) => ({
       // ignore — fall through to network
     }
 
-    // 2. Refresh from the mirror when missing or stale.
+    // 2. Derive the live pool from the IRCC rounds feed when missing or stale.
+    //    The Levels Plan isn't in the feed, so keep the current (cached/bundled)
+    //    one — it's an annual figure maintained in the bundled snapshot.
     try {
-      const res = await fetch(EE_POOL_URL, { headers: { Accept: 'application/json' } });
+      const res = await fetch(IRCC_ROUNDS_FEED_URL, { headers: { Accept: 'application/json' } });
       if (!res.ok) return; // keep cache / bundled fallback
-      const data = (await res.json()) as unknown;
-      if (!isEePoolData(data)) return; // ignore bad payload — keep last good
+      const json = (await res.json()) as { rounds?: unknown };
+      const derived = derivePoolFromRounds(json?.rounds);
+      if (!derived) return; // malformed/incomplete feed — keep last good
+
+      const prev = get().data;
+      const data: EePoolData = {
+        updated: derived.updated || prev.updated,
+        source: prev.source,
+        pool: derived.pool,
+        levels: prev.levels,
+      };
       set({ data, live: true });
       await AsyncStorage.setItem(
         STORAGE_KEYS.EE_POOL_CACHE,
