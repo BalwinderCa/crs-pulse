@@ -143,7 +143,11 @@ module.exports = () => ({
       backgroundColor: '#0A1628',
     },
     package: 'com.crspulse.app',
-    permissions: ['VIBRATE', 'POST_NOTIFICATIONS'],
+    permissions: [
+      'VIBRATE',
+      'POST_NOTIFICATIONS',
+      'com.google.android.gms.permission.AD_ID',
+    ],
     softwareKeyboardLayoutMode: 'resize',
     ...(googleServicesFile ? { googleServicesFile } : {}),
   },
