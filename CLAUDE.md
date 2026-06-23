@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (a freemium split — free draw insights plus a one-time in-app purchase that unlocks the personalised "Your Plan" analytics), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker; the in-app purchase is processed entirely by the app store (no payment data reaches us).
+CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (a freemium split — free draw insights and Google AdMob banner ads for free users, plus a one-time in-app purchase that unlocks the personalised "Your Plan" analytics and removes ads), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker; the in-app purchase is processed entirely by the app store (no payment data reaches us).
 
 The repository has two independent workspaces:
 - `mobile/` — Expo React Native app
@@ -154,7 +154,7 @@ Copy `mobile/.env.example` to `mobile/.env.local`. Required vars:
 | `EXPO_PUBLIC_PUSH_API_KEY` | Bearer token matching worker's `PUSH_API_SECRET` |
 | `EAS_PROJECT_ID` | From `eas init` or expo.dev |
 
-Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_ERROR_REPORT_URL`.
+Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_ERROR_REPORT_URL`. AdMob IDs (`GOOGLE_ADMOB_ANDROID_APP_ID`/`_IOS_APP_ID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID`/`_IOS`) are set in `eas.json`'s `production` env for release builds (dev falls back to Google test IDs); the app ID and ad-unit IDs must share one AdMob publisher account.
 
 ### Services & Observability
 
@@ -162,10 +162,11 @@ Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PU
 - `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
 - `iapService.ts` — Thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock" (`crs_pulse.analytics_unlock`); handles connect/buy/restore/entitlement check
 - `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
+- `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row), free users only, hidden for Premium, and self-hides on ad no-fill; `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
 ### Premium / IAP Gate
 
-The analytics "Your Plan" tab is gated behind a one-time Google Play managed product (`crs_pulse.analytics_unlock`). `premiumStore` is the source of truth — it connects to billing on init, verifies entitlement, and mirrors to AsyncStorage for fast cold starts. The gate **fails open**: when billing is unavailable (iOS without StoreKit configured, emulator, transient Play outage) `isPremium` is set to `true` so the feature is never accidentally locked for real users.
+The analytics "Your Plan" tab is gated behind a one-time Google Play managed product (`crs_pulse.analytics_unlock`). `premiumStore` is the source of truth — it connects to billing on init, verifies entitlement, and mirrors to AsyncStorage for fast cold starts. The gate **fails open** through `billingAvailable`: when no purchasable product loads (iOS without StoreKit, emulator, transient Play outage) `billingAvailable` becomes `false` and consumers treat that as "don't lock" — the analytics "Your Plan" tab unlocks (`planLocked = premiumLoaded && !isPremium && billingAvailable`) and the paywall/upgrade banner hide. Note `isPremium` itself is **not** force-set to `true`, so AdMob ads — which gate only on `isPremium` — keep showing for non-purchasers.
 
 ### Testing
 

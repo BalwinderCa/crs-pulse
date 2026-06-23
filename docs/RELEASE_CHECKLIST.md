@@ -51,3 +51,12 @@ eas submit --platform android --profile production --latest
 - [ ] Verify push registration on a physical Android device
 - [ ] Verify IRCC draw fetch and offline cache
 - [ ] Monitor Cloudflare Worker logs: `cd workers/push && npm run tail`
+
+## Troubleshooting (lessons learned)
+
+- **`gradlew`: "SDK location not found"** during a local `eas build --local` → export `ANDROID_HOME` (e.g. `$HOME/Library/Android/sdk`) before building. (Raw `gradlew bundleRelease` also produces a **debug-signed** bundle Play rejects — build through EAS so the upload keystore is injected.)
+- **Play upload: "Version code N has already been used"** → bump it; under `appVersionSource: remote` EAS auto-increments its own counter (the `app.config.js` value is ignored), and a failed build can still consume a number, so gaps are fine.
+- **"Your advertising ID declaration … an active artifact doesn't include AD_ID":** not about the new bundle — an **older active artifact** (built before the `AD_ID` permission) is still live in some track. Retire it (roll the new build over it) rather than re-uploading. Keep the declaration "Yes" (the app uses AdMob).
+- **`eas submit`: "service account is missing the necessary permissions":** grant the `google-play-service-account.json` identity _"Release apps to testing tracks"_ in Play Console → Users and permissions. The first release of a new app must be created manually in the UI. For local builds, submit with `--path <aab>` (not `--latest`).
+- **In-app "Could not reach the notification service":** worker `PUSH_API_SECRET` ≠ app `EXPO_PUBLIC_PUSH_API_KEY` → `/register` returns 401. Set them equal (`eas env:list production --include-sensitive` reads the app key; `wrangler secret put PUSH_API_SECRET` aligns the worker), then toggle notifications off/on to re-register.
+- **No ads after install:** banners show only in the Draws/Notifications lists (every 5th row), never for Premium, and self-hide on no-fill. New AdMob apps no-fill for hours–days; verify wiring with a dev build (test ads always fill).

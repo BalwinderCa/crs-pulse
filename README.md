@@ -210,6 +210,43 @@ Production builds with `distribution: store` go to App Store Connect automatical
 
 `EXPO_PUBLIC_PUSH_URL` is set in `mobile/eas.json` for preview and production profiles.
 
+## Android / Google Play release
+
+See **[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)** for the full pre-flight list (push key, FCM V1, data-safety form). Highlights:
+
+### Build
+
+Production Android builds are **app bundles signed with the upload keystore** from local credentials (`mobile/credentials.json` → `credentials/upload-keystore.jks`, both gitignored). EAS injects that signing config — a plain `gradlew bundleRelease` is **debug-signed and Play rejects it**, so always build through EAS:
+
+```bash
+cd mobile
+npm run build:android        # cloud build (recommended)
+
+# or a local build (needs the Android SDK on PATH):
+export ANDROID_HOME=$HOME/Library/Android/sdk
+eas build --local --platform android --profile production --output build/app.aab
+```
+
+`versionCode` uses `appVersionSource: "remote"` + `autoIncrement` — EAS owns the counter and **ignores** the value in `app.config.js`; each build bumps it.
+
+### Advertising ID (AD_ID)
+
+The free tier ships Google AdMob, so the app declares `com.google.android.gms.permission.AD_ID` (in `app.config.js`) and the Play Console **Advertising ID declaration must be "Yes."** ⚠️ The _"an active artifact doesn't include AD_ID"_ error checks **every active artifact across all tracks** — an old build made before the permission was added keeps tripping it until you roll a compliant build over it / retire that version code. It is **not** about your newest bundle.
+
+### Submit / roll out
+
+```bash
+eas submit --platform android --profile production --latest             # cloud build
+eas submit --platform android --profile production --path build/app.aab  # local build
+```
+
+`eas submit` uses `mobile/google-play-service-account.json` (gitignored, track `internal`). That service account must be granted access in **Play Console → Users and permissions** with at least _"Release apps to testing tracks"_, or submit fails with _"the service account is missing the necessary permissions."_ The **first release of a new app must be created manually** in the console UI. With permission granted you can also drive a track rollout directly via the Google Play Developer API (`edits.insert` → `tracks.update` → `edits.commit`).
+
+### Troubleshooting
+
+- **In-app "Could not reach the notification service":** the worker's `PUSH_API_SECRET` must exactly equal the build's `EXPO_PUBLIC_PUSH_API_KEY` (sent as a Bearer token; mismatch → HTTP 401, surfaced as this message). The key comes from the EAS `production` environment at build time — keep it in sync with the worker secret.
+- **No ads showing:** banners render only in the **Draws** and **Notifications** lists (after every 5th row), are hidden for Premium, and **self-hide on no-fill**. A brand-new AdMob app returns no-fill for hours–days; run a dev build (`npm run android`) to confirm with Google **test ads**, which always fill.
+
 ## Project structure
 
 ```

@@ -479,6 +479,7 @@ Locked behind `premiumStore.isPremium`. If not premium, shows the paywall gate (
 | `ErrorBoundary.tsx` | React error boundary; catches render errors, shows fallback |
 | `Logo.tsx` | App logo (used on splash / onboarding) |
 | `PulseAnimation.tsx` | Looping scale/opacity animation (used for new-draw badge) |
+| `AdBanner.tsx` | Google AdMob anchored-adaptive banner. Renders nothing for Premium, before premium resolves, when the native module / unit ID is missing, or on ad no-fill. Uses Google **test** ad units in `__DEV__`. |
 
 ### Layout (`layout/`)
 
@@ -622,7 +623,7 @@ type PremiumStore = {
 
 **IAP product:** `crs_pulse.analytics_unlock` (non-consumable managed product, Google Play)
 
-**Fail-open:** `isPremium = true` when billing is unavailable (iOS without StoreKit, emulator, transient outage).
+**Fail-open:** when no purchasable product loads (iOS without StoreKit, emulator, transient outage), `billingAvailable` is set to `false` and consumers treat that as "don't lock" — the analytics gate (`planLocked = premiumLoaded && !isPremium && billingAvailable`), paywall, and upgrade banner all unlock/hide. `isPremium` itself stays `false` (it is **not** force-set to `true`), so AdMob ads — gated only on `isPremium` — still show for non-purchasers.
 
 **Actions:** `init()` (connect + verify entitlement), `purchase()` (launch Play sheet), `restore()` (re-query Play)
 
@@ -737,6 +738,12 @@ Production-safe error logging.
 - Installs global `ErrorUtils` handler for uncaught JS exceptions
 - No-ops / console.warn in development
 - Never throws; errors never mask the original failure
+
+### adsService.ts
+
+Initializes the Google Mobile Ads SDK once at app boot — `initAds()` is called from `RootNavigator`. On iOS it first requests App Tracking Transparency. Fully guarded: no-ops if the native module is unavailable (Expo Go / JS-only client).
+
+**Where ads render:** `AdBanner` appears in the **Draws** and **Notifications** lists, after every 5th row only (`(index + 1) % 5 === 0`). Free users only — Premium removes ads. The banner self-hides on a failed/no-fill load, and a **brand-new AdMob app returns no-fill for the first hours–days**, so an empty slot is expected at first. In `__DEV__` it uses Google's test ad unit (which always fills) — the quickest way to confirm the integration works.
 
 ---
 
@@ -853,6 +860,10 @@ Rule: Always use `useColors()` hook — never hardcode hex values.
 | `EXPO_PUBLIC_APP_STORE_ID` | No | For in-app "Rate" link on iOS |
 | `EXPO_PUBLIC_PRIVACY_POLICY_URL` | No | Override privacy policy URL |
 | `EXPO_PUBLIC_ERROR_REPORT_URL` | No | Endpoint for errorReporter.transmit() |
+| `GOOGLE_ADMOB_ANDROID_APP_ID` / `_IOS_APP_ID` | No¹ | AdMob app IDs (baked into AndroidManifest / Info.plist) |
+| `EXPO_PUBLIC_ADMOB_BANNER_ANDROID` / `_IOS` | No¹ | AdMob banner ad-unit IDs |
+
+¹ Set in `eas.json`'s `production` env for release builds; dev falls back to Google test IDs. The app ID and ad-unit IDs **must belong to the same AdMob publisher account** or ads won't serve.
 
 ### Worker (`wrangler secret put`)
 
