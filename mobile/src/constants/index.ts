@@ -67,7 +67,10 @@ export const STORAGE_KEYS = {
   USER_PROFILE: 'crs_pulse.user_profile',
   DRAWS_CACHE: 'crs_pulse.draws_cache',
   PROCESSING_TIMES_CACHE: 'crs_pulse.processing_times_cache',
-  EE_POOL_CACHE: 'crs_pulse.ee_pool_cache',
+  // v2: pool is now derived live from the IRCC rounds feed (not the GitHub
+  // mirror). Bumping the key invalidates stale pre-migration caches so existing
+  // users re-derive fresh data instead of waiting out the 7-day window.
+  EE_POOL_CACHE: 'crs_pulse.ee_pool_cache_v2',
   DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
   LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
   PUSH_TOKEN: 'crs_pulse.push_token',
