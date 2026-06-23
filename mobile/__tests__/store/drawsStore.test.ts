@@ -1,4 +1,5 @@
 import { useDrawsStore } from '@/store/drawsStore';
+import { useEePoolStore } from '@/store/eePoolStore';
 import type { Draw } from '@/types';
 
 // Silence the cross-module side effect (last-seen sync) — irrelevant here.
@@ -49,3 +50,25 @@ describe('drawsStore.refresh (H2) — empty-feed guard', () => {
     expect(state.error).toBeNull();
   });
 });
+
+describe('drawsStore & eePoolStore Unified Sync', () => {
+  it('synchronizes pool store when draws are refreshed', async () => {
+    const updateSpy = jest.spyOn(useEePoolStore.getState(), 'updateFromRounds').mockResolvedValue(undefined);
+
+    const rounds = [
+      { drawNumber: '411', drawCRS: '505', drawSize: '1,500', drawDate: '2026-02-01', drawName: 'Canadian Experience Class' },
+    ];
+
+    jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({
+        rounds,
+      }),
+    );
+
+    await useDrawsStore.getState().refresh();
+
+    expect(updateSpy).toHaveBeenCalledWith(rounds);
+    updateSpy.mockRestore();
+  });
+});
+

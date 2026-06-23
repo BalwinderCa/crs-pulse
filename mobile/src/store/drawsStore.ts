@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import type { Draw, Category } from '@/types';
 import { syncLastSeenDraw } from '@/hooks/useDrawNotifications';
+import { useEePoolStore } from './eePoolStore';
 
 // Official IRCC public draw data feed
 const IRCC_URL =
@@ -81,7 +82,9 @@ async function fetchWithRetry(url: string, retries = MAX_RETRIES): Promise<Respo
   let lastErr: unknown;
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      const res = await fetch(url, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
       const retryable = res.status >= 500 || res.status === 429;
       if (res.ok || !retryable || attempt === retries) return res;
     } catch (err) {
@@ -123,7 +126,8 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
     set(hasCache ? { isRefreshing: true, error: null } : { isLoading: true, error: null });
 
     try {
-      const res = await fetchWithRetry(IRCC_URL);
+      // Cache-bust so a stale Akamai edge can't return an older copy of the feed.
+      const res = await fetchWithRetry(`${IRCC_URL}?_=${Date.now()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const json = await res.json();
@@ -133,6 +137,9 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         .map(parseRound)
         .filter((d): d is Draw => d !== null)
         .sort((a, b) => b.draw_number - a.draw_number); // newest first
+
+      // TEMP(remove me): confirm what the device actually receives.
+      console.log('[draws] fetched', draws.length, 'rounds; latest #' + draws[0]?.draw_number, draws[0]?.date);
 
       // A 200 response with an unexpected/changed shape (IRCC has reshaped this
       // feed before) yields zero parseable rounds. Treat that as a failure so we
@@ -149,6 +156,9 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         STORAGE_KEYS.DRAWS_CACHE,
         JSON.stringify({ draws, lastFetched }),
       );
+
+      // Keep the EE Pool Store perfectly synchronized using the same rounds feed
+      useEePoolStore.getState().updateFromRounds(rounds).catch(() => {});
 
       // Keep last-seen in sync (server sends push alerts)
       syncLastSeenDraw(draws).catch(() => {});

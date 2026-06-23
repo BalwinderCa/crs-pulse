@@ -65,7 +65,7 @@ export const IRCC_ROUNDS_FEED_URL =
 
 export const STORAGE_KEYS = {
   USER_PROFILE: 'crs_pulse.user_profile',
-  DRAWS_CACHE: 'crs_pulse.draws_cache',
+  DRAWS_CACHE: 'crs_pulse.draws_cache_v2',
   PROCESSING_TIMES_CACHE: 'crs_pulse.processing_times_cache',
   // v2: pool is now derived live from the IRCC rounds feed (not the GitHub
   // mirror). Bumping the key invalidates stale pre-migration caches so existing

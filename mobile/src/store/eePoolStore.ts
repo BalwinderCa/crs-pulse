@@ -20,6 +20,7 @@ type EePoolStore = {
   /** true once the live mirror (not just the bundled seed) has loaded. */
   live: boolean;
   load: () => Promise<void>;
+  updateFromRounds: (rounds: unknown) => Promise<void>;
 };
 
 const STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
@@ -27,6 +28,28 @@ const STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 export const useEePoolStore = create<EePoolStore>((set, get) => ({
   data: EE_POOL_FALLBACK,
   live: false,
+
+  updateFromRounds: async (rounds: unknown) => {
+    try {
+      const derived = derivePoolFromRounds(rounds);
+      if (!derived) return;
+
+      const prev = get().data;
+      const data: EePoolData = {
+        updated: derived.updated || prev.updated,
+        source: prev.source,
+        pool: derived.pool,
+        levels: prev.levels,
+      };
+      set({ data, live: true });
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.EE_POOL_CACHE,
+        JSON.stringify({ data, fetchedAt: new Date().toISOString() }),
+      );
+    } catch {
+      // ignore — transient disk error should not crash
+    }
+  },
 
   load: async () => {
     // 1. Hydrate from cache first (instant, offline-safe).
@@ -47,7 +70,9 @@ export const useEePoolStore = create<EePoolStore>((set, get) => ({
     //    The Levels Plan isn't in the feed, so keep the current (cached/bundled)
     //    one — it's an annual figure maintained in the bundled snapshot.
     try {
-      const res = await fetch(IRCC_ROUNDS_FEED_URL, { headers: { Accept: 'application/json' } });
+      const res = await fetch(`${IRCC_ROUNDS_FEED_URL}?_=${Date.now()}`, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
       if (!res.ok) return; // keep cache / bundled fallback
       const json = (await res.json()) as { rounds?: unknown };
       const derived = derivePoolFromRounds(json?.rounds);
