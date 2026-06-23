@@ -143,6 +143,7 @@ module.exports = () => ({
       backgroundColor: '#0A1628',
     },
     package: 'com.crspulse.app',
+    versionCode: 13,
     permissions: [
       'VIBRATE',
       'POST_NOTIFICATIONS',
