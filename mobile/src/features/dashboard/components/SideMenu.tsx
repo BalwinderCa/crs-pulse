@@ -40,7 +40,7 @@ The free version shows ads through Google AdMob, which may collect device identi
 
 Full policy: ${PRIVACY_POLICY_URL}
 
-For questions, contact: balwinderxcode@gmail.com`;
+For questions, contact: info@crspulse.com`;
 
 const TERMS_TEXT = `By using CRS Pulse, you agree to these terms.
 
@@ -54,7 +54,7 @@ The app is provided "as is", without warranties of any kind. To the maximum exte
 
 These terms may be updated from time to time. Continued use of the app after an update means you accept the revised terms.
 
-Questions? Contact: balwinderxcode@gmail.com`;
+Questions? Contact: info@crspulse.com`;
 
 const MENU_WIDTH = Dimensions.get('window').width;
 
@@ -107,8 +107,8 @@ function ContactView({ onClose }: { onClose: () => void }) {
     {
       icon: 'mail' as const,
       label: 'Email us',
-      sub: 'balwinderxcode@gmail.com',
-      onPress: () => Linking.openURL('mailto:balwinderxcode@gmail.com?subject=CRS%20Pulse'),
+      sub: 'support@crspulse.com',
+      onPress: () => Linking.openURL('mailto:support@crspulse.com?subject=CRS%20Pulse'),
     },
     {
       icon: 'logo-github' as const,

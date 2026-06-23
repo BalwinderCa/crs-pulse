@@ -30,7 +30,7 @@ This is an unofficial calculator. Always verify your score with the official IRC
 Tools
 
 ## Contact email
-balwinderxcode@gmail.com
+contact@crspulse.com
 
 ## Privacy policy
 https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md

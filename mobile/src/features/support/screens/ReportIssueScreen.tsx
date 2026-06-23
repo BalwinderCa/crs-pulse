@@ -9,7 +9,7 @@ import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 
-const SUPPORT_EMAIL = 'balwinderxcode@gmail.com';
+const SUPPORT_EMAIL = 'support@crspulse.com';
 
 function buildMailUrl() {
   const version = Constants.expoConfig?.version ?? 'unknown';

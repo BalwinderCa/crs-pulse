@@ -2,7 +2,7 @@
 
 **Effective date:** June 17, 2026  
 **App:** CRS Pulse – Express Entry Calculator  
-**Contact:** balwinderxcode@gmail.com
+**Contact:** contact@crspulse.com
 
 ## Summary
 
@@ -71,4 +71,4 @@ We may update this policy. The effective date above will change when we do. Cont
 
 ## Contact
 
-Questions: balwinderxcode@gmail.com
+Questions: contact@crspulse.com
