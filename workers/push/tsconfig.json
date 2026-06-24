@@ -3,6 +3,10 @@
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
+    // Relative imports in src use explicit .ts extensions so Node's native test
+    // runner (node --test, type-stripping) can resolve them; esbuild/wrangler
+    // and tsc (noEmit) both accept this.
+    "allowImportingTsExtensions": true,
     "lib": ["ES2022"],
     "types": ["@cloudflare/workers-types"],
     "strict": true,

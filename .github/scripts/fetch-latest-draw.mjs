@@ -11,63 +11,80 @@
 
 import { writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
 const IRCC_URL =
   'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
 const OUT = 'data/latest-draw.json';
 
-let body;
-try {
-  body = execFileSync(
-    'curl',
-    [
-      '-fsS',
-      '--compressed',
-      '--max-time', '30',
-      '--retry', '6',
-      '--retry-delay', '3',
-      // canada.ca/Akamai intermittently resets the HTTP/2 stream (curl exit 92);
-      // --retry-all-errors makes --retry cover those protocol errors too.
-      '--retry-all-errors',
-      '-H', 'Accept: application/json, text/plain, */*',
-      '-H', 'Accept-Language: en-CA,en;q=0.9',
-      IRCC_URL,
-    ],
-    { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
-  );
-} catch (err) {
-  console.error(`IRCC fetch failed: ${err.message}`);
-  process.exit(1);
+/** Pick the round with the highest numeric drawNumber. Pure — unit tested. */
+export function pickLatestRound(rounds) {
+  let latest = null;
+  for (const r of Array.isArray(rounds) ? rounds : []) {
+    const n = parseInt(r?.drawNumber, 10);
+    if (!n) continue;
+    if (!latest || n > parseInt(latest.drawNumber, 10)) latest = r;
+  }
+  return latest;
 }
 
-let json;
-try {
-  json = JSON.parse(body);
-} catch {
-  console.error('IRCC feed was not valid JSON');
-  process.exit(1);
+/** Reduce an IRCC round to the mirror's stored shape. Pure — unit tested. */
+export function toMirrorRecord(round) {
+  return {
+    drawNumber: round.drawNumber,
+    drawCRS: round.drawCRS,
+    drawName: round.drawName,
+    drawDate: round.drawDate,
+  };
 }
 
-const rounds = Array.isArray(json.rounds) ? json.rounds : [];
-
-let latest = null;
-for (const r of rounds) {
-  const n = parseInt(r.drawNumber, 10);
-  if (!n) continue;
-  if (!latest || n > parseInt(latest.drawNumber, 10)) latest = r;
+function fetchRounds() {
+  let body;
+  try {
+    body = execFileSync(
+      'curl',
+      [
+        '-fsS',
+        '--compressed',
+        '--max-time', '30',
+        '--retry', '6',
+        '--retry-delay', '3',
+        // canada.ca/Akamai intermittently resets the HTTP/2 stream (curl exit 92);
+        // --retry-all-errors makes --retry cover those protocol errors too.
+        '--retry-all-errors',
+        '-H', 'Accept: application/json, text/plain, */*',
+        '-H', 'Accept-Language: en-CA,en;q=0.9',
+        IRCC_URL,
+      ],
+      { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+    );
+  } catch (err) {
+    console.error(`IRCC fetch failed: ${err.message}`);
+    process.exit(1);
+  }
+  let json;
+  try {
+    json = JSON.parse(body);
+  } catch {
+    console.error('IRCC feed was not valid JSON');
+    process.exit(1);
+  }
+  return Array.isArray(json.rounds) ? json.rounds : [];
 }
 
-if (!latest) {
-  console.error('No valid rounds in IRCC feed');
-  process.exit(1);
+function main() {
+  const latest = pickLatestRound(fetchRounds());
+  if (!latest) {
+    console.error('No valid rounds in IRCC feed');
+    process.exit(1);
+  }
+  const out = toMirrorRecord(latest);
+  writeFileSync(OUT, `${JSON.stringify(out, null, 2)}\n`);
+  console.log(`Wrote draw #${out.drawNumber} (${out.drawName}, CRS ${out.drawCRS})`);
 }
 
-const out = {
-  drawNumber: latest.drawNumber,
-  drawCRS: latest.drawCRS,
-  drawName: latest.drawName,
-  drawDate: latest.drawDate,
-};
-
-writeFileSync(OUT, `${JSON.stringify(out, null, 2)}\n`);
-console.log(`Wrote draw #${out.drawNumber} (${out.drawName}, CRS ${out.drawCRS})`);
+// Only run main() when executed directly (not when imported by a test).
+if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
+  main();
+}

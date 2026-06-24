@@ -11,9 +11,9 @@ import {
   registerEmail,
   revokeEmail,
   listEmails,
-} from './tokenStore';
-import { validateTokenWithExpo } from './expoValidate';
-import { fetchExpoReceipts } from './expoReceipts';
+} from './tokenStore.ts';
+import { validateTokenWithExpo } from './expoValidate.ts';
+import { fetchExpoReceipts } from './expoReceipts.ts';
 
 // canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520, so the
 // worker reads the latest draw from a GitHub Actions mirror (raw.githubusercontent)
@@ -68,7 +68,7 @@ interface LatestDraw {
   date: string;
 }
 
-function mapCategory(name: string): string {
+export function mapCategory(name: string): string {
   for (const [key, val] of Object.entries(CATEGORY_MAP)) {
     const needle = key.toLowerCase().replace('targeted draw: ', '');
     if (name.toLowerCase().includes(needle) || name.toLowerCase().includes(key.toLowerCase())) {
@@ -130,7 +130,7 @@ function timingSafeEqualStr(a: string, b: string): boolean {
  * Fails CLOSED: a missing secret means the endpoint is not available, never
  * that it is open. Callers should respond 503 when the secret is unset.
  */
-function isAuthorized(request: Request, secret: string | undefined): boolean {
+export function isAuthorized(request: Request, secret: string | undefined): boolean {
   if (!secret) return false;
   const auth = request.headers.get('Authorization');
   if (!auth) return false;
@@ -401,7 +401,7 @@ async function sendEmailNotifications(kv: KVNamespace, env: Env, content: EmailC
   );
 }
 
-async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
+export async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
   notified: boolean;
   draw_number?: number;
   token_count?: number;

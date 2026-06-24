@@ -27,10 +27,12 @@ jobs:
       # out, and a transient blip on one feed must not skip the other or the
       # commit. continue-on-error keeps the job green; the cron retries every 15m.
       - name: Fetch latest IRCC draw
+        id: fetch_draw
         continue-on-error: true
         run: node .github/scripts/fetch-latest-draw.mjs
 
       - name: Fetch IRCC processing times
+        id: fetch_times
         if: always()
         continue-on-error: true
         run: node .github/scripts/fetch-processing-times.mjs
@@ -47,3 +49,15 @@ jobs:
           git add data/latest-draw.json data/processing-times.json
           git commit -m "chore(data): update IRCC draw + processing times [skip ci]"
           git push
+
+      # continue-on-error keeps the job running through a transient blip on one
+      # feed, but a *persistent* fetch failure must not look green (that's how the
+      # spoofed-UA outage hid for ~4 weeks). Turn the run red if either fetch failed.
+      - name: Fail the run if a fetch failed (surface silent mirror outages)
+        if: always()
+        run: |
+          echo "fetch outcomes — draw: ${{ steps.fetch_draw.outcome }}, times: ${{ steps.fetch_times.outcome }}"
+          if [ "${{ steps.fetch_draw.outcome }}" != "success" ] || [ "${{ steps.fetch_times.outcome }}" != "success" ]; then
+            echo "::error::IRCC mirror fetch failed — committed data may be stale."
+            exit 1
+          fi
