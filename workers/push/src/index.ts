@@ -54,6 +54,8 @@ export interface Env {
   RESEND_API_KEY?: string;
   /** From address for email notifications, e.g. "CRS Pulse <alerts@yourdomain.com>". */
   EMAIL_FROM?: string;
+  /** Recipient for ops alerts (e.g. a stale draw mirror). Optional — alerting is skipped when unset. */
+  ALERT_EMAIL?: string;
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -515,6 +517,61 @@ async function checkProcessingTimes(kv: KVNamespace, env: Env): Promise<{ change
   return { changed: true };
 }
 
+const STALE_KEY = 'mirror_stale_alerted';
+const STALE_DAYS = 30;
+
+/**
+ * True when an IRCC draw date (YYYY-MM-DD) is older than `maxAgeDays`. Empty or
+ * unparseable dates return false — a broken fetch is already caught by the mirror
+ * workflow's red-on-failure gate, so this only alarms on data we can confidently
+ * call stale. Pure — unit tested.
+ */
+export function isStale(dateStr: string, nowMs: number, maxAgeDays: number): boolean {
+  const t = Date.parse(dateStr);
+  if (Number.isNaN(t)) return false;
+  return nowMs - t > maxAgeDays * 86_400_000;
+}
+
+/**
+ * Independent heartbeat. The worker runs on Cloudflare cron regardless of whether
+ * the GitHub Actions mirror is still running, so a silently-stuck mirror (the
+ * Action disabled after repo inactivity, or broken in a new way) is caught here
+ * even when CI is green. Emails ALERT_EMAIL once per staleness episode and resets
+ * when the mirror recovers, so it never spams every 15 minutes.
+ */
+async function checkMirrorFreshness(kv: KVNamespace, env: Env): Promise<void> {
+  const latest = await fetchLatestDraw();
+  if (!latest?.date) return; // can't assess freshness; fetch failures caught elsewhere
+
+  const stale = isStale(latest.date, Date.now(), STALE_DAYS);
+  const alerted = await kv.get(STALE_KEY);
+
+  if (!stale) {
+    if (alerted) await kv.delete(STALE_KEY); // recovered — re-arm for next time
+    return;
+  }
+  if (alerted) return; // already alerted this episode
+  if (!env.ALERT_EMAIL || !env.RESEND_API_KEY || !env.EMAIL_FROM) return; // alerting not configured
+
+  const ageDays = Math.floor((Date.now() - Date.parse(latest.date)) / 86_400_000);
+  const line =
+    `The CRS Pulse draw mirror's latest draw is #${latest.draw_number} (${latest.date}), ` +
+    `${ageDays} days old. The "IRCC draw mirror" GitHub Action may have stopped or broken — ` +
+    `no new-draw push notifications will be sent until it is fixed.`;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: env.EMAIL_FROM,
+      to: [env.ALERT_EMAIL],
+      subject: `⚠️ CRS Pulse: draw mirror is stale (${ageDays}d)`,
+      text: line,
+      html: `<p>${esc(line)}</p>`,
+    }),
+  });
+  await kv.put(STALE_KEY, latest.date); // mark only after an alert actually went out
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === 'OPTIONS') return corsPreflight();
@@ -665,5 +722,6 @@ export default {
     await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV, env);
     await checkProcessingTimes(env.TOKENS_KV, env);
+    await checkMirrorFreshness(env.TOKENS_KV, env);
   },
 };

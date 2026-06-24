@@ -101,6 +101,11 @@ npm run deploy
 # Required production secrets (one-time)
 npx wrangler secret put PUSH_API_SECRET
 npx wrangler secret put SYNC_SECRET
+
+# Optional: ops alerting — the cron emails ALERT_EMAIL once if the draw mirror
+# goes >30 days stale (e.g. the GitHub Action stopped). Needs RESEND_API_KEY +
+# EMAIL_FROM set too; no-op if unset.
+npx wrangler secret put ALERT_EMAIL
 ```
 
 Set the same `PUSH_API_SECRET` value as `EXPO_PUBLIC_PUSH_API_KEY` in EAS secrets / `mobile/.env.local`.

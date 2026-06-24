@@ -132,7 +132,7 @@ Two entry points:
 - `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, `/health`, and `/sync` (manual trigger)
 - `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected
 
-Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). KV binding: `TOKENS_KV`.
+Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). Optional: `RESEND_API_KEY`/`EMAIL_FROM` (email alerts) and `ALERT_EMAIL` (recipient for the stale-mirror heartbeat — the cron emails it once if the draw mirror goes >30 days stale). KV binding: `TOKENS_KV`.
 
 ## Key Conventions
 

@@ -871,3 +871,5 @@ Rule: Always use `useColors()` hook — never hardcode hex values.
 |---|---|
 | `PUSH_API_SECRET` | Bearer auth for `/register` and `/revoke` |
 | `SYNC_SECRET` | Bearer auth for `/sync` |
+| `RESEND_API_KEY` / `EMAIL_FROM` | Optional — Resend creds for email draw alerts + ops alerts |
+| `ALERT_EMAIL` | Optional — recipient for the stale-mirror heartbeat; the cron emails it once if the draw mirror's date goes >30 days stale (no-op if unset) |

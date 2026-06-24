@@ -13,6 +13,9 @@
 - [ ] `wrangler secret put PUSH_API_SECRET` — set the **same value** as the
       `EXPO_PUBLIC_PUSH_API_KEY` EAS secret above (worker rejects mismatches with 401)
 - [ ] `wrangler secret put SYNC_SECRET` — for manual `/sync` only
+- [ ] (optional) `wrangler secret put ALERT_EMAIL` — the cron emails this address
+      once if the draw mirror goes >30 days stale (needs `RESEND_API_KEY` +
+      `EMAIL_FROM`); no-op if unset
 - [ ] `cd workers/push && npm run deploy`
 - [ ] `google-play-service-account.json` in `mobile/` (gitignored) for `eas submit`
 

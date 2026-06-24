@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkAndNotify, isAuthorized, mapCategory } from './index.ts';
+import { checkAndNotify, isAuthorized, isStale, mapCategory } from './index.ts';
 
 // Minimal in-memory KV (mirrors tokenStore.test.ts's MockKV).
 class MockKV {
@@ -61,6 +61,16 @@ test('isAuthorized requires an exact Bearer match and a configured secret', () =
   assert.equal(isAuthorized(req('Bearer wrong'), 's3cret'), false);
   assert.equal(isAuthorized(req(), 's3cret'), false);
   assert.equal(isAuthorized(req('Bearer s3cret'), undefined), false); // fails closed
+});
+
+// ─── isStale (mirror freshness heartbeat) ─────────────────────────────────────
+test('isStale flags only confidently-old draw dates', () => {
+  const now = Date.parse('2026-06-23');
+  assert.equal(isStale('2026-06-20', now, 30), false); // 3 days — fresh
+  assert.equal(isStale('2026-06-23', now, 30), false); // today
+  assert.equal(isStale('2026-05-01', now, 30), true); // ~53 days — stale
+  assert.equal(isStale('', now, 30), false); // empty — don't false-alarm
+  assert.equal(isStale('not-a-date', now, 30), false); // unparseable — don't false-alarm
 });
 
 // ─── checkAndNotify: the new-draw decision logic ──────────────────────────────
