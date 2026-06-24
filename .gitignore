@@ -98,3 +98,5 @@ mobile/Crs\ Pulse
 
 # Claude Code local config/skills
 .claude/
+.vercel
+.env*
