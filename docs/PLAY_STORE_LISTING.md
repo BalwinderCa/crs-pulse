@@ -52,4 +52,4 @@ Tools
 contact@crspulse.com
 
 ## Privacy policy
-https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md
+https://www.crspulse.com/privacy

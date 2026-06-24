@@ -22,7 +22,7 @@ const projectId = process.env.EAS_PROJECT_ID || '255e43da-70b7-44a9-a50f-8852233
 const appStoreId = process.env.EXPO_PUBLIC_APP_STORE_ID || '';
 const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
-  'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md';
+  'https://www.crspulse.com/privacy';
 
 // Inline config plugin: adds -Xskip-metadata-version-check to all subproject
 // Kotlin compile tasks. Required because play-services-ads 25.0.0 (pulled in

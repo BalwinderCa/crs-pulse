@@ -8,7 +8,7 @@ export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.1';
 /** Public URLs — no custom domain required; GitHub hosts the privacy policy. */
 export const GITHUB_REPO_URL = 'https://github.com/BalwinderCa/crs-pulse';
 export const PRIVACY_POLICY_URL =
-  'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md';
+  'https://www.crspulse.com/privacy';
 /** Terms of Use (EULA) — required link on the IAP purchase surface (Apple 3.1.2). */
 export const TERMS_OF_USE_URL =
   'https://github.com/BalwinderCa/crs-pulse/blob/main/docs/TERMS_OF_USE.md';

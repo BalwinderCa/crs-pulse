@@ -29,7 +29,7 @@
 
 ## Play Console
 
-- [ ] Privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+- [ ] Privacy policy URL: `https://www.crspulse.com/privacy`
 - [ ] Data safety form (must match PRIVACY_POLICY.md):
   - Device-stored CRS data (not collected off-device)
   - Optional anonymous push token → Cloudflare Worker

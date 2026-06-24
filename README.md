@@ -65,9 +65,9 @@ Set your EAS project ID in `mobile/.env.local` (or EAS secrets):
 EAS_PROJECT_ID=your-eas-project-id
 ```
 
-Privacy policy: [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) — no custom domain needed. Use the GitHub URL in App Store Connect:
+Privacy policy — rendered from [docs/PRIVACY_POLICY.md](docs/PRIVACY_POLICY.md) and hosted on Vercel (see [web/](web/)). Use this URL in the stores:
 
-`https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+`https://www.crspulse.com/privacy`
 
 Run on a device or simulator:
 
@@ -157,7 +157,7 @@ Local dev: `npm run dev` → `http://localhost:8787`
 
 - [Apple Developer Program](https://developer.apple.com/programs/) membership ($99/yr)
 - [EAS CLI](https://docs.expo.dev/build/setup/): `npm install -g eas-cli`
-- Privacy policy URL (GitHub, no domain required): `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+- Privacy policy URL: `https://www.crspulse.com/privacy`
 
 ### One-time setup
 
@@ -180,7 +180,7 @@ EXPO_PUBLIC_PUSH_URL=https://crs-pulse-push.balwinderxcode.workers.dev
 
 1. Create app at [App Store Connect](https://appstoreconnect.apple.com) with bundle ID `com.crspulse.app`
 2. Fill **App Privacy** questionnaire: profile data stored on device; optional push token sent to server; the free version uses Google AdMob — declare the advertising identifier / ad-related data collection (and "Tracking" if you serve personalized ads)
-3. Set privacy policy URL: `https://github.com/BalwinderCa/crs-pulse/blob/main/docs/PRIVACY_POLICY.md`
+3. Set privacy policy URL: `https://www.crspulse.com/privacy`
 4. Export compliance: app uses standard HTTPS only (`ITSAppUsesNonExemptEncryption` is false)
 
 ### Push notifications (APNs)
