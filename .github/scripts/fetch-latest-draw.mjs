@@ -1,30 +1,53 @@
 // Fetches the official IRCC Express Entry rounds feed and writes the latest
-// draw to data/latest-draw.json. Runs on GitHub-hosted runners, whose egress
-// canada.ca (Akamai) accepts — unlike Cloudflare Worker egress, which is
-// rejected with HTTP 520. The push worker reads the committed file from
-// raw.githubusercontent.com instead of hitting canada.ca directly.
+// draw to data/latest-draw.json.
+//
+// We shell out to `curl` and DO NOT spoof a browser User-Agent. canada.ca
+// (Akamai) bot-mitigation resets the HTTP/2 stream (curl exit 92 / read
+// ETIMEDOUT on runners) when a client claims to be Chrome but doesn't match a
+// real browser TLS/HTTP-2 fingerprint — curl's honest default UA is accepted,
+// the Chrome-UA spoof is not. (Node's undici fetch was being reset the same
+// way.) Runs on GitHub-hosted runners; the push worker reads the committed file
+// from raw.githubusercontent.com (canada.ca rejects Cloudflare egress, HTTP 520).
 
 import { writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 
 const IRCC_URL =
   'https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json';
 const OUT = 'data/latest-draw.json';
 
-const res = await fetch(IRCC_URL, {
-  headers: {
-    // canada.ca (Akamai) is more permissive to browser-like requests.
-    'User-Agent':
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-    Accept: 'application/json, text/plain, */*',
-    'Accept-Language': 'en-CA,en;q=0.9',
-  },
-});
-if (!res.ok) {
-  console.error(`IRCC fetch failed: HTTP ${res.status}`);
+let body;
+try {
+  body = execFileSync(
+    'curl',
+    [
+      '-fsS',
+      '--compressed',
+      '--max-time', '30',
+      '--retry', '6',
+      '--retry-delay', '3',
+      // canada.ca/Akamai intermittently resets the HTTP/2 stream (curl exit 92);
+      // --retry-all-errors makes --retry cover those protocol errors too.
+      '--retry-all-errors',
+      '-H', 'Accept: application/json, text/plain, */*',
+      '-H', 'Accept-Language: en-CA,en;q=0.9',
+      IRCC_URL,
+    ],
+    { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+  );
+} catch (err) {
+  console.error(`IRCC fetch failed: ${err.message}`);
   process.exit(1);
 }
 
-const json = await res.json();
+let json;
+try {
+  json = JSON.parse(body);
+} catch {
+  console.error('IRCC feed was not valid JSON');
+  process.exit(1);
+}
+
 const rounds = Array.isArray(json.rounds) ? json.rounds : [];
 
 let latest = null;

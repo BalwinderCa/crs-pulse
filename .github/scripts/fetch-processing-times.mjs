@@ -19,6 +19,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 const FLPT_URL = 'https://www.canada.ca/content/dam/ircc/documents/json/flpt-en.json';
 const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '../../data/processing-times.json');
@@ -82,18 +83,32 @@ export function buildProcessingTimes(flpt) {
   return { updated, times };
 }
 
-async function fetchFlpt() {
-  const res = await fetch(FLPT_URL, {
-    headers: {
-      // canada.ca rejects non-browser UAs; mirror the draw fetcher's approach.
-      'User-Agent':
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-      Accept: 'application/json, text/plain, */*',
-      'Accept-Language': 'en-CA,en;q=0.9',
-    },
-  });
-  if (!res.ok) throw new Error(`flpt fetch failed: HTTP ${res.status}`);
-  return res.json();
+function fetchFlpt() {
+  // Use curl with its honest default UA — NOT a spoofed browser UA. canada.ca
+  // (Akamai) resets the HTTP/2 stream for clients claiming to be Chrome that
+  // don't match a browser fingerprint; the default curl UA is accepted. Mirrors
+  // fetch-latest-draw.mjs.
+  let body;
+  try {
+    body = execFileSync(
+      'curl',
+      [
+        '-fsS',
+        '--compressed',
+        '--max-time', '30',
+        '--retry', '6',
+        '--retry-delay', '3',
+        '--retry-all-errors',
+        '-H', 'Accept: application/json, text/plain, */*',
+        '-H', 'Accept-Language: en-CA,en;q=0.9',
+        FLPT_URL,
+      ],
+      { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+    );
+  } catch (err) {
+    throw new Error(`flpt fetch failed: ${err.message}`);
+  }
+  return JSON.parse(body);
 }
 
 async function main() {
