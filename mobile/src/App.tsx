@@ -11,11 +11,8 @@ import { useColors } from '@/hooks/useColors';
 LogBox.ignoreLogs([
   'onAnimatedValueUpdate',
   'Sending `onAnimatedValueUpdate`',
-  'VirtualizedLists should never be nested',
-  'Each child in a list should have a unique',
   'Warning: An update to',
   'Non-serializable values were found in the navigation state',
-  'Require cycle:',
   'new NativeEventEmitter',
   'EventEmitter.removeListener',
   '[expo-notifications]',

@@ -24,7 +24,8 @@
       },
       "env": {
         "APP_ENV": "staging",
-        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev"
+        "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev",
+        "EXPO_PUBLIC_PUSH_API_KEY": "dummy_secret_for_preview_replace_in_eas_secrets"
       }
     },
     "production": {

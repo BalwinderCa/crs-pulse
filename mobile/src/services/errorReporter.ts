@@ -30,6 +30,7 @@ export interface ReportContext {
 }
 
 const ENDPOINT = process.env.EXPO_PUBLIC_ERROR_REPORT_URL?.trim() || null;
+const AUTH_KEY = process.env.EXPO_PUBLIC_ERROR_API_KEY?.trim() || null;
 const MAX_BUFFER = 20;
 const recent: ErrorReport[] = [];
 
@@ -82,9 +83,12 @@ export async function reportError(error: unknown, context: ReportContext): Promi
  */
 export async function transmit(report: ErrorReport, endpoint: string): Promise<void> {
   try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (AUTH_KEY) headers['Authorization'] = `Bearer ${AUTH_KEY}`;
+
     await fetch(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(report),
     });
   } catch {

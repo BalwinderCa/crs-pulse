@@ -104,13 +104,28 @@ const RL_PREFIX = 'rl:';
 const RL_WINDOW_SECONDS = 60;
 const RL_MAX_REQUESTS = 60;
 
-async function isRateLimited(kv: KVNamespace, request: Request, route: string): Promise<boolean> {
+async function isRateLimited(kv: KVNamespace, request: Request, route: string, token?: string): Promise<boolean> {
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-  const key = `${RL_PREFIX}${route}:${ip}`;
+  const ipKey = `${RL_PREFIX}${route}:ip:${ip}`;
+  const tokenKey = token ? `${RL_PREFIX}${route}:token:${token}` : null;
+  
   try {
-    const count = parseInt((await kv.get(key)) ?? '0', 10) + 1;
-    if (count > RL_MAX_REQUESTS) return true;
-    await kv.put(key, String(count), { expirationTtl: RL_WINDOW_SECONDS });
+    const [ipCountStr, tokenCountStr] = await Promise.all([
+      kv.get(ipKey),
+      tokenKey ? kv.get(tokenKey) : Promise.resolve(null)
+    ]);
+    
+    const ipCount = parseInt(ipCountStr ?? '0', 10) + 1;
+    const tokenCount = parseInt(tokenCountStr ?? '0', 10) + 1;
+    
+    // Stricter limit per token (e.g. 10 operations per minute) to stop distributed attacks
+    if (ipCount > RL_MAX_REQUESTS || (tokenKey && tokenCount > 10)) return true;
+    
+    const puts = [kv.put(ipKey, String(ipCount), { expirationTtl: RL_WINDOW_SECONDS })];
+    if (tokenKey) {
+      puts.push(kv.put(tokenKey, String(tokenCount), { expirationTtl: RL_WINDOW_SECONDS }));
+    }
+    await Promise.all(puts);
     return false;
   } catch {
     return false; // fail open — never lock out a legitimate device on KV error
@@ -589,15 +604,16 @@ export default {
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
-      if (await isRateLimited(env.TOKENS_KV, request, 'register')) {
-        return json({ message: 'Too many requests' }, 429);
-      }
 
       let body: { token?: string; platform?: string };
       try {
         body = (await request.json()) as { token?: string; platform?: string };
       } catch {
         return json({ message: 'Invalid JSON body' }, 400);
+      }
+
+      if (await isRateLimited(env.TOKENS_KV, request, 'register', body.token)) {
+        return json({ message: 'Too many requests' }, 429);
       }
 
       if (!body.token || !body.platform) {
@@ -640,15 +656,16 @@ export default {
       if (!isAuthorized(request, env.PUSH_API_SECRET)) {
         return json({ message: 'Unauthorized' }, 401);
       }
-      if (await isRateLimited(env.TOKENS_KV, request, 'revoke')) {
-        return json({ message: 'Too many requests' }, 429);
-      }
 
       let body: { token?: string };
       try {
         body = (await request.json()) as { token?: string };
       } catch {
         return json({ message: 'Invalid JSON body' }, 400);
+      }
+
+      if (await isRateLimited(env.TOKENS_KV, request, 'revoke', body.token)) {
+        return json({ message: 'Too many requests' }, 429);
       }
 
       if (!body.token) return json({ message: 'token is required' }, 422);
