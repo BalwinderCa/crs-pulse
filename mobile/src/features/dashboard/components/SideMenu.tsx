@@ -244,7 +244,7 @@ export function SideMenu({ visible, onClose }: Props) {
 
   const groupAbout: MenuItem[] = [
     { icon: 'help-circle',       label: 'FAQ',                onPress: navigateTo('Faq'),          accent: palette.blue },
-    { icon: 'information-circle', label: 'About Us',           onPress: () => setDetail('about'),   accent: '#A78BFA' },
+    { icon: 'information-circle', label: 'About Us',           onPress: () => setDetail('about'),   accent: palette.purple },
     { icon: 'lock-closed',        label: 'Privacy Policy',     onPress: () => setDetail('privacy'), accent: palette.success },
     { icon: 'document-text',      label: 'Terms & Conditions', onPress: () => setDetail('terms'),   accent: palette.blue },
   ];

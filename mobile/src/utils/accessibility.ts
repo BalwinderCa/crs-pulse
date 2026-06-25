@@ -1,8 +1,8 @@
-import { AccessibilityInfo } from 'react-native';
-
-export async function announceForAccessibility(message: string): Promise<void> {
-  AccessibilityInfo.announceForAccessibility(message);
-}
+/**
+ * Builders for screen-reader (VoiceOver / TalkBack) labels on the data-dense
+ * score widgets. Grouping the numbers into one spoken sentence stops the reader
+ * announcing the gauge, score and cutoff as disconnected fragments.
+ */
 
 export function getScoreAccessibilityLabel(
   userScore: number,

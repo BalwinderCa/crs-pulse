@@ -35,16 +35,24 @@ export default function PaywallScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
 
-  const isPremium  = usePremiumStore((s) => s.isPremium);
-  const purchasing = usePremiumStore((s) => s.purchasing);
-  const price      = usePremiumStore((s) => s.price);
-  const error      = usePremiumStore((s) => s.error);
-  const purchase   = usePremiumStore((s) => s.purchase);
-  const restore    = usePremiumStore((s) => s.restore);
+  const isPremium        = usePremiumStore((s) => s.isPremium);
+  const premiumLoaded    = usePremiumStore((s) => s.loaded);
+  const billingAvailable = usePremiumStore((s) => s.billingAvailable);
+  const purchasing       = usePremiumStore((s) => s.purchasing);
+  const price            = usePremiumStore((s) => s.price);
+  const error            = usePremiumStore((s) => s.error);
+  const purchase         = usePremiumStore((s) => s.purchase);
+  const restore          = usePremiumStore((s) => s.restore);
 
   useEffect(() => {
-    if (isPremium) nav.goBack();
-  }, [isPremium, nav]);
+    // Dismiss once entitlement is granted, OR when there is no purchasable
+    // product on this device (iOS without StoreKit, emulator, billing outage).
+    // In that case the analytics gate already fails OPEN, so a paywall here is a
+    // dead end — and showing a non-functional purchase flow is an App Review
+    // rejection (Guideline 2.1). Defence-in-depth: the entry CTAs are already
+    // hidden when billing is unavailable, this guards any direct navigation too.
+    if (isPremium || (premiumLoaded && !billingAvailable)) nav.goBack();
+  }, [isPremium, premiumLoaded, billingAvailable, nav]);
 
   const openUrl = useCallback((url: string) => {
     Linking.openURL(url).catch(() => {});

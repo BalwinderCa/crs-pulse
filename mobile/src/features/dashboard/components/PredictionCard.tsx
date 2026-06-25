@@ -5,6 +5,7 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
 import type { Prediction } from '@/types';
+import { getPredictionAccessibilityLabel } from '@/utils/accessibility';
 
 type Props = { prediction: Prediction };
 
@@ -36,7 +37,12 @@ export function PredictionCard({ prediction }: Props) {
   const config = strengthConfig[prediction.strength];
 
   return (
-    <Card style={[styles.card, { backgroundColor: config.bg, borderColor: config.border }]}>
+    <Card
+      style={[styles.card, { backgroundColor: config.bg, borderColor: config.border }]}
+      accessible
+      accessibilityRole="summary"
+      accessibilityLabel={getPredictionAccessibilityLabel(prediction.label, prediction.description)}
+    >
       <View style={styles.header}>
         <View style={styles.emojiWrap}>
           <Text style={styles.emoji}>{config.emoji}</Text>

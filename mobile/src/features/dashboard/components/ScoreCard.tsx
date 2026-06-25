@@ -7,6 +7,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import { NEAR_THRESHOLD } from '@/constants';
+import { getScoreAccessibilityLabel } from '@/utils/accessibility';
 
 // Larger, more dramatic gauge
 const GAUGE_SIZE = 140;
@@ -103,7 +104,7 @@ function makeStyles(c: Colors) {
   });
 }
 
-export function ScoreCard({ userScore, latestCutoff, drawNumber, drawDate }: Props) {
+export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawDate }: Props) {
   const colors = useColors();
   const accent = useAccentColor();
   const styles = makeStyles(colors);
@@ -125,7 +126,12 @@ export function ScoreCard({ userScore, latestCutoff, drawNumber, drawDate }: Pro
       <View style={[styles.topStripe, { backgroundColor: accent }]} />
 
       <View style={styles.inner}>
-        <View style={styles.mainRow}>
+        <View
+          style={styles.mainRow}
+          accessible
+          accessibilityRole="summary"
+          accessibilityLabel={getScoreAccessibilityLabel(userScore, latestCutoff, category)}
+        >
           {/* Gauge */}
           <View style={styles.gaugeWrap}>
             <Svg width={GAUGE_SIZE} height={GAUGE_SIZE}>

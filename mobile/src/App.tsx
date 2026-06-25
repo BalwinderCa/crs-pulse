@@ -3,10 +3,25 @@ import React, { Suspense, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
-import { StyleSheet, View, ActivityIndicator, LogBox } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, LogBox, Text, TextInput } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { palette } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+
+// Honour Dynamic Type (allowFontScaling stays on) but cap the multiplier so the
+// largest accessibility text sizes can't shatter fixed layouts (tab bar, score
+// gauge, cards). Components that need a tighter cap set their own — a lower
+// per-component maxFontSizeMultiplier still wins over this default.
+type ScalableDefaults = { defaultProps?: { maxFontSizeMultiplier?: number } };
+const FONT_SCALE_CAP = 1.6;
+(Text as unknown as ScalableDefaults).defaultProps = {
+  ...(Text as unknown as ScalableDefaults).defaultProps,
+  maxFontSizeMultiplier: FONT_SCALE_CAP,
+};
+(TextInput as unknown as ScalableDefaults).defaultProps = {
+  ...(TextInput as unknown as ScalableDefaults).defaultProps,
+  maxFontSizeMultiplier: FONT_SCALE_CAP,
+};
 
 LogBox.ignoreLogs([
   'onAnimatedValueUpdate',

@@ -24,6 +24,14 @@ export const palette = {
   danger: '#DC2626',      // 4.75:1 contrast on white — WCAG AA
   dangerLight: '#DC262618',
 
+  // Extended semantic accents — used for status/category iconography (e.g. the
+  // application-timeline milestone icons). Centralised here so screens never
+  // hardcode hex values.
+  info: '#5B9EFF',        // alias of brand blue for status icons
+  orange: '#FF8C42',
+  purple: '#A78BFA',
+  purpleDeep: '#7C3AED',
+
   // Neutrals (absolute, not mode-dependent)
   white: '#FFFFFF',
   offWhite: '#F0F5FF',
