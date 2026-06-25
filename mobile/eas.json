@@ -30,12 +30,13 @@
     },
     "production": {
       "autoIncrement": true,
-      "credentialsSource": "local",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "credentialsSource": "local"
       },
       "ios": {
-        "distribution": "store"
+        "distribution": "store",
+        "credentialsSource": "remote"
       },
       "env": {
         "APP_ENV": "production",
