@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -84,6 +85,7 @@ export default function SinpCalculatorScreen() {
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
+  const { t } = useTranslation();
   const [input, setInput] = useState<SinpInput>(DEFAULT_INPUT);
 
   const result = useMemo(() => calculateSinp(input), [input]);
@@ -93,11 +95,11 @@ export default function SinpCalculatorScreen() {
   const scoreColor = result.pass ? palette.success : palette.warning;
 
   const breakdownRows = [
-    { label: 'Education',        pts: result.education,      max: 23 },
-    { label: 'Work Experience',  pts: result.workExperience, max: 15 },
-    { label: 'Language',         pts: result.language,       max: 30 },
-    { label: 'Age',              pts: result.age,            max: 12 },
-    { label: 'SK Connection',    pts: result.connection,     max: 30 },
+    { label: t('sinpCalculator.educationTraining'), pts: result.education,      max: 23 },
+    { label: t('sinpCalculator.workExperience'),    pts: result.workExperience, max: 15 },
+    { label: t('sinpCalculator.languageAbility'),   pts: result.language,       max: 30 },
+    { label: t('sinpCalculator.age'),               pts: result.age,            max: 12 },
+    { label: t('sinpCalculator.connection'),        pts: result.connection,     max: 30 },
   ];
 
   const renderOptions = <T extends string>(
@@ -152,7 +154,7 @@ export default function SinpCalculatorScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="SINP Calculator" variant="stack" />
+      <AppHeader title={t('sinpCalculator.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
@@ -162,7 +164,7 @@ export default function SinpCalculatorScreen() {
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
           <View style={s.scoreHero}>
             <Text style={[s.scoreNum, { color: scoreColor }]}>{result.total}</Text>
-            <Text style={[s.scoreOutOf, { color: c.textMuted }]}>/ {SINP_MAX_SCORE} points</Text>
+            <Text style={[s.scoreOutOf, { color: c.textMuted }]}>/ {SINP_MAX_SCORE} {t('sinpCalculator.points')}</Text>
             <View style={[s.passBadge, { backgroundColor: scoreColor + '1A', borderColor: scoreColor + '50' }]}>
               <Ionicons
                 name={result.pass ? 'checkmark-circle' : 'alert-circle-outline'}
@@ -171,8 +173,8 @@ export default function SinpCalculatorScreen() {
               />
               <Text style={[s.passText, { color: scoreColor }]}>
                 {result.pass
-                  ? `Meets ${SINP_PASS_MARK}-point minimum`
-                  : `${SINP_PASS_MARK - result.total} points below minimum`}
+                  ? t('sinpCalculator.meetsMinimum', { min: SINP_PASS_MARK })
+                  : t('sinpCalculator.belowMinimum', { points: SINP_PASS_MARK - result.total })}
               </Text>
             </View>
           </View>
@@ -190,32 +192,64 @@ export default function SinpCalculatorScreen() {
 
         {/* Education */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Education & Training</Text>
-          {renderOptions(EDUCATION_OPTIONS, input.education, (v) => set('education', v))}
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('sinpCalculator.educationTraining')}</Text>
+          {renderOptions(
+            EDUCATION_OPTIONS.map((o) => ({
+              ...o,
+              label: o.value === 'masters_phd' ? t('sinpCalculator.mastersPhD')
+                : o.value === 'bachelors' ? t('sinpCalculator.bachelors3Plus')
+                : o.value === 'trade_cert' ? t('sinpCalculator.tradeCert')
+                : o.label,
+            })),
+            input.education,
+            (v) => set('education', v),
+          )}
         </View>
 
         {/* Language */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Language Ability</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('sinpCalculator.languageAbility')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
-            First language — lowest CLB level across all four skills of your test:
+            {t('sinpCalculator.firstLanguageHint')}
           </Text>
-          {renderOptions(LANGUAGE_OPTIONS, input.language, (v) => set('language', v))}
+          {renderOptions(
+            LANGUAGE_OPTIONS.map((o) => ({
+              ...o,
+              label: o.value === 'clb8plus' ? t('sinpCalculator.clb8Plus')
+                : o.value === 'clb6' ? t('sinpCalculator.clb6Plus')
+                : (o.value === 'clb5' || o.value === 'clb4') ? t('sinpCalculator.clb4Plus')
+                : o.value === 'below4' ? t('sinpCalculator.belowClb4')
+                : o.label,
+            })),
+            input.language,
+            (v) => set('language', v),
+          )}
           <Text style={[s.hint, { color: c.textSecondary, marginTop: spacing.sm }]}>
             Second official language (English or French), if tested:
           </Text>
-          {renderOptions(SECOND_LANGUAGE_OPTIONS, input.secondLanguage, (v) => set('secondLanguage', v))}
+          {renderOptions(
+            SECOND_LANGUAGE_OPTIONS.map((o) => ({
+              ...o,
+              label: o.value === 'clb8plus' ? t('sinpCalculator.clb8Plus')
+                : o.value === 'clb6' ? t('sinpCalculator.clb6Plus')
+                : (o.value === 'clb5' || o.value === 'clb4') ? t('sinpCalculator.clb4Plus')
+                : o.value === 'below4' ? t('sinpCalculator.belowClb4')
+                : o.label,
+            })),
+            input.secondLanguage,
+            (v) => set('secondLanguage', v),
+          )}
         </View>
 
         {/* Age */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Age</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('sinpCalculator.age')}</Text>
           {renderOptions(AGE_OPTIONS, input.age, (v) => set('age', v))}
         </View>
 
         {/* Work experience */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Skilled Work Experience</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('sinpCalculator.workExperience')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
             Years worked in the field of your education, within the 5 years before applying (2 pts/year):
           </Text>
@@ -228,7 +262,7 @@ export default function SinpCalculatorScreen() {
 
         {/* Saskatchewan connection */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Saskatchewan Connection</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('sinpCalculator.connection')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>Capped at 30 points total.</Text>
           {CONNECTION_OPTIONS.map((opt) => (
             <View key={opt.key} style={s.switchRow}>

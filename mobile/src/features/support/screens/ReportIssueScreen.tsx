@@ -2,6 +2,7 @@ import { Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { GITHUB_REPO_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -26,34 +27,34 @@ export default function ReportIssueScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { contentFrameStyle } = useResponsiveLayout();
 
   const actions = [
     {
       icon: 'mail-outline' as const,
-      title: 'Email us',
-      sub: `Opens your mail app with device info pre-filled (${SUPPORT_EMAIL})`,
-      onPress: () => Linking.openURL(buildMailUrl()),
+      title: t('support.emailTitle'),
+      sub: t('support.emailSub', { email: SUPPORT_EMAIL }),
+      onPress: () => Linking.openURL(buildMailUrl()).catch(() => {}),
     },
     {
       icon: 'logo-github' as const,
-      title: 'Open a GitHub issue',
-      sub: 'Report bugs or request features on the public issue tracker',
-      onPress: () => Linking.openURL(`${GITHUB_REPO_URL}/issues/new`),
+      title: t('support.githubTitle'),
+      sub: t('support.githubSub'),
+      onPress: () => Linking.openURL(`${GITHUB_REPO_URL}/issues/new`).catch(() => {}),
     },
   ];
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Report an Issue" variant="stack" />
+      <AppHeader title={t('support.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>
-          Found a bug, a wrong score, or missing draw data? Tell us and we will fix it.
-          Include steps to reproduce the problem if you can.
+          {t('support.intro')}
         </Text>
 
         {actions.map((a) => (
@@ -75,7 +76,7 @@ export default function ReportIssueScreen() {
         ))}
 
         <Text style={[s.note, { color: c.textMuted }]}>
-          Reports include no personal data — only what you choose to write.
+          {t('support.note')}
         </Text>
       </ScrollView>
     </View>

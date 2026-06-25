@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -82,6 +83,7 @@ export default function BcSirsCalculatorScreen() {
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
+  const { t } = useTranslation();
   const [input, setInput] = useState<SirsInput>(DEFAULT_INPUT);
   const [wageText, setWageText] = useState(String(DEFAULT_INPUT.hourlyWage));
 
@@ -96,11 +98,11 @@ export default function BcSirsCalculatorScreen() {
   };
 
   const breakdownRows = [
-    { label: 'Work Experience', pts: result.workExperience, max: 40 },
-    { label: 'Education',       pts: result.education,      max: 40 },
-    { label: 'Language',        pts: result.language,       max: 40 },
-    { label: 'Hourly Wage',     pts: result.wage,           max: 55 },
-    { label: 'Region of B.C.',  pts: result.region,         max: 25 },
+    { label: t('bcpnpCalculator.workExperience'),    pts: result.workExperience, max: 40 },
+    { label: t('bcpnpCalculator.education'),          pts: result.education,      max: 40 },
+    { label: t('bcpnpCalculator.language'),           pts: result.language,       max: 40 },
+    { label: t('bcpnpCalculator.hourlyWage'),         pts: result.wage,           max: 55 },
+    { label: t('bcpnpCalculator.areaOfEmployment'),   pts: result.region,         max: 25 },
   ];
 
   const renderOptions = <T extends string>(
@@ -154,7 +156,7 @@ export default function BcSirsCalculatorScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="BC PNP — SIRS" variant="stack" />
+      <AppHeader title={t('bcpnpCalculator.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
@@ -167,8 +169,7 @@ export default function BcSirsCalculatorScreen() {
             <Text style={[s.scoreNum, { color: accent }]}>{result.total}</Text>
             <Text style={[s.scoreOutOf, { color: c.textMuted }]}>/ {SIRS_MAX_SCORE} points</Text>
             <Text style={[s.heroNote, { color: c.textSecondary }]}>
-              No fixed pass mark — registrations compete in periodic draws. Recent invitation
-              scores vary by stream.
+              {t('bcpnpCalculator.noFixedPass')}
             </Text>
           </View>
           <View style={s.breakdown}>
@@ -185,39 +186,65 @@ export default function BcSirsCalculatorScreen() {
 
         {/* Work experience */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Directly Related Work Experience</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('bcpnpCalculator.workExperience')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
-            Experience in the occupation of your B.C. job offer. Capped at 40 with bonuses.
+            {t('bcpnpCalculator.expInOccupation')}
           </Text>
-          {renderOptions(WORK_OPTIONS, input.workYears, (v) => set('workYears', v))}
-          {renderSwitch('hasCanadianExp', 'Canadian work experience', '1+ year in Canada in this occupation', 10)}
-          {renderSwitch('currentlyWorkingInJob', 'Currently working in the offered job', 'Full-time for the B.C. employer', 10)}
+          {renderOptions(
+            WORK_OPTIONS.map((o) => ({
+              ...o,
+              label: o.value === 'none' ? t('bcpnpCalculator.none')
+                : o.value === '1_2' ? t('bcpnpCalculator.oneTwoYrs')
+                : o.value === '2_3' ? t('bcpnpCalculator.twoThreeYrs')
+                : o.value === '3_4' ? t('bcpnpCalculator.threeFourYrs')
+                : o.value === '4_5' ? t('bcpnpCalculator.fourFiveYrs')
+                : o.value === '5plus' ? t('bcpnpCalculator.fivePlusYrs')
+                : o.label,
+            })),
+            input.workYears,
+            (v) => set('workYears', v),
+          )}
+          {renderSwitch('hasCanadianExp', t('bcpnpCalculator.canadianWorkExp'), t('bcpnpCalculator.oneYearInCanada'), 10)}
+          {renderSwitch('currentlyWorkingInJob', t('bcpnpCalculator.currentlyWorking'), t('bcpnpCalculator.fullTimeBc'), 10)}
         </View>
 
         {/* Education */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Education</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('bcpnpCalculator.education')}</Text>
           {renderOptions(EDUCATION_OPTIONS, input.education, (v) => set('education', v))}
           <Text style={[s.hint, { color: c.textSecondary, marginTop: spacing.xs }]}>
-            Where did you complete your highest post-secondary education?
+            {t('bcpnpCalculator.educationLocation')}
           </Text>
           {renderOptions(EDU_LOCATION_OPTIONS, input.educationLocation, (v) => set('educationLocation', v))}
-          {renderSwitch('hasTradesOrProfessionalCert', 'Eligible professional designation or trades certification', 'B.C.-recognized designation or Red Seal', 5)}
+          {renderSwitch('hasTradesOrProfessionalCert', t('bcpnpCalculator.professionalDesignation'), t('bcpnpCalculator.designationOrSeal'), 5)}
         </View>
 
         {/* Language */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Language</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('bcpnpCalculator.language')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
-            Lowest CLB across all four abilities of your best official language.
+            {t('bcpnpCalculator.lowestClb')}
           </Text>
-          {renderOptions(LANGUAGE_OPTIONS, input.language, (v) => set('language', v))}
-          {renderSwitch('bothOfficialLanguages', 'Both English and French at CLB 4+', 'Capped at 40 total for language', 10)}
+          {renderOptions(
+            LANGUAGE_OPTIONS.map((o) => ({
+              ...o,
+              label: o.value === 'clb9plus' ? t('bcpnpCalculator.clb9Plus')
+                : o.value === 'clb8' ? t('bcpnpCalculator.clb8')
+                : o.value === 'clb7' ? t('bcpnpCalculator.clb7')
+                : o.value === 'clb6' ? t('bcpnpCalculator.clb6')
+                : o.value === 'clb5' ? t('bcpnpCalculator.clb5')
+                : o.value === 'clb4' ? t('bcpnpCalculator.clb4')
+                : o.label,
+            })),
+            input.language,
+            (v) => set('language', v),
+          )}
+          {renderSwitch('bothOfficialLanguages', t('bcpnpCalculator.bothFrenchEnglish'), 'Capped at 40 total for language', 10)}
         </View>
 
         {/* Wage */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Hourly Wage of B.C. Job Offer</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('bcpnpCalculator.hourlyWage')}</Text>
           <View style={[s.wageRow, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}>
             <Text style={[s.wageCurrency, { color: c.textMuted }]}>$</Text>
             <TextInput
@@ -225,23 +252,23 @@ export default function BcSirsCalculatorScreen() {
               value={wageText}
               onChangeText={onWageChange}
               keyboardType="decimal-pad"
-              placeholder="0.00"
+              placeholder={t('bcpnpCalculator.wagePlaceholder')}
               placeholderTextColor={c.textMuted}
-              accessibilityLabel="Hourly wage in Canadian dollars"
+              accessibilityLabel={t('bcpnpCalculator.wageCurrency')}
             />
-            <Text style={[s.wageUnit, { color: c.textMuted }]}>/hour</Text>
+            <Text style={[s.wageUnit, { color: c.textMuted }]}>{t('bcpnpCalculator.perHour')}</Text>
             <View style={[s.wagePts, { backgroundColor: accent + '18' }]}>
               <Text style={[s.wagePtsText, { color: accent }]}>{sirsWagePoints(input.hourlyWage)} pts</Text>
             </View>
           </View>
           <Text style={[s.hint, { color: c.textSecondary }]}>
-            1 point at $16/hr, +1 per dollar, maximum 55 points at $70/hr or more.
+            {t('bcpnpCalculator.wageHint')}
           </Text>
         </View>
 
         {/* Region */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Area of Employment</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('bcpnpCalculator.areaOfEmployment')}</Text>
           {renderOptions(REGION_OPTIONS, input.region, (v) => set('region', v))}
           {renderSwitch('hasRegionalExperience', 'Worked or studied outside Metro Vancouver', '1+ year full-time work, or recent study, in regional B.C.', 10)}
         </View>

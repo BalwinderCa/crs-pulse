@@ -46,7 +46,7 @@ export function buildCRSInput(d: CalcInputs): CRSInput {
       reading: Number(d.secondLangReading) || 0,
       writing: Number(d.secondLangWriting) || 0,
     },
-    canadianWorkExp: Math.min(5, d.canadianWorkExp) as CRSInput['canadianWorkExp'],
+    canadianWorkExp: Math.min(5, Math.floor(d.canadianWorkExp)) as CRSInput['canadianWorkExp'],
     foreignWorkExp: d.foreignWorkExp as CRSInput['foreignWorkExp'],
     spouseEducation: d.spouseEducation as CRSInput['spouseEducation'],
     spouseLang: {

@@ -38,22 +38,22 @@ export type CalcInputs = {
 
 export const DEFAULT_CALC_INPUTS: CalcInputs = {
   maritalStatus: 'single',
-  age: 30,
+  age: 29,
   education: 'bachelors',
   canadianEducation: 'none',
   firstLangTest: 'IELTS',
-  firstLangSpeaking: 0,
-  firstLangListening: 0,
-  firstLangReading: 0,
-  firstLangWriting: 0,
+  firstLangSpeaking: 7.5,
+  firstLangListening: 8.5,
+  firstLangReading: 8,
+  firstLangWriting: 7.5,
   hasSecondLang: false,
   secondLangTest: 'TEF',
   secondLangSpeaking: 0,
   secondLangListening: 0,
   secondLangReading: 0,
   secondLangWriting: 0,
-  canadianWorkExp: 0,
-  foreignWorkExp: 0,
+  canadianWorkExp: 2,
+  foreignWorkExp: 3,
   spouseEducation: 'secondary',
   spouseLangSpeaking: 0,
   spouseLangListening: 0,
@@ -83,7 +83,7 @@ export type LocalProfile = {
 };
 
 export const DEFAULT_PROFILE: LocalProfile = {
-  crs_score: 0,
+  crs_score: 512,
   category: 'CEC',
   accent_color: '#DC2626',
   theme: 'system',

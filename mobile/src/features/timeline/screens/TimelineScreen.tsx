@@ -71,7 +71,7 @@ function useDaysLabel() {
 
 // ─── Milestone card ───────────────────────────────────────────────────────────
 
-function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; onDelete: () => void }) {
+function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; onDelete?: () => void }) {
   const c = useColors();
   const meta = MILESTONE_META[item.type];
   const label = item.type === 'Custom' && item.customLabel ? item.customLabel : item.type;
@@ -92,7 +92,7 @@ function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; 
       <View style={s.cardMid}>
         <Text style={[s.cardTitle, { color: c.textPrimary }]}>{label}</Text>
         <Text style={[s.cardDate,  { color: c.textMuted }]}>
-          {format(parseISO(item.date), 'MMM d, yyyy')}
+          {isValid(parseISO(item.date)) ? format(parseISO(item.date), 'MMM d, yyyy') : item.date}
         </Text>
         {!!item.note && (
           <Text style={[s.cardNote, { color: c.textSecondary }]} numberOfLines={1}>

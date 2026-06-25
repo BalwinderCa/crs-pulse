@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
@@ -10,94 +11,51 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import type { RootStackParamList } from '@/types';
 import { AppHeader } from '@/components/layout/AppHeader';
 
-type CalcEntry = {
-  icon: React.ComponentProps<typeof Ionicons>['name'];
-  title: string;
-  desc: string;
-  meta: string;
-  route?: 'CrsCalculator' | 'SinpCalculator' | 'FswCalculator' | 'BcSirsCalculator';
-};
-
-const CALCULATORS: CalcEntry[] = [
-  {
-    icon: 'speedometer-outline',
-    title: 'Express Entry — CRS',
-    desc: 'Comprehensive Ranking System score for the federal Express Entry pool.',
-    meta: 'Out of 1,200',
-    route: 'CrsCalculator',
-  },
-  {
-    icon: 'calculator-outline',
-    title: 'Saskatchewan — SINP',
-    desc: 'International Skilled Worker points for the Saskatchewan EOI pool.',
-    meta: 'Out of 110 · pass 60',
-    route: 'SinpCalculator',
-  },
-  {
-    icon: 'checkmark-done-outline',
-    title: 'FSW Eligibility — 67 points',
-    desc: 'Federal Skilled Worker six-factor eligibility check.',
-    meta: 'Out of 100 · pass 67',
-    route: 'FswCalculator',
-  },
-  {
-    icon: 'trail-sign-outline',
-    title: 'British Columbia — SIRS',
-    desc: 'BC PNP Skills Immigration registration score.',
-    meta: 'Out of 200 · draw-based',
-    route: 'BcSirsCalculator',
-  },
-];
-
 export default function CalculatorsScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  const calcEntries: { icon: React.ComponentProps<typeof Ionicons>['name']; title: string; desc: string; meta: string; route: 'CrsCalculator' | 'SinpCalculator' | 'FswCalculator' | 'BcSirsCalculator' }[] = [
+    { icon: 'speedometer-outline', title: t('calculators.crsTitle'), desc: t('calculators.crsDesc'), meta: '1,200', route: 'CrsCalculator' },
+    { icon: 'calculator-outline', title: t('calculators.sinpTitle'), desc: t('calculators.sinpDesc'), meta: '110 · 60', route: 'SinpCalculator' },
+    { icon: 'checkmark-done-outline', title: t('calculators.fswTitle'), desc: t('calculators.fswDesc'), meta: '100 · 67', route: 'FswCalculator' },
+    { icon: 'trail-sign-outline', title: t('calculators.bcpnpTitle'), desc: t('calculators.bcpnpDesc'), meta: '200', route: 'BcSirsCalculator' },
+  ];
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Calculators" variant="stack" />
+      <AppHeader title={t('calculators.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>
-          Points calculators for Canadian immigration programs. All run fully on your device.
+          {t('calculators.intro')}
         </Text>
 
-        {CALCULATORS.map((calc) => {
-          const enabled = !!calc.route;
-          return (
-            <TouchableOpacity
-              key={calc.title}
-              style={[
-                s.card,
-                { borderColor: c.border, backgroundColor: c.surfaceCard },
-                !enabled && s.cardDisabled,
-              ]}
-              onPress={enabled ? () => navigation.navigate(calc.route!) : undefined}
-              activeOpacity={enabled ? 0.65 : 1}
-              disabled={!enabled}
-            >
-              <View style={[s.iconBox, { backgroundColor: accent + (enabled ? '18' : '0D') }]}>
-                <Ionicons name={calc.icon} size={22} color={enabled ? accent : c.textMuted} />
-              </View>
-              <View style={s.cardText}>
-                <Text style={[s.cardTitle, { color: enabled ? c.textPrimary : c.textMuted }]}>
-                  {calc.title}
-                </Text>
-                <Text style={[s.cardDesc, { color: enabled ? c.textSecondary : c.textMuted }]}>
-                  {calc.desc}
-                </Text>
-                <Text style={[s.cardMeta, { color: enabled ? accent : c.textMuted }]}>{calc.meta}</Text>
-              </View>
-              {enabled && <Ionicons name="chevron-forward" size={16} color={c.textMuted} />}
-            </TouchableOpacity>
-          );
-        })}
+        {calcEntries.map((calc) => (
+          <TouchableOpacity
+            key={calc.title}
+            style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
+            onPress={() => navigation.navigate(calc.route)}
+            activeOpacity={0.65}
+          >
+            <View style={[s.iconBox, { backgroundColor: accent + '18' }]}>
+              <Ionicons name={calc.icon} size={22} color={accent} />
+            </View>
+            <View style={s.cardText}>
+              <Text style={[s.cardTitle, { color: c.textPrimary }]}>{calc.title}</Text>
+              <Text style={[s.cardDesc, { color: c.textSecondary }]}>{calc.desc}</Text>
+              <Text style={[s.cardMeta, { color: accent }]}>{calc.meta}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color={c.textMuted} />
+          </TouchableOpacity>
+        ))}
       </ScrollView>
     </View>
   );

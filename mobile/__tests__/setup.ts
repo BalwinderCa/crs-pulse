@@ -58,8 +58,6 @@ jest.mock('expo-notifications', () => ({
   scheduleNotificationAsync:   jest.fn(),
 }));
 
-jest.mock('react-native-linear-gradient', () => 'LinearGradient');
-jest.mock('react-native-chart-kit', () => ({ LineChart: 'LineChart' }));
 jest.mock('react-native-toast-message', () => ({
   default: { show: jest.fn() },
   show: jest.fn(),

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,12 +30,9 @@ const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: pa
 const fmt = (n: number) => n.toLocaleString('en-CA');
 
 type TabKey = 'draws' | 'plan';
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'draws', label: 'Draws' },
-  { key: 'plan', label: 'Your Plan' },
-];
 
 export default function PremiumAnalyticsScreen() {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = useAccentColor();
   const { width: windowWidth } = useWindowDimensions();
@@ -63,6 +61,11 @@ export default function PremiumAnalyticsScreen() {
     if (isPremium && !wasPremium.current) setTab('plan');
     wasPremium.current = isPremium;
   }, [isPremium]);
+
+  const TABS: { key: TabKey; label: string }[] = [
+    { key: 'draws', label: t('analytics.drawsTab') },
+    { key: 'plan', label: t('analytics.yourPlanTab') },
+  ];
 
   // Refresh draws when the tab regains focus. load() is cache-first and
   // staleness-guarded (returns early if <1h old), so this is cheap and only
@@ -145,7 +148,7 @@ export default function PremiumAnalyticsScreen() {
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
       <View style={s.header}>
-        <AppHeader title="Analytics" />
+        <AppHeader title={t('analytics.title')} />
       </View>
 
       <View style={s.bodyWrap}>
@@ -156,7 +159,7 @@ export default function PremiumAnalyticsScreen() {
       >
         {/* Pinned odds hero */}
         <Card style={[s.card, { borderTopWidth: 2, borderTopColor: accent }]}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>YOUR ODDS · {data.category}</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.yourOdds')} · {data.category}</Text>
           <View style={s.gaugeWrap}>
             <OddsGauge
               fraction={data.oddsFraction}
@@ -237,7 +240,7 @@ export default function PremiumAnalyticsScreen() {
                 odds, percentile, forecast and what-if scenarios.
               </Text>
               <Button
-                title="Calculate my CRS"
+                title={t('analytics.calculateCrs')}
                 fullWidth
                 icon={<Ionicons name="calculator-outline" size={18} color={palette.white} />}
                 onPress={() => nav.navigate('CrsCalculator')}
@@ -253,6 +256,7 @@ export default function PremiumAnalyticsScreen() {
 
 // ─── Draws tab (free: live IRCC market data + history) ────────────────────────
 function DrawsTab({ c, accent, data, chartWidth }: any) {
+  const { t } = useTranslation();
   const i = data.ircc;
   return (
     <>
@@ -285,7 +289,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>POOL COMPOSITION · candidates by CRS</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.poolComposition')}</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={i.poolComposition.map((p: any) => ({
@@ -300,7 +304,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{i.curYear} ITA MIX · by category</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.itaMix', { year: i.curYear })}</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={i.categoryMix.map((m: any, idx: number) => ({ label: m.label, value: m.value, max: 40, suffix: '%', color: idx === 0 ? accent : c.textMuted }))} />
@@ -308,7 +312,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>LATEST CUTOFF · by category</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.latestCutoff')}</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={i.categoryCutoffs.map((cc: any) => ({ label: cc.label, value: cc.value, max: 750, color: cc.label.startsWith('French') ? palette.success : accent, highlight: cc.label.startsWith('French') }))} />
@@ -316,7 +320,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={[s.card, { borderLeftWidth: 3, borderLeftColor: palette.success }]}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>FRENCH ADVANTAGE</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.frenchAdvantage')}</Text>
         <Text style={[s.bodyText, { color: c.textPrimary }]}>
           French draws cut off <Text style={[s.num, { color: palette.success }]}>~{i.cecCutoff - i.frenchCutoff} pts</Text> below CEC
           ({i.frenchCutoff} vs {i.cecCutoff}). NCLC 7 French is the biggest CRS shortcut.
@@ -324,18 +328,18 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DRAW SIZE & FREQUENCY · {i.curYear}</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.drawSizeFreq')} · {i.curYear}</Text>
         <View style={s.statGrid}>
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.avgSize}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>avg/draw</Text></View>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.avgSize}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.avgPerDraw')}</Text></View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.largest}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>largest</Text></View>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.largest}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.largest')}</Text></View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.drawsYtd}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>draws YTD</Text></View>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{i.drawsYtd}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.drawsYtd')}</Text></View>
         </View>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>TIE-BREAK · latest draw</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.tieBreak')}</Text>
         <Text style={[s.num, { color: c.textPrimary, fontSize: typography.base }]}>{i.tieBreak}</Text>
         <Text style={[s.caption, { color: c.textMuted }]}>
           At the cutoff, only profiles submitted before this time were invited. Submit early to win ties.
@@ -424,11 +428,12 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
 
 // ─── Your Plan tab (premium: personalised, predictive + prescriptive) ─────────
 function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french, setFrench, pnp, setPnp, whatIfScore, whatIfLabel }: any) {
+  const { t } = useTranslation();
   const i = data.ircc;
   return (
     <>
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.nextDrawPredicted')}</Text>
         <View style={s.rowBetween}>
           <Text style={[s.opsBig, { color: c.textPrimary }]}>{i.nextDrawWindow}</Text>
           <View style={[s.tagPill, { backgroundColor: accent + '18' }]}>
@@ -443,7 +448,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
 
       <Card style={s.card}>
         <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.howToImprove')}</Text>
           <Text style={[s.gapBadge, { color: accent }]}>{data.gapText}</Text>
         </View>
         {data.paths.length > 0 ? (
@@ -463,19 +468,19 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT {data.category.toUpperCase()} DRAW</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.forecast', { category: data.category.toUpperCase() })}</Text>
         <ForecastBandChart actual={data.forecast.actual} forecast={data.forecast.proj} band={data.forecast.band}
           min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border}
           width={Math.min(280, chartWidth)}
           accessibilityLabel={`Next ${data.category} draw forecast: likely cutoff ${data.forecast.likely}, ${data.forecast.confidence.toLowerCase()} confidence.`} />
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · confidence {data.forecast.confidence.toLowerCase()}
+          Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · {t('analytics.confidence')} {data.forecast.confidence.toLowerCase()}
         </Text>
       </Card>
 
       <Card style={s.card}>
         <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whatIf')}</Text>
           <Text style={[s.whatIfScore, { color: c.textPrimary }]}>CRS {whatIfScore}</Text>
         </View>
         <SliderRow c={c} accent={accent} label="Age" value={age} min={18} max={45} step={1} onChange={setAge} display={String(age)} />
@@ -483,17 +488,17 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
         <SwitchRow c={c} accent={accent} label="French (NCLC 7+)" value={french} onChange={setFrench} />
         <SwitchRow c={c} accent={accent} label="Provincial nomination" value={pnp} onChange={setPnp} />
         <View style={[s.whatIfOut, { backgroundColor: (ODDS_COLOR[whatIfLabel] ?? accent) + '14' }]}>
-          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>Projected odds: {whatIfLabel}</Text>
+          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>{t('analytics.projectedOdds')} {whatIfLabel}</Text>
         </View>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.bestStream')}</Text>
         {data.streams.map((st: any, idx: number) => (
           <View key={st.label} style={[s.bandRow, idx > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[s.bandScore, { color: idx === 0 ? accent : c.textPrimary, fontWeight: idx === 0 ? typography.bold : typography.medium }]}>{st.label}</Text>
             <Text style={[s.bandWait, { color: c.textSecondary }]}>
-              cutoff {st.cutoff}{'   '}
+              {t('analytics.cutoff')} {st.cutoff}{'   '}
               <Text style={{ color: st.margin >= 0 ? palette.success : palette.danger, fontWeight: typography.bold }}>
                 {st.margin >= 0 ? `+${st.margin}` : st.margin}
               </Text>
@@ -504,7 +509,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.expectedWait')}</Text>
         {data.byScoreBand.map((r: any, idx: number) => {
           const mine = r.mine;
           return (
@@ -517,7 +522,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.vsRecentCutoffs')}</Text>
         <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} clears {data.percentile}% of recent draw cutoffs</Text>
         <View style={{ marginTop: spacing.sm }}>
           <MarkerBar
@@ -530,7 +535,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whereYouStand')}</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ← you' : ''), value: d.value, max: Math.max(1, ...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
@@ -538,11 +543,11 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · {data.category}</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.decisionOutlook', { category: data.category })}</Text>
         <View style={s.statGrid}>
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text></View>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>~{i.estMonths}mo</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.estDecision')}</Text></View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
-          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text></View>
+          <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.inInventory')}</Text></View>
         </View>
       </Card>
     </>
@@ -551,6 +556,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
 
 // ─── Your Plan skeleton (locked preview with shimmer + unlock CTA) ────────────
 function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; userScore: number }) {
+  const { t } = useTranslation();
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const lv = () => (
@@ -562,11 +568,11 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
   const lb = (h: number) => (
     <View style={[s.lockBlock, { height: h, borderColor: c.border }]}>
       <Ionicons name="lock-closed" size={20} color={c.textMuted} />
-      <Text style={[s.caption, { color: c.textMuted }]}>Unlock to view</Text>
+      <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.unlockToView')}</Text>
     </View>
   );
 
-  const IMPROVE_PATHS = ['Improve language score (CLB)', 'Learn French (NCLC 7+)', 'Get provincial nomination'];
+  const IMPROVE_PATHS = [t('analytics.improveLanguage'), t('analytics.learnFrench'), t('analytics.getProvNom')];
   const STREAMS       = ['Canadian Experience Class', 'French Language', 'Provincial Nominee', 'RNIP / Agri-Food'];
   const SCORE_BANDS   = ['530\u2013559  \u2190 you', '500\u2013529', '470\u2013499', '440\u2013469', '< 440'];
 
@@ -576,12 +582,12 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
         <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
           <Ionicons name="analytics-outline" size={24} color={accent} />
         </View>
-        <Text style={[s.lockTitle, { color: c.textPrimary }]}>Unlock Premium</Text>
+        <Text style={[s.lockTitle, { color: c.textPrimary }]}>{t('analytics.unlockPremium')}</Text>
         <Text style={[s.lockBody, { color: c.textSecondary }]}>
-          Personalised predictions, improvement paths, what-if scenarios and decision outlook — one-time purchase.
+          {t('analytics.unlockDesc')}
         </Text>
         <Button
-          title="Unlock Premium"
+          title={t('analytics.unlockButton')}
           fullWidth
           icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
           onPress={() => nav.navigate('Paywall')}
@@ -590,14 +596,14 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>NEXT DRAW · predicted</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.nextDrawPredicted')}</Text>
         <View style={[s.rowBetween, { marginTop: spacing.sm }]}>
           <View style={{ gap: 5 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>Expected window</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.expectedWindow')}</Text>
             {lv()}
           </View>
           <View style={{ alignItems: 'flex-end', gap: 5 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>Likelihood</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.likelihood')}</Text>
             {lv()}
           </View>
         </View>
@@ -606,11 +612,11 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
 
       <Card style={s.card}>
         <View style={[s.rowBetween, { marginBottom: spacing.xs }]}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>HOW TO IMPROVE</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.howToImprove')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>You need</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.youNeed')}</Text>
             {lv()}
-            <Text style={[s.caption, { color: c.textSecondary }]}>pts</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.pts')}</Text>
           </View>
         </View>
         {IMPROVE_PATHS.map((label, i) => (
@@ -627,11 +633,11 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
         {lb(110)}
         <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>Likely cutoff</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.likelyCutoff')}</Text>
             {lv()}
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>confidence</Text>
+            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.confidence')}</Text>
             {lv()}
           </View>
         </View>
@@ -639,7 +645,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
 
       <Card style={s.card}>
         <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>WHAT IF…</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whatIf')}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <Text style={[s.caption, { color: c.textSecondary }]}>CRS</Text>
             {lv()}
@@ -664,19 +670,19 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
         ))}
         <View style={[s.whatIfOut, { backgroundColor: c.surfaceTertiary + '50' }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[s.caption, { color: c.textMuted }]}>Projected odds:</Text>
+            <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.projectedOdds')}</Text>
             {lv()}
           </View>
         </View>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>BEST STREAM FOR YOU · CRS vs latest cutoff</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.bestStream')}</Text>
         {STREAMS.map((stream, i) => (
           <View key={stream} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{stream}</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Text style={[s.caption, { color: c.textSecondary }]}>cutoff</Text>
+              <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.cutoff')}</Text>
               {lv()}{lv()}
             </View>
           </View>
@@ -685,7 +691,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>EXPECTED WAIT BY SCORE</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.expectedWait')}</Text>
         {SCORE_BANDS.map((band, i) => (
           <View key={band} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
             <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
@@ -695,7 +701,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>VS RECENT CUTOFFS</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.vsRecentCutoffs')}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, flexWrap: 'wrap' }}>
           <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {userScore} clears</Text>
           {lv()}
@@ -707,7 +713,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>WHERE YOU STAND · recent cutoffs</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whereYouStand')}</Text>
         {SCORE_BANDS.map((band, i) => (
           <View key={band} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
             <Text style={{ width: 92, fontSize: typography.xs, color: i === 0 ? accent : c.textSecondary, fontWeight: i === 0 ? typography.bold : typography.medium }}>{band}</Text>
@@ -717,16 +723,16 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DECISION OUTLOOK · CEC</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.decisionOutlook', { category: 'CEC' })}</Text>
         <View style={[s.statGrid, { marginTop: spacing.sm }]}>
           <View style={[s.statCell, { gap: spacing.xs }]}>
             {lv()}
-            <Text style={[s.statCellLabel, { color: c.textMuted }]}>est. decision</Text>
+            <Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.estDecision')}</Text>
           </View>
           <View style={[s.vDivTall, { backgroundColor: c.border }]} />
           <View style={[s.statCell, { gap: spacing.xs }]}>
             {lv()}
-            <Text style={[s.statCellLabel, { color: c.textMuted }]}>in inventory</Text>
+            <Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.inInventory')}</Text>
           </View>
         </View>
       </Card>
@@ -736,7 +742,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
           Unlock everything above — one-time purchase, yours forever.
         </Text>
         <Button
-          title="Unlock Premium"
+          title={t('analytics.unlockButton')}
           fullWidth
           icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
           onPress={() => nav.navigate('Paywall')}

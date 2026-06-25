@@ -4,6 +4,7 @@ import DateTimePicker, { type DateTimePickerEvent } from '@react-native-communit
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -19,9 +20,10 @@ export default function ApplicationSetupScreen() {
   const accent = useAccentColor();
   const scheme = useResolvedScheme();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const navigation = useNavigation();
   const { application, save } = useApplicationStore();
-  const { categories: APPLICATION_CATEGORIES, updatedLabel: PROCESSING_TIMES_UPDATED } =
+  const { categories: APPLICATION_CATEGORIES } =
     useProcessingTimes();
 
   const [step, setStep] = useState(0);
@@ -105,12 +107,12 @@ export default function ApplicationSetupScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Track Application" variant="stack" onBackPress={back} />
+      <AppHeader title={t('tracker.title')} variant="stack" onBackPress={back} />
 
       {/* Progress */}
       <View style={s.progressWrap}>
         <View style={s.progressLabels}>
-          <Text style={[s.progressText, { color: c.textSecondary }]}>Step {step + 1} of {STEPS}</Text>
+          <Text style={[s.progressText, { color: c.textSecondary }]}>{t('tracker.step', { current: step + 1, total: STEPS })}</Text>
           <Text style={[s.progressText, { color: c.textMuted }]}>{Math.round(progress)}%</Text>
         </View>
         <View style={[s.progressTrack, { backgroundColor: c.surfaceTertiary }]}>
@@ -125,7 +127,7 @@ export default function ApplicationSetupScreen() {
         {step === 0 && (
           <>
             <Text style={[s.question, { color: c.textPrimary }]}>
-              What kind of application did you submit?
+              {t('tracker.categoryQuestion')}
             </Text>
             {renderChoice(
               APPLICATION_CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label, icon: cat.icon })),
@@ -138,13 +140,13 @@ export default function ApplicationSetupScreen() {
         {step === 1 && category && (
           <>
             <Text style={[s.question, { color: c.textPrimary }]}>
-              Which {category.label.toLowerCase()} program?
+              {t('tracker.programQuestion', { category: category.label.toLowerCase() })}
             </Text>
             {renderChoice(
-              category.types.map((t) => ({
-                id: t.id,
-                label: t.label,
-                sub: `Typical processing: ~${t.months} ${t.months === 1 ? 'month' : 'months'}${t.varies ? ' (varies by country)' : ''}`,
+              category.types.map((item) => ({
+                id: item.id,
+                label: item.label,
+                sub: `${t('tracker.processingTime', { months: item.months })}${item.varies ? ` (${t('processingTimes.variesByCase')})` : ''}`,
               })),
               typeId,
               setTypeId,
@@ -154,7 +156,7 @@ export default function ApplicationSetupScreen() {
 
         {step === 2 && (
           <>
-            <Text style={[s.question, { color: c.textPrimary }]}>When did you apply?</Text>
+            <Text style={[s.question, { color: c.textPrimary }]}>{t('tracker.dateQuestion')}</Text>
             {Platform.OS === 'ios' ? (
               /* iOS: compact chip that opens a native calendar popover on tap */
               <View style={[s.dateBtn, { borderColor: c.border, backgroundColor: c.surfaceCard, justifyContent: 'space-between' }]}>
@@ -200,15 +202,14 @@ export default function ApplicationSetupScreen() {
             >
               <Ionicons name="calendar-clear-outline" size={16} color={c.textSecondary} />
               <Text style={[s.notAppliedText, { color: c.textSecondary }]}>
-                I haven't applied yet
+                {t('tracker.notAppliedYet')}
               </Text>
             </TouchableOpacity>
           </>
         )}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
-          Estimates based on IRCC published processing times (updated {PROCESSING_TIMES_UPDATED}).
-          Actual times vary by case — check your account on canada.ca for official status.
+          {t('tracker.disclaimer')}
         </Text>
       </ScrollView>
 
@@ -221,7 +222,7 @@ export default function ApplicationSetupScreen() {
           activeOpacity={0.8}
         >
           <Text style={[s.ctaText, { color: canNext ? '#fff' : c.textMuted }]}>
-            {step === STEPS - 1 ? 'Start Tracking' : 'Next'}
+            {step === STEPS - 1 ? t('tracker.startTracking') : t('tracker.next')}
           </Text>
           <Ionicons
             name={step === STEPS - 1 ? 'checkmark' : 'arrow-forward'}

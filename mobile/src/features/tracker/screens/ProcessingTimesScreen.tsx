@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -12,30 +13,31 @@ import { useProcessingTimes } from '../hooks/useProcessingTimes';
 const OFFICIAL_URL =
   'https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html';
 
-function fmtMonths(months: number): string {
-  if (months < 1) return '< 1 month';
-  return months === 1 ? '1 month' : `${months} months`;
+function fmtMonths(months: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  if (months < 1) return t('processingTimes.lessThanOneMonth');
+  if (months === 1) return t('processingTimes.oneMonth');
+  return t('processingTimes.months', { months });
 }
 
 export default function ProcessingTimesScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { contentFrameStyle } = useResponsiveLayout();
   const { categories, updatedLabel } = useProcessingTimes();
   const [open, setOpen] = useState<string | null>(categories[0]?.id ?? null);
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Processing Times" variant="stack" />
+      <AppHeader title={t('processingTimes.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>
-          Typical IRCC processing times by application type. Last updated{' '}
-          {updatedLabel} · updated monthly.
+          {t('processingTimes.intro', { label: updatedLabel })}
         </Text>
 
         {categories.map((cat) => {
@@ -64,26 +66,26 @@ export default function ProcessingTimesScreen() {
               </TouchableOpacity>
 
               {expanded &&
-                cat.types.map((t, i) => (
+                cat.types.map((type, i) => (
                   <View
-                    key={t.id}
+                    key={type.id}
                     style={[
                       s.typeRow,
                       i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
                     ]}
                   >
                     <View style={s.typeText}>
-                      <Text style={[s.typeLabel, { color: c.textPrimary }]}>{t.label}</Text>
-                      {(t.method || t.varies) && (
+                      <Text style={[s.typeLabel, { color: c.textPrimary }]}>{type.label}</Text>
+                      {(type.method || type.varies) && (
                         <Text style={[s.typeHint, { color: c.textMuted }]}>
-                          {[t.method, t.varies ? 'varies by case/country' : null]
+                          {[type.method, type.varies ? t('processingTimes.variesByCase') : null]
                             .filter(Boolean)
                             .join(' · ')}
                         </Text>
                       )}
                     </View>
                     <View style={[s.timeBadge, { backgroundColor: accent + '14' }]}>
-                      <Text style={[s.timeText, { color: accent }]}>{fmtMonths(t.months)}</Text>
+                      <Text style={[s.timeText, { color: accent }]}>{fmtMonths(type.months, t as (key: string, opts?: Record<string, unknown>) => string)}</Text>
                     </View>
                   </View>
                 ))}
@@ -93,18 +95,17 @@ export default function ProcessingTimesScreen() {
 
         <TouchableOpacity
           style={[s.officialRow, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
-          onPress={() => Linking.openURL(OFFICIAL_URL)}
+          onPress={() => Linking.openURL(OFFICIAL_URL).catch(() => {})}
           activeOpacity={0.65}
         >
           <Ionicons name="open-outline" size={16} color={accent} />
           <Text style={[s.officialText, { color: c.textSecondary }]}>
-            Check your exact case on the official IRCC tool (canada.ca)
+            {t('processingTimes.officialTool')}
           </Text>
         </TouchableOpacity>
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
-          Estimates, not guarantees. Processing times may increase when more people apply than
-          spaces available under the Immigration Levels Plan.
+          {t('processingTimes.disclaimer')}
         </Text>
       </ScrollView>
     </View>

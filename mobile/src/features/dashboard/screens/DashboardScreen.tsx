@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useProfileStore, type CalcInputs, DEFAULT_CALC_INPUTS } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -121,6 +122,7 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
   label: string; test: LanguageTest; skill: keyof LangScores;
   value: number; onChange: (v: number) => void; tefScale?: TefScale;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = useAccentColor();
 
@@ -174,7 +176,7 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
               <Text style={[st.langClb, { color: accent }]}>CLB {clb}</Text>
             </>
           ) : (
-            <Text style={[st.langNotSet, { color: c.textMuted }]}>Not set</Text>
+            <Text style={[st.langNotSet, { color: c.textMuted }]}>{t('crsCalculator.notSet')}</Text>
           )}
         </View>
         <TouchableOpacity
@@ -196,6 +198,7 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
 function CLBStepper({ label, value, onChange }: {
   label: string; value: number; onChange: (v: number) => void;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = useAccentColor();
   return (
@@ -214,7 +217,7 @@ function CLBStepper({ label, value, onChange }: {
         <View style={[st.langVal, { backgroundColor: value > 0 ? accent + '15' : c.surfaceTertiary }]}>
           {value > 0
             ? <Text style={[st.langScore, { color: accent }]}>CLB {value}</Text>
-            : <Text style={[st.langNotSet, { color: c.textMuted }]}>Not set</Text>}
+            : <Text style={[st.langNotSet, { color: c.textMuted }]}>{t('crsCalculator.notSet')}</Text>}
         </View>
         <TouchableOpacity
           style={[st.clbBtn, { backgroundColor: value >= 12 ? c.surfaceTertiary : accent }]}
@@ -315,6 +318,7 @@ function coerceInputs(saved: CalcInputs): CalcInputs {
 export default function DashboardScreen() {
   const c      = useColors();
   const accent = useAccentColor();
+  const { t }  = useTranslation();
   const { floatingBottomOffset, floatingOverlayPaddingBottom } = useTabBarLayout();
   const { contentFrameStyle } = useResponsiveLayout();
   const profile        = useProfileStore((s) => s.profile);
@@ -425,20 +429,20 @@ export default function DashboardScreen() {
   function renderPersonal() {
     return (
       <View style={st.secBody}>
-        <FieldLabel>MARITAL / PARTNER STATUS</FieldLabel>
+        <FieldLabel>{t('crsCalculator.maritalStatus').toUpperCase()}</FieldLabel>
         <View style={st.pillRow}>
-          <OptionPill label="Single"
+          <OptionPill label={t('crsCalculator.single')}
             selected={inputs.maritalStatus === 'single'}
             onPress={() => upd('maritalStatus', 'single')} />
-          <OptionPill label="Married (partner coming)"
+          <OptionPill label={t('crsCalculator.marriedAccompanying')}
             selected={inputs.maritalStatus === 'married'}
             onPress={() => upd('maritalStatus', 'married')} />
-          <OptionPill label="Married (partner staying)"
+          <OptionPill label={t('crsCalculator.marriedNotAccompanying')}
             selected={inputs.maritalStatus === 'married_not_accompanying'}
             onPress={() => upd('maritalStatus', 'married_not_accompanying')} />
         </View>
-        <FieldLabel top>YOUR AGE</FieldLabel>
-        <Stepper value={inputs.age} onChange={v => upd('age', v)} min={17} max={55} unit="yrs" label="age" />
+        <FieldLabel top>{t('crsCalculator.yourAge').toUpperCase()}</FieldLabel>
+        <Stepper value={inputs.age} onChange={v => upd('age', v)} min={17} max={55} unit="yrs" label={t('crsCalculator.age')} />
       </View>
     );
   }
@@ -446,7 +450,7 @@ export default function DashboardScreen() {
   function renderEducation() {
     return (
       <View style={st.secBody}>
-        <FieldLabel>HIGHEST EDUCATION</FieldLabel>
+        <FieldLabel>{t('crsCalculator.highestEducation')}</FieldLabel>
         <View style={st.pillGrid}>
           {EDU_OPTIONS.map(o => (
             <OptionPill key={o.value} label={o.label}
@@ -454,11 +458,11 @@ export default function DashboardScreen() {
               onPress={() => upd('education', o.value)} />
           ))}
         </View>
-        <FieldLabel top>CANADIAN EDUCATION</FieldLabel>
+        <FieldLabel top>{t('crsCalculator.canadianEducation')}</FieldLabel>
         <View style={st.pillRow}>
-          <OptionPill label="None"     selected={inputs.canadianEducation === 'none'}       onPress={() => upd('canadianEducation', 'none')} />
-          <OptionPill label="1–2 yrs"  selected={inputs.canadianEducation === '1_2year'}    onPress={() => upd('canadianEducation', '1_2year')} />
-          <OptionPill label="3+ yrs"   selected={inputs.canadianEducation === '3year_plus'} onPress={() => upd('canadianEducation', '3year_plus')} />
+          <OptionPill label={t('crsCalculator.none')}     selected={inputs.canadianEducation === 'none'}       onPress={() => upd('canadianEducation', 'none')} />
+          <OptionPill label={t('crsCalculator.oneTwoYear')}  selected={inputs.canadianEducation === '1_2year'}    onPress={() => upd('canadianEducation', '1_2year')} />
+          <OptionPill label={t('crsCalculator.threePlusYear')}   selected={inputs.canadianEducation === '3year_plus'} onPress={() => upd('canadianEducation', '3year_plus')} />
         </View>
       </View>
     );
@@ -491,7 +495,7 @@ export default function DashboardScreen() {
     const secondLangOptions = isFrenchTest(inputs.firstLangTest) ? ENGLISH_TESTS : FRENCH_TESTS;
     return (
       <View style={st.secBody}>
-        <FieldLabel>FIRST LANGUAGE TEST</FieldLabel>
+        <FieldLabel>{t('crsCalculator.firstLanguageTest')}</FieldLabel>
         <View style={st.pillRow}>
           {LANG_TESTS.map(t => (
             <OptionPill key={t} label={t}
@@ -501,34 +505,34 @@ export default function DashboardScreen() {
         </View>
         {usesTef && (
           <>
-            <FieldLabel top>TEF TEST DATE</FieldLabel>
+            <FieldLabel top>{t('crsCalculator.tefTestDate')}</FieldLabel>
             <View style={st.pillRow}>
-              <OptionPill label="After Dec 2023"
+              <OptionPill label={t('crsCalculator.tefCurrent')}
                 selected={tefScale === 'current'}
                 onPress={() => upd('tefScale', 'current')} />
-              <OptionPill label="Oct 2019–Dec 2023"
+              <OptionPill label={t('crsCalculator.tefOct2019')}
                 selected={tefScale === 'oct2019'}
                 onPress={() => upd('tefScale', 'oct2019')} />
-              <OptionPill label="Before Oct 2019"
+              <OptionPill label={t('crsCalculator.tefLegacy')}
                 selected={tefScale === 'legacy'}
                 onPress={() => upd('tefScale', 'legacy')} />
             </View>
           </>
         )}
-        <FieldLabel top>SCORES</FieldLabel>
-        <LangInput label="Speaking"  test={firstTest} skill="speaking"  value={inputs.firstLangSpeaking}  onChange={v => upd('firstLangSpeaking',  v)} tefScale={tefScale} />
-        <LangInput label="Listening" test={firstTest} skill="listening" value={inputs.firstLangListening} onChange={v => upd('firstLangListening', v)} tefScale={tefScale} />
-        <LangInput label="Reading"   test={firstTest} skill="reading"   value={inputs.firstLangReading}   onChange={v => upd('firstLangReading',   v)} tefScale={tefScale} />
-        <LangInput label="Writing"   test={firstTest} skill="writing"   value={inputs.firstLangWriting}   onChange={v => upd('firstLangWriting',   v)} tefScale={tefScale} />
+        <FieldLabel top>{t('crsCalculator.scores')}</FieldLabel>
+        <LangInput label={t('crsCalculator.speaking')}  test={firstTest} skill="speaking"  value={inputs.firstLangSpeaking}  onChange={v => upd('firstLangSpeaking',  v)} tefScale={tefScale} />
+        <LangInput label={t('crsCalculator.listening')} test={firstTest} skill="listening" value={inputs.firstLangListening} onChange={v => upd('firstLangListening', v)} tefScale={tefScale} />
+        <LangInput label={t('crsCalculator.reading')}   test={firstTest} skill="reading"   value={inputs.firstLangReading}   onChange={v => upd('firstLangReading',   v)} tefScale={tefScale} />
+        <LangInput label={t('crsCalculator.writing')}   test={firstTest} skill="writing"   value={inputs.firstLangWriting}   onChange={v => upd('firstLangWriting',   v)} tefScale={tefScale} />
 
         <Toggle
-          label={inputs.hasSecondLang ? 'Second language scores added' : 'Add second official language (optional)'}
+          label={inputs.hasSecondLang ? t('crsCalculator.secondLanguageScores') : t('crsCalculator.addSecondLanguage')}
           value={inputs.hasSecondLang}
           onPress={() => upd('hasSecondLang', !inputs.hasSecondLang)}
         />
         {inputs.hasSecondLang && (
           <>
-            <FieldLabel top>SECOND LANGUAGE TEST</FieldLabel>
+            <FieldLabel top>{t('crsCalculator.secondLanguageTest')}</FieldLabel>
             <View style={st.pillRow}>
               {secondLangOptions.map(t => (
                 <OptionPill key={t} label={t}
@@ -540,11 +544,11 @@ export default function DashboardScreen() {
                   }))} />
               ))}
             </View>
-            <FieldLabel top>SCORES</FieldLabel>
-            <LangInput label="Speaking"  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} tefScale={tefScale} />
-            <LangInput label="Listening" test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} tefScale={tefScale} />
-            <LangInput label="Reading"   test={secondTest} skill="reading"   value={inputs.secondLangReading}   onChange={v => upd('secondLangReading',   v)} tefScale={tefScale} />
-            <LangInput label="Writing"   test={secondTest} skill="writing"   value={inputs.secondLangWriting}   onChange={v => upd('secondLangWriting',   v)} tefScale={tefScale} />
+            <FieldLabel top>{t('crsCalculator.scores')}</FieldLabel>
+            <LangInput label={t('crsCalculator.speaking')}  test={secondTest} skill="speaking"  value={inputs.secondLangSpeaking}  onChange={v => upd('secondLangSpeaking',  v)} tefScale={tefScale} />
+            <LangInput label={t('crsCalculator.listening')} test={secondTest} skill="listening" value={inputs.secondLangListening} onChange={v => upd('secondLangListening', v)} tefScale={tefScale} />
+            <LangInput label={t('crsCalculator.reading')}   test={secondTest} skill="reading"   value={inputs.secondLangReading}   onChange={v => upd('secondLangReading',   v)} tefScale={tefScale} />
+            <LangInput label={t('crsCalculator.writing')}   test={secondTest} skill="writing"   value={inputs.secondLangWriting}   onChange={v => upd('secondLangWriting',   v)} tefScale={tefScale} />
           </>
         )}
       </View>
@@ -554,16 +558,16 @@ export default function DashboardScreen() {
   function renderWork() {
     return (
       <View style={st.secBody}>
-        <FieldLabel>CANADIAN WORK EXPERIENCE</FieldLabel>
+        <FieldLabel>{t('crsCalculator.canadianWorkExp')}</FieldLabel>
         <Stepper value={inputs.canadianWorkExp} onChange={v => upd('canadianWorkExp', v)}
-          min={0} max={5} unit={inputs.canadianWorkExp === 1 ? 'year' : 'years'} />
-        <FieldLabel top>FOREIGN WORK EXPERIENCE</FieldLabel>
+          min={0} max={5} unit={t('crsCalculator.years')} />
+        <FieldLabel top>{t('crsCalculator.foreignWorkExp')}</FieldLabel>
         <View style={st.pillRow}>
-          <OptionPill label="None"      selected={inputs.foreignWorkExp === 0} onPress={() => upd('foreignWorkExp', 0)} />
-          <OptionPill label="1–2 years" selected={inputs.foreignWorkExp === 1} onPress={() => upd('foreignWorkExp', 1)} />
-          <OptionPill label="3+ years"  selected={inputs.foreignWorkExp === 3} onPress={() => upd('foreignWorkExp', 3)} />
+          <OptionPill label={t('crsCalculator.none')}      selected={inputs.foreignWorkExp === 0} onPress={() => upd('foreignWorkExp', 0)} />
+          <OptionPill label={t('crsCalculator.oneTwoYears')} selected={inputs.foreignWorkExp === 1} onPress={() => upd('foreignWorkExp', 1)} />
+          <OptionPill label={t('crsCalculator.threePlusYears')}  selected={inputs.foreignWorkExp === 3} onPress={() => upd('foreignWorkExp', 3)} />
         </View>
-        <Toggle label={inputs.hasTradeCert ? 'Certificate of qualification (trade)' : 'Add trade certificate (optional)'}
+        <Toggle label={inputs.hasTradeCert ? t('crsCalculator.tradeCertificate') : t('crsCalculator.addTrade')}
           value={inputs.hasTradeCert} onPress={() => upd('hasTradeCert', !inputs.hasTradeCert)} icon="ribbon" />
       </View>
     );
@@ -576,22 +580,22 @@ export default function DashboardScreen() {
         <View style={[st.noticeRow, { backgroundColor: palette.warningLight, borderColor: palette.warning + '40' }]}>
           <Ionicons name="information-circle" size={15} color={palette.warning} style={{ marginTop: 1 }} />
           <Text style={[st.noticeTxt, { color: palette.warning }]}>
-            <Text style={{ fontWeight: typography.bold }}>Job offer points removed</Text>
-            {' '}— As of March 25, 2025, IRCC no longer awards CRS points for job offers (previously 50–200 pts). Job offers still affect program eligibility.
+            <Text style={{ fontWeight: typography.bold }}>{t('crsCalculator.jobOfferRemoved')}</Text>
+            {' '}— {t('crsCalculator.jobOfferNotice')}
           </Text>
         </View>
-        <FieldLabel>PROVINCIAL NOMINATION</FieldLabel>
+        <FieldLabel>{t('crsCalculator.provincialNomination')}</FieldLabel>
         <View style={st.pillRow}>
-          <OptionPill label="No nomination"    selected={!inputs.hasProvincialNomination} onPress={() => upd('hasProvincialNomination', false)} />
-          <OptionPill label="Yes — I have one" selected={inputs.hasProvincialNomination}  onPress={() => upd('hasProvincialNomination', true)} />
+          <OptionPill label={t('crsCalculator.noNomination')}    selected={!inputs.hasProvincialNomination} onPress={() => upd('hasProvincialNomination', false)} />
+          <OptionPill label={t('crsCalculator.yesNomination')} selected={inputs.hasProvincialNomination}  onPress={() => upd('hasProvincialNomination', true)} />
         </View>
         {inputs.hasProvincialNomination && (
           <View style={[st.bonusRow, { backgroundColor: palette.successLight, borderColor: palette.success + '30' }]}>
             <Ionicons name="trending-up" size={14} color={palette.success} />
-            <Text style={[st.bonusTxt, { color: palette.success }]}>+600 pts — near-guaranteed invitation</Text>
+            <Text style={[st.bonusTxt, { color: palette.success }]}>{t('crsCalculator.bonusPts')}</Text>
           </View>
         )}
-        <Toggle label={inputs.hasSiblingInCanada ? 'Sibling in Canada (citizen/PR)' : 'Add: sibling in Canada (optional)'}
+        <Toggle label={inputs.hasSiblingInCanada ? t('crsCalculator.siblingInCanada') : t('crsCalculator.addSibling')}
           value={inputs.hasSiblingInCanada} onPress={() => upd('hasSiblingInCanada', !inputs.hasSiblingInCanada)} icon="people" />
       </View>
     );
@@ -600,7 +604,7 @@ export default function DashboardScreen() {
   function renderSpouse() {
     return (
       <View style={st.secBody}>
-        <FieldLabel>PARTNER'S EDUCATION</FieldLabel>
+        <FieldLabel>{t('crsCalculator.partnersEducation')}</FieldLabel>
         <View style={st.pillGrid}>
           {EDU_OPTIONS.map(o => (
             <OptionPill key={o.value} label={o.label}
@@ -608,14 +612,14 @@ export default function DashboardScreen() {
               onPress={() => upd('spouseEducation', o.value)} />
           ))}
         </View>
-        <FieldLabel top>PARTNER'S LANGUAGE (CLB)</FieldLabel>
-        <CLBStepper label="Speaking"  value={inputs.spouseLangSpeaking}  onChange={v => upd('spouseLangSpeaking',  v)} />
-        <CLBStepper label="Listening" value={inputs.spouseLangListening} onChange={v => upd('spouseLangListening', v)} />
-        <CLBStepper label="Reading"   value={inputs.spouseLangReading}   onChange={v => upd('spouseLangReading',   v)} />
-        <CLBStepper label="Writing"   value={inputs.spouseLangWriting}   onChange={v => upd('spouseLangWriting',   v)} />
-        <FieldLabel top>PARTNER'S CANADIAN WORK EXP.</FieldLabel>
+        <FieldLabel top>{t('crsCalculator.partnersLanguage')}</FieldLabel>
+        <CLBStepper label={t('crsCalculator.speaking')}  value={inputs.spouseLangSpeaking}  onChange={v => upd('spouseLangSpeaking',  v)} />
+        <CLBStepper label={t('crsCalculator.listening')} value={inputs.spouseLangListening} onChange={v => upd('spouseLangListening', v)} />
+        <CLBStepper label={t('crsCalculator.reading')}   value={inputs.spouseLangReading}   onChange={v => upd('spouseLangReading',   v)} />
+        <CLBStepper label={t('crsCalculator.writing')}   value={inputs.spouseLangWriting}   onChange={v => upd('spouseLangWriting',   v)} />
+        <FieldLabel top>{t('crsCalculator.partnersCanadianWorkExp')}</FieldLabel>
         <Stepper value={inputs.spouseCanadianWorkExp} onChange={v => upd('spouseCanadianWorkExp', v)}
-          min={0} max={5} unit="years" />
+          min={0} max={5} unit={t('crsCalculator.years')} />
       </View>
     );
   }
@@ -636,7 +640,7 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <AppHeader
-          title="CRS Calculator"
+          title={t('crsCalculator.title')}
           variant="stack"
           right={scoreReady ? (
             <View style={[st.catBadge, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
@@ -647,37 +651,37 @@ export default function DashboardScreen() {
 
         {/* Calculator */}
         <View style={st.calcSection}>
-          <Text style={[st.calcTitle, { color: c.textPrimary }]}>CRS Calculator</Text>
+          <Text style={[st.calcTitle, { color: c.textPrimary }]}>{t('crsCalculator.title')}</Text>
           <Text style={[st.calcSub, { color: c.textMuted }]}>
-            {scoreReady ? 'Score updates live as you edit' : 'Enter CLB 4+ scores in all four language skills to unlock your CRS'}
+            {scoreReady ? t('crsCalculator.scoreLive') : t('crsCalculator.enterScores')}
           </Text>
           <Text style={[st.disclaimer, { color: c.textMuted }]}>
-            Unofficial calculator based on the IRCC CRS grid (2025-08-21). Verify with the official IRCC CRS tool.
+            {t('crsCalculator.disclaimer')}
           </Text>
 
-          <SectionHeader title="Personal"        icon="person-outline"    expanded={exp.personal}
+          <SectionHeader title={t('crsCalculator.sectionPersonal')}        icon="person-outline"    expanded={exp.personal}
             onToggle={() => tog('personal')}   summaryText={persSummary} score={scoreReady ? result.agePoints : null} />
           {exp.personal && renderPersonal()}
 
-          <SectionHeader title="Education"       icon="school-outline"    expanded={exp.education}
+          <SectionHeader title={t('crsCalculator.sectionEducation')}       icon="school-outline"    expanded={exp.education}
             onToggle={() => tog('education')}  summaryText={eduSummary}  score={scoreReady ? result.educationPoints + result.eduTransferPoints + canadianEduBonus : null} />
           {exp.education && renderEducation()}
 
-          <SectionHeader title="Language"        icon="language-outline"  expanded={exp.language}
+          <SectionHeader title={t('crsCalculator.sectionLanguage')}        icon="language-outline"  expanded={exp.language}
             onToggle={() => tog('language')}   summaryText={langSummary} score={scoreReady ? result.firstLangPoints + result.secondLangPoints + frenchBonus : null} />
           {exp.language && renderLanguage()}
 
-          <SectionHeader title="Work Experience" icon="briefcase-outline" expanded={exp.work}
+          <SectionHeader title={t('crsCalculator.sectionWork')} icon="briefcase-outline" expanded={exp.work}
             onToggle={() => tog('work')}       summaryText={workSummary} score={scoreReady ? result.canadianWorkExpPoints + result.workTransferPoints : null} />
           {exp.work && renderWork()}
 
-          <SectionHeader title="Additional"      icon="star-outline"      expanded={exp.additional}
+          <SectionHeader title={t('crsCalculator.sectionAdditional')}      icon="star-outline"      expanded={exp.additional}
             onToggle={() => tog('additional')}                            score={scoreReady ? (inputs.hasProvincialNomination ? 600 : 0) + (inputs.hasSiblingInCanada ? 15 : 0) || null : null} />
           {exp.additional && renderAdditional()}
 
           {married && (
             <>
-              <SectionHeader title="Spouse / Partner" icon="people-outline" expanded={exp.spouse}
+              <SectionHeader title={t('crsCalculator.sectionSpouse')} icon="people-outline" expanded={exp.spouse}
                 onToggle={() => tog('spouse')} score={scoreReady ? result.spouseTotal || null : null} />
               {exp.spouse && renderSpouse()}
             </>
@@ -693,12 +697,12 @@ export default function DashboardScreen() {
             <View style={[st.floatStripe, { backgroundColor: scoreClr }]} />
             <View style={st.floatInner}>
               <View style={st.floatStat}>
-                <Text style={[st.floatLbl, { color: c.textMuted }]}>CRS SCORE</Text>
+                <Text style={[st.floatLbl, { color: c.textMuted }]}>{t('crsCalculator.crsScore').toUpperCase()}</Text>
                 <Text style={[st.floatScore, { color: scoreClr }]}>{score}</Text>
               </View>
               <View style={[st.floatRule, { backgroundColor: c.border }]} />
               <View style={st.floatStat}>
-                <Text style={[st.floatLbl, { color: c.textMuted }]}>CATEGORY</Text>
+                <Text style={[st.floatLbl, { color: c.textMuted }]}>{t('crsCalculator.category').toUpperCase()}</Text>
                 <Text style={[st.floatCat, { color: accent }]} numberOfLines={1}>{cat}</Text>
               </View>
               {latestDraw ? (

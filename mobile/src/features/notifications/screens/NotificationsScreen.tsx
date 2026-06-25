@@ -2,6 +2,7 @@ import { Fragment, useEffect } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 import { AdBanner } from '@/components/common/AdBanner';
@@ -15,19 +16,21 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 
 const MAX_ITEMS = 15;
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, tr: (key: string, opts?: Record<string, unknown>) => string): string {
   const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
-  if (days <= 0) return 'Today';
-  if (days === 1) return 'Yesterday';
-  if (days < 30) return `${days} days ago`;
+  if (days <= 0) return tr('notifications.today');
+  if (days === 1) return tr('notifications.yesterday');
+  if (days < 30) return tr('notifications.daysAgo', { days });
   const months = Math.floor(days / 30);
-  return months === 1 ? '1 month ago' : `${months} months ago`;
+  if (months === 1) return tr('notifications.monthsAgo', { months: 1 });
+  return tr('notifications.monthsAgo', { months });
 }
 
 export default function NotificationsScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { draws } = useDrawsStore();
   const { seenDraw, markSeen } = useNotificationsStore();
   const { enabled: alertsEnabled, toggle: toggleAlerts } = useDrawNotifications();
@@ -43,7 +46,7 @@ export default function NotificationsScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Notifications" variant="stack" />
+      <AppHeader title={t('notifications.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
@@ -60,11 +63,9 @@ export default function NotificationsScreen() {
               <Ionicons name="notifications-outline" size={20} color={accent} />
             </View>
             <View style={s.toggleText}>
-              <Text style={[s.toggleLabel, { color: c.textPrimary }]}>New Draw Alerts</Text>
+              <Text style={[s.toggleLabel, { color: c.textPrimary }]}>{t('notifications.newDrawAlerts')}</Text>
               <Text style={[s.toggleHint, { color: c.textMuted }]}>
-                {alertsEnabled
-                  ? 'Push alerts on — you will be notified of new draws'
-                  : 'Turn on to get notified the moment IRCC publishes a draw'}
+                {t('notifications.toggleHint')}
               </Text>
             </View>
             <Switch
@@ -72,16 +73,16 @@ export default function NotificationsScreen() {
               onValueChange={toggleAlerts}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
-              accessibilityLabel="New Draw Alerts"
+              accessibilityLabel={t('notifications.newDrawAlerts')}
             />
           </View>
         </View>
 
-        <Text style={[s.sectionTitle, { color: c.textMuted }]}>RECENT DRAW ALERTS</Text>
+        <Text style={[s.sectionTitle, { color: c.textMuted }]}>{t('notifications.recentAlerts')}</Text>
 
         {items.length === 0 ? (
           <Text style={[s.empty, { color: c.textMuted }]}>
-            No draws yet — alerts will appear here when IRCC publishes rounds of invitations.
+            {t('notifications.noNotifications')} — {t('notifications.noNotificationsDesc')}
           </Text>
         ) : (
           items.map((draw, index) => (
@@ -92,13 +93,12 @@ export default function NotificationsScreen() {
                 </View>
                 <View style={s.itemText}>
                   <Text style={[s.itemTitle, { color: c.textPrimary }]}>
-                    New Express Entry Draw #{draw.draw_number}
+                    {t('notifications.newDraw', { number: draw.draw_number })}
                   </Text>
                   <Text style={[s.itemBody, { color: c.textSecondary }]}>
-                    {CATEGORY_LABELS[draw.category] ?? draw.category} — Cutoff:{' '}
-                    {draw.cutoff_score} points · {draw.invitations_issued.toLocaleString()} invitations
+                    {t('notifications.drawMeta', { category: CATEGORY_LABELS[draw.category] ?? draw.category, score: draw.cutoff_score })}
                   </Text>
-                  <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(draw.date)}</Text>
+                  <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(draw.date, t as (key: string, opts?: Record<string, unknown>) => string)}</Text>
                 </View>
               </View>
               {(index + 1) % 5 === 0 && <AdBanner />}

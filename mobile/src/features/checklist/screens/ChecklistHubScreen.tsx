@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -27,6 +28,7 @@ export default function ChecklistHubScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { contentFrameStyle } = useResponsiveLayout();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [progress, setProgress] = useState<Record<string, number>>({});
@@ -51,15 +53,14 @@ export default function ChecklistHubScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="Document Checklists" variant="stack" />
+      <AppHeader title={t('checklist.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}
       >
         <Text style={[s.intro, { color: c.textSecondary }]}>
-          Pick your program to track the documents you need. Your IRCC account checklist is always
-          the official list.
+          {t('checklist.intro')}
         </Text>
 
         {CHECKLIST_PROGRAMS.map((p) => {
@@ -89,7 +90,7 @@ export default function ChecklistHubScreen() {
                   />
                 </View>
                 <Text style={[s.count, { color: complete ? palette.success : c.textMuted }]}>
-                  {done} of {total} ready{complete ? ' · complete' : ''}
+                  {t('checklist.ofReady', { done, total })}{complete ? t('checklist.complete') : ''}
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={16} color={c.textMuted} />

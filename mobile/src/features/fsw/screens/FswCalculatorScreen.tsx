@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -80,6 +81,7 @@ export default function FswCalculatorScreen() {
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
+  const { t } = useTranslation();
   const [input, setInput] = useState<FswInput>(DEFAULT_INPUT);
 
   const result = useMemo(() => calculateFsw(input), [input]);
@@ -91,17 +93,17 @@ export default function FswCalculatorScreen() {
   const scoreColor = result.pass ? palette.success : palette.warning;
 
   const breakdownRows = [
-    { label: 'Language',            pts: result.language,           max: 28 },
-    { label: 'Education',           pts: result.education,          max: 25 },
-    { label: 'Work Experience',     pts: result.workExperience,     max: 15 },
-    { label: 'Age',                 pts: result.age,                max: 12 },
-    { label: 'Arranged Employment', pts: result.arrangedEmployment, max: 10 },
-    { label: 'Adaptability',        pts: result.adaptability,       max: 10 },
+    { label: t('fswCalculator.language'),            pts: result.language,           max: 28 },
+    { label: t('fswCalculator.education'),           pts: result.education,          max: 25 },
+    { label: t('fswCalculator.workExperience'),      pts: result.workExperience,     max: 15 },
+    { label: t('fswCalculator.age'),                 pts: result.age,                max: 12 },
+    { label: t('fswCalculator.arrangedEmployment'),  pts: result.arrangedEmployment, max: 10 },
+    { label: t('fswCalculator.adaptability'),        pts: result.adaptability,       max: 10 },
   ];
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title="FSW Eligibility" variant="stack" />
+      <AppHeader title={t('fswCalculator.title')} variant="stack" />
 
       <ScrollView
         contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
@@ -120,10 +122,10 @@ export default function FswCalculatorScreen() {
               />
               <Text style={[s.passText, { color: scoreColor }]}>
                 {result.pass
-                  ? `Eligible — meets the ${FSW_PASS_MARK}-point minimum`
+                  ? t('fswCalculator.eligible', { min: FSW_PASS_MARK })
                   : result.total >= FSW_PASS_MARK
-                    ? 'Minimum requirements not met'
-                    : `${FSW_PASS_MARK - result.total} points below minimum`}
+                    ? t('fswCalculator.notEligible')
+                    : t('fswCalculator.belowMin', { points: FSW_PASS_MARK - result.total })}
               </Text>
             </View>
           </View>
@@ -132,7 +134,7 @@ export default function FswCalculatorScreen() {
             <View style={[s.warnRow, { backgroundColor: palette.warningLight ?? palette.warning + '1A' }]}>
               <Ionicons name="warning-outline" size={14} color={palette.warning} />
               <Text style={[s.warnText, { color: palette.warning }]}>
-                FSW requires CLB 7 or higher in all four first-language abilities.
+                {t('fswCalculator.fswClb7Required')}
               </Text>
             </View>
           )}
@@ -140,7 +142,7 @@ export default function FswCalculatorScreen() {
             <View style={[s.warnRow, { backgroundColor: palette.warning + '1A' }]}>
               <Ionicons name="warning-outline" size={14} color={palette.warning} />
               <Text style={[s.warnText, { color: palette.warning }]}>
-                FSW requires at least 1 year of continuous skilled work experience.
+                {t('fswCalculator.fswOneYearRequired')}
               </Text>
             </View>
           )}
@@ -159,9 +161,11 @@ export default function FswCalculatorScreen() {
 
         {/* Age */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Age</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.age')}</Text>
           <View style={s.stepperRow}>
             <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t('fswCalculator.decrease')}
               style={[s.stepBtn, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
               onPress={() => set('age', Math.max(17, input.age - 1))}
             >
@@ -169,11 +173,11 @@ export default function FswCalculatorScreen() {
             </TouchableOpacity>
             <View style={s.stepValue}>
               <Text style={[s.stepNum, { color: c.textPrimary }]}>{input.age}</Text>
-              <Text style={[s.stepUnit, { color: c.textMuted }]}>years</Text>
+              <Text style={[s.stepUnit, { color: c.textMuted }]}>{t('fswCalculator.years')}</Text>
             </View>
             <TouchableOpacity
               accessibilityRole="button"
-              accessibilityLabel="Increase age"
+              accessibilityLabel={t('fswCalculator.increase')}
               style={[s.stepBtn, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
               onPress={() => set('age', Math.min(60, input.age + 1))}
             >
@@ -181,13 +185,13 @@ export default function FswCalculatorScreen() {
             </TouchableOpacity>
           </View>
           <Text style={[s.hint, { color: c.textSecondary }]}>
-            Full points (12) from 18–35, minus 1 per year after 35, zero at 47.
+            {t('fswCalculator.ageFullPoints')}
           </Text>
         </View>
 
         {/* Education */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Education</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.education')}</Text>
           {EDUCATION_OPTIONS.map((opt) => {
             const active = input.education === opt.value;
             return (
@@ -215,7 +219,7 @@ export default function FswCalculatorScreen() {
 
         {/* Language */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>First Official Language</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.language')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
             CLB level per ability — 6 pts each at CLB 9+, 5 at CLB 8, 4 at CLB 7.
           </Text>
@@ -225,12 +229,13 @@ export default function FswCalculatorScreen() {
               <View style={s.chipRow}>
                 {CLB_OPTIONS.map((opt) => {
                   const active = input.firstLang[ability] === opt.value;
+                  const labelKey = `fswCalculator.${opt.value === 'clb9plus' ? 'clb9Plus' : opt.value}`;
                   return (
                     <TouchableOpacity
                       key={opt.value}
                       accessibilityRole="radio"
                       accessibilityState={{ checked: active }}
-                      accessibilityLabel={opt.label}
+                      accessibilityLabel={t(labelKey)}
                       style={[
                         s.chip,
                         { borderColor: c.border, backgroundColor: c.surfaceSecondary },
@@ -240,7 +245,7 @@ export default function FswCalculatorScreen() {
                       activeOpacity={0.65}
                     >
                       <Text style={[s.chipText, { color: active ? accent : c.textSecondary }]}>
-                        {opt.label}
+                        {t(labelKey)}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -251,7 +256,7 @@ export default function FswCalculatorScreen() {
           <View style={s.switchRow}>
             <View style={s.switchText}>
               <Text style={[s.switchLabel, { color: c.textPrimary }]}>
-                Second official language <Text style={{ color: accent }}>+4</Text>
+                {t('fswCalculator.secondLanguageLabel')} <Text style={{ color: accent }}>+4</Text>
               </Text>
               <Text style={[s.switchHint, { color: c.textMuted }]}>CLB 5+ in all four abilities</Text>
             </View>
@@ -260,14 +265,14 @@ export default function FswCalculatorScreen() {
               onValueChange={(v) => set('secondLangClb5', v)}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
-              accessibilityLabel="Second official language"
+              accessibilityLabel={t('fswCalculator.secondLanguageLabel')}
             />
           </View>
         </View>
 
         {/* Work experience */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Skilled Work Experience</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.workExperience')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>
             Continuous full-time (or equivalent) work in NOC TEER 0–3, within the last 10 years.
           </Text>
@@ -299,11 +304,11 @@ export default function FswCalculatorScreen() {
 
         {/* Arranged employment */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Arranged Employment</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.arrangedEmployment')}</Text>
           <View style={s.switchRow}>
             <View style={s.switchText}>
               <Text style={[s.switchLabel, { color: c.textPrimary }]}>
-                Valid Canadian job offer <Text style={{ color: accent }}>+10</Text>
+                {t('fswCalculator.validJobOffer')} <Text style={{ color: accent }}>+10</Text>
               </Text>
               <Text style={[s.switchHint, { color: c.textMuted }]}>
                 Full-time, NOC TEER 0–3, LMIA-supported or exempt — also adds +5 adaptability
@@ -314,32 +319,41 @@ export default function FswCalculatorScreen() {
               onValueChange={(v) => set('hasArrangedEmployment', v)}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
-              accessibilityLabel="Valid Canadian job offer"
+              accessibilityLabel={t('fswCalculator.validJobOffer')}
             />
           </View>
         </View>
 
         {/* Adaptability */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>Adaptability</Text>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('fswCalculator.adaptability')}</Text>
           <Text style={[s.hint, { color: c.textSecondary }]}>Capped at 10 points total.</Text>
-          {ADAPT_OPTIONS.map((opt) => (
-            <View key={opt.key} style={s.switchRow}>
-              <View style={s.switchText}>
-                <Text style={[s.switchLabel, { color: c.textPrimary }]}>
-                  {opt.label} <Text style={{ color: accent }}>+{opt.pts}</Text>
-                </Text>
-                <Text style={[s.switchHint, { color: c.textMuted }]}>{opt.hint}</Text>
+          {ADAPT_OPTIONS.map((opt) => {
+            const adaptLabel = opt.key === 'workedInCanada'
+              ? t('fswCalculator.canadianWorkExp')
+              : opt.key === 'studiedInCanada'
+                ? t('fswCalculator.studyInCanada')
+                : opt.key === 'hasRelativeInCanada'
+                  ? t('fswCalculator.relativeInCanada')
+                  : opt.label;
+            return (
+              <View key={opt.key} style={s.switchRow}>
+                <View style={s.switchText}>
+                  <Text style={[s.switchLabel, { color: c.textPrimary }]}>
+                    {adaptLabel} <Text style={{ color: accent }}>+{opt.pts}</Text>
+                  </Text>
+                  <Text style={[s.switchHint, { color: c.textMuted }]}>{opt.hint}</Text>
+                </View>
+                <Switch
+                  value={input[opt.key]}
+                  onValueChange={(v) => set(opt.key, v)}
+                  trackColor={{ false: c.surfaceTertiary, true: accent }}
+                  thumbColor={palette.white}
+                  accessibilityLabel={adaptLabel}
+                />
               </View>
-              <Switch
-                value={input[opt.key]}
-                onValueChange={(v) => set(opt.key, v)}
-                trackColor={{ false: c.surfaceTertiary, true: accent }}
-                thumbColor={palette.white}
-                accessibilityLabel={opt.label}
-              />
-            </View>
-          ))}
+            );
+          })}
         </View>
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
