@@ -44,6 +44,9 @@ export default function FaqScreen() {
                 style={s.qRow}
                 onPress={() => setOpen(expanded ? null : i)}
                 activeOpacity={0.55}
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                accessibilityLabel={item.q}
               >
                 <Text style={[s.qText, { color: c.textPrimary }]}>{item.q}</Text>
                 <Ionicons

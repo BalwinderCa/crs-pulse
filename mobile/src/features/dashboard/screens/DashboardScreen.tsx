@@ -161,6 +161,9 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
           style={[st.clbBtn, { backgroundColor: idx <= 0 ? c.surfaceTertiary : accent }]}
           onPress={() => { const p = bps[idx - 1]; if (p !== undefined) onChange(p); }}
           disabled={idx <= 0}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label} score`}
         >
           <Ionicons name="remove" size={15} color={idx <= 0 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -178,6 +181,9 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
           style={[st.clbBtn, { backgroundColor: idx >= bps.length - 1 ? c.surfaceTertiary : accent }]}
           onPress={() => { const n = bps[idx + 1]; if (n !== undefined) onChange(n); }}
           disabled={idx >= bps.length - 1}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label} score`}
         >
           <Ionicons name="add" size={15} color={idx >= bps.length - 1 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -199,6 +205,9 @@ function CLBStepper({ label, value, onChange }: {
         <TouchableOpacity
           style={[st.clbBtn, { backgroundColor: value <= 0 ? c.surfaceTertiary : accent }]}
           onPress={() => onChange(Math.max(0, value - 1))} disabled={value <= 0}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`Decrease ${label}`}
         >
           <Ionicons name="remove" size={15} color={value <= 0 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -210,6 +219,9 @@ function CLBStepper({ label, value, onChange }: {
         <TouchableOpacity
           style={[st.clbBtn, { backgroundColor: value >= 12 ? c.surfaceTertiary : accent }]}
           onPress={() => onChange(Math.min(12, value + 1))} disabled={value >= 12}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={`Increase ${label}`}
         >
           <Ionicons name="add" size={15} color={value >= 12 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -229,6 +241,7 @@ function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
       <TouchableOpacity
         style={[st.stepBtn, { backgroundColor: value <= min ? c.surfaceTertiary : accent }]}
         onPress={() => onChange(Math.max(min, value - 1))} disabled={value <= min}
+        hitSlop={8}
         accessible={true}
         accessibilityRole="button"
         accessibilityLabel={label ? `Decrease ${label}` : 'Decrease'}
@@ -241,6 +254,7 @@ function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
       <TouchableOpacity
         style={[st.stepBtn, { backgroundColor: value >= max ? c.surfaceTertiary : accent }]}
         onPress={() => onChange(Math.min(max, value + 1))} disabled={value >= max}
+        hitSlop={8}
         accessible={true}
         accessibilityRole="button"
         accessibilityLabel={label ? `Increase ${label}` : 'Increase'}
@@ -257,7 +271,13 @@ function Toggle({ label, value, onPress, icon }: {
   const c = useColors();
   const accent = useAccentColor();
   return (
-    <TouchableOpacity style={[st.toggle, { borderColor: c.border }]} onPress={onPress}>
+    <TouchableOpacity
+      style={[st.toggle, { borderColor: c.border }]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ checked: value }}
+      accessibilityLabel={label}
+    >
       <Ionicons
         name={(value ? (icon ?? 'checkmark-circle') : 'add-circle-outline') as any}
         size={17} color={accent}

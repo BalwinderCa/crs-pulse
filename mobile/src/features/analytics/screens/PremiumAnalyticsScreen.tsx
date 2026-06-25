@@ -764,7 +764,7 @@ function SwitchRow({ c, accent, label, value, onChange }: any) {
   return (
     <View style={[s.switchRow, { borderTopColor: c.border }]}>
       <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: accent }} />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: accent }} accessibilityLabel={label} />
     </View>
   );
 }

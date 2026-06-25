@@ -82,7 +82,13 @@ function DetailView({ title, body, onClose }: {
   return (
     <View style={[dv.wrap, { backgroundColor: c.surfacePrimary }]}>
       <View style={[dv.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={onClose} hitSlop={16} style={dv.backBtn}>
+        <TouchableOpacity
+          onPress={onClose}
+          hitSlop={16}
+          style={dv.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
         <Text style={[dv.title, { color: c.textPrimary }]}>{title}</Text>
@@ -121,7 +127,13 @@ function ContactView({ onClose }: { onClose: () => void }) {
   return (
     <View style={[dv.wrap, { backgroundColor: c.surfacePrimary }]}>
       <View style={[dv.topBar, { paddingTop: insets.top + spacing.sm, borderBottomColor: c.border }]}>
-        <TouchableOpacity onPress={onClose} hitSlop={16} style={dv.backBtn}>
+        <TouchableOpacity
+          onPress={onClose}
+          hitSlop={16}
+          style={dv.backBtn}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
           <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
         <Text style={[dv.title, { color: c.textPrimary }]}>Contact Us</Text>
@@ -264,6 +276,8 @@ export function SideMenu({ visible, onClose }: Props) {
       style={[s.row, idx < arr.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border }]}
       onPress={item.onPress}
       activeOpacity={0.55}
+      accessibilityRole="button"
+      accessibilityLabel={item.label}
     >
       <View style={[s.iconBox, { backgroundColor: (item.accent ?? accent) + '1A' }]}>
         <Ionicons name={item.icon} size={19} color={item.accent ?? accent} />
@@ -311,7 +325,13 @@ export function SideMenu({ visible, onClose }: Props) {
                   <Text style={[s.appSub,  { color: c.textMuted }]}>IRCC Tracker</Text>
                 </View>
               </View>
-              <TouchableOpacity onPress={onClose} hitSlop={16} style={s.closeBtn}>
+              <TouchableOpacity
+                onPress={onClose}
+                hitSlop={16}
+                style={s.closeBtn}
+                accessibilityRole="button"
+                accessibilityLabel="Close menu"
+              >
                 <Ionicons name="close" size={22} color={c.textMuted} />
               </TouchableOpacity>
             </View>

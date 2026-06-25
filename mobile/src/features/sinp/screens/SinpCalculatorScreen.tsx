@@ -243,6 +243,7 @@ export default function SinpCalculatorScreen() {
                 onValueChange={(v) => set(opt.key, v)}
                 trackColor={{ false: c.surfaceTertiary, true: accent }}
                 thumbColor={palette.white}
+                accessibilityLabel={opt.label}
               />
             </View>
           ))}

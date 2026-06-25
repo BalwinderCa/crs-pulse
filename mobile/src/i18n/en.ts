@@ -36,6 +36,7 @@ const en = {
     calculateScore: 'Calculate your score',
     crsAndMore: 'CRS, SINP and more points calculators',
     myApplication: 'My Application',
+    editApplication: 'Edit tracked application',
     daysSinceApplied: 'Days since applied',
     monthsLeft: 'Months left (est.)',
     appliedOn: 'Applied',

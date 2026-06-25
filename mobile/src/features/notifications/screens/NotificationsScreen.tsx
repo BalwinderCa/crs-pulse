@@ -72,6 +72,7 @@ export default function NotificationsScreen() {
               onValueChange={toggleAlerts}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
+              accessibilityLabel="New Draw Alerts"
             />
           </View>
         </View>

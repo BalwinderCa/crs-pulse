@@ -147,6 +147,7 @@ export default function BcSirsCalculatorScreen() {
         onValueChange={(v) => set(key, v)}
         trackColor={{ false: c.surfaceTertiary, true: accent }}
         thumbColor={palette.white}
+        accessibilityLabel={label}
       />
     </View>
   );

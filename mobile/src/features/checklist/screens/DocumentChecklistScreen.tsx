@@ -105,6 +105,9 @@ export default function DocumentChecklistScreen() {
                     ]}
                     onPress={() => toggle(item.id)}
                     activeOpacity={0.6}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isChecked }}
+                    accessibilityLabel={item.label}
                   >
                     <Ionicons
                       name={isChecked ? 'checkbox' : 'square-outline'}

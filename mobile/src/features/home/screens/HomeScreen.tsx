@@ -133,7 +133,12 @@ export default function HomeScreen() {
         <Card style={s.appCard}>
           <View style={s.appHeader}>
             <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('home.myApplication')}</Text>
-            <TouchableOpacity onPress={() => stackNav.navigate('ApplicationSetup')} hitSlop={10}>
+            <TouchableOpacity
+              onPress={() => stackNav.navigate('ApplicationSetup')}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t('home.editApplication')}
+            >
               <Ionicons name="pencil-outline" size={16} color={c.textMuted} />
             </TouchableOpacity>
           </View>

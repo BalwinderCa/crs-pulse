@@ -260,6 +260,7 @@ export default function FswCalculatorScreen() {
               onValueChange={(v) => set('secondLangClb5', v)}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
+              accessibilityLabel="Second official language"
             />
           </View>
         </View>
@@ -313,6 +314,7 @@ export default function FswCalculatorScreen() {
               onValueChange={(v) => set('hasArrangedEmployment', v)}
               trackColor={{ false: c.surfaceTertiary, true: accent }}
               thumbColor={palette.white}
+              accessibilityLabel="Valid Canadian job offer"
             />
           </View>
         </View>
@@ -334,6 +336,7 @@ export default function FswCalculatorScreen() {
                 onValueChange={(v) => set(opt.key, v)}
                 trackColor={{ false: c.surfaceTertiary, true: accent }}
                 thumbColor={palette.white}
+                accessibilityLabel={opt.label}
               />
             </View>
           ))}

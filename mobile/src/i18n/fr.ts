@@ -38,6 +38,7 @@ const fr: TranslationKeys = {
     calculateScore: 'Calculer votre score',
     crsAndMore: 'Calculateurs SGC, SINP et plus',
     myApplication: 'Ma demande',
+    editApplication: 'Modifier la demande suivie',
     daysSinceApplied: 'Jours depuis la demande',
     monthsLeft: 'Mois restants (est.)',
     appliedOn: 'Soumise le',
