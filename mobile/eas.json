@@ -36,7 +36,8 @@
       },
       "ios": {
         "distribution": "store",
-        "credentialsSource": "remote"
+        "credentialsSource": "remote",
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "env": {
         "APP_ENV": "production",
@@ -61,7 +62,8 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "balwinderxcode@gmail.com"
+        "appleId": "balwinderxcode@gmail.com",
+        "ascAppId": "6784619403"
       },
       "android": {
         "serviceAccountKeyPath": "./google-play-service-account.json",
