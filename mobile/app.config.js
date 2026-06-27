@@ -24,6 +24,13 @@ const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://www.crspulse.com/privacy';
 
+// Mirror of MONETIZATION_ENABLED in src/constants/index.ts (kept in sync manually —
+// app.config.js is CommonJS and can't import the TS source). While false the app
+// ships fully free and the ATT tracking purpose string is omitted from Info.plist,
+// so the binary matches the "Data Not Collected" privacy label. Flip BOTH this and
+// the src/constants flag to true (and rebuild) to re-enable ads + tracking.
+const MONETIZATION_ENABLED = false;
+
 // Inline config plugin: adds -Xskip-metadata-version-check to all subproject
 // Kotlin compile tasks. Required because play-services-ads 25.0.0 (pulled in
 // by react-native-google-mobile-ads 16.x) ships Kotlin metadata compiled with
@@ -150,12 +157,17 @@ module.exports = () => ({
       UIBackgroundModes: ['remote-notification'],
       CFBundleDisplayName: 'CRS Pulse',
       ITSAppUsesNonExemptEncryption: false,
-      // REQUIRED: adsService.ts calls requestTrackingPermissionsAsync() on iOS.
-      // Without this purpose string the ATT prompt no-ops and App Review rejects
-      // the binary (and older iOS can crash). Kept here directly (not only via a
-      // plugin) so it is guaranteed present regardless of plugin version.
-      NSUserTrackingUsageDescription:
-        'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
+      // ATT purpose string, ONLY when ads are enabled. adsService calls
+      // requestTrackingPermissionsAsync() on iOS — but that path is gated by
+      // MONETIZATION_ENABLED, so in free mode tracking is never requested and the
+      // string must be absent to match the "Data Not Collected" privacy label
+      // (Apple rejects a present NSUserTrackingUsageDescription the label contradicts).
+      ...(MONETIZATION_ENABLED
+        ? {
+            NSUserTrackingUsageDescription:
+              'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
+          }
+        : {}),
     },
   },
   android: {
@@ -199,9 +211,14 @@ module.exports = () => ({
           process.env.GOOGLE_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713',
         iosAppId:
           process.env.GOOGLE_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511',
-        // Mirrors the infoPlist NSUserTrackingUsageDescription above.
-        userTrackingUsageDescription:
-          'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
+        // Mirrors the infoPlist NSUserTrackingUsageDescription above — only when
+        // monetization (and thus tracking) is enabled.
+        ...(MONETIZATION_ENABLED
+          ? {
+              userTrackingUsageDescription:
+                'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
+            }
+          : {}),
         // Injected into Info.plist as SKAdNetworkItems for iOS ad attribution
         // under ATT. The plugin only adds these when the option is provided.
         skAdNetworkItems: SKADNETWORK_ITEMS,
