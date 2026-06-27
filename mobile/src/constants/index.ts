@@ -94,6 +94,18 @@ export const IAP_PRODUCTS = {
 export const IAP_SKUS: string[] = [IAP_PRODUCTS.ANALYTICS_UNLOCK];
 
 /**
+ * Master monetization kill-switch. While `false` the app ships fully FREE:
+ *   • no ads — AdMob never initializes (so no ATT prompt) and AdBanner renders nothing
+ *   • the "Your Plan" analytics tab is unlocked for everyone
+ *   • the paywall and "Upgrade to Premium" banner are hidden
+ *
+ * Temporarily disabled until monetization is permitted (work-permit/PR). Flip
+ * back to `true` and ship a new build to re-enable ads + the one-time IAP unlock;
+ * no other code changes are needed (every gate keys off this flag).
+ */
+export const MONETIZATION_ENABLED = false;
+
+/**
  * AdMob banner ad-unit IDs (shown to free users; Premium removes ads).
  *
  * Set the EXPO_PUBLIC_ADMOB_BANNER_* env vars (wired in eas.json's production

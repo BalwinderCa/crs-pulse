@@ -10,7 +10,7 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { usePremiumStore } from '@/store/premiumStore';
-import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants';
+import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL, MONETIZATION_ENABLED } from '@/constants';
 import type { RootStackParamList } from '@/types';
 
 type Feature = {
@@ -51,7 +51,7 @@ export default function PaywallScreen() {
     // dead end — and showing a non-functional purchase flow is an App Review
     // rejection (Guideline 2.1). Defence-in-depth: the entry CTAs are already
     // hidden when billing is unavailable, this guards any direct navigation too.
-    if (isPremium || (premiumLoaded && !billingAvailable)) nav.goBack();
+    if (!MONETIZATION_ENABLED || isPremium || (premiumLoaded && !billingAvailable)) nav.goBack();
   }, [isPremium, premiumLoaded, billingAvailable, nav]);
 
   const openUrl = useCallback((url: string) => {

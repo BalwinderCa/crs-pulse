@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDrawsStore } from '@/store/drawsStore';
 import { usePremiumStore } from '@/store/premiumStore';
+import { MONETIZATION_ENABLED } from '@/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -50,7 +51,7 @@ export default function PremiumAnalyticsScreen() {
   // when billing is unavailable (iOS without StoreKit, emulator, or a transient
   // outage) — never show a lock the user can't buy through. A CRS score is
   // required for any analytics (everything is personalised to it).
-  const planLocked = premiumLoaded && !isPremium && billingAvailable;
+  const planLocked = MONETIZATION_ENABLED && premiumLoaded && !isPremium && billingAvailable;
   const noProfile = data.userScore === 0;
   const showPlan = tab === 'plan';
 

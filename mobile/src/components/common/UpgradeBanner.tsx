@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { usePremiumStore } from '@/store/premiumStore';
+import { MONETIZATION_ENABLED } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import type { RootStackParamList } from '@/types';
 
@@ -20,7 +21,7 @@ export function UpgradeBanner({ style }: { style?: StyleProp<ViewStyle> }) {
   // unavailable (iOS without a StoreKit product, emulator, outage) the gate
   // already fails OPEN, so showing "Upgrade to Premium" here would dead-end in a
   // Paywall whose purchase can never complete — an App Review rejection.
-  if (!premiumLoaded || isPremium || !billingAvailable) return null;
+  if (!MONETIZATION_ENABLED || !premiumLoaded || isPremium || !billingAvailable) return null;
 
   return (
     <TouchableOpacity

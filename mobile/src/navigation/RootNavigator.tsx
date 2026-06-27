@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '@/constants';
+import { STORAGE_KEYS, MONETIZATION_ENABLED } from '@/constants';
 import { useProfileStore, DEFAULT_PROFILE } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
@@ -47,7 +47,9 @@ export default function RootNavigator() {
     useProcessingTimesStore.getState().load().catch(() => {});
     useEePoolStore.getState().load().catch(() => {});
     usePremiumStore.getState().init().catch(() => {});
-    void initAds();
+    // Ads are disabled while the app ships free (MONETIZATION_ENABLED=false): skip
+    // AdMob init so the SDK never loads and the ATT prompt is never shown.
+    if (MONETIZATION_ENABLED) void initAds();
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))
