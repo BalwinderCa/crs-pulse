@@ -36,24 +36,26 @@ export type CalcInputs = {
   tefScale: 'current' | 'oct2019' | 'legacy';
 };
 
+// Fresh installs start empty: language scores at 0 keep isCrsScoreReady false,
+// so no score shows anywhere until the user fills in the calculator.
 export const DEFAULT_CALC_INPUTS: CalcInputs = {
   maritalStatus: 'single',
   age: 29,
-  education: 'bachelors',
+  education: 'secondary',
   canadianEducation: 'none',
   firstLangTest: 'IELTS',
-  firstLangSpeaking: 7.5,
-  firstLangListening: 8.5,
-  firstLangReading: 8,
-  firstLangWriting: 7.5,
+  firstLangSpeaking: 0,
+  firstLangListening: 0,
+  firstLangReading: 0,
+  firstLangWriting: 0,
   hasSecondLang: false,
   secondLangTest: 'TEF',
   secondLangSpeaking: 0,
   secondLangListening: 0,
   secondLangReading: 0,
   secondLangWriting: 0,
-  canadianWorkExp: 2,
-  foreignWorkExp: 3,
+  canadianWorkExp: 0,
+  foreignWorkExp: 0,
   spouseEducation: 'secondary',
   spouseLangSpeaking: 0,
   spouseLangListening: 0,
@@ -83,7 +85,9 @@ export type LocalProfile = {
 };
 
 export const DEFAULT_PROFILE: LocalProfile = {
-  crs_score: 512,
+  // 0 = not calculated yet — Home/Analytics render their "calculate your score"
+  // setup states. Never hardcode a score here; it must agree with the inputs above.
+  crs_score: 0,
   category: 'CEC',
   accent_color: '#DC2626',
   theme: 'system',

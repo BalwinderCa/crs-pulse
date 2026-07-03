@@ -88,9 +88,12 @@ export default function HomeScreen() {
 
 
   return (
-    <ScreenWrapper scrollable refreshing={isRefreshing} onRefresh={refresh}>
-      <AppHeader title={t('home.title')} />
-
+    <ScreenWrapper
+      scrollable
+      refreshing={isRefreshing}
+      onRefresh={refresh}
+      header={<AppHeader title={t('home.title')} />}
+    >
       {/* Score hero */}
       <Card style={s.heroCard}>
         {scoreReady ? (

@@ -276,11 +276,7 @@ export default function ProfileScreen() {
   ];
 
   return (
-    <ScreenWrapper scrollable keyboardAvoiding>
-      <View style={styles.headerWrap}>
-        <AppHeader title={t('profile.title')} />
-      </View>
-
+    <ScreenWrapper scrollable keyboardAvoiding header={<AppHeader title={t('profile.title')} />}>
       {/* ── CRS Score Hero ── */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>{t('profile.crsScore')}</Text>
@@ -303,8 +299,9 @@ export default function ProfileScreen() {
 
       <UpgradeBanner style={{ marginBottom: spacing.sm }} />
 
-      {/* ── Profile Details (grouped) ── */}
-      {infoGroups.map((group) => (
+      {/* ── Profile Details (grouped) — hidden until the user has actually
+           entered their profile, so fresh installs don't echo the defaults ── */}
+      {scoreReady && infoGroups.map((group) => (
         <Card key={group.title} style={styles.section}>
           <Text style={styles.groupTitle}>{group.title}</Text>
           {group.rows.map(({ label, value }) => (
@@ -319,6 +316,7 @@ export default function ProfileScreen() {
       ))}
 
       {/* ── Profile Report ── */}
+      {scoreReady && (
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>{t('profile.profileReport')}</Text>
         <Text style={styles.hint}>{t('profile.downloadPdfHint')}</Text>
@@ -337,6 +335,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
       </Card>
+      )}
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>

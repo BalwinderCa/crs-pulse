@@ -21,7 +21,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
     safe:       { flex: 1, backgroundColor: c.surfacePrimary },
-    header:     { paddingHorizontal: spacing.base, paddingTop: spacing.base, gap: spacing.xs },
+    header:     { paddingHorizontal: spacing.base, gap: spacing.xs },
     greeting:   { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium, letterSpacing: 0.5, textTransform: 'uppercase' },
     title:      { color: c.textPrimary, fontSize: typography['4xl'], fontWeight: typography.black, letterSpacing: -0.5 },
     subtitle:   { color: c.textMuted, fontSize: typography.sm, marginTop: spacing.xs },

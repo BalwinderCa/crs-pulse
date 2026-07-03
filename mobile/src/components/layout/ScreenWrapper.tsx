@@ -9,6 +9,8 @@ import type { Colors } from '@/theme/colors';
 
 type Props = {
   children: React.ReactNode;
+  /** Pinned above the scroll view so it doesn't scroll away (matches Timeline/Draws/Analytics). */
+  header?: React.ReactNode;
   scrollable?: boolean;
   refreshing?: boolean;
   onRefresh?: () => void;
@@ -35,6 +37,7 @@ function makeStyles(c: Colors, contentPaddingBottom: number, contentFrameStyle?:
 
 export function ScreenWrapper({
   children,
+  header,
   scrollable = false,
   refreshing = false,
   onRefresh,
@@ -50,6 +53,7 @@ export function ScreenWrapper({
 
   const content = (
     <SafeAreaView style={[styles.safe, style]} edges={['top', 'left', 'right']}>
+      {header && <View style={styles.hPad}>{header}</View>}
       {scrollable ? (
         <ScrollView
           style={styles.scroll}

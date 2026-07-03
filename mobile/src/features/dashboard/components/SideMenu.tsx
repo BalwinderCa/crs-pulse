@@ -70,6 +70,8 @@ const DETAIL_TITLES: Record<NonNullable<DetailModal>, string> = {
 interface Props {
   visible: boolean;
   onClose: () => void;
+  /** Reopens the menu; used to restore it when a pushed page navigates back. */
+  onOpen?: () => void;
 }
 
 // ─── Detail View ──────────────────────────────────────────────────────────────
@@ -115,12 +117,6 @@ function ContactView({ onClose }: { onClose: () => void }) {
       label: 'Email us',
       sub: 'support@crspulse.com',
       onPress: () => Linking.openURL('mailto:support@crspulse.com?subject=CRS%20Pulse'),
-    },
-    {
-      icon: 'logo-github' as const,
-      label: 'Open a GitHub issue',
-      sub: 'Bug reports & feature requests',
-      onPress: () => Linking.openURL(`${GITHUB_REPO_URL}/issues`),
     },
   ];
 
@@ -200,7 +196,7 @@ type MenuItem = {
 
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
 
-export function SideMenu({ visible, onClose }: Props) {
+export function SideMenu({ visible, onClose, onOpen }: Props) {
   const c      = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
@@ -247,6 +243,11 @@ export function SideMenu({ visible, onClose }: Props) {
   const navigateTo = (screen: 'Faq' | 'ReportIssue' | 'DocumentChecklist' | 'ProcessingTimes') => () => {
     onClose();
     navigation.navigate(screen);
+    // Restore the menu when the user pops back to this screen.
+    const unsubscribe = navigation.addListener('focus', () => {
+      unsubscribe();
+      onOpen?.();
+    });
   };
 
   const groupOne: MenuItem[] = [

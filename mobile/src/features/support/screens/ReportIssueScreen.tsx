@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { GITHUB_REPO_URL } from '@/constants';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
@@ -36,12 +35,6 @@ export default function ReportIssueScreen() {
       title: t('support.emailTitle'),
       sub: t('support.emailSub', { email: SUPPORT_EMAIL }),
       onPress: () => Linking.openURL(buildMailUrl()).catch(() => {}),
-    },
-    {
-      icon: 'logo-github' as const,
-      title: t('support.githubTitle'),
-      sub: t('support.githubSub'),
-      onPress: () => Linking.openURL(`${GITHUB_REPO_URL}/issues/new`).catch(() => {}),
     },
   ];
 

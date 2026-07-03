@@ -120,7 +120,11 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
           </View>
         </>
       )}
-      <SideMenu visible={menuOpen} onClose={() => setMenuOpen(false)} />
+      <SideMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        onOpen={() => setMenuOpen(true)}
+      />
     </View>
   );
 }

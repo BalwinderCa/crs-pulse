@@ -780,7 +780,7 @@ const TAB = { fontVariant: ['tabular-nums' as const] };
 
 const s = StyleSheet.create({
   safe: { flex: 1 },
-  header: { paddingHorizontal: spacing.base, paddingTop: spacing.base },
+  header: { paddingHorizontal: spacing.base },
   body: { padding: spacing.base, paddingTop: spacing.md, gap: spacing.sm },
 
   segWrap: { flexDirection: 'row', backgroundColor: 'transparent', borderRadius: borderRadius.md,
