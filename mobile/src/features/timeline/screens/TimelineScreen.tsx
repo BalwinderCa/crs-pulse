@@ -137,6 +137,16 @@ function AddMilestoneModal({ visible, onClose, editing }: {
   const [showPicker,  setShowPicker]  = useState(false);
   const [note,        setNote]        = useState('');
   const [pickingType, setPickingType] = useState(false);
+  // iOS compact DateTimePicker ignores the date it mounts with (renders
+  // epoch "Dec 31, 1969") — the native side only applies the date on prop
+  // *updates*. Mount it after the modal's onShow, then nudge the state by
+  // 1s so a fresh prop reaches the native picker and it repaints correctly.
+  const [pickerReady, setPickerReady] = useState(false);
+  useEffect(() => {
+    if (!pickerReady) return undefined;
+    const id = setTimeout(() => setDate((d) => new Date(d.getTime() + 1000)), 50);
+    return () => clearTimeout(id);
+  }, [pickerReady]);
   const emojiInputRef = useRef<TextInput>(null);
 
   // Pre-fill when editing
@@ -156,6 +166,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
   function reset() {
     setType('ITA'); setCustomLabel(''); setCustomEmoji(''); setNote('');
     setDate(new Date()); setShowPicker(false); setPickingType(false);
+    setPickerReady(false);
   }
 
   async function handleSave() {
@@ -188,6 +199,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet"
+      onShow={() => setPickerReady(true)}
       onRequestClose={() => { reset(); onClose(); }}>
       <SafeAreaView style={[s.modal, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView
@@ -283,13 +295,19 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                its natural width — squeezing it makes it misrender the value. */
             <View style={[s.fieldRow, { backgroundColor: c.surfaceCard, borderColor: c.border, justifyContent: 'space-between' }]}>
               <Ionicons name="calendar-outline" size={18} color={accent} />
-              <DateTimePicker
-                value={isValid(date) ? date : new Date()}
-                mode="date"
-                display="compact"
-                onChange={(_e, d) => { if (d && d.getFullYear() > 2000) setDate(d); }}
-                themeVariant={scheme}
-              />
+              {pickerReady ? (
+                <DateTimePicker
+                  value={isValid(date) ? date : new Date()}
+                  mode="date"
+                  display="compact"
+                  onChange={(_e, d) => { if (d && d.getFullYear() > 2000) setDate(d); }}
+                  themeVariant={scheme}
+                />
+              ) : (
+                <Text style={[s.fieldVal, { color: c.textPrimary }]}>
+                  {format(date, 'MMM d, yyyy')}
+                </Text>
+              )}
             </View>
           ) : (
             /* Android: tap row → native calendar dialog */
