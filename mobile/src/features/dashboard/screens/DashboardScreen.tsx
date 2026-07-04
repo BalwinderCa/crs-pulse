@@ -726,12 +726,8 @@ export default function DashboardScreen() {
                   </View>
                 </>
               ) : null}
-              <View style={[st.floatRule, { backgroundColor: c.border }]} />
-              <View style={st.floatGo}>
-                <Text style={[st.floatGoTxt, { color: accent }]} numberOfLines={1}>
-                  {t('crsCalculator.viewAnalytics')}
-                </Text>
-                <Ionicons name="chevron-forward" size={14} color={accent} />
+              <View style={[st.floatGoBtn, { backgroundColor: accent }]}>
+                <Ionicons name="arrow-forward" size={15} color="#fff" />
               </View>
             </View>
           </TouchableOpacity>
@@ -858,9 +854,8 @@ const st = StyleSheet.create({
   floatCat:   { fontSize: typography.base, fontWeight: typography.bold },
   floatDiff:  { fontSize: typography.xl, fontWeight: typography.black },
   floatRule:  { width: 1, marginVertical: 4, alignSelf: 'stretch' },
-  floatGo:    { flexShrink: 1, flexDirection: 'row', alignItems: 'center',
-                justifyContent: 'center', paddingLeft: spacing.sm, gap: 1 },
-  floatGoTxt: { fontSize: typography.sm, fontWeight: typography.bold },
+  floatGoBtn: { width: 28, height: 28, borderRadius: 14, alignSelf: 'center',
+                alignItems: 'center', justifyContent: 'center', marginLeft: spacing.sm },
 
   floatHint:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
                   borderRadius: borderRadius.xl, borderWidth: 1,
