@@ -305,6 +305,7 @@ const fr: TranslationKeys = {
     crsScore: 'SCORE SGC',
     category: 'CATÉGORIE',
     vsCutoff: 'vs seuil',
+    viewAnalytics: 'Analyses',
     floatHint: 'Ouvrez <accent>Langue</accent> et saisissez les 4 scores NCLC pour voir votre SGC',
     sectionPersonal: 'Personnel',
     sectionEducation: 'Éducation',

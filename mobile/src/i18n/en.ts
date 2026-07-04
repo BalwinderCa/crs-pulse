@@ -303,6 +303,7 @@ const en = {
     crsScore: 'CRS SCORE',
     category: 'CATEGORY',
     vsCutoff: 'vs cutoff',
+    viewAnalytics: 'Analytics',
     floatHint: 'Open <accent>Language</accent> and set all 4 CLB scores to see your CRS',
     sectionPersonal: 'Personal',
     sectionEducation: 'Education',

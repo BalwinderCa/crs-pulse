@@ -692,16 +692,25 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {/* ── Floating score pill — tap to see what the score means ── */}
+      {/* ── Floating Analytics button + score pill ── */}
       <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="box-none">
-        {scoreReady ? (
+        {scoreReady && (
           <TouchableOpacity
+            style={[st.fab, { backgroundColor: accent }]}
+            onPress={() => navigation.navigate('Main', { screen: 'Analytics' })}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Open analytics"
+          >
+            <Text style={st.fabTxt}>{t('crsCalculator.viewAnalytics')}</Text>
+            <Ionicons name="chevron-forward" size={15} color="#fff" />
+          </TouchableOpacity>
+        )}
+        {scoreReady ? (
+          <View
             style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
               shadowColor: scoreClr }]}
-            onPress={() => navigation.navigate('Main', { screen: 'Analytics' })}
-            activeOpacity={0.75}
-            accessibilityRole="button"
-            accessibilityLabel={`CRS score ${score}. Open analytics`}
+            pointerEvents="none"
           >
             <View style={[st.floatStripe, { backgroundColor: scoreClr }]} />
             <View style={st.floatInner}>
@@ -726,11 +735,8 @@ export default function DashboardScreen() {
                   </View>
                 </>
               ) : null}
-              <View style={[st.floatGoBtn, { backgroundColor: accent }]}>
-                <Ionicons name="arrow-forward" size={15} color="#fff" />
-              </View>
             </View>
-          </TouchableOpacity>
+          </View>
         ) : (
           <View
             style={[st.floatHint, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
@@ -854,8 +860,12 @@ const st = StyleSheet.create({
   floatCat:   { fontSize: typography.base, fontWeight: typography.bold },
   floatDiff:  { fontSize: typography.xl, fontWeight: typography.black },
   floatRule:  { width: 1, marginVertical: 4, alignSelf: 'stretch' },
-  floatGoBtn: { width: 28, height: 28, borderRadius: 14, alignSelf: 'center',
-                alignItems: 'center', justifyContent: 'center', marginLeft: spacing.sm },
+  fab:        { alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center',
+                gap: 2, paddingLeft: spacing.base, paddingRight: spacing.md,
+                paddingVertical: 10, borderRadius: 999, marginBottom: spacing.sm,
+                shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
+  fabTxt:     { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
   floatHint:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
                   borderRadius: borderRadius.xl, borderWidth: 1,
