@@ -1,6 +1,6 @@
 # CRS Pulse Terms of Use
 
-**Effective date:** June 16, 2026
+**Effective date:** July 4, 2026
 **App:** CRS Pulse – Express Entry Calculator
 **Contact:** contact@crspulse.com
 
@@ -14,19 +14,13 @@ CRS Pulse is an independent app. It is **not** affiliated with, endorsed by, or 
 
 The app does not require an account. Your profile and calculator inputs are stored on your device. Our limited data practices are described in the [Privacy Policy](./PRIVACY_POLICY.md), which is incorporated into these Terms by reference.
 
-## 3. In-app purchase ("Analytics unlock")
+## 3. The app is free
 
-The Analytics tab has two sections. **Draws** — live IRCC market data, draw history and trends — is **free**. **Your Plan** — your odds, improvement plan, what-if scenarios, cutoff forecast and percentile — is unlocked with a **one-time, non-consumable in-app purchase**. There is **no trial**, **no subscription**, and no recurring charge.
-
-- Purchases are processed and billed by the app store (Google Play, and where offered, the App Store). We do not receive or store your payment details.
-- The purchase unlocks the feature on devices signed in to the same store account; use **Restore purchase** on the paywall to re-grant it on a new device or reinstall.
-- Where no in-app purchase is offered or available (for example, on a platform or region without a configured product), these features are provided free.
-- **Refunds** are handled by the app store under its applicable policy (for example, Google Play's refund window). We do not separately process refunds.
-- Prices are shown by the store in your local currency and may change; any change applies only to future purchases.
+CRS Pulse is **completely free**. Every feature — including the calculators, live draws, analytics, timeline, and push alerts — is available at no charge. There are no ads, no in-app purchases, no trials, and no subscriptions.
 
 ## 4. Acceptable use
 
-You agree not to misuse the app, including attempting to circumvent the in-app purchase or entitlement mechanism, reverse-engineer the billing flow, or interfere with our push-notification service.
+You agree not to misuse the app, including attempting to interfere with our push-notification service.
 
 ## 5. Disclaimer of warranties and limitation of liability
 
