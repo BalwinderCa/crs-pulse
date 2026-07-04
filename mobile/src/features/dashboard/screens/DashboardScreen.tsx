@@ -2,7 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useProfileStore, type CalcInputs, DEFAULT_CALC_INPUTS } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -14,7 +16,7 @@ import {
   type LanguageTest, type LangScores, type TefScale,
 } from '@/features/onboarding/utils/crsCalculator';
 import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
-import type { ProgramCategory } from '@/types';
+import type { ProgramCategory, RootStackParamList } from '@/types';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
@@ -320,6 +322,7 @@ export default function DashboardScreen() {
   const accent = useAccentColor();
   const { t }  = useTranslation();
   const { floatingBottomOffset, floatingOverlayPaddingBottom } = useTabBarLayout();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { contentFrameStyle } = useResponsiveLayout();
   const profile        = useProfileStore((s) => s.profile);
   const resetKey       = useProfileStore((s) => s.resetKey);
@@ -689,11 +692,17 @@ export default function DashboardScreen() {
         </View>
       </ScrollView>
 
-      {/* ── Floating score pill ── */}
-      <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="none">
+      {/* ── Floating score pill — tap to see what the score means ── */}
+      <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="box-none">
         {scoreReady ? (
-          <View style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
-            shadowColor: scoreClr }]}>
+          <TouchableOpacity
+            style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
+              shadowColor: scoreClr }]}
+            onPress={() => navigation.navigate('Main', { screen: 'Analytics' })}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel={`CRS score ${score}. Open analytics`}
+          >
             <View style={[st.floatStripe, { backgroundColor: scoreClr }]} />
             <View style={st.floatInner}>
               <View style={st.floatStat}>
@@ -709,7 +718,7 @@ export default function DashboardScreen() {
                 <>
                   <View style={[st.floatRule, { backgroundColor: c.border }]} />
                   <View style={st.floatStat}>
-                    <Text style={[st.floatLbl, { color: c.textMuted }]}>VS CUTOFF</Text>
+                    <Text style={[st.floatLbl, { color: c.textMuted }]}>{t('crsCalculator.vsCutoff').toUpperCase()}</Text>
                     <Text style={[st.floatDiff, {
                       color: score >= latestDraw.cutoff_score ? palette.success : palette.danger }]}>
                       {score >= latestDraw.cutoff_score ? '+' : ''}{score - latestDraw.cutoff_score}
@@ -717,13 +726,26 @@ export default function DashboardScreen() {
                   </View>
                 </>
               ) : null}
+              <View style={[st.floatRule, { backgroundColor: c.border }]} />
+              <View style={st.floatGo}>
+                <Text style={[st.floatGoTxt, { color: accent }]} numberOfLines={1}>
+                  {t('crsCalculator.viewAnalytics')}
+                </Text>
+                <Ionicons name="chevron-forward" size={14} color={accent} />
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
         ) : (
-          <View style={[st.floatHint, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
+          <View
+            style={[st.floatHint, { backgroundColor: c.surfaceCard, borderColor: c.border }]}
+            pointerEvents="none"
+          >
             <Ionicons name="calculator-outline" size={15} color={c.textMuted} />
             <Text style={[st.floatHintTxt, { color: c.textMuted }]}>
-              Open <Text style={{ color: accent }}>Language</Text> and set all 4 CLB scores to see your CRS
+              <Trans
+                i18nKey="crsCalculator.floatHint"
+                components={{ accent: <Text style={{ color: accent }} /> }}
+              />
             </Text>
           </View>
         )}
@@ -836,6 +858,9 @@ const st = StyleSheet.create({
   floatCat:   { fontSize: typography.base, fontWeight: typography.bold },
   floatDiff:  { fontSize: typography.xl, fontWeight: typography.black },
   floatRule:  { width: 1, marginVertical: 4, alignSelf: 'stretch' },
+  floatGo:    { flexShrink: 1, flexDirection: 'row', alignItems: 'center',
+                justifyContent: 'center', paddingLeft: spacing.sm, gap: 1 },
+  floatGoTxt: { fontSize: typography.sm, fontWeight: typography.bold },
 
   floatHint:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,
                   borderRadius: borderRadius.xl, borderWidth: 1,

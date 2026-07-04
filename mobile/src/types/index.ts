@@ -89,7 +89,7 @@ export type Prediction = {
 
 export type RootStackParamList = {
   Onboarding: undefined;
-  Main: undefined;
+  Main: import('@react-navigation/native').NavigatorScreenParams<MainTabParamList> | undefined;
   Faq:  undefined;
   ReportIssue: undefined;
   SinpCalculator: undefined;
