@@ -472,7 +472,7 @@ const fr: TranslationKeys = {
     q7: 'L\'application fonctionne-t-elle hors ligne?',
     a7: 'Oui. Le calculateur fonctionne entièrement hors ligne, et le dernier historique de tirage récupéré est mis en cache sur votre appareil. Vous n\'avez besoin d\'une connexion que pour actualiser les tirages ou recevoir des notifications.',
     q8: 'CRS Pulse est-il gratuit?',
-    a8: 'Les fonctionnalités de base sont toujours gratuites — suivi des tirages, score SGC et alertes push sans frais. Premium débloque les analyses personnalisées et supprime les bannières. Achat unique, aucun abonnement. C\'est un outil indépendant et il n\'est pas affilié à l\'IRCC ou au gouvernement du Canada.',
+    a8: 'Oui — CRS Pulse est entièrement gratuit. Toutes les fonctionnalités, du suivi des tirages aux calculatrices, analyses et alertes push, sont sans frais : aucune publicité, aucun achat intégré, aucun abonnement. C\'est un outil indépendant et il n\'est pas affilié à l\'IRCC ou au gouvernement du Canada.',
   },
 
   paywall: {

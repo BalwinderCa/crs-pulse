@@ -470,7 +470,7 @@ const en = {
     q7: 'Does the app work offline?',
     a7: 'Yes. The calculator works fully offline, and the latest fetched draw history is cached on your device. You only need a connection to refresh draws or receive notifications.',
     q8: 'Is CRS Pulse free?',
-    a8: 'Core features are always free — draw tracking, CRS score, and push alerts have no charge. Premium unlocks personalised analytics and removes banners. One-time purchase, no subscription. It is an independent tool and is not affiliated with IRCC or the Government of Canada.',
+    a8: 'Yes — CRS Pulse is completely free. Every feature, from draw tracking and the calculators to analytics and push alerts, comes at no charge, with no ads, no in-app purchases, and no subscription. It is an independent tool and is not affiliated with IRCC or the Government of Canada.',
   },
 
   paywall: {

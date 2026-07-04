@@ -214,7 +214,7 @@ const FEATURES = [
   ['trending', 'Live IRCC draws', 'Every Express Entry round with category filters and cutoff trends, fetched straight from IRCC.'],
   ['bell', 'Instant draw alerts', 'Push notifications the moment a new draw is published — never miss a round again.'],
   ['checklist', 'Application tracker', 'A milestone timeline, processing-time estimates and per-program document checklists.'],
-  ['chart', 'Premium analytics', 'Your odds of an ITA and where your score sits in the Express Entry pool — a one-time unlock.'],
+  ['chart', 'Personal analytics', 'Your odds of an ITA and where your score sits in the Express Entry pool — free, like everything else in the app.'],
 ];
 
 function landing() {

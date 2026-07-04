@@ -36,7 +36,7 @@ Push notifications (if enabled) register your device with our server so we can a
 
 Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
-The free version shows ads through Google AdMob, which may collect device identifiers and usage data to deliver ads under Google's privacy policy. Buying Premium removes all ads. We use no other third-party analytics or trackers.
+CRS Pulse is completely free — no ads, no in-app purchases, and no subscriptions. We use no third-party analytics or trackers.
 
 Full policy: ${PRIVACY_POLICY_URL}
 
