@@ -12,7 +12,7 @@
 // Brand comes straight from the app: logo mark is mobile/assets/logo.svg
 // (red leaf #E8312E, navy gap #0A1628, teal pulse line #35C2DC — the secondary
 // accent). Primary accent matches the logo red; teal is used as the secondary.
-import { readFileSync, writeFileSync, mkdirSync, cpSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
@@ -22,6 +22,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(here, '../docs');
 const OUT = resolve(here, 'public');
 const ASSETS = resolve(here, 'assets');
+
+// The real iPhone 17 Pro bezel (Apple's official Product Bezels asset) is kept out
+// of git — its license restricts redistribution — so it only exists on machines
+// that downloaded it locally. Deploys without it (e.g. a fresh GitHub-triggered
+// Vercel build) fall back to the CSS-drawn frame instead of crashing.
+const HAS_FRAME_ASSET = existsSync(resolve(ASSETS, 'frame', 'iphone17pro.png'));
 
 const APP_STORE_URL = 'https://apps.apple.com/app/crs-pulse-ircc-tracker/id6784619403';
 const CONTACT = 'contact@crspulse.com';
@@ -42,6 +48,11 @@ const apple = (s = 15) =>
   `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.86-.07 1.68-.75 3.04-.83 1.65-.13 2.9.65 3.71 1.94-1.94 1.16-1.64 3.66.32 4.86-.38 1.08-.9 2.15-1.65 3.2zm-3.62-14.6c-.05-1.7 1.4-3.1 3.14-3.18.28 1.88-1.65 3.4-3.14 3.18z"/></svg>`;
 
 const dlBtn = (cls, label = 'Download on the App Store') => `<a class="pill ${cls}" href="${APP_STORE_URL}">${apple()}<span>${label}</span></a>`;
+
+// Renders the frame overlay <img> when the (gitignored) real asset is present at
+// build time; omitted otherwise so CSS fallback styling (.no-frame rules) takes over.
+const dvFrame = () => HAS_FRAME_ASSET ? '<img class="dv-frame" src="/img/frame/iphone17pro.png" alt="">' : '';
+const frameClass = () => HAS_FRAME_ASSET ? '' : ' no-frame';
 
 const advIcon = (d, s = 17) =>
   `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -117,6 +128,8 @@ const SITE_CSS = `
   .phonefr{width:260px;margin:44px auto 0;position:relative;aspect-ratio:600/1226;z-index:1}
   .phonefr .dv-shot{position:absolute;display:block;top:7.97%;left:5.33%;width:89.26%;height:89.49%;object-fit:cover;object-position:top;border-radius:8%}
   .phonefr .dv-frame{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 30px 60px rgba(6,20,48,.28))}
+  /* fallback when the real device-frame asset isn't present at build time */
+  .phonefr.no-frame .dv-shot{top:0;left:0;width:100%;height:100%;border-radius:38px;border:7px solid;border-image:linear-gradient(135deg,#7b8494,#1c2333 45%,#545e70) 1;box-shadow:0 30px 60px rgba(6,20,48,.28)}
   .phonefr.hero-crop{height:425px;aspect-ratio:auto;overflow:hidden}
   .phonefr.hero-crop .dv-inner{position:absolute;top:0;left:0;width:100%;aspect-ratio:600/1226}
   @media (max-width:760px){.hero2-badge{display:none}}
@@ -166,6 +179,7 @@ const SITE_CSS = `
   .shotstrip .shot.active{opacity:1;width:340px}
   .shotstrip .shot.active .dv-shot{top:7.97%;left:5.33%;width:89.26%;height:89.49%;border-radius:8%;box-shadow:none}
   .shotstrip .shot.active .dv-frame{display:block;filter:drop-shadow(0 30px 60px rgba(6,20,48,.3))}
+  .shotstrip .shot.no-frame.active .dv-shot{border-radius:38px;border:7px solid;border-image:linear-gradient(135deg,#7b8494,#1c2333 45%,#545e70) 1;box-shadow:0 30px 60px rgba(6,20,48,.3)}
   .shot-dots{display:flex;justify-content:center;gap:8px;margin:0 0 90px}
   .shot-dots span{width:22px;height:6px;border-radius:999px;background:var(--line);cursor:pointer;transition:all .2s ease}
   .shot-dots span.on{background:var(--accent);width:32px}
@@ -481,10 +495,10 @@ function home() {
       ${dlBtn('dark lg', 'Download on the App Store')}
       <a class="textlink" href="/features">Explore Features</a>
     </div>
-    <div class="phonefr hero-crop">
+    <div class="phonefr hero-crop${frameClass()}">
       <div class="dv-inner">
         <img class="dv-shot" src="/img/screenshots/hero_home.png" alt="CRS Pulse home screen showing your CRS score and recent draws">
-        <img class="dv-frame" src="/img/frame/iphone17pro.png" alt="">
+        ${dvFrame()}
       </div>
     </div>
   </div>
@@ -517,7 +531,7 @@ function home() {
   <p>A look inside the app — your score, live draws, analytics and application tracking</p>
 </div>
 <section class="shotstrip" id="shotstrip">
-  ${[0, 1, 2, 3, 4].map((slot) => `<div class="shot${slot === 2 ? ' active' : ''}" data-slot="${slot}"><img class="dv-shot" src="/img/screenshots/${SHOTS[slot][0]}" alt="${SHOTS[slot][1]}" loading="lazy"><img class="dv-frame" src="/img/frame/iphone17pro.png" alt=""></div>`).join('\n  ')}
+  ${[0, 1, 2, 3, 4].map((slot) => `<div class="shot${slot === 2 ? ' active' : ''}${frameClass()}" data-slot="${slot}"><img class="dv-shot" src="/img/screenshots/${SHOTS[slot][0]}" alt="${SHOTS[slot][1]}" loading="lazy">${dvFrame()}</div>`).join('\n  ')}
 </section>
 <div class="shot-dots" id="shot-dots">${SHOTS.map((_, i) => `<span data-i="${i}" class="${i === 2 ? 'on' : ''}"></span>`).join('')}</div>
 <script>
@@ -568,10 +582,10 @@ function home() {
       </div>
     </div>
     <div class="getapp-art" aria-hidden="true">
-      <div class="phonefr hero-crop">
+      <div class="phonefr hero-crop${frameClass()}">
         <div class="dv-inner">
           <img class="dv-shot" src="/img/screenshots/hero_home.png" alt="">
-          <img class="dv-frame" src="/img/frame/iphone17pro.png" alt="">
+          ${dvFrame()}
         </div>
       </div>
     </div>
@@ -676,7 +690,7 @@ function doc(mdFile, title, path) {
 
 mkdirSync(OUT, { recursive: true });
 cpSync(resolve(ASSETS, 'screenshots'), resolve(OUT, 'img/screenshots'), { recursive: true });
-cpSync(resolve(ASSETS, 'frame'), resolve(OUT, 'img/frame'), { recursive: true });
+if (HAS_FRAME_ASSET) cpSync(resolve(ASSETS, 'frame'), resolve(OUT, 'img/frame'), { recursive: true });
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
