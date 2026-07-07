@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 import { AdBanner } from '@/components/common/AdBanner';
@@ -17,7 +18,10 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 const MAX_ITEMS = 15;
 
 function timeAgo(dateStr: string, tr: (key: string, opts?: Record<string, unknown>) => string): string {
-  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+  // parseISO reads YYYY-MM-DD as local midnight; new Date() would read it as UTC
+  // and shift the day back in timezones behind UTC (all of Canada), making a
+  // today draw read as "yesterday". Compare calendar days, not raw millis.
+  const days = differenceInCalendarDays(new Date(), parseISO(dateStr.slice(0, 10)));
   if (days <= 0) return tr('notifications.today');
   if (days === 1) return tr('notifications.yesterday');
   if (days < 30) return tr('notifications.daysAgo', { days });
