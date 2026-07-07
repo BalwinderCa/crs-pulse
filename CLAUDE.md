@@ -136,6 +136,17 @@ Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't res
 
 ## Key Conventions
 
+### Internationalization (i18n)
+
+All user-facing strings must use the i18next/react-i18next system. Translation keys live in `src/i18n/en.ts` and `src/i18n/fr.ts` with structural parity enforced by the `TranslationKeys` type.
+
+- **React components:** use `const { t } = useTranslation()` hook.
+- **Hooks/store files (non-component contexts):** import `i18n` directly from `@/i18n` and call `i18n.t('key')`.
+- **Markup with inline translations:** use the `<Trans>` component.
+- **Parameterized strings:** use `t('key', { variable: value })` with `{{variable}}` in the translation value.
+- **New keys:** add to both `en.ts` and `fr.ts`. French translations should be flagged `[REVIEW]` at the top for human review.
+- **Naming convention:** keys are organized in nested sections matching feature/domain (e.g., `common.goBack`, `education.bachelors`, `analytics.clearTrend`).
+
 ### TypeScript
 
 Strict mode is fully enabled (`strict`, `noImplicitAny`, `noUnusedLocals`, `noUnusedParameters`, `exactOptionalPropertyTypes`). Prefix intentionally unused parameters with `_`.
