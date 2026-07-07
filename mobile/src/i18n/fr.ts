@@ -226,6 +226,37 @@ const fr: TranslationKeys = {
     learnFrench: 'Apprendre le français (NCLC 7+)',
     getProvNom: 'Obtenir une nomination provinciale',
     projectedOdds: 'Probabilités projetées :',
+    yourLabel: 'Vous',
+    trendCutoffLabel: 'Seuil tendance',
+    completeCrsTitle: 'Complétez votre score CRS',
+    completeCrsBody: 'Les analyses sont personnalisées selon votre profil. Calculez votre score CRS pour débloquer vos probabilités, votre centile, les prévisions et les scénarios hypothétiques.',
+    cutoffVsScore: 'SEUIL vs VOTRE SCORE · {{count}} derniers tirages',
+    clearDrawLegend: 'Tirets verts = votre score. Au-dessus de la ligne = vous auriez franchi ce tirage.',
+    invitationsPace: 'RYTHME DES INVITATIONS {{year}}',
+    itasYtd: 'ITA émises depuis le début de l’année',
+    cutoffByCategoryTrend: 'SEUIL PAR CATÉGORIE · tendance',
+    invitationsPerDraw: 'INVITATIONS PAR TIRAGE · {{count}} derniers',
+    itasEachRound: 'ITA émises à chaque tirage',
+    drawsByMonth: 'TIRAGES PAR MOIS · 12 derniers',
+    busiest: 'Le plus actif :',
+    quietest: 'le plus calme',
+    drawCadence: 'CADENCE DES TIRAGES',
+    everyPrefix: '~tous les',
+    daysUnit: 'jours',
+    invitationsCaps: 'INVITATIONS',
+    ytd: 'depuis le début de l’année',
+    cutoffMomentum: 'ÉVOLUTION DU SEUIL · 6 derniers',
+    trendingDown: 'en baisse ↓',
+    trendingUp: 'en hausse ↑',
+    fallingCutoffs: 'La baisse des seuils améliore vos chances · moy. {{count}} ITA/tirage',
+    streamGapLegendLong: 'Points au-dessus (+) ou en dessous (−) desquels votre CRS se situe par rapport au dernier seuil en direct de chaque volet',
+    forecastNextDraw: 'PRÉVISION · PROCHAIN TIRAGE',
+    basedOnCadence: 'Selon la cadence des tirages · écart moyen et taille inclus',
+    streamGapLegend: 'Points au-dessus (+) ou en dessous (−) du seuil en direct de chaque volet',
+    whatIfAge: 'Âge',
+    whatIfLanguage: 'Langue (NCLC)',
+    whatIfFrench: 'Français (NCLC 7+)',
+    whatIfPnp: 'Nomination provinciale',
   },
 
   calculators: {
@@ -514,6 +545,81 @@ const fr: TranslationKeys = {
     feat4Title: 'Accès à vie',
     feat4Body: 'Payez une fois. À vous pour toujours — aucun abonnement.',
     tagline: 'Achat unique · Aucun abonnement · À vous pour toujours',
+  },
+
+  cards: {
+    draw: 'Tirage',
+    cutoff: 'Seuil',
+    invitations: 'Invitations',
+    yourGap: 'Votre écart',
+    crsScore: 'Score CRS',
+    prediction: 'Prévision',
+    scoreNeeded: 'Points requis :',
+    estimatedDraws: 'Tirages estimés :',
+  },
+
+  common: {
+    error: 'Erreur',
+    tryAgain: 'Réessayer',
+    somethingWrong: 'Une erreur s’est produite',
+    restartApp: 'Veuillez redémarrer l’application et réessayer.',
+    upgradeToPremium: 'Passer à Premium',
+    upgradeSub: 'Analyses · Expérience sans publicité',
+  },
+
+  menu: {
+    subtitle: 'Suivi IRCC',
+    general: 'Général',
+    about: 'À propos',
+    support: 'Assistance',
+    documentChecklists: 'Listes de documents',
+    checkProcessingTimes: 'Délais de traitement',
+    faq: 'FAQ',
+    aboutUs: 'À propos de nous',
+    privacyPolicy: 'Politique de confidentialité',
+    terms: 'Conditions d’utilisation',
+    reportIssue: 'Signaler un problème',
+    contactUs: 'Nous contacter',
+    shareApp: 'Partager l’application',
+    reviewAppStore: 'Évaluer sur l’App Store',
+    contactIntro: 'Une question, un commentaire ou un problème ? Nous répondons généralement en quelques jours.',
+    emailUs: 'Écrivez-nous',
+    shareMessage: 'Découvrez CRS Pulse — calculateur CRS et suivi des tirages Entrée express gratuit pour l’immigration au Canada ! {{url}}',
+    aboutBody: `Bonjour ! Je suis Balwinder Singh, créateur de CRS Pulse — un outil de suivi IRCC gratuit et précis, conçu pour les futurs Canadiens comme vous.
+
+Après avoir constaté à quel point le processus d’immigration peut être stressant et déroutant, j’ai créé CRS Pulse pour offrir aux candidats un outil clair et en temps réel afin de comprendre leur position dans le bassin. L’application récupère les données de tirage en direct directement d’IRCC et calcule votre score CRS à partir de la grille CRS actuelle d’IRCC (dernière mise à jour le 2025-08-21). Vérifiez toujours votre score avec l’outil CRS officiel d’IRCC avant de prendre des décisions.
+
+Ce qui me motive chaque jour, c’est la conviction que chacun mérite une chance équitable de bâtir sa vie au Canada. De meilleures informations mènent à de meilleures décisions — et de meilleures décisions changent des vies.
+
+Votre soutien compte énormément pour moi. Je continue de créer des outils plus intelligents pour vous aider à améliorer votre profil et à suivre votre progression vers la résidence permanente.
+
+Merci de faire confiance à CRS Pulse dans votre parcours d’immigration. Continuez — le Canada vous attend !`,
+    privacyBody: `CRS Pulse respecte votre vie privée.
+
+Toutes les données que vous saisissez (âge, études, résultats linguistiques, expérience de travail) sont stockées localement sur votre appareil uniquement. Nous ne collectons, ne transmettons ni ne partageons jamais avec qui que ce soit les informations de profil que vous saisissez.
+
+Les notifications push (si activées) enregistrent votre appareil auprès de notre serveur afin de vous alerter lorsqu’IRCC publie un nouveau tirage. Aucune donnée de profil personnelle n’est envoyée — seulement un jeton d’appareil anonyme.
+
+L’historique des tirages est récupéré directement du flux de données public officiel d’IRCC (canada.ca) et mis en cache sur l’appareil pour une utilisation hors ligne.
+
+CRS Pulse est entièrement gratuit — aucune publicité, aucun achat intégré et aucun abonnement. Nous n’utilisons aucun outil d’analyse ni de suivi tiers.
+
+Politique complète : {{url}}
+
+Pour toute question, contactez : info@crspulse.com`,
+    termsBody: `En utilisant CRS Pulse, vous acceptez ces conditions.
+
+CRS Pulse est un outil d’information gratuit. Les scores, les données de tirage, les délais de traitement et tout autre chiffre affiché dans l’application sont des estimations à des fins de planification uniquement. Ils ne constituent pas des conseils en immigration et ne représentent ni un maximum, ni un minimum, ni une garantie de résultat.
+
+CRS Pulse est un projet indépendant. Il n’est ni affilié, ni approuvé, ni lié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ou au gouvernement du Canada. Vérifiez toujours les scores, l’admissibilité et les délais de traitement avec les outils officiels sur canada.ca avant de prendre des décisions.
+
+Vos données restent sur votre appareil. Nous ne collectons ni ne vendons de renseignements personnels (voir la Politique de confidentialité pour plus de détails).
+
+L’application est fournie « telle quelle », sans aucune garantie. Dans toute la mesure permise par la loi, le développeur n’est pas responsable de toute perte ou dommage découlant de votre utilisation de l’application ou de votre confiance en ses estimations.
+
+Ces conditions peuvent être mises à jour de temps à autre. La poursuite de l’utilisation de l’application après une mise à jour signifie que vous acceptez les conditions révisées.
+
+Des questions ? Contactez : info@crspulse.com`,
   },
 };
 

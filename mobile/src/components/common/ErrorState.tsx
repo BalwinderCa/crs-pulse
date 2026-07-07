@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 import { palette, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
@@ -23,15 +24,16 @@ function makeStyles(c: Colors) {
   });
 }
 
-export function ErrorState({ message = 'Something went wrong.', onRetry }: Props) {
+export function ErrorState({ message, onRetry }: Props) {
   const colors = useColors();
+  const { t } = useTranslation();
   const styles = makeStyles(colors);
   return (
     <View style={styles.container} accessibilityRole="alert">
       <Ionicons name="alert-circle-outline" size={48} color={palette.danger} />
-      <Text style={styles.title}>Error</Text>
-      <Text style={styles.message}>{message}</Text>
-      {onRetry && <Button title="Try Again" onPress={onRetry} variant="outline" size="sm" style={styles.btn} />}
+      <Text style={styles.title}>{t('common.error')}</Text>
+      <Text style={styles.message}>{message ?? t('common.somethingWrong')}</Text>
+      {onRetry && <Button title={t('common.tryAgain')} onPress={onRetry} variant="outline" size="sm" style={styles.btn} />}
     </View>
   );
 }

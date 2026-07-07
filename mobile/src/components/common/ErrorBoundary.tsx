@@ -3,6 +3,7 @@ import { Appearance, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import { palette, spacing, typography } from '@/theme';
 import { darkColors, lightColors } from '@/theme/colors';
 import { reportError } from '@/services/errorReporter';
+import i18n from '@/i18n';
 
 type Props = { children: ReactNode; fallback?: ReactNode };
 type State = { hasError: boolean; error: Error | null };
@@ -32,12 +33,12 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <View style={[styles.container, { backgroundColor: c.surfacePrimary }]} accessibilityRole="alert">
           <Text style={styles.emoji}>⚠️</Text>
-          <Text style={[styles.title, { color: c.textPrimary }]}>Something went wrong</Text>
+          <Text style={[styles.title, { color: c.textPrimary }]}>{i18n.t('common.somethingWrong')}</Text>
           <Text style={[styles.message, { color: c.textSecondary }]}>
-            {__DEV__ ? this.state.error?.message : 'Please restart the app and try again.'}
+            {__DEV__ ? this.state.error?.message : i18n.t('common.restartApp')}
           </Text>
-          <TouchableOpacity style={styles.btn} onPress={this.reset} accessibilityRole="button" accessibilityLabel="Try again">
-            <Text style={styles.btnText}>Try Again</Text>
+          <TouchableOpacity style={styles.btn} onPress={this.reset} accessibilityRole="button" accessibilityLabel={i18n.t('common.tryAgain')}>
+            <Text style={styles.btnText}>{i18n.t('common.tryAgain')}</Text>
           </TouchableOpacity>
         </View>
       );

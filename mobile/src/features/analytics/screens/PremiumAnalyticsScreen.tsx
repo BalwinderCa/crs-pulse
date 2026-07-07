@@ -174,9 +174,9 @@ export default function PremiumAnalyticsScreen() {
             </View>
           </View>
           <View style={[s.compareRow, { borderTopColor: c.border }]}>
-            <Text style={[s.compareText, { color: c.textSecondary }]}>Your <Text style={[s.num, { color: c.textPrimary }]}>{data.userScore}</Text></Text>
+            <Text style={[s.compareText, { color: c.textSecondary }]}>{t('analytics.yourLabel')} <Text style={[s.num, { color: c.textPrimary }]}>{data.userScore}</Text></Text>
             <View style={[s.vDiv, { backgroundColor: c.border }]} />
-            <Text style={[s.compareText, { color: c.textSecondary }]}>Trend cutoff <Text style={[s.num, { color: c.textPrimary }]}>~{data.trendCutoff}</Text></Text>
+            <Text style={[s.compareText, { color: c.textSecondary }]}>{t('analytics.trendCutoffLabel')} <Text style={[s.num, { color: c.textPrimary }]}>~{data.trendCutoff}</Text></Text>
           </View>
         </Card>
 
@@ -235,10 +235,9 @@ export default function PremiumAnalyticsScreen() {
               <View style={[s.lockIcon, { backgroundColor: accent + '1A' }]}>
                 <Ionicons name="lock-closed" size={26} color={accent} />
               </View>
-              <Text style={[s.lockTitle, { color: c.textPrimary }]}>Complete your CRS score</Text>
+              <Text style={[s.lockTitle, { color: c.textPrimary }]}>{t('analytics.completeCrsTitle')}</Text>
               <Text style={[s.lockBody, { color: c.textSecondary }]}>
-                Analytics is personalised to your profile. Calculate your CRS score to unlock your
-                odds, percentile, forecast and what-if scenarios.
+                {t('analytics.completeCrsBody')}
               </Text>
               <Button
                 title={t('analytics.calculateCrs')}
@@ -263,7 +262,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
     <>
       {/* Free teaser: where your score sits vs the live cutoff trend */}
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF vs YOUR SCORE · last {data.trend.length} draws</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.cutoffVsScore', { count: data.trend.length })}</Text>
         <TrendLineChart
           series={[{ points: data.trend, color: accent }]}
           min={data.selfTrendMin} max={data.selfTrendMax}
@@ -272,14 +271,14 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           width={chartWidth} height={150}
           accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
         />
-        <Text style={[s.caption, { color: c.textMuted }]}>Green dashed = your score. Above the line = you’d clear that draw.</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.clearDrawLegend')}</Text>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{i.curYear} INVITATIONS PACE</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.invitationsPace', { year: i.curYear })}</Text>
         <View style={s.rowBetween}>
           <Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.itaYtd)}</Text>
-          <Text style={[s.caption, { color: c.textSecondary }]}>ITAs issued YTD</Text>
+          <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.itasYtd')}</Text>
         </View>
         <View style={[s.progressTrack, { backgroundColor: c.surfaceTertiary }]}>
           <View style={[s.progressFill, { backgroundColor: accent, width: `${Math.min(100, Math.round((i.itaYtd / Math.max(1, i.itaProjected)) * 100))}%` }]} />
@@ -348,7 +347,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF BY CATEGORY · trend</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.cutoffByCategoryTrend')}</Text>
         <TrendLineChart
           series={[
             { points: data.categoryTrends.CEC, color: accent },
@@ -374,7 +373,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS PER DRAW · last {data.invitationsTrend.length}</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.invitationsPerDraw', { count: data.invitationsTrend.length })}</Text>
         <TrendLineChart
           series={[{ points: data.invitationsTrend, color: palette.success, fill: palette.success + '22' }]}
           min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
@@ -382,36 +381,36 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           width={chartWidth} height={140}
           accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
         />
-        <Text style={[s.caption, { color: c.textMuted }]}>ITAs issued each round</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.itasEachRound')}</Text>
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>DRAWS BY MONTH · last 12</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.drawsByMonth')}</Text>
         <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={chartWidth} height={48}
           accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
-        <Text style={[s.caption, { color: c.textSecondary }]}>Busiest: <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · quietest <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
+        <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.busiest')} <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · {t('analytics.quietest')} <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
       </Card>
 
       <View style={s.miniRow}>
         <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>DRAW CADENCE</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.drawCadence')}</Text>
           <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary}
             accessibilityLabel={`Draw cadence: roughly every ${data.cadenceDays} days.`} />
-          <Text style={[s.caption, { color: c.textSecondary }]}>~every <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> days</Text>
+          <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.everyPrefix')} <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> {t('analytics.daysUnit')}</Text>
         </Card>
         <Card style={s.miniCard}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>INVITATIONS</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.invitationsCaps')}</Text>
           <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary}
             accessibilityLabel={`Invitations per recent draw. ${data.invitationsYtd} issued year to date.`} />
-          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> YTD</Text>
+          <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> {t('analytics.ytd')}</Text>
         </Card>
       </View>
 
       <Card style={s.card}>
         <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>CUTOFF MOMENTUM · last 6</Text>
+          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.cutoffMomentum')}</Text>
           <Text style={[s.num, { color: data.momentumDown ? palette.success : palette.danger }]}>
-            {data.momentumDown ? 'trending down ↓' : 'trending up ↑'}
+            {data.momentumDown ? t('analytics.trendingDown') : t('analytics.trendingUp')}
           </Text>
         </View>
         <View style={s.chipRow}>
@@ -421,7 +420,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
             </View>
           ))}
         </View>
-        <Text style={[s.caption, { color: c.textMuted }]}>Falling cutoffs improve your odds · avg {data.avgInvitations} ITAs/draw</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.fallingCutoffs', { count: data.avgInvitations })}</Text>
       </Card>
     </>
   );
@@ -484,10 +483,10 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
           <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whatIf')}</Text>
           <Text style={[s.whatIfScore, { color: c.textPrimary }]}>CRS {whatIfScore}</Text>
         </View>
-        <SliderRow c={c} accent={accent} label="Age" value={age} min={18} max={45} step={1} onChange={setAge} display={String(age)} />
-        <SliderRow c={c} accent={accent} label="Language (CLB)" value={clb} min={4} max={10} step={1} onChange={setClb} display={`CLB ${clb}`} />
-        <SwitchRow c={c} accent={accent} label="French (NCLC 7+)" value={french} onChange={setFrench} />
-        <SwitchRow c={c} accent={accent} label="Provincial nomination" value={pnp} onChange={setPnp} />
+        <SliderRow c={c} accent={accent} label={t('analytics.whatIfAge')} value={age} min={18} max={45} step={1} onChange={setAge} display={String(age)} />
+        <SliderRow c={c} accent={accent} label={t('analytics.whatIfLanguage')} value={clb} min={4} max={10} step={1} onChange={setClb} display={`CLB ${clb}`} />
+        <SwitchRow c={c} accent={accent} label={t('analytics.whatIfFrench')} value={french} onChange={setFrench} />
+        <SwitchRow c={c} accent={accent} label={t('analytics.whatIfPnp')} value={pnp} onChange={setPnp} />
         <View style={[s.whatIfOut, { backgroundColor: (ODDS_COLOR[whatIfLabel] ?? accent) + '14' }]}>
           <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>{t('analytics.projectedOdds')} {whatIfLabel}</Text>
         </View>
@@ -506,7 +505,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
             </Text>
           </View>
         ))}
-        <Text style={[s.caption, { color: c.textMuted }]}>Points your CRS sits above (+) or below (−) each stream’s most recent live cutoff</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.streamGapLegendLong')}</Text>
       </Card>
 
       <Card style={s.card}>
@@ -608,7 +607,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
             {lv()}
           </View>
         </View>
-        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>Based on draw cadence · avg gap and size included</Text>
+        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>{t('analytics.basedOnCadence')}</Text>
       </Card>
 
       <Card style={s.card}>
@@ -630,7 +629,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       </Card>
 
       <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>FORECAST · NEXT DRAW</Text>
+        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.forecastNextDraw')}</Text>
         {lb(110)}
         <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
@@ -652,7 +651,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
             {lv()}
           </View>
         </View>
-        {(['Age', 'Language (CLB)'] as const).map((label) => (
+        {[t('analytics.whatIfAge'), t('analytics.whatIfLanguage')].map((label) => (
           <View key={label} style={{ marginTop: spacing.sm }}>
             <View style={s.rowBetween}>
               <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
@@ -661,7 +660,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
             <View style={{ height: 5, backgroundColor: c.surfaceTertiary, borderRadius: 3, marginTop: 8 }} />
           </View>
         ))}
-        {(['French (NCLC 7+)', 'Provincial nomination'] as const).map((label) => (
+        {[t('analytics.whatIfFrench'), t('analytics.whatIfPnp')].map((label) => (
           <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
             <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
             <View style={[s.lockSwitch, { backgroundColor: c.surfaceTertiary }]}>
@@ -688,7 +687,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
             </View>
           </View>
         ))}
-        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>Points above (+) or below (−) each stream's live cutoff</Text>
+        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>{t('analytics.streamGapLegend')}</Text>
       </Card>
 
       <Card style={s.card}>

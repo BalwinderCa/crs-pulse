@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated, Dimensions, Image, Linking, Modal, Platform,
+  Animated, Dimensions, Linking, Modal, Platform,
   ScrollView, Share, StyleSheet, Text, TouchableOpacity,
   TouchableWithoutFeedback, View,
 } from 'react-native';
@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import type { RootStackParamList } from '@/types';
 import { GITHUB_REPO_URL, PRIVACY_POLICY_URL } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -16,56 +17,9 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { Logo } from '@/components/common/Logo';
 
-// ─── Content ──────────────────────────────────────────────────────────────────
-
-const ABOUT_TEXT = `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate IRCC Tracker built for aspiring Canadians like you.
-
-After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.
-
-What drives me every day is the belief that everyone deserves a fair shot at building a life in Canada. Better information leads to better decisions — and better decisions change lives.
-
-Your support means the world to me. I keep building smarter tools to help you improve your profile and track your progress toward permanent residency.
-
-Thank you for trusting CRS Pulse on your immigration journey. Keep going — Canada is waiting!`;
-
-const PRIVACY_TEXT = `CRS Pulse respects your privacy.
-
-All data you enter (age, education, language scores, work experience) is stored locally on your device only. We never collect, transmit, or share the profile information you enter with anyone.
-
-Push notifications (if enabled) register your device with our server so we can alert you when IRCC publishes a new draw. No personal profile data is sent — only an anonymous device token.
-
-Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
-
-CRS Pulse is completely free — no ads, no in-app purchases, and no subscriptions. We use no third-party analytics or trackers.
-
-Full policy: ${PRIVACY_POLICY_URL}
-
-For questions, contact: info@crspulse.com`;
-
-const TERMS_TEXT = `By using CRS Pulse, you agree to these terms.
-
-CRS Pulse is a free informational tool. Scores, draw data, processing times and any other figures shown in the app are estimates for planning purposes only. They are not immigration advice, and they are not a maximum, a minimum, or a guarantee of any outcome.
-
-CRS Pulse is an independent project. It is not affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada. Always verify scores, eligibility, and processing times with the official tools on canada.ca before making decisions.
-
-Your data stays on your device. We do not collect or sell personal information (see the Privacy Policy for details).
-
-The app is provided "as is", without warranties of any kind. To the maximum extent permitted by law, the developer is not liable for any loss or damage arising from your use of the app or reliance on its estimates.
-
-These terms may be updated from time to time. Continued use of the app after an update means you accept the revised terms.
-
-Questions? Contact: info@crspulse.com`;
-
 const MENU_WIDTH = Dimensions.get('window').width;
 
 type DetailModal = 'about' | 'privacy' | 'terms' | 'contact' | null;
-
-const DETAIL_TITLES: Record<NonNullable<DetailModal>, string> = {
-  about:   'About Us',
-  privacy: 'Privacy Policy',
-  terms:   'Terms & Conditions',
-  contact: 'Contact Us',
-};
 
 interface Props {
   visible: boolean;
@@ -110,11 +64,12 @@ function ContactView({ onClose }: { onClose: () => void }) {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
 
   const rows = [
     {
       icon: 'mail' as const,
-      label: 'Email us',
+      label: t('menu.emailUs'),
       sub: 'support@crspulse.com',
       onPress: () => Linking.openURL('mailto:support@crspulse.com?subject=CRS%20Pulse'),
     },
@@ -132,12 +87,12 @@ function ContactView({ onClose }: { onClose: () => void }) {
         >
           <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
-        <Text style={[dv.title, { color: c.textPrimary }]}>Contact Us</Text>
+        <Text style={[dv.title, { color: c.textPrimary }]}>{t('menu.contactUs')}</Text>
         <View style={{ width: 44 }} />
       </View>
       <View style={dv.body}>
         <Text style={[dv.text, { color: c.textSecondary, marginBottom: spacing.lg }]}>
-          Questions, feedback, or something not working? We usually reply within a couple of days.
+          {t('menu.contactIntro')}
         </Text>
         {rows.map((row) => (
           <TouchableOpacity
@@ -200,6 +155,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   const c      = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
+  const { t }  = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const slideX          = useRef(new Animated.Value(-MENU_WIDTH)).current;
@@ -223,7 +179,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration! ${GITHUB_REPO_URL}`,
+        message: t('menu.shareMessage', { url: GITHUB_REPO_URL }),
         title: 'CRS Pulse',
       });
     } catch {}
@@ -251,23 +207,23 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   };
 
   const groupOne: MenuItem[] = [
-    { icon: 'checkbox',        label: 'Document Checklists',    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
-    { icon: 'hourglass',       label: 'Check Processing Times', onPress: navigateTo('ProcessingTimes'),  accent: palette.warning },
+    { icon: 'checkbox',        label: t('menu.documentChecklists'),    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
+    { icon: 'hourglass',       label: t('menu.checkProcessingTimes'),  onPress: navigateTo('ProcessingTimes'),  accent: palette.warning },
   ];
 
   const groupAbout: MenuItem[] = [
-    { icon: 'help-circle',       label: 'FAQ',                onPress: navigateTo('Faq'),          accent: palette.blue },
-    { icon: 'information-circle', label: 'About Us',           onPress: () => setDetail('about'),   accent: palette.purple },
-    { icon: 'lock-closed',        label: 'Privacy Policy',     onPress: () => setDetail('privacy'), accent: palette.success },
-    { icon: 'document-text',      label: 'Terms & Conditions', onPress: () => setDetail('terms'),   accent: palette.blue },
+    { icon: 'help-circle',       label: t('menu.faq'),           onPress: navigateTo('Faq'),          accent: palette.blue },
+    { icon: 'information-circle', label: t('menu.aboutUs'),       onPress: () => setDetail('about'),   accent: palette.purple },
+    { icon: 'lock-closed',        label: t('menu.privacyPolicy'), onPress: () => setDetail('privacy'), accent: palette.success },
+    { icon: 'document-text',      label: t('menu.terms'),         onPress: () => setDetail('terms'),   accent: palette.blue },
   ];
 
   const groupTwo: MenuItem[] = [
-    { icon: 'bug',   label: 'Report an Issue', onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
-    { icon: 'mail',  label: 'Contact Us',      onPress: () => setDetail('contact'), accent: palette.blue },
-    { icon: 'share', label: 'Share App',       onPress: handleShare,                accent: palette.success },
+    { icon: 'bug',   label: t('menu.reportIssue'), onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
+    { icon: 'mail',  label: t('menu.contactUs'),   onPress: () => setDetail('contact'), accent: palette.blue },
+    { icon: 'share', label: t('menu.shareApp'),    onPress: handleShare,                accent: palette.success },
     ...(Platform.OS === 'ios' && appStoreId
-      ? [{ icon: 'star' as const, label: 'Review on App Store', onPress: handleRate, accent: palette.warning }]
+      ? [{ icon: 'star' as const, label: t('menu.reviewAppStore'), onPress: handleRate, accent: palette.warning }]
       : []),
   ];
 
@@ -311,8 +267,14 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
           <ContactView onClose={() => setDetail(null)} />
         ) : detail ? (
           <DetailView
-            title={DETAIL_TITLES[detail]}
-            body={detail === 'about' ? ABOUT_TEXT : detail === 'terms' ? TERMS_TEXT : PRIVACY_TEXT}
+            title={detail === 'about' ? t('menu.aboutUs') : detail === 'terms' ? t('menu.terms') : t('menu.privacyPolicy')}
+            body={
+              detail === 'about'
+                ? t('menu.aboutBody')
+                : detail === 'terms'
+                  ? t('menu.termsBody')
+                  : t('menu.privacyBody', { url: PRIVACY_POLICY_URL })
+            }
             onClose={() => setDetail(null)}
           />
         ) : (
@@ -320,10 +282,9 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
             {/* Header */}
             <View style={[s.header, { paddingTop: insets.top + spacing.md, borderBottomColor: c.border }]}>
               <View style={s.headerInner}>
-                <Image source={require('../../../../assets/logo.png')} style={s.logoBox} resizeMode="contain" />
                 <View>
                   <Logo size={20} />
-                  <Text style={[s.appSub,  { color: c.textMuted }]}>IRCC Tracker</Text>
+                  <Text style={[s.appSub,  { color: c.textMuted }]}>{t('menu.subtitle')}</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -345,19 +306,19 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
             >
 
               {/* General */}
-              <Text style={[s.groupTitle, { color: c.textMuted }]}>General</Text>
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>{t('menu.general')}</Text>
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                 {groupOne.map((item, i) => renderItem(item, i, groupOne))}
               </View>
 
               {/* About */}
-              <Text style={[s.groupTitle, { color: c.textMuted }]}>About</Text>
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>{t('menu.about')}</Text>
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                 {groupAbout.map((item, i) => renderItem(item, i, groupAbout))}
               </View>
 
               {/* Support */}
-              <Text style={[s.groupTitle, { color: c.textMuted }]}>Support</Text>
+              <Text style={[s.groupTitle, { color: c.textMuted }]}>{t('menu.support')}</Text>
               <View style={[s.group, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                 {groupTwo.map((item, i) => renderItem(item, i, groupTwo))}
               </View>
@@ -397,7 +358,6 @@ const s = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   headerInner: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  logoBox:     { width: 38, height: 38, borderRadius: borderRadius.md, overflow: 'hidden' },
   appName:     { fontSize: typography.lg, fontWeight: typography.bold, letterSpacing: -0.3 },
   appSub:      { fontSize: typography.xs, marginTop: 1 },
   closeBtn:    { padding: spacing.xs },

@@ -2,6 +2,7 @@ import React from 'react';
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 // Official IRCC "Express Entry rounds of invitations" page. Appending ?q=<draw
 // number> opens that specific round (e.g. ...invitations.html?q=418).
@@ -65,6 +66,7 @@ function makeStyles(c: Colors, _accentColor: string) {
 export function DrawCard({ draw, userScore }: Props) {
   const colors = useColors();
   const accent = useAccentColor();
+  const { t } = useTranslation();
   const borderColor = CATEGORY_COLOR[draw.category] ?? accent;
   const styles = makeStyles(colors, accent);
   const diff = userScore != null ? userScore - draw.cutoff_score : null;
@@ -84,7 +86,7 @@ export function DrawCard({ draw, userScore }: Props) {
         <View style={styles.inner}>
           <View style={styles.headerRow}>
             <View style={styles.numberWrap}>
-              <Text style={styles.drawLabel}>Draw</Text>
+              <Text style={styles.drawLabel}>{t('cards.draw')}</Text>
               <Text style={styles.drawNumber}>#{draw.draw_number}</Text>
             </View>
             <View style={styles.headerRight}>
@@ -97,16 +99,16 @@ export function DrawCard({ draw, userScore }: Props) {
 
           <View style={styles.statsRow}>
             <View style={styles.stat}>
-              <Text style={styles.statLabel}>Cutoff</Text>
+              <Text style={styles.statLabel}>{t('cards.cutoff')}</Text>
               <Text style={[styles.statValue, styles.cutoff, { color: accent }]}>{draw.cutoff_score}</Text>
             </View>
             <View style={styles.stat}>
-              <Text style={styles.statLabel}>Invitations</Text>
+              <Text style={styles.statLabel}>{t('cards.invitations')}</Text>
               <Text style={styles.statValue}>{draw.invitations_issued.toLocaleString()}</Text>
             </View>
             {diff !== null && (
               <View style={styles.stat}>
-                <Text style={styles.statLabel}>Your Gap</Text>
+                <Text style={styles.statLabel}>{t('cards.yourGap')}</Text>
                 <Text style={[
                   styles.statValue,
                   diff >= 0 ? styles.diffPositive : diff >= -10 ? styles.diffNegNear : styles.diffNegFar

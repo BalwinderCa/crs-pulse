@@ -224,6 +224,37 @@ const en = {
     learnFrench: 'Learn French (NCLC 7+)',
     getProvNom: 'Get provincial nomination',
     projectedOdds: 'Projected odds:',
+    yourLabel: 'Your',
+    trendCutoffLabel: 'Trend cutoff',
+    completeCrsTitle: 'Complete your CRS score',
+    completeCrsBody: 'Analytics is personalised to your profile. Calculate your CRS score to unlock your odds, percentile, forecast and what-if scenarios.',
+    cutoffVsScore: 'CUTOFF vs YOUR SCORE · last {{count}} draws',
+    clearDrawLegend: 'Green dashed = your score. Above the line = you’d clear that draw.',
+    invitationsPace: '{{year}} INVITATIONS PACE',
+    itasYtd: 'ITAs issued YTD',
+    cutoffByCategoryTrend: 'CUTOFF BY CATEGORY · trend',
+    invitationsPerDraw: 'INVITATIONS PER DRAW · last {{count}}',
+    itasEachRound: 'ITAs issued each round',
+    drawsByMonth: 'DRAWS BY MONTH · last 12',
+    busiest: 'Busiest:',
+    quietest: 'quietest',
+    drawCadence: 'DRAW CADENCE',
+    everyPrefix: '~every',
+    daysUnit: 'days',
+    invitationsCaps: 'INVITATIONS',
+    ytd: 'YTD',
+    cutoffMomentum: 'CUTOFF MOMENTUM · last 6',
+    trendingDown: 'trending down ↓',
+    trendingUp: 'trending up ↑',
+    fallingCutoffs: 'Falling cutoffs improve your odds · avg {{count}} ITAs/draw',
+    streamGapLegendLong: 'Points your CRS sits above (+) or below (−) each stream’s most recent live cutoff',
+    forecastNextDraw: 'FORECAST · NEXT DRAW',
+    basedOnCadence: 'Based on draw cadence · avg gap and size included',
+    streamGapLegend: 'Points above (+) or below (−) each stream’s live cutoff',
+    whatIfAge: 'Age',
+    whatIfLanguage: 'Language (CLB)',
+    whatIfFrench: 'French (NCLC 7+)',
+    whatIfPnp: 'Provincial nomination',
   },
 
   calculators: {
@@ -512,6 +543,81 @@ const en = {
     feat4Title: 'Lifetime access',
     feat4Body: 'Pay once. Yours forever — no subscription, ever.',
     tagline: 'One-time purchase · No subscription · Yours forever',
+  },
+
+  cards: {
+    draw: 'Draw',
+    cutoff: 'Cutoff',
+    invitations: 'Invitations',
+    yourGap: 'Your Gap',
+    crsScore: 'CRS Score',
+    prediction: 'Prediction',
+    scoreNeeded: 'Score needed:',
+    estimatedDraws: 'Estimated draws:',
+  },
+
+  common: {
+    error: 'Error',
+    tryAgain: 'Try Again',
+    somethingWrong: 'Something went wrong',
+    restartApp: 'Please restart the app and try again.',
+    upgradeToPremium: 'Upgrade to Premium',
+    upgradeSub: 'Analytics · Ad-free experience',
+  },
+
+  menu: {
+    subtitle: 'IRCC Tracker',
+    general: 'General',
+    about: 'About',
+    support: 'Support',
+    documentChecklists: 'Document Checklists',
+    checkProcessingTimes: 'Check Processing Times',
+    faq: 'FAQ',
+    aboutUs: 'About Us',
+    privacyPolicy: 'Privacy Policy',
+    terms: 'Terms & Conditions',
+    reportIssue: 'Report an Issue',
+    contactUs: 'Contact Us',
+    shareApp: 'Share App',
+    reviewAppStore: 'Review on App Store',
+    contactIntro: 'Questions, feedback, or something not working? We usually reply within a couple of days.',
+    emailUs: 'Email us',
+    shareMessage: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration! {{url}}',
+    aboutBody: `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate IRCC Tracker built for aspiring Canadians like you.
+
+After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.
+
+What drives me every day is the belief that everyone deserves a fair shot at building a life in Canada. Better information leads to better decisions — and better decisions change lives.
+
+Your support means the world to me. I keep building smarter tools to help you improve your profile and track your progress toward permanent residency.
+
+Thank you for trusting CRS Pulse on your immigration journey. Keep going — Canada is waiting!`,
+    privacyBody: `CRS Pulse respects your privacy.
+
+All data you enter (age, education, language scores, work experience) is stored locally on your device only. We never collect, transmit, or share the profile information you enter with anyone.
+
+Push notifications (if enabled) register your device with our server so we can alert you when IRCC publishes a new draw. No personal profile data is sent — only an anonymous device token.
+
+Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
+
+CRS Pulse is completely free — no ads, no in-app purchases, and no subscriptions. We use no third-party analytics or trackers.
+
+Full policy: {{url}}
+
+For questions, contact: info@crspulse.com`,
+    termsBody: `By using CRS Pulse, you agree to these terms.
+
+CRS Pulse is a free informational tool. Scores, draw data, processing times and any other figures shown in the app are estimates for planning purposes only. They are not immigration advice, and they are not a maximum, a minimum, or a guarantee of any outcome.
+
+CRS Pulse is an independent project. It is not affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada. Always verify scores, eligibility, and processing times with the official tools on canada.ca before making decisions.
+
+Your data stays on your device. We do not collect or sell personal information (see the Privacy Policy for details).
+
+The app is provided "as is", without warranties of any kind. To the maximum extent permitted by law, the developer is not liable for any loss or damage arising from your use of the app or reliance on its estimates.
+
+These terms may be updated from time to time. Continued use of the app after an update means you accept the revised terms.
+
+Questions? Contact: info@crspulse.com`,
   },
 };
 

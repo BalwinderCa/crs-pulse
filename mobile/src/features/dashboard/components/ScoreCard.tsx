@@ -5,6 +5,7 @@ import { Badge } from '@/components/common/Badge';
 import { palette, spacing, typography, borderRadius, shadows } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useTranslation } from 'react-i18next';
 import type { Colors } from '@/theme/colors';
 import { NEAR_THRESHOLD } from '@/constants';
 import { getScoreAccessibilityLabel } from '@/utils/accessibility';
@@ -107,6 +108,7 @@ function makeStyles(c: Colors) {
 export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawDate }: Props) {
   const colors = useColors();
   const accent = useAccentColor();
+  const { t } = useTranslation();
   const styles = makeStyles(colors);
 
   const diff    = userScore - latestCutoff;
@@ -168,16 +170,16 @@ export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawD
 
           {/* Right column */}
           <View style={styles.rightCol}>
-            <Text style={styles.scoreLabel}>CRS Score</Text>
+            <Text style={styles.scoreLabel}>{t('cards.crsScore')}</Text>
             <Text style={[styles.score, { color: accent }]} maxFontSizeMultiplier={1.3}>{userScore}</Text>
             <Badge label={status.label} variant={status.variant} />
             <View style={styles.statsRow}>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Cutoff</Text>
+                <Text style={styles.statLabel}>{t('cards.cutoff')}</Text>
                 <Text style={[styles.statValue, { color: statusColor }]}>{latestCutoff}</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statLabel}>Draw #{drawNumber}</Text>
+                <Text style={styles.statLabel}>{t('cards.draw')} #{drawNumber}</Text>
                 <Text style={styles.statValue}>{drawDate}</Text>
               </View>
             </View>

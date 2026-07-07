@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Card } from '@/components/common/Card';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { useTranslation } from 'react-i18next';
 import type { Colors } from '@/theme/colors';
 import type { Prediction } from '@/types';
 import { getPredictionAccessibilityLabel } from '@/utils/accessibility';
@@ -33,6 +34,7 @@ function makeStyles(c: Colors) {
 
 export function PredictionCard({ prediction }: Props) {
   const colors = useColors();
+  const { t } = useTranslation();
   const styles = makeStyles(colors);
   const config = strengthConfig[prediction.strength];
 
@@ -48,20 +50,20 @@ export function PredictionCard({ prediction }: Props) {
           <Text style={styles.emoji}>{config.emoji}</Text>
         </View>
         <View style={styles.headerText}>
-          <Text style={styles.predLabel}>Prediction</Text>
+          <Text style={styles.predLabel}>{t('cards.prediction')}</Text>
           <Text style={[styles.label, { color: config.color }]}>{prediction.label}</Text>
         </View>
       </View>
       <Text style={styles.description}>{prediction.description}</Text>
       {prediction.score_needed != null && prediction.score_needed > 0 && (
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Score needed:</Text>
+          <Text style={styles.statLabel}>{t('cards.scoreNeeded')}</Text>
           <Text style={[styles.statValue, { color: config.color }]}>+{prediction.score_needed}</Text>
         </View>
       )}
       {prediction.estimated_draws != null && (
         <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Estimated draws:</Text>
+          <Text style={styles.statLabel}>{t('cards.estimatedDraws')}</Text>
           <Text style={[styles.statValue, { color: config.color }]}>{prediction.estimated_draws}</Text>
         </View>
       )}

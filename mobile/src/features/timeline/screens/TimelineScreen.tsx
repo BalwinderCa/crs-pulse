@@ -390,7 +390,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                       <Ionicons name={m.icon} size={18} color={m.color} />
                     </View>
                     <Text style={[s.typeRowTxt, { color: selected ? accent : c.textPrimary },
-                      selected && { fontWeight: typography.bold }]}>Custom</Text>
+                      selected && { fontWeight: typography.bold }]}>{t('timeline.custom')}</Text>
                     {selected && <Ionicons name="checkmark" size={16} color={accent} />}
                   </TouchableOpacity>
                 );
