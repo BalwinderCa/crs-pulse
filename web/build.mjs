@@ -57,23 +57,12 @@ const frameClass = () => HAS_FRAME_ASSET ? '' : ' no-frame';
 const advIcon = (d, s = 17) =>
   `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
-// Logo mark — exact paths from mobile/assets/logo.svg (maple leaf + heartbeat
-// pulse line). IDs are suffixed per instance since header + footer both embed it.
-const LOGO_MARK = (size, id) => `<svg width="${size}" height="${size}" viewBox="0 0 512 512" aria-hidden="true">
-  <defs>
-    <path id="leaf-${id}" d="M256 30 L230 96 L198 74 L210 148 L156 100 L165 152 L98 136 L122 196 L72 208 L178 286 L160 350 L240 326 L249 360 L263 360 L272 326 L352 350 L334 286 L440 208 L390 196 L414 136 L347 152 L356 100 L302 148 L314 74 L282 96 Z" />
-    <path id="stem-${id}" d="M249 354 L263 354 L261 482 L251 482 Z" />
-    <clipPath id="clip-${id}"><use href="#leaf-${id}" /><use href="#stem-${id}" /></clipPath>
-  </defs>
-  <use href="#leaf-${id}" fill="#E8312E" />
-  <use href="#stem-${id}" fill="#E8312E" />
-  <g clip-path="url(#clip-${id})">
-    <path fill="none" stroke="#0A1628" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" d="M30 300 H148 L184 248 L220 330 L256 146 L292 402 L324 266 L342 300 H482" />
-  </g>
-  <path fill="none" stroke="#35C2DC" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" d="M30 300 H148 L184 248 L220 330 L256 146 L292 402 L324 266 L342 300 H482" />
-</svg>`;
+// Logo mark — user-supplied brand SVG (web/assets/logo.svg → /img/logo.svg).
+// Referenced (not inlined) so the 100 KB artwork is fetched once and cached.
+// ponytail: id arg kept for call-site compatibility; unused now there's no inline <defs>.
+const LOGO_MARK = (size, _id) => `<img class="logo-mark" src="/img/logo.svg" width="${size}" height="${size}" alt="CRS Pulse logo">`;
 
-const logoLockup = (id, size = 26) => `${LOGO_MARK(size, id)}<span class="logo-word">CRS Pulse</span>`;
+const logoLockup = (id, size = 30) => `${LOGO_MARK(size, id)}<span class="logo-word">CRS Pulse</span>`;
 
 const SITE_CSS = `
   :root{
@@ -106,6 +95,7 @@ const SITE_CSS = `
   header.pf{position:sticky;top:0;z-index:50;background:rgba(245,246,248,.9);backdrop-filter:blur(8px)}
   header.pf .bar{max-width:1400px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:18px}
   .logo{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:1.05rem;letter-spacing:-.01em;white-space:nowrap}
+  .logo-mark{display:block;flex:none;object-fit:contain}
   .logo-word{color:inherit}
   header.pf nav{display:flex;gap:4px}
   header.pf nav a{font-size:14px;color:#3a3c40;padding:8px 13px;border-radius:999px}
@@ -691,6 +681,8 @@ function doc(mdFile, title, path) {
 mkdirSync(OUT, { recursive: true });
 cpSync(resolve(ASSETS, 'screenshots'), resolve(OUT, 'img/screenshots'), { recursive: true });
 if (HAS_FRAME_ASSET) cpSync(resolve(ASSETS, 'frame'), resolve(OUT, 'img/frame'), { recursive: true });
+mkdirSync(resolve(OUT, 'img'), { recursive: true });
+cpSync(resolve(ASSETS, 'logo.svg'), resolve(OUT, 'img/logo.svg'));
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
