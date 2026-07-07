@@ -3,23 +3,21 @@ import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 
-const SUPPORT_EMAIL = 'support@crspulse.com';
-
-function buildMailUrl() {
+function buildMailUrl(t: TFunction) {
   const version = Constants.expoConfig?.version ?? 'unknown';
-  const subject = encodeURIComponent(`CRS Pulse ${version} — issue report`);
+  const email = t('reportIssue.email');
+  const subject = encodeURIComponent(t('reportIssue.subject', { version }));
   const body = encodeURIComponent(
-    `Describe the issue:\n\n\n` +
-    `What did you expect to happen?\n\n\n` +
-    `—\nApp version: ${version}\nDevice: ${Platform.OS} ${Platform.Version}\n`,
+    t('reportIssue.body', { version, os: Platform.OS, osVersion: String(Platform.Version) }),
   );
-  return `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`;
+  return `mailto:${email}?subject=${subject}&body=${body}`;
 }
 
 export default function ReportIssueScreen() {
@@ -33,8 +31,8 @@ export default function ReportIssueScreen() {
     {
       icon: 'mail-outline' as const,
       title: t('support.emailTitle'),
-      sub: t('support.emailSub', { email: SUPPORT_EMAIL }),
-      onPress: () => Linking.openURL(buildMailUrl()).catch(() => {}),
+      sub: t('support.emailSub', { email: t('reportIssue.email') }),
+      onPress: () => Linking.openURL(buildMailUrl(t)).catch(() => {}),
     },
   ];
 

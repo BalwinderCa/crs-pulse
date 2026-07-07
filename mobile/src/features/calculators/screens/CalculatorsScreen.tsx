@@ -20,10 +20,10 @@ export default function CalculatorsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const calcEntries: { icon: React.ComponentProps<typeof Ionicons>['name']; title: string; desc: string; meta: string; route: 'CrsCalculator' | 'SinpCalculator' | 'FswCalculator' | 'BcSirsCalculator' }[] = [
-    { icon: 'speedometer-outline', title: t('calculators.crsTitle'), desc: t('calculators.crsDesc'), meta: '1,200', route: 'CrsCalculator' },
-    { icon: 'calculator-outline', title: t('calculators.sinpTitle'), desc: t('calculators.sinpDesc'), meta: '110 · 60', route: 'SinpCalculator' },
-    { icon: 'checkmark-done-outline', title: t('calculators.fswTitle'), desc: t('calculators.fswDesc'), meta: '100 · 67', route: 'FswCalculator' },
-    { icon: 'trail-sign-outline', title: t('calculators.bcpnpTitle'), desc: t('calculators.bcpnpDesc'), meta: '200', route: 'BcSirsCalculator' },
+    { icon: 'speedometer-outline', title: t('calculators.crsTitle'), desc: t('calculators.crsDesc'), meta: t('calcMeta.crs'), route: 'CrsCalculator' },
+    { icon: 'calculator-outline', title: t('calculators.sinpTitle'), desc: t('calculators.sinpDesc'), meta: t('calcMeta.sinp'), route: 'SinpCalculator' },
+    { icon: 'checkmark-done-outline', title: t('calculators.fswTitle'), desc: t('calculators.fswDesc'), meta: t('calcMeta.fsw'), route: 'FswCalculator' },
+    { icon: 'trail-sign-outline', title: t('calculators.bcpnpTitle'), desc: t('calculators.bcpnpDesc'), meta: t('calcMeta.bcpnp'), route: 'BcSirsCalculator' },
   ];
 
   return (

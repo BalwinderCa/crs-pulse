@@ -27,8 +27,10 @@ import { buildCRSInput, LANG_TEST_MAP } from '@/features/onboarding/utils/buildC
 import { calculateCRS, scoresToCLB, type TefScale } from '@/features/onboarding/utils/crsCalculator';
 
 
+import i18n from '@/i18n';
+
 const ODDS_COLOR: Record<string, string> = { High: palette.success, Moderate: palette.warning, Low: palette.danger };
-const fmt = (n: number) => n.toLocaleString('en-CA');
+const fmt = (n: number) => n.toLocaleString(i18n.language === 'fr' ? 'fr-CA' : 'en-CA');
 
 type TabKey = 'draws' | 'plan';
 
@@ -166,7 +168,12 @@ export default function PremiumAnalyticsScreen() {
               fraction={data.oddsFraction}
               color={oddsColor}
               track={c.surfaceTertiary}
-              accessibilityLabel={`Invitation odds: ${data.oddsLabel}. Your score ${data.userScore} versus trend cutoff ${data.trendCutoff}. ${data.timeframe}.`}
+              accessibilityLabel={t('premiumCharts.oddsAccessibility', {
+                label: data.oddsLabel,
+                score: data.userScore,
+                cutoff: data.trendCutoff,
+                timeframe: data.timeframe,
+              })}
             />
             <View style={s.gaugeCenter}>
               <Text style={[s.oddsLabel, { color: oddsColor }]}>{data.oddsLabel}</Text>
@@ -219,8 +226,7 @@ export default function PremiumAnalyticsScreen() {
         )}
 
         <Text style={[s.disclaimer, { color: c.textMuted }]}>
-          Estimates, not guarantees. Based on historical IRCC draw data and your profile. IRCC draws
-          are unpredictable — always verify with the official tools.
+          {t('premiumCharts.disclaimer')}
         </Text>
       </ScrollView>
 
@@ -267,9 +273,14 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           series={[{ points: data.trend, color: accent }]}
           min={data.selfTrendMin} max={data.selfTrendMax}
           gridColor={c.border} axisColor={c.textMuted}
-          refLine={{ value: data.userScore, color: palette.success, label: `you ${data.userScore}` }}
+           refLine={{ value: data.userScore, color: palette.success, label: t('premiumCharts.youLabel', { score: data.userScore }) }}
           width={chartWidth} height={150}
-          accessibilityLabel={`Cutoff trend over the last ${data.trend.length} draws, ranging ${data.selfTrendMin} to ${data.selfTrendMax}, compared against your score of ${data.userScore}.`}
+          accessibilityLabel={t('premiumCharts.trendAccessibility', {
+            count: data.trend.length,
+            min: data.selfTrendMin,
+            max: data.selfTrendMax,
+            score: data.userScore,
+          })}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.clearDrawLegend')}</Text>
       </Card>
@@ -284,7 +295,12 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           <View style={[s.progressFill, { backgroundColor: accent, width: `${Math.min(100, Math.round((i.itaYtd / Math.max(1, i.itaProjected)) * 100))}%` }]} />
         </View>
         <Text style={[s.caption, { color: c.textMuted }]}>
-          ~{fmt(i.itaProjected)} projected · past {i.prevYear}’s {fmt(i.itaPrevYear)} pace · PR target {fmt(i.prTarget)}
+          {t('premiumCharts.projectedText', {
+            projected: fmt(i.itaProjected),
+            prevYear: i.prevYear,
+            prevYearItas: fmt(i.itaPrevYear),
+            prTarget: fmt(i.prTarget),
+          })}
         </Text>
       </Card>
 
@@ -293,13 +309,13 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
             items={i.poolComposition.map((p: any) => ({
-              label: p.label + (p.mine ? '  ← you' : ''), value: p.value,
+              label: p.label + (p.mine ? '  ' + t('premiumCharts.directionYou') : ''), value: p.value,
               max: Math.max(...i.poolComposition.map((x: any) => x.value)),
               color: p.mine ? accent : c.textMuted, highlight: !!p.mine,
             }))} />
         </View>
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          Pool ~<Text style={[s.num, { color: c.textPrimary }]}>{fmt(i.poolTotal)}</Text> candidates · IRCC snapshot as of {i.poolAsOf}
+          {t('premiumCharts.poolText', { total: fmt(i.poolTotal), asOf: i.poolAsOf })}
         </Text>
       </Card>
 
@@ -322,8 +338,11 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       <Card style={[s.card, { borderLeftWidth: 3, borderLeftColor: palette.success }]}>
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.frenchAdvantage')}</Text>
         <Text style={[s.bodyText, { color: c.textPrimary }]}>
-          French draws cut off <Text style={[s.num, { color: palette.success }]}>~{i.cecCutoff - i.frenchCutoff} pts</Text> below CEC
-          ({i.frenchCutoff} vs {i.cecCutoff}). NCLC 7 French is the biggest CRS shortcut.
+          {t('premiumCharts.frenchAdvantageText', {
+            diff: Math.max(0, i.cecCutoff - i.frenchCutoff),
+            frenchCutoff: i.frenchCutoff,
+            cecCutoff: i.cecCutoff,
+          })}
         </Text>
       </Card>
 
@@ -342,7 +361,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.tieBreak')}</Text>
         <Text style={[s.num, { color: c.textPrimary, fontSize: typography.base }]}>{i.tieBreak}</Text>
         <Text style={[s.caption, { color: c.textMuted }]}>
-          At the cutoff, only profiles submitted before this time were invited. Submit early to win ties.
+          {t('premiumCharts.tieBreakHint')}
         </Text>
       </Card>
 
@@ -357,7 +376,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           min={data.trendMin} max={data.trendMax}
           gridColor={c.border} axisColor={c.textMuted}
           width={chartWidth} height={150}
-          accessibilityLabel="Cutoff trend by category over recent draws: Canadian Experience Class, French, and Provincial Nominee Program."
+          accessibilityLabel={t('premiumCharts.categoryTrendAccessibility')}
         />
         <View style={s.legendRow}>
           {[['CEC', accent], ['French', palette.success], ['PNP', palette.warning]].map(([lbl, col]) => (
@@ -368,7 +387,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           ))}
         </View>
         <Text style={[s.caption, { color: c.textMuted }]}>
-          Each line is that category’s own recent draws (categories draw on different days, so points aren’t date-aligned).
+          {t('premiumCharts.categoryTrendLegend')}
         </Text>
       </Card>
 
@@ -379,7 +398,7 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
           min={0} max={Math.max(1, ...data.invitationsTrend) * 1.1}
           gridColor={c.border} axisColor={c.textMuted}
           width={chartWidth} height={140}
-          accessibilityLabel={`Invitations issued per draw over the last ${data.invitationsTrend.length} rounds.`}
+          accessibilityLabel={t('premiumCharts.invitationsTrendAccessibility', { count: data.invitationsTrend.length })}
         />
         <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.itasEachRound')}</Text>
       </Card>
@@ -387,21 +406,27 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.drawsByMonth')}</Text>
         <MiniBars values={data.byMonth} color={accent} track={c.surfaceTertiary} width={chartWidth} height={48}
-          accessibilityLabel={`Draws by month over the last 12 months. Busiest ${data.busiestMonth}, quietest ${data.quietestMonth}.`} />
-        <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.busiest')} <Text style={[s.num, { color: c.textPrimary }]}>{data.busiestMonth}</Text> · {t('analytics.quietest')} <Text style={[s.num, { color: c.textPrimary }]}>{data.quietestMonth}</Text></Text>
+          accessibilityLabel={t('premiumCharts.byMonthAccessibility', {
+            busiest: data.busiestMonth,
+            quietest: data.quietestMonth,
+          })} />
+        <Text style={[s.caption, { color: c.textSecondary }]}>{t('premiumCharts.busiestQuietest', {
+          busiest: data.busiestMonth,
+          quietest: data.quietestMonth,
+        })}</Text>
       </Card>
 
       <View style={s.miniRow}>
         <Card style={s.miniCard}>
           <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.drawCadence')}</Text>
           <MiniBars values={data.cadence} color={accent} track={c.surfaceTertiary}
-            accessibilityLabel={`Draw cadence: roughly every ${data.cadenceDays} days.`} />
+            accessibilityLabel={t('premiumCharts.cadenceAccessibility', { days: data.cadenceDays })} />
           <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.everyPrefix')} <Text style={[s.num, { color: c.textPrimary }]}>{data.cadenceDays}</Text> {t('analytics.daysUnit')}</Text>
         </Card>
         <Card style={s.miniCard}>
           <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.invitationsCaps')}</Text>
           <MiniBars values={data.volume} color={palette.success} track={c.surfaceTertiary}
-            accessibilityLabel={`Invitations per recent draw. ${data.invitationsYtd} issued year to date.`} />
+            accessibilityLabel={t('premiumCharts.volumeAccessibility', { ytd: data.invitationsYtd })} />
           <Text style={[s.caption, { color: c.textSecondary }]}><Text style={[s.num, { color: c.textPrimary }]}>{data.invitationsYtd}</Text> {t('analytics.ytd')}</Text>
         </Card>
       </View>
@@ -441,8 +466,11 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
           </View>
         </View>
         <Text style={[s.caption, { color: c.textSecondary }]}>
-          <Text style={[s.num, { color: c.textPrimary }]}>{i.daysSinceLast}</Text> days since last · avg gap{' '}
-          <Text style={[s.num, { color: c.textPrimary }]}>{i.avgGap}</Text> days · typically ~<Text style={[s.num, { color: c.textPrimary }]}>{i.typicalSize}</Text> ITAs
+          {t('premiumCharts.nextDrawText', {
+            days: i.daysSinceLast,
+            gap: i.avgGap,
+            size: i.typicalSize,
+          })}
         </Text>
       </Card>
 
@@ -461,8 +489,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
           ))
         ) : (
           <Text style={[s.bodyText, { color: c.textSecondary, marginTop: spacing.xs }]}>
-            Your profile already maxes the common CRS levers — a provincial nomination is the main
-            remaining boost.
+            {t('premiumCharts.noProfilePaths')}
           </Text>
         )}
       </Card>
@@ -472,7 +499,11 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
         <ForecastBandChart actual={data.forecast.actual} forecast={data.forecast.proj} band={data.forecast.band}
           min={data.forecast.min} max={data.forecast.max} lineColor={accent} bandColor={accent + '26'} gridColor={c.border}
           width={Math.min(280, chartWidth)}
-          accessibilityLabel={`Next ${data.category} draw forecast: likely cutoff ${data.forecast.likely}, ${data.forecast.confidence.toLowerCase()} confidence.`} />
+          accessibilityLabel={t('premiumCharts.forecastAccessibility', {
+            category: data.category,
+            likely: data.forecast.likely,
+            confidence: data.forecast.confidence.toLowerCase(),
+          })} />
         <Text style={[s.caption, { color: c.textSecondary }]}>
           Likely <Text style={[s.num, { color: c.textPrimary }]}>{data.forecast.likely}</Text> · {t('analytics.confidence')} {data.forecast.confidence.toLowerCase()}
         </Text>
@@ -488,7 +519,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
         <SwitchRow c={c} accent={accent} label={t('analytics.whatIfFrench')} value={french} onChange={setFrench} />
         <SwitchRow c={c} accent={accent} label={t('analytics.whatIfPnp')} value={pnp} onChange={setPnp} />
         <View style={[s.whatIfOut, { backgroundColor: (ODDS_COLOR[whatIfLabel] ?? accent) + '14' }]}>
-          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>{t('analytics.projectedOdds')} {whatIfLabel}</Text>
+          <Text style={[s.whatIfOutText, { color: ODDS_COLOR[whatIfLabel] ?? accent }]}>{t('premiumCharts.whatIfOutText', { label: whatIfLabel })}</Text>
         </View>
       </Card>
 
@@ -505,7 +536,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
             </Text>
           </View>
         ))}
-        <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.streamGapLegendLong')}</Text>
+        <Text style={[s.caption, { color: c.textMuted }]}>{t('premiumCharts.streamLegend')}</Text>
       </Card>
 
       <Card style={s.card}>
@@ -523,13 +554,13 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.vsRecentCutoffs')}</Text>
-        <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {data.userScore} clears {data.percentile}% of recent draw cutoffs</Text>
+        <Text style={[s.bodyText, { color: c.textPrimary }]}>{t('premiumCharts.percentileText', { score: data.userScore, percentile: data.percentile })}</Text>
         <View style={{ marginTop: spacing.sm }}>
           <MarkerBar
             fraction={data.percentile / 100}
             color={accent}
             track={c.surfaceTertiary}
-            accessibilityLabel={`Your score clears ${data.percentile} percent of recent draw cutoffs.`}
+            accessibilityLabel={t('premiumCharts.markerBarAccessibility', { percentile: data.percentile })}
           />
         </View>
       </Card>
@@ -538,7 +569,7 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whereYouStand')}</Text>
         <View style={{ marginTop: spacing.xs }}>
           <HorizontalBars track={c.surfaceTertiary} labelColor={c.textSecondary} valueColor={c.textPrimary}
-            items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ← you' : ''), value: d.value, max: Math.max(1, ...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
+            items={data.distribution.map((d: any) => ({ label: d.label + (d.mine ? '  ' + t('premiumCharts.directionYou') : ''), value: d.value, max: Math.max(1, ...data.distribution.map((x: any) => x.value)), color: d.mine ? accent : c.textMuted, highlight: !!d.mine }))} />
         </View>
       </Card>
 
@@ -703,9 +734,9 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
       <Card style={s.card}>
         <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.vsRecentCutoffs')}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, flexWrap: 'wrap' }}>
-          <Text style={[s.bodyText, { color: c.textPrimary }]}>Your {userScore} clears</Text>
+          <Text style={[s.bodyText, { color: c.textPrimary }]}>{t('premiumCharts.percentileText', { score: userScore, percentile: '' })}</Text>
           {lv()}
-          <Text style={[s.bodyText, { color: c.textPrimary }]}>% of recent draw cutoffs</Text>
+          <Text style={[s.bodyText, { color: c.textPrimary }]}>%</Text>
         </View>
         <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm, alignItems: 'center', justifyContent: 'center' }]}>
           <Ionicons name="lock-closed" size={11} color={c.textMuted} />
@@ -739,7 +770,7 @@ function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; 
 
       <Card style={[s.card, { borderWidth: 1, borderColor: accent, alignItems: 'center' }]}>
         <Text style={[s.lockBody, { color: c.textSecondary, textAlign: 'center' }]}>
-          Unlock everything above — one-time purchase, yours forever.
+          {t('premiumCharts.unlockCta')}
         </Text>
         <Button
           title={t('analytics.unlockButton')}

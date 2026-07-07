@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { parseISO } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useProfileStore, DEFAULT_CALC_INPUTS, type CalcInputs } from '@/store/profileStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
@@ -20,7 +22,6 @@ import { CATEGORY_LABELS } from '@/constants';
  */
 
 const DAY = 86_400_000;
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const avg = (xs: number[]) => (xs.length ? Math.round(xs.reduce((s, v) => s + v, 0) / xs.length) : 0);
 const median = (xs: number[]) => {
   if (!xs.length) return 0;
@@ -57,7 +58,7 @@ type Skill = keyof typeof SKILL_LABEL;
  * exactly what that change would add. Levers already achieved (Δ ≤ 0, e.g. a
  * skill that's already maxed) are dropped, and the rest are ranked by impact.
  */
-function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[] {
+function improvementPaths(inputs: CalcInputs, t: TFunction): { label: string; delta: string }[] {
   const score = (di: CalcInputs) => calculateCRS(buildCRSInput(di)).total;
   const base = score(inputs);
 
@@ -93,7 +94,7 @@ function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[
   if (weakestClb < 10) {
     const di: CalcInputs = { ...clbBase };
     (di as Record<string, unknown>)[`firstLang${SKILL_LABEL[weakest]}`] = weakestClb + 1;
-    candidates.push({ label: `${SKILL_LABEL[weakest]} → CLB ${weakestClb + 1}`, total: score(di) });
+    candidates.push({       label: t('analytics.weakSkillBoost', { skill: t(`skills.${weakest}`), clb: weakestClb + 1 }), total: score(di) });
   }
 
   // Add NCLC 7 French (only if the user isn't already taking a French test).
@@ -103,7 +104,7 @@ function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[
     (inputs.hasSecondLang && (inputs.secondLangTest === 'TEF' || inputs.secondLangTest === 'TCF'));
   if (!hasFrench) {
     candidates.push({
-      label: 'French (NCLC 7+)',
+      label: t('analytics.frenchBoost'),
       total: score({
         ...inputs,
         hasSecondLang: true,
@@ -119,14 +120,14 @@ function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[
   // One more year of Canadian work experience (CRS caps the factor at 5 years).
   if (inputs.canadianWorkExp < 5) {
     candidates.push({
-      label: `${inputs.canadianWorkExp + 1} yrs Canadian work`,
+      label: t('analytics.canadianWorkBoost', { years: inputs.canadianWorkExp + 1 }),
       total: score({ ...inputs, canadianWorkExp: (inputs.canadianWorkExp + 1) as CalcInputs['canadianWorkExp'] }),
     });
   }
 
   // Provincial nomination (the single biggest lever, if not already held).
   if (!inputs.hasProvincialNomination) {
-    candidates.push({ label: 'Provincial nomination', total: score({ ...inputs, hasProvincialNomination: true }) });
+    candidates.push({ label: t('analytics.pnpBoost'), total: score({ ...inputs, hasProvincialNomination: true }) });
   }
 
   return candidates
@@ -138,17 +139,21 @@ function improvementPaths(inputs: CalcInputs): { label: string; delta: string }[
 }
 
 export function useAnalyticsData() {
+  const { t, i18n } = useTranslation();
   const draws = useDrawsStore((s) => s.draws);
   const profile = useProfileStore((s) => s.profile);
   const procTimes = useProcessingTimesStore((s) => s.times);
   const eePool = useEePoolStore((s) => s.data);
 
   return useMemo(() => {
+    const localeStr = i18n.language === 'fr' ? 'fr-CA' : 'en-CA';
+    const mfmt = (idx: number) =>
+      new Date(2025, idx, 1).toLocaleDateString(localeStr, { month: 'short' }).replace('.', '');
     const score = profile?.crs_score ?? 0;
     const categoryCode = profile?.category ?? 'CEC';
     // Personalised improvement levers (independent of draws — uses the profile).
     const inputs = profile?.calculatorInputs ?? DEFAULT_CALC_INPUTS;
-    const paths = improvementPaths(inputs);
+    const paths = improvementPaths(inputs, t);
 
     // ── Place in line + pool + annual targets (live mirror, dated snapshot) ──
     const position = computePoolPosition(eePool, score);
@@ -181,8 +186,8 @@ export function useAnalyticsData() {
         oddsLabel: 'Moderate',
         timeframe: '—',
         gapText: '—',
-        paths,
-        forecast: { actual: [] as number[], proj: [] as number[], band: [] as { lo: number; hi: number }[], min: 450, max: 550, likely: '—', confidence: 'Low' },
+          paths,
+          forecast: { actual: [] as number[], proj: [] as number[], band: [] as { lo: number; hi: number }[], min: 450, max: 550, likely: '—', confidence: t('analytics.lowConfidence') },
         trend: [] as number[],
         categoryTrends: { CEC: [] as number[], French: [] as number[], PNP: [] as number[] },
         invitationsTrend: [] as number[],
@@ -225,18 +230,16 @@ export function useAnalyticsData() {
 
     const diff = score - trendCutoff;
     const oddsLabel = diff >= 10 ? 'High' : diff >= -10 ? 'Moderate' : 'Low';
-    // Honest gap badge: points to the next odds tier, or a clear-cut message when
-    // the user already beats the trend (no invented "+14 to High").
     const gapText =
       diff >= 10
-        ? 'You clear the current trend'
+        ? t('analytics.clearTrend')
         : diff >= -10
-          ? `+${Math.ceil(10 - diff)} to High odds`
-          : `+${Math.ceil(-10 - diff)} to Moderate odds`;
+          ? t('analytics.gapToHigh', { n: Math.ceil(10 - diff) })
+          : t('analytics.gapToModerate', { n: Math.ceil(-10 - diff) });
     const timeframe =
-      oddsLabel === 'High' ? 'Likely next 1–2 draws'
-      : oddsLabel === 'Moderate' ? '~2–4 draws · a few weeks'
-      : 'Several draws away';
+      oddsLabel === 'High' ? t('analytics.timeframeHigh')
+      : oddsLabel === 'Moderate' ? t('analytics.timeframeModerate')
+      : t('analytics.timeframeLow');
 
     // Forecast — recent cutoffs (oldest→newest) + a naive "last value holds"
     // projection. The band width AND the confidence label are derived from the
@@ -274,14 +277,14 @@ export function useAnalyticsData() {
     const nextDrawWindow = !avgGap
       ? '—'
       : predictedTs < Date.now()
-        ? 'Any day now'
-        : `~${MONTHS[nd.getMonth()]} ${nd.getDate()}`;
+        ? t('analytics.anyDayNow')
+        : `~${mfmt(nd.getMonth())} ${nd.getDate()}`;
 
     // Next-draw likelihood — the most frequent categories in the recent rounds.
     const recentCatCount = new Map<string, number>();
     for (const d of draws.slice(0, 8)) recentCatCount.set(d.category, (recentCatCount.get(d.category) ?? 0) + 1);
     const topCats = [...recentCatCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([c]) => c);
-    const nextDrawLikely = topCats.length ? topCats.join(' or ') : '—';
+    const nextDrawLikely = topCats.length ? topCats.join(t('analytics.or')) : '—';
 
     // YTD volume + prior-year total (live, dynamic years)
     const curYear = new Date(lastTime).getFullYear();
@@ -325,10 +328,10 @@ export function useAnalyticsData() {
 
     // Best stream for you — your CRS vs each stream's latest cutoff (live).
     const streamDefs: { label: string; cat: string }[] = [
-      { label: 'Provincial Nominee', cat: 'PNP' },
-      { label: 'French proficiency', cat: 'French' },
-      { label: 'Canadian Experience', cat: 'CEC' },
-      { label: 'Federal Skilled Worker', cat: 'General' },
+      { label: t('analytics.streamPNP'), cat: 'PNP' },
+      { label: t('analytics.streamFrench'), cat: 'French' },
+      { label: t('analytics.streamCEC'), cat: 'CEC' },
+      { label: t('analytics.streamFSW'), cat: 'General' },
     ];
     // Real margin (your CRS minus the stream's latest live cutoff), not a
     // fabricated "odds %". Positive = you'd have cleared that stream's last draw.
@@ -353,8 +356,8 @@ export function useAnalyticsData() {
       if (!Number.isNaN(m)) byMonth[m] += 1;
     }
     const activeMonths = byMonth.map((v, i) => ({ v, i })).filter((x) => x.v > 0);
-    const busiestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v > a.v ? b : a)).i]! : '—';
-    const quietestMonth = activeMonths.length ? MONTHS[activeMonths.reduce((a, b) => (b.v < a.v ? b : a)).i]! : '—';
+    const busiestMonth = activeMonths.length ? mfmt(activeMonths.reduce((a, b) => (b.v > a.v ? b : a)).i) : '—';
+    const quietestMonth = activeMonths.length ? mfmt(activeMonths.reduce((a, b) => (b.v < a.v ? b : a)).i) : '—';
 
     // Distribution of recent category cutoffs into 4 buckets, mark the user's.
     // Clamp: a score above the highest recent cutoff maps to the top bucket (and
@@ -375,13 +378,14 @@ export function useAnalyticsData() {
     const percentile = recentCutoffs.length ? Math.round((beats / recentCutoffs.length) * 100) : 0;
 
     // Expected wait by score band — derived from the live trend cutoff + cadence.
-    const weeksPerDraws = (n: number) => (avgGap ? ` · ~${Math.max(1, Math.round((n * avgGap) / 7))} wks` : '');
+    const weeksSuffix = (n: number) =>
+      avgGap ? t('analytics.weeksSuffix', { n: Math.max(1, Math.round((n * avgGap) / 7)) }) : '';
     const waitFor = (floor: number): string => {
       const margin = floor - trendCutoff;
-      if (margin >= 0) return `Next 1–2 draws${weeksPerDraws(1.5)}`;
-      if (margin >= -15) return `1–3 draws${weeksPerDraws(2)}`;
-      if (margin >= -30) return `3–6 draws${weeksPerDraws(4)}`;
-      return 'Long wait';
+      if (margin >= 0) return `${t('analytics.waitNextDraws')}${weeksSuffix(1.5)}`;
+      if (margin >= -15) return `${t('analytics.wait1to3')}${weeksSuffix(2)}`;
+      if (margin >= -30) return `${t('analytics.wait3to6')}${weeksSuffix(4)}`;
+      return t('analytics.longWait');
     };
     const scoreBands = [
       { band: '525+', floor: 525 },
@@ -477,7 +481,7 @@ export function useAnalyticsData() {
         drawsYtd: ytd.length,
       },
     };
-  }, [draws, profile, procTimes, eePool]);
+  }, [draws, profile, procTimes, eePool, t, i18n.language]);
 }
 
 export type AnalyticsData = ReturnType<typeof useAnalyticsData>;

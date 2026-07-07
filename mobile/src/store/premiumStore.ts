@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 import { STORAGE_KEYS, IAP_PRODUCTS, IAP_SKUS } from '@/constants';
 import { connect, fetchProducts, buy, getOwnedSkus } from '@/services/iapService';
 
@@ -73,7 +74,7 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       onError: (err) => {
         // User cancelling the sheet is not an error worth surfacing.
         const cancelled = err.code === 'E_USER_CANCELLED';
-        set({ purchasing: false, error: cancelled ? null : err.message ?? 'Purchase failed' });
+        set({ purchasing: false, error: cancelled ? null : err.message ?? i18n.t('common.purchaseFailed') });
       },
     });
 
@@ -109,7 +110,7 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       await buy(UNLOCK_SKU);
       // Success is delivered asynchronously via the onPurchase listener.
     } catch (err) {
-      set({ purchasing: false, error: err instanceof Error ? err.message : 'Purchase failed' });
+      set({ purchasing: false, error: err instanceof Error ? err.message : i18n.t('common.purchaseFailed') });
     }
   },
 
@@ -121,9 +122,9 @@ export const usePremiumStore = create<PremiumStore>((set, get) => ({
       const isPremium = owned.includes(UNLOCK_SKU);
       set({ isPremium, purchasing: false });
       void cacheEntitlement(isPremium);
-      if (!isPremium) set({ error: 'No previous purchase found to restore.' });
+      if (!isPremium) set({ error: i18n.t('common.noPurchaseFound') });
     } catch {
-      set({ purchasing: false, error: 'Could not restore purchases.' });
+      set({ purchasing: false, error: i18n.t('common.restoreFailed') });
     }
   },
 }));

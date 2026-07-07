@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +31,7 @@ type Props = {
 export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props) {
   const c = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [menuOpen, setMenuOpen] = useState(false);
   const isStack = variant === 'stack';
@@ -68,7 +70,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
             hitSlop={16}
             style={[s.iconBtn, s.stackSide]}
             accessibilityRole="button"
-            accessibilityLabel={`Go back from ${title}`}
+            accessibilityLabel={t('common.goBackFrom', { title })}
           >
             <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
           </TouchableOpacity>
@@ -86,7 +88,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               hitSlop={12}
               style={s.iconBtn}
               accessibilityRole="button"
-              accessibilityLabel="Open menu"
+              accessibilityLabel={t('common.openMenu')}
             >
               <Ionicons name="menu" size={26} color={c.textPrimary} />
             </TouchableOpacity>
@@ -99,7 +101,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
             <Logo size={20} />
             {isPremium && (
               <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
-                <Text style={s.proText}>👑 PRO</Text>
+                <Text style={s.proText}>{t('proBadge')}</Text>
               </View>
             )}
           </View>
@@ -111,7 +113,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               hitSlop={12}
               style={s.iconBtn}
               accessibilityRole="button"
-              accessibilityLabel="Notifications"
+              accessibilityLabel={t('notifications.title')}
             >
               <Ionicons name="notifications-outline" size={23} color={c.textPrimary} />
               {hasUnseen && <View style={[s.badge, { backgroundColor: palette.danger }]} />}

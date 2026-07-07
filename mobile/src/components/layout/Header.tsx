@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
 import { spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
@@ -33,13 +34,14 @@ function makeStyles(c: Colors) {
 export function Header({ title, subtitle, showBack = false, right }: Props) {
   const navigation = useNavigation();
   const colors = useColors();
+  const { t } = useTranslation();
   const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
       <View style={styles.left}>
         {showBack && (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel="Go back">
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button" accessibilityLabel={t('common.goBack')}>
             <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
           </TouchableOpacity>
         )}

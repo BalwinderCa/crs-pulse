@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import Toast from 'react-native-toast-message';
+import i18n from '@/i18n';
 
 /** null while NetInfo is still probing internet reachability. */
 function resolveOnline(state: NetInfoState): boolean | null {
@@ -23,8 +24,8 @@ export function useNetworkStatus() {
       offlineNotified.current = true;
       Toast.show({
         type: 'error',
-        text1: 'No Internet Connection',
-        text2: 'Showing cached data.',
+        text1: i18n.t('common.noInternet'),
+        text2: i18n.t('common.showingCached'),
         visibilityTime: 3000,
       });
     };
@@ -34,7 +35,7 @@ export function useNetworkStatus() {
       offlineNotified.current = false;
       Toast.show({
         type: 'success',
-        text1: 'Back Online',
+        text1: i18n.t('common.backOnline'),
         visibilityTime: 2000,
       });
     };

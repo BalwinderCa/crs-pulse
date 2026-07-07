@@ -33,6 +33,7 @@ interface Props {
 function DetailView({ title, body, onClose }: {
   title: string; body: string; onClose: () => void;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const insets = useSafeAreaInsets();
   return (
@@ -43,7 +44,7 @@ function DetailView({ title, body, onClose }: {
           hitSlop={16}
           style={dv.backBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('common.goBack')}
         >
           <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
@@ -70,8 +71,8 @@ function ContactView({ onClose }: { onClose: () => void }) {
     {
       icon: 'mail' as const,
       label: t('menu.emailUs'),
-      sub: 'support@crspulse.com',
-      onPress: () => Linking.openURL('mailto:support@crspulse.com?subject=CRS%20Pulse'),
+      sub: t('sideMenu.contactEmail'),
+      onPress: () => Linking.openURL(t('sideMenu.contactUrl')),
     },
   ];
 
@@ -83,7 +84,7 @@ function ContactView({ onClose }: { onClose: () => void }) {
           hitSlop={16}
           style={dv.backBtn}
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t('sideMenu.goBack')}
         >
           <Ionicons name="chevron-back" size={26} color={c.textPrimary} />
         </TouchableOpacity>
@@ -180,7 +181,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
     try {
       await Share.share({
         message: t('menu.shareMessage', { url: GITHUB_REPO_URL }),
-        title: 'CRS Pulse',
+        title: t('sideMenu.shareTitle'),
       });
     } catch {}
     onClose();
@@ -292,7 +293,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
                 hitSlop={16}
                 style={s.closeBtn}
                 accessibilityRole="button"
-                accessibilityLabel="Close menu"
+                accessibilityLabel={t('sideMenu.closeMenu')}
               >
                 <Ionicons name="close" size={22} color={c.textMuted} />
               </TouchableOpacity>
@@ -328,7 +329,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
             {/* Footer */}
             <View style={[s.footer, { paddingBottom: insets.bottom + spacing.md, borderTopColor: c.border }]}>
               <Text style={[s.footerText, { color: c.textMuted }]}>
-                CRS Pulse v{Constants.expoConfig?.version ?? '1.0.0'}
+                {t('common.version', { version: Constants.expoConfig?.version ?? '1.0.0' })}
               </Text>
             </View>
           </>

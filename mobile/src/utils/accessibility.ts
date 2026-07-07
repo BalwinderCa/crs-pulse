@@ -1,8 +1,4 @@
-/**
- * Builders for screen-reader (VoiceOver / TalkBack) labels on the data-dense
- * score widgets. Grouping the numbers into one spoken sentence stops the reader
- * announcing the gauge, score and cutoff as disconnected fragments.
- */
+import i18n from '@/i18n';
 
 export function getScoreAccessibilityLabel(
   userScore: number,
@@ -10,13 +6,19 @@ export function getScoreAccessibilityLabel(
   category: string,
 ): string {
   const diff = userScore - cutoff;
-  const sign = diff >= 0 ? 'above' : 'below';
-  return `Your CRS score is ${userScore}. The latest ${category} draw cutoff was ${cutoff}. You are ${Math.abs(diff)} points ${sign} the cutoff.`;
+  const direction = diff >= 0 ? i18n.t('cards.ptsAbove') : i18n.t('cards.ptsBelow');
+  return i18n.t('cards.scoreCardAccessibility', {
+    score: userScore,
+    category,
+    cutoff,
+    diff: Math.abs(diff),
+    direction,
+  });
 }
 
 export function getPredictionAccessibilityLabel(
   label: string,
   description: string,
 ): string {
-  return `Prediction: ${label}. ${description}`;
+  return i18n.t('cards.predictionAccessibility', { label, description });
 }

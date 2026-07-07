@@ -21,20 +21,17 @@ import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 
-const EDU_OPTIONS = [
-  { label: 'Less than high school', value: 'less_than_secondary' },
-  { label: 'High school',           value: 'secondary' },
-  { label: '1-yr diploma',          value: '1year' },
-  { label: '2-yr diploma',          value: '2year' },
-  { label: "Bachelor's",            value: 'bachelors' },
-  { label: '2+ certs (3yr+)',       value: 'two_or_more' },
-  { label: "Master's",              value: 'masters' },
-  { label: 'PhD',                   value: 'phd' },
+const EDU_OPTIONS_EN = [
+  { key: 'lessThanSecondary', value: 'less_than_secondary' },
+  { key: 'secondary',         value: 'secondary' },
+  { key: 'oneYear',           value: '1year' },
+  { key: 'twoYear',           value: '2year' },
+  { key: 'bachelors',         value: 'bachelors' },
+  { key: 'twoOrMore',         value: 'two_or_more' },
+  { key: 'masters',           value: 'masters' },
+  { key: 'phd',               value: 'phd' },
 ];
 
-// IRCC accepts either official language first — English (IELTS/CELPIP/PTE
-// Core) or French (TEF Canada/TCF Canada). The second language must be the
-// other official language, so the second-test options depend on the first.
 const ENGLISH_TESTS = ['IELTS', 'CELPIP', 'PTE Core'] as const;
 const FRENCH_TESTS = ['TEF', 'TCF'] as const;
 const LANG_TESTS = [...ENGLISH_TESTS, ...FRENCH_TESTS] as const;
@@ -80,6 +77,7 @@ function SectionHeader({ title, icon, expanded, onToggle, summaryText, score }: 
   title: string; icon: string; expanded: boolean; onToggle: () => void;
   summaryText?: string; score?: number | null;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = useAccentColor();
   return (
@@ -88,7 +86,7 @@ function SectionHeader({ title, icon, expanded, onToggle, summaryText, score }: 
       onPress={onToggle} activeOpacity={0.7}
       accessible={true}
       accessibilityRole="button"
-      accessibilityLabel={`${title} section, ${expanded ? 'expanded' : 'collapsed'}`}
+      accessibilityLabel={title + ' ' + (expanded ? t('misc.expanded') : t('misc.collapsed'))}
       accessibilityState={{ expanded }}
     >
       <View style={[st.secIcon, { backgroundColor: accent + '18' }]}>
@@ -167,7 +165,7 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
           disabled={idx <= 0}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Decrease ${label} score`}
+          accessibilityLabel={t('common.decrease') + ' ' + label}
         >
           <Ionicons name="remove" size={15} color={idx <= 0 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -187,7 +185,7 @@ function LangInput({ label, test, skill, value, onChange, tefScale = 'current' }
           disabled={idx >= bps.length - 1}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Increase ${label} score`}
+          accessibilityLabel={t('common.increase') + ' ' + label}
         >
           <Ionicons name="add" size={15} color={idx >= bps.length - 1 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -212,7 +210,7 @@ function CLBStepper({ label, value, onChange }: {
           onPress={() => onChange(Math.max(0, value - 1))} disabled={value <= 0}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Decrease ${label}`}
+          accessibilityLabel={t('common.decrease') + ' ' + label}
         >
           <Ionicons name="remove" size={15} color={value <= 0 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -226,7 +224,7 @@ function CLBStepper({ label, value, onChange }: {
           onPress={() => onChange(Math.min(12, value + 1))} disabled={value >= 12}
           hitSlop={8}
           accessibilityRole="button"
-          accessibilityLabel={`Increase ${label}`}
+          accessibilityLabel={t('common.increase') + ' ' + label}
         >
           <Ionicons name="add" size={15} color={value >= 12 ? c.textMuted : palette.white} />
         </TouchableOpacity>
@@ -239,6 +237,7 @@ function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
   value: number; onChange: (v: number) => void;
   min?: number; max?: number; unit?: string; label?: string;
 }) {
+  const { t } = useTranslation();
   const c = useColors();
   const accent = useAccentColor();
   return (
@@ -249,7 +248,7 @@ function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
         hitSlop={8}
         accessible={true}
         accessibilityRole="button"
-        accessibilityLabel={label ? `Decrease ${label}` : 'Decrease'}
+        accessibilityLabel={label ? t('common.decrease') + ' ' + label : t('common.decrease')}
       >
         <Ionicons name="remove" size={18} color={value <= min ? c.textMuted : palette.white} />
       </TouchableOpacity>
@@ -262,7 +261,7 @@ function Stepper({ value, onChange, min = 0, max = 10, unit, label }: {
         hitSlop={8}
         accessible={true}
         accessibilityRole="button"
-        accessibilityLabel={label ? `Increase ${label}` : 'Increase'}
+        accessibilityLabel={label ? t('common.increase') + ' ' + label : t('common.increase')}
       >
         <Ionicons name="add" size={18} color={value >= max ? c.textMuted : palette.white} />
       </TouchableOpacity>
@@ -329,6 +328,11 @@ export default function DashboardScreen() {
   const saveCalcInputs = useProfileStore((s) => s.saveCalcInputs);
   const saveProfile    = useProfileStore((s) => s.save);
   const { draws } = useDrawsStore();
+
+  const EDU_OPTIONS = useMemo(() => EDU_OPTIONS_EN.map(o => ({
+    label: t('education.' + o.key),
+    value: o.value,
+  })), [t]);
 
   const [inputs, setInputs] = useState<CalcInputs>(() =>
     coerceInputs(profile?.calculatorInputs ?? DEFAULT_CALC_INPUTS)
@@ -414,18 +418,27 @@ export default function DashboardScreen() {
     : 0;
 
   // Section summaries (shown when collapsed)
-  const persSummary = `Age ${inputs.age} · ${
-    inputs.maritalStatus === 'single' ? 'Single'
-    : inputs.maritalStatus === 'married_not_accompanying' ? 'Married (not accompanying)'
-    : 'Married'}`;
+  const maritalLabel = inputs.maritalStatus === 'single'
+    ? t('sectionSummary.maritalSingle')
+    : inputs.maritalStatus === 'married_not_accompanying'
+      ? t('sectionSummary.maritalNotAccompanying')
+      : t('sectionSummary.maritalMarried');
+  const persSummary = t('sectionSummary.personal', { age: inputs.age, marital: maritalLabel });
   const eduSummary  = EDU_OPTIONS.find(e => e.value === inputs.education)?.label ?? inputs.education;
   const langSummary = useMemo(() => {
-    if (!scoreReady) return `${inputs.firstLangTest} · not set`;
+    if (!scoreReady) return t('sectionSummary.language', { test: inputs.firstLangTest, status: t('sectionSummary.notSet') });
     const clbs = Object.values(result.firstLangClb);
     return `${inputs.firstLangTest} · CLB ${Math.min(...clbs)}–${Math.max(...clbs)}`;
-  }, [scoreReady, inputs.firstLangTest, result.firstLangClb]);
-  const workSummary = `${inputs.canadianWorkExp === 0 ? 'No CA exp' : `${inputs.canadianWorkExp}yr CA`} · ${
-    inputs.foreignWorkExp === 0 ? 'No foreign exp' : inputs.foreignWorkExp === 1 ? '1–2yr foreign' : '3+yr foreign'}`;
+  }, [scoreReady, inputs.firstLangTest, result.firstLangClb, t]);
+  const workCaPart = inputs.canadianWorkExp === 0
+    ? t('sectionSummary.workNoCa')
+    : t('sectionSummary.workCanadian', { years: inputs.canadianWorkExp });
+  const workForeignPart = inputs.foreignWorkExp === 0
+    ? t('sectionSummary.workNoForeign')
+    : inputs.foreignWorkExp === 1
+      ? t('sectionSummary.workOneTwoForeign')
+      : t('sectionSummary.workThreePlusForeign');
+  const workSummary = `${workCaPart} · ${workForeignPart}`;
 
   // ─── Section renderers ──────────────────────────────────────────────────────
 
@@ -700,7 +713,7 @@ export default function DashboardScreen() {
             onPress={() => navigation.navigate('Main', { screen: 'Analytics' })}
             activeOpacity={0.8}
             accessibilityRole="button"
-            accessibilityLabel="Open analytics"
+            accessibilityLabel={t('common.openAnalytics')}
           >
             <Text style={st.fabTxt}>{t('crsCalculator.viewAnalytics')}</Text>
             <Ionicons name="chevron-forward" size={15} color="#fff" />

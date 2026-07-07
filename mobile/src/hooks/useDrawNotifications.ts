@@ -2,21 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import i18n from '@/i18n';
 import { STORAGE_KEYS } from '@/constants';
 import {
   registerForPushNotifications,
   unregisterPushNotifications,
   type PushRegisterFailure,
 } from '@/services/pushService';
-
-const FAILURE_MESSAGES: Record<PushRegisterFailure, string> = {
-  simulator:         'Push notifications are not available on simulators. Try a physical device.',
-  expo_go:           'Push notifications are not supported in Expo Go. Use a development or production build.',
-  not_configured:    'Push notifications are not configured for this build.',
-  permission_denied: 'Notifications are disabled for this app. Enable them in your device settings to receive draw alerts.',
-  token_failed:      'Could not register this device for notifications. Please try again later.',
-  server_error:      'Could not reach the notification service. Check your connection and try again.',
-};
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -55,17 +47,29 @@ export function useDrawNotifications() {
       .finally(() => setLoading(false));
   }, []);
 
+  const failureKey = useCallback((reason: PushRegisterFailure): string => {
+    const map: Record<PushRegisterFailure, string> = {
+      simulator: 'common.notifSimulator',
+      expo_go: 'common.notifExpoGo',
+      not_configured: 'common.notifNotConfigured',
+      permission_denied: 'common.notifPermissionDenied',
+      token_failed: 'common.notifTokenFailed',
+      server_error: 'common.notifServerError',
+    };
+    return map[reason];
+  }, []);
+
   const toggle = useCallback(async () => {
     if (!enabled) {
       const result = await registerForPushNotifications();
       if (!result.ok) {
         if (result.reason === 'permission_denied') {
-          Alert.alert('Notifications Disabled', FAILURE_MESSAGES.permission_denied, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Open Settings', onPress: () => Linking.openSettings() },
+          Alert.alert(i18n.t('common.notificationsDisabled'), i18n.t('common.notifPermissionDenied'), [
+            { text: i18n.t('common.cancel'), style: 'cancel' },
+            { text: i18n.t('common.openSettings'), onPress: () => Linking.openSettings() },
           ]);
         } else {
-          Alert.alert('Notifications Unavailable', FAILURE_MESSAGES[result.reason]);
+          Alert.alert(i18n.t('common.notificationsUnavailable'), i18n.t(failureKey(result.reason)));
         }
         return;
       }
@@ -75,7 +79,7 @@ export function useDrawNotifications() {
     const next = !enabled;
     setEnabled(next);
     await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, next ? 'true' : 'false');
-  }, [enabled]);
+  }, [enabled, failureKey]);
 
   return { enabled, loading, toggle };
 }

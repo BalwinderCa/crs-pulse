@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
+import { fr, enUS } from 'date-fns/locale';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -85,6 +86,7 @@ export default function HomeScreen() {
   const score = profile?.crs_score ?? 0;
   const scoreReady = score > 0;
   const cat = profile?.category ?? 'General';
+  const dateLocale = profile?.language === 'fr' ? fr : enUS;
 
 
   return (
@@ -179,7 +181,7 @@ export default function HomeScreen() {
               <View style={s.appProgressRow}>
                 <Text style={[s.appProgressText, { color: c.textMuted }]}>
                   {t('home.appliedOn')}{' '}
-                  {tracked.applied.toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {format(tracked.applied, 'MMM d, yyyy', { locale: dateLocale })}
                 </Text>
                 <Text style={[s.appProgressText, { color: c.textMuted }]}>
                   {t('home.typicalPercent', { percent: Math.min(100, Math.round(tracked.progress * 100)) })}
@@ -197,7 +199,7 @@ export default function HomeScreen() {
                 <Text style={[s.appDecision, { color: c.textSecondary }]}>
                   {t('home.estimatedDecision')}{' '}
                   <Text style={{ color: accent, fontWeight: typography.bold }}>
-                    {tracked.decisionDate.toLocaleDateString('en-CA', { month: 'long', year: 'numeric' })}
+                    {format(tracked.decisionDate, 'MMMM yyyy', { locale: dateLocale })}
                   </Text>
                 </Text>
               )}

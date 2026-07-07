@@ -47,11 +47,12 @@ type Props = {
   drawDate: string;
 };
 
-function getScoreStatus(userScore: number, cutoff: number) {
+function useScoreStatus(userScore: number, cutoff: number) {
+  const { t } = useTranslation();
   const diff = userScore - cutoff;
-  if (diff >= 0)                        return { label: '✓  High Chance',  variant: 'success' as const };
-  if (Math.abs(diff) <= NEAR_THRESHOLD) return { label: '⚡ Near Cutoff',  variant: 'warning' as const };
-  return                                       { label: '↓  Below Cutoff', variant: 'danger'  as const };
+  if (diff >= 0)                        return { label: t('cards.highChance'),  variant: 'success' as const };
+  if (Math.abs(diff) <= NEAR_THRESHOLD) return { label: t('cards.nearCutoff'),  variant: 'warning' as const };
+  return                                       { label: t('cards.belowCutoff'), variant: 'danger'  as const };
 }
 
 function makeStyles(c: Colors) {
@@ -112,7 +113,7 @@ export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawD
   const styles = makeStyles(colors);
 
   const diff    = userScore - latestCutoff;
-  const status  = getScoreStatus(userScore, latestCutoff);
+  const status  = useScoreStatus(userScore, latestCutoff);
   const absDiff = Math.abs(diff);
 
   const fillSweep = Math.min(ARC_TOTAL, (userScore / MAX_SCORE) * ARC_TOTAL);
@@ -190,7 +191,10 @@ export function ScoreCard({ userScore, latestCutoff, category, drawNumber, drawD
 
         <View style={styles.bottomRow}>
           <Text style={styles.bottomText}>
-            {diff < 0 ? `${absDiff} pts from latest cutoff` : `${absDiff} pts above latest cutoff`}
+            {t('cards.ptsFromCutoff', {
+              pts: absDiff,
+              direction: diff < 0 ? t('cards.ptsBelow') : t('cards.ptsAbove'),
+            })}
           </Text>
           <Text style={[styles.diffText, { color: statusColor }]}>
             {diff >= 0 ? '+' : ''}{diff}

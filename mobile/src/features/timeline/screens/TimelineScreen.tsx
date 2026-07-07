@@ -19,24 +19,24 @@ import { AppHeader } from '@/components/layout/AppHeader';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
-type Meta = { icon: React.ComponentProps<typeof Ionicons>['name']; color: string };
+type Meta = { icon: React.ComponentProps<typeof Ionicons>['name']; color: string; labelKey: string };
 
 const MILESTONE_META: Record<MilestoneType, Meta> = {
-  'ITA':                   { icon: 'mail-open',         color: palette.info },
-  'Application Submitted': { icon: 'cloud-upload',      color: palette.success },
-  'AOR Received':          { icon: 'document-text',     color: palette.success },
-  'Biometrics Requested':  { icon: 'finger-print',      color: palette.warning },
-  'Biometrics Completed':  { icon: 'shield-checkmark',  color: palette.success },
-  'Medical Requested':     { icon: 'medkit',            color: palette.warning },
-  'Medical Passed':        { icon: 'pulse',             color: palette.success },
-  'Passport Requested':    { icon: 'id-card',           color: palette.warning },
-  'Passport Submitted':    { icon: 'send',              color: palette.info },
-  'Passport Collected':    { icon: 'airplane',          color: palette.success },
-  'ADR':                   { icon: 'document-attach',   color: palette.orange },
-  'Portal 1':              { icon: 'log-in',            color: palette.purple },
-  'Portal 2':              { icon: 'globe',             color: palette.purpleDeep },
-  'Final Decision':        { icon: 'trophy',            color: palette.danger },
-  'Custom':                { icon: 'pencil',            color: palette.gray300 },
+  'ITA':                   { icon: 'mail-open',         color: palette.info, labelKey: 'milestoneTypes.ita' },
+  'Application Submitted': { icon: 'cloud-upload',      color: palette.success, labelKey: 'milestoneTypes.applicationSubmitted' },
+  'AOR Received':          { icon: 'document-text',     color: palette.success, labelKey: 'milestoneTypes.aorReceived' },
+  'Biometrics Requested':  { icon: 'finger-print',      color: palette.warning, labelKey: 'milestoneTypes.biometricsRequested' },
+  'Biometrics Completed':  { icon: 'shield-checkmark',  color: palette.success, labelKey: 'milestoneTypes.biometricsCompleted' },
+  'Medical Requested':     { icon: 'medkit',            color: palette.warning, labelKey: 'milestoneTypes.medicalRequested' },
+  'Medical Passed':        { icon: 'pulse',             color: palette.success, labelKey: 'milestoneTypes.medicalPassed' },
+  'Passport Requested':    { icon: 'id-card',           color: palette.warning, labelKey: 'milestoneTypes.passportRequested' },
+  'Passport Submitted':    { icon: 'send',              color: palette.info, labelKey: 'milestoneTypes.passportSubmitted' },
+  'Passport Collected':    { icon: 'airplane',          color: palette.success, labelKey: 'milestoneTypes.passportCollected' },
+  'ADR':                   { icon: 'document-attach',   color: palette.orange, labelKey: 'milestoneTypes.adr' },
+  'Portal 1':              { icon: 'log-in',            color: palette.purple, labelKey: 'milestoneTypes.portal1' },
+  'Portal 2':              { icon: 'globe',             color: palette.purpleDeep, labelKey: 'milestoneTypes.portal2' },
+  'Final Decision':        { icon: 'trophy',            color: palette.danger, labelKey: 'milestoneTypes.finalDecision' },
+  'Custom':                { icon: 'pencil',            color: palette.gray300, labelKey: 'timeline.custom' },
 };
 
 const MILESTONE_TYPES: MilestoneType[] = [
@@ -48,13 +48,7 @@ const MILESTONE_TYPES: MilestoneType[] = [
   'Final Decision', 'Custom',
 ];
 
-// Illustrative rows shown on the empty timeline so new users can see the kind of
-// milestones they can track. Not real data — dates are placeholders.
-const SAMPLE_MILESTONES: { type: MilestoneType; when: string }[] = [
-  { type: 'ITA',                when: 'e.g. Jan 12' },
-  { type: 'AOR Received',       when: 'e.g. Feb 03' },
-  { type: 'Passport Requested', when: 'e.g. Apr 22' },
-];
+
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -73,8 +67,9 @@ function useDaysLabel() {
 
 function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; onDelete?: () => void }) {
   const c = useColors();
+  const { t } = useTranslation();
   const meta = MILESTONE_META[item.type];
-  const label = item.type === 'Custom' && item.customLabel ? item.customLabel : item.type;
+  const label = item.type === 'Custom' && item.customLabel ? item.customLabel : (meta?.labelKey ? t(meta.labelKey) : item.type);
   const getDaysLabel = useDaysLabel();
   const dl = getDaysLabel(item.date);
 
@@ -244,7 +239,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
               <Ionicons name={meta.icon} size={20} color={meta.color} />
             </View>
             <Text style={[s.fieldVal, { color: c.textPrimary, flex: 1 }]}>
-              {type === 'Custom' && customLabel ? customLabel : type}
+              {type === 'Custom' && customLabel ? customLabel : t(MILESTONE_META[type]?.labelKey ?? type)}
             </Text>
             <Ionicons name="chevron-down" size={16} color={c.textMuted} />
           </TouchableOpacity>
@@ -358,20 +353,20 @@ function AddMilestoneModal({ visible, onClose, editing }: {
               {/* Scrollable predefined types */}
               <ScrollView showsVerticalScrollIndicator={false}
                 style={{ maxHeight: 340 }}>
-                {MILESTONE_TYPES.filter(t => t !== 'Custom').map((t) => {
-                  const m = MILESTONE_META[t];
-                  const selected = t === type;
+                {MILESTONE_TYPES.filter(mt => mt !== 'Custom').map((mt) => {
+                  const m = MILESTONE_META[mt];
+                  const selected = mt === type;
                   return (
                     <TouchableOpacity
-                      key={t}
+                      key={mt}
                       style={[s.typeRow, { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border }]}
-                      onPress={() => { setType(t); setPickingType(false); }}
+                      onPress={() => { setType(mt); setPickingType(false); }}
                     >
                       <View style={[s.typeIconSm, { backgroundColor: m.color + '20' }]}>
                         <Ionicons name={m.icon} size={18} color={m.color} />
                       </View>
                       <Text style={[s.typeRowTxt, { color: selected ? accent : c.textPrimary },
-                        selected && { fontWeight: typography.bold }]}>{t}</Text>
+                        selected && { fontWeight: typography.bold }]}>{t(m.labelKey)}</Text>
                       {selected && <Ionicons name="checkmark" size={16} color={accent} />}
                     </TouchableOpacity>
                   );
@@ -439,14 +434,18 @@ export default function TimelineScreen() {
           {/* Example rows so users can see what they can add */}
           <Text style={[s.sampleHint, { color: c.textMuted }]}>{t('timeline.forExample')}</Text>
           <View style={s.sampleList}>
-            {SAMPLE_MILESTONES.map(({ type, when }) => {
+            {([
+              { type: 'ITA' as MilestoneType, when: t('sampleMilestones.sampleWhen1') },
+              { type: 'AOR Received' as MilestoneType, when: t('sampleMilestones.sampleWhen2') },
+              { type: 'Passport Requested' as MilestoneType, when: t('sampleMilestones.sampleWhen3') },
+            ]).map(({ type, when }) => {
               const m = MILESTONE_META[type];
               return (
                 <View key={type} style={[s.sampleCard, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
                   <View style={[s.cardIcon, { backgroundColor: m.color + '20' }]}>
                     <Ionicons name={m.icon} size={20} color={m.color} />
                   </View>
-                  <Text style={[s.sampleLabel, { color: c.textSecondary }]}>{type}</Text>
+                  <Text style={[s.sampleLabel, { color: c.textSecondary }]}>{t(m.labelKey)}</Text>
                   <Text style={[s.sampleWhen, { color: c.textMuted }]}>{when}</Text>
                 </View>
               );

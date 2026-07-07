@@ -20,7 +20,18 @@ jest.mock('react-i18next', () => ({
 }));
 
 jest.mock('@/i18n', () => ({
-  default: { changeLanguage: jest.fn().mockResolvedValue(undefined) },
+  __esModule: true,
+  default: {
+    t: (key: string, opts?: Record<string, unknown>) => {
+      const base = key.split('.').pop() ?? key;
+      if (!opts) return base;
+      return Object.entries(opts).reduce(
+        (s, [k, v]) => s.replace(`{{${k}}}`, String(v)),
+        base,
+      );
+    },
+    changeLanguage: jest.fn().mockResolvedValue(undefined),
+  },
 }));
 
 // Mock Expo modules

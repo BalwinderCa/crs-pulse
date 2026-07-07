@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import i18n from '@/i18n';
 import { STORAGE_KEYS } from '@/constants';
 import type { Draw, Category } from '@/types';
 import { syncLastSeenDraw } from '@/hooks/useDrawNotifications';
@@ -149,7 +150,7 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
           new Error(`IRCC feed returned no parseable draws (rounds=${rounds.length})`),
           { source: 'drawsStore.refresh' },
         );
-        throw new Error('IRCC feed returned no parseable draws');
+        throw new Error(i18n.t('drawsStore.noParseableDraws'));
       }
 
       const lastFetched = new Date().toISOString();
@@ -173,8 +174,8 @@ export const useDrawsStore = create<DrawsStore>((set, get) => ({
         isLoading: false,
         isRefreshing: false,
         error: isNetworkErr
-          ? 'Unable to reach the IRCC server. Check your connection and try again.'
-          : (raw || 'Failed to load draws'),
+          ? i18n.t('drawsStore.unableToReach')
+          : (raw || i18n.t('drawsStore.failedToLoad')),
       });
     }
   },

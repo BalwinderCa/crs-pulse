@@ -1,20 +1,17 @@
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { typography } from '@/theme';
-
-/**
- * CRS Pulse wordmark — the full wordmark uses the brand pulse red.
- */
 
 const RED = '#DC2626';
 
 type Props = {
-  /** Font size of the wordmark. */
   size?: number;
 };
 
 export function Logo({ size = 20 }: Props) {
+  const { t } = useTranslation();
   return (
-    <View style={s.row} accessibilityRole="text" accessibilityLabel="CRS Pulse">
+    <View style={s.row} accessibilityRole="text" accessibilityLabel={t('common.appName')}>
       <Text style={[s.word, { fontSize: size, color: RED }]}>CRS Pulse</Text>
     </View>
   );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
@@ -70,6 +70,7 @@ export function DrawCard({ draw, userScore }: Props) {
   const borderColor = CATEGORY_COLOR[draw.category] ?? accent;
   const styles = makeStyles(colors, accent);
   const diff = userScore != null ? userScore - draw.cutoff_score : null;
+  const formattedDate = useMemo(() => format(parseISO(draw.date.slice(0, 10)), 'MMMM d yyyy'), [draw.date]);
 
   return (
     <TouchableOpacity
@@ -77,7 +78,13 @@ export function DrawCard({ draw, userScore }: Props) {
       activeOpacity={0.7}
       accessible={true}
       accessibilityRole="link"
-      accessibilityLabel={`Draw ${draw.draw_number}, ${draw.category}, cutoff ${draw.cutoff_score}, ${format(parseISO(draw.date.slice(0, 10)), 'MMMM d yyyy')}, ${draw.invitations_issued.toLocaleString()} invitations`}
+       accessibilityLabel={t('cards.drawAccessibility', {
+          number: draw.draw_number,
+          category: draw.category,
+          cutoff: draw.cutoff_score,
+          date: formattedDate,
+          invitations: draw.invitations_issued.toLocaleString(),
+        })}
     >
       <View style={styles.card}>
         {/* Colored left border by category */}
@@ -120,7 +127,7 @@ export function DrawCard({ draw, userScore }: Props) {
           </View>
 
           {draw.tie_breaking_rule && (
-            <Text style={styles.tieBraking} numberOfLines={1}>Tie-break: {draw.tie_breaking_rule}</Text>
+            <Text style={styles.tieBraking} numberOfLines={1}>{t('cards.tieBreak', { rule: draw.tie_breaking_rule })}</Text>
           )}
         </View>
       </View>

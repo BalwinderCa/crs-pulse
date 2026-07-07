@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { palette, borderRadius, typography, spacing } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
@@ -59,6 +60,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
   const [isSecure, setIsSecure] = useState(secureTextEntry);
   const [focused, setFocused] = useState(false);
   const colors = useColors();
+  const { t } = useTranslation();
   const styles = makeStyles(colors);
 
   const borderColor = error
@@ -97,7 +99,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
             onPress={() => setIsSecure((s) => !s)}
             style={styles.rightIcon}
             accessibilityRole="button"
-            accessibilityLabel={isSecure ? 'Show password' : 'Hide password'}
+            accessibilityLabel={isSecure ? t('common.showPassword') : t('common.hidePassword')}
           >
             <Ionicons name={isSecure ? 'eye-outline' : 'eye-off-outline'} size={18} color={palette.gray400} />
           </TouchableOpacity>
