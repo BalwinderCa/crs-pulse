@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -96,7 +96,6 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
           </View>
 
           <View style={s.brandCenter}>
-            <Image source={require('../../../assets/logo.png')} style={s.brandIcon} resizeMode="contain" />
             <Logo size={20} />
             {isPremium && (
               <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
@@ -141,7 +140,6 @@ const s = StyleSheet.create({
   stackSide:   { minWidth: 40, flexDirection: 'row', alignItems: 'center' },
   stackRight:  { justifyContent: 'flex-end' },
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
-  brandIcon:   { width: 38, height: 38, marginRight: -7 },
   proBadge: {
     alignSelf: 'flex-start',
     marginTop: -4, marginLeft: 3,
