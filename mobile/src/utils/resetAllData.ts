@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import { useProfileStore } from '@/store/profileStore';
 import { useApplicationStore } from '@/store/applicationStore';
+import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { useTimelineStore } from '@/store/timelineStore';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { unregisterPushNotifications } from '@/services/pushService';
@@ -23,6 +24,7 @@ export async function resetAllData(): Promise<void> {
   await Promise.allSettled([
     useProfileStore.getState().reset(),
     useApplicationStore.getState().clear(),
+    useCalculatorsStore.getState().clear(),
     useTimelineStore.getState().clearAll(),
     useNotificationsStore.getState().clear(),
     // Revokes the token server-side and removes it locally.

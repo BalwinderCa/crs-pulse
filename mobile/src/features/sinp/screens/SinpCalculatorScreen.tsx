@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,7 +87,10 @@ export default function SinpCalculatorScreen() {
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
   const { t } = useTranslation();
-  const [input, setInput] = useState<SinpInput>(DEFAULT_INPUT);
+  const input = useCalculatorsStore((s) => s.sinp) ?? DEFAULT_INPUT;
+  const setSinp = useCalculatorsStore((s) => s.setSinp);
+  const setInput = (u: SinpInput | ((prev: SinpInput) => SinpInput)) =>
+    setSinp(typeof u === 'function' ? u(input) : u);
 
   const result = useMemo(() => calculateSinp(input), [input]);
   const set = <K extends keyof SinpInput>(key: K, value: SinpInput[K]) =>

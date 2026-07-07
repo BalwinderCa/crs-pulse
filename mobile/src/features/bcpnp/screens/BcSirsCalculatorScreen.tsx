@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { useMemo, useState } from 'react';
+import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -84,8 +85,11 @@ export default function BcSirsCalculatorScreen() {
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
   const { t } = useTranslation();
-  const [input, setInput] = useState<SirsInput>(DEFAULT_INPUT);
-  const [wageText, setWageText] = useState(String(DEFAULT_INPUT.hourlyWage));
+  const input = useCalculatorsStore((s) => s.sirs) ?? DEFAULT_INPUT;
+  const setSirs = useCalculatorsStore((s) => s.setSirs);
+  const setInput = (u: SirsInput | ((prev: SirsInput) => SirsInput)) =>
+    setSirs(typeof u === 'function' ? u(input) : u);
+  const [wageText, setWageText] = useState(() => String(input.hourlyWage));
 
   const result = useMemo(() => calculateSirs(input), [input]);
   const set = <K extends keyof SirsInput>(key: K, value: SirsInput[K]) =>

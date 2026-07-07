@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -82,7 +83,10 @@ export default function FswCalculatorScreen() {
   const insets = useSafeAreaInsets();
   const { contentFrameStyle } = useResponsiveLayout();
   const { t } = useTranslation();
-  const [input, setInput] = useState<FswInput>(DEFAULT_INPUT);
+  const input = useCalculatorsStore((s) => s.fsw) ?? DEFAULT_INPUT;
+  const setFsw = useCalculatorsStore((s) => s.setFsw);
+  const setInput = (u: FswInput | ((prev: FswInput) => FswInput)) =>
+    setFsw(typeof u === 'function' ? u(input) : u);
 
   const result = useMemo(() => calculateFsw(input), [input]);
   const set = <K extends keyof FswInput>(key: K, value: FswInput[K]) =>
