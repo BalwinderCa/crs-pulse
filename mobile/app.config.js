@@ -177,7 +177,7 @@ module.exports = () => ({
     },
     adaptiveIcon: {
       foregroundImage: './assets/adaptive-icon.png',
-      backgroundColor: '#0A1628',
+      backgroundColor: '#DF2C19',
     },
     package: 'com.crspulse.app',
     versionCode: 13,
