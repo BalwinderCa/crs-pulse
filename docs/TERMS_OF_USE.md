@@ -1,6 +1,6 @@
 # CRS Pulse Terms of Use
 
-**Effective date:** July 4, 2026
+**Effective date:** July 9, 2026
 **App:** CRS Pulse – Express Entry Calculator
 **Contact:** contact@crspulse.com
 
@@ -14,9 +14,9 @@ CRS Pulse is an independent app. It is **not** affiliated with, endorsed by, or 
 
 The app does not require an account. Your profile and calculator inputs are stored on your device. Our limited data practices are described in the [Privacy Policy](./PRIVACY_POLICY.md), which is incorporated into these Terms by reference.
 
-## 3. The app is free
+## 3. Free to use, ad-supported
 
-CRS Pulse is **completely free**. Every feature — including the calculators, live draws, analytics, timeline, and push alerts — is available at no charge. There are no ads, no in-app purchases, no trials, and no subscriptions.
+CRS Pulse is **free to download and use** — the calculators, live draws, draw insights, timeline, and push alerts are all available at no charge. The free version shows banner ads (Google AdMob). An optional **one-time in-app purchase**, billed by Apple's App Store or Google Play, unlocks the personalised "Your Plan" analytics and removes all ads. There are no trials and no subscriptions.
 
 ## 4. Acceptable use
 

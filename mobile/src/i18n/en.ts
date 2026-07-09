@@ -538,7 +538,7 @@ const en = {
     q7: 'Does the app work offline?',
     a7: 'Yes. The calculator works fully offline, and the latest fetched draw history is cached on your device. You only need a connection to refresh draws or receive notifications.',
     q8: 'Is CRS Pulse free?',
-    a8: 'Yes — CRS Pulse is completely free. Every feature, from draw tracking and the calculators to analytics and push alerts, comes at no charge, with no ads, no in-app purchases, and no subscription. It is an independent tool and is not affiliated with IRCC or the Government of Canada.',
+    a8: 'CRS Pulse is free to download and use — draw tracking, all calculators, the timeline and push alerts cost nothing. The free version is ad-supported (Google AdMob), and an optional one-time purchase unlocks the personalised "Your Plan" analytics and removes all ads. No subscriptions, no trials. It is an independent tool and is not affiliated with IRCC or the Government of Canada.',
   },
 
   paywall: {
@@ -999,14 +999,14 @@ Push notifications (if enabled) register your device with our server so we can a
 
 Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
-CRS Pulse is completely free — no ads, no in-app purchases, and no subscriptions. We use no third-party analytics or trackers.
+The free version of CRS Pulse is ad-supported: banner ads are served by Google AdMob, which may use a device identifier to deliver and measure ads (on iOS, only with your App Tracking Transparency consent). An optional one-time in-app purchase removes all ads and unlocks the personalised analytics — the purchase is processed entirely by the app store, so no payment data ever reaches us. There are no subscriptions, and we use no other third-party analytics or trackers.
 
 Full policy: {{url}}
 
 For questions, contact: info@crspulse.com`,
     termsBody: `By using CRS Pulse, you agree to these terms.
 
-CRS Pulse is a free informational tool. Scores, draw data, processing times and any other figures shown in the app are estimates for planning purposes only. They are not immigration advice, and they are not a maximum, a minimum, or a guarantee of any outcome.
+CRS Pulse is a free, ad-supported informational tool; an optional one-time in-app purchase (billed by the app store) unlocks the personalised analytics and removes ads. Scores, draw data, processing times and any other figures shown in the app are estimates for planning purposes only. They are not immigration advice, and they are not a maximum, a minimum, or a guarantee of any outcome.
 
 CRS Pulse is an independent project. It is not affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada. Always verify scores, eligibility, and processing times with the official tools on canada.ca before making decisions.
 

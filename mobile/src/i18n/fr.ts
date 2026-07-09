@@ -542,7 +542,8 @@ const fr: TranslationKeys = {
     q7: 'L\'application fonctionne-t-elle hors ligne?',
     a7: 'Oui. Le calculateur fonctionne entièrement hors ligne, et le dernier historique de tirage récupéré est mis en cache sur votre appareil. Vous n\'avez besoin d\'une connexion que pour actualiser les tirages ou recevoir des notifications.',
     q8: 'CRS Pulse est-il gratuit?',
-    a8: 'Oui — CRS Pulse est entièrement gratuit. Toutes les fonctionnalités, du suivi des tirages aux calculatrices, analyses et alertes push, sont sans frais : aucune publicité, aucun achat intégré, aucun abonnement. C\'est un outil indépendant et il n\'est pas affilié à l\'IRCC ou au gouvernement du Canada.',
+    // [REVIEW]
+    a8: 'CRS Pulse est gratuit à télécharger et à utiliser — le suivi des tirages, toutes les calculatrices, la chronologie et les alertes push sont sans frais. La version gratuite est financée par la publicité (Google AdMob), et un achat unique facultatif débloque les analyses personnalisées « Votre plan » et supprime toutes les publicités. Aucun abonnement, aucun essai. C\'est un outil indépendant et il n\'est pas affilié à l\'IRCC ou au gouvernement du Canada.',
   },
 
   paywall: {
@@ -998,14 +999,14 @@ Les notifications push (si activées) enregistrent votre appareil auprès de not
 
 L’historique des tirages est récupéré directement du flux de données public officiel d’IRCC (canada.ca) et mis en cache sur l’appareil pour une utilisation hors ligne.
 
-CRS Pulse est entièrement gratuit — aucune publicité, aucun achat intégré et aucun abonnement. Nous n’utilisons aucun outil d’analyse ni de suivi tiers.
+La version gratuite de CRS Pulse est financée par la publicité : les bannières sont diffusées par Google AdMob, qui peut utiliser un identifiant d’appareil pour diffuser et mesurer les publicités (sur iOS, uniquement avec votre consentement via App Tracking Transparency). Un achat intégré unique facultatif supprime toutes les publicités et débloque les analyses personnalisées — l’achat est traité entièrement par la boutique d’applications, donc aucune donnée de paiement ne nous parvient. Il n’y a aucun abonnement, et nous n’utilisons aucun autre outil d’analyse ni de suivi tiers.
 
 Politique complète : {{url}}
 
 Pour toute question, contactez : info@crspulse.com`,
     termsBody: `En utilisant CRS Pulse, vous acceptez ces conditions.
 
-CRS Pulse est un outil d’information gratuit. Les scores, les données de tirage, les délais de traitement et tout autre chiffre affiché dans l’application sont des estimations à des fins de planification uniquement. Ils ne constituent pas des conseils en immigration et ne représentent ni un maximum, ni un minimum, ni une garantie de résultat.
+CRS Pulse est un outil d’information gratuit financé par la publicité ; un achat intégré unique facultatif (facturé par la boutique d’applications) débloque les analyses personnalisées et supprime les publicités. Les scores, les données de tirage, les délais de traitement et tout autre chiffre affiché dans l’application sont des estimations à des fins de planification uniquement. Ils ne constituent pas des conseils en immigration et ne représentent ni un maximum, ni un minimum, ni une garantie de résultat.
 
 CRS Pulse est un projet indépendant. Il n’est ni affilié, ni approuvé, ni lié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ou au gouvernement du Canada. Vérifiez toujours les scores, l’admissibilité et les délais de traitement avec les outils officiels sur canada.ca avant de prendre des décisions.
 
