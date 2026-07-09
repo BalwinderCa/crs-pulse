@@ -49,9 +49,6 @@ export default function RootNavigator() {
     useProcessingTimesStore.getState().load().catch(() => {});
     useEePoolStore.getState().load().catch(() => {});
     usePremiumStore.getState().init().catch(() => {});
-    // Ads are disabled while the app ships free (MONETIZATION_ENABLED=false): skip
-    // AdMob init so the SDK never loads and the ATT prompt is never shown.
-    if (MONETIZATION_ENABLED) void initAds();
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
       .then((v) => setOnboardingSeen(v === 'true'))
@@ -89,9 +86,11 @@ export default function RootNavigator() {
 
   // Hide splash as soon as ready — don't gate on profile, as loadProfile()
   // always sets a non-null value and the null guard below handles the brief gap.
+  // Defer AdMob init to after splash hides so it doesn't interfere with boot.
   useEffect(() => {
     if (ready) {
       ExpoSplash.hideAsync().catch(() => {});
+      if (MONETIZATION_ENABLED) setTimeout(() => void initAds(), 0);
     }
   }, [ready]);
 
