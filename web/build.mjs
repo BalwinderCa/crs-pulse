@@ -690,4 +690,7 @@ writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'faq.html'), faqPage());
 writeFileSync(resolve(OUT, 'privacy.html'), doc('PRIVACY_POLICY.md', 'Privacy Policy', '/privacy'));
 writeFileSync(resolve(OUT, 'terms.html'), doc('TERMS_OF_USE.md', 'Terms of Use', '/terms'));
+// AdMob authorized-seller declaration; crspulse.com must be the developer
+// website on the App Store / Play listings for AdMob to crawl it.
+writeFileSync(resolve(OUT, 'app-ads.txt'), 'google.com, pub-4933939673966567, DIRECT, f08c47fec0942fa0\n');
 console.log('Built index, features, draws, calculators, faq, privacy, terms → web/public/');
