@@ -24,12 +24,11 @@ const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://www.crspulse.com/privacy';
 
-// Mirror of MONETIZATION_ENABLED in src/constants/index.ts (kept in sync manually —
-// app.config.js is CommonJS and can't import the TS source). While false the app
-// ships fully free and the ATT tracking purpose string is omitted from Info.plist,
-// so the binary matches the "Data Not Collected" privacy label. Flip BOTH this and
-// the src/constants flag to true (and rebuild) to re-enable ads + tracking.
-const MONETIZATION_ENABLED = false;
+// When false the app ships fully free and the ATT tracking purpose string is
+// omitted from Info.plist, so the binary matches the "Data Not Collected"
+// privacy label. Set EXPO_PUBLIC_MONETIZATION_ENABLED=true in your build env
+// (eas.json or EAS secret) to enable ads + the ATT prompt.
+const MONETIZATION_ENABLED = process.env.EXPO_PUBLIC_MONETIZATION_ENABLED === 'true';
 
 // Inline config plugin: adds -Xskip-metadata-version-check to all subproject
 // Kotlin compile tasks. Required because play-services-ads 25.0.0 (pulled in
