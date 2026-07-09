@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import { usePremiumStore } from '@/store/premiumStore';
 import { ADMOB_BANNER_AD_UNIT, MONETIZATION_ENABLED } from '@/constants';
 import { spacing } from '@/theme';
 
@@ -43,14 +42,9 @@ const UNIT_ID =
  * ad fails to fill.
  */
 export function AdBanner() {
-  const isPremium = usePremiumStore((s) => s.isPremium);
-  const premiumLoaded = usePremiumStore((s) => s.loaded);
   const [failed, setFailed] = useState(false);
 
-  // UNIT_ID is empty in a release build whose EXPO_PUBLIC_ADMOB_BANNER_* env
-  // vars weren't set — render nothing rather than fall back to Google's test
-  // ad units (an AdMob policy violation). __DEV__ always has a TestIds unit.
-  if (!MONETIZATION_ENABLED || !UNIT_ID || !ads?.BannerAd || !ads.BannerAdSize || !premiumLoaded || isPremium || failed) {
+  if (!MONETIZATION_ENABLED || !UNIT_ID || !ads?.BannerAd || !ads.BannerAdSize || failed) {
     return null;
   }
 

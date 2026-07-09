@@ -100,11 +100,10 @@ export const IAP_SKUS: string[] = [IAP_PRODUCTS.ANALYTICS_UNLOCK];
  *   • the "Your Plan" analytics tab is unlocked for everyone
  *   • the paywall and "Upgrade to Premium" banner are hidden
  *
- * Temporarily disabled until monetization is permitted (work-permit/PR). Flip
- * back to `true` and ship a new build to re-enable ads + the one-time IAP unlock;
- * no other code changes are needed (every gate keys off this flag).
+ * Set EXPO_PUBLIC_MONETIZATION_ENABLED=true in your env to enable ads + IAP.
+ * Defaults to false when unset.
  */
-export const MONETIZATION_ENABLED = false;
+export const MONETIZATION_ENABLED = process.env.EXPO_PUBLIC_MONETIZATION_ENABLED === 'true';
 
 /**
  * AdMob banner ad-unit IDs (shown to free users; Premium removes ads).

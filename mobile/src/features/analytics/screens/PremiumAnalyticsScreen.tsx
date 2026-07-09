@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
+import { AdBanner } from '@/components/common/AdBanner';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import type { Colors } from '@/theme/colors';
@@ -447,6 +448,8 @@ function DrawsTab({ c, accent, data, chartWidth }: any) {
         </View>
         <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.fallingCutoffs', { count: data.avgInvitations })}</Text>
       </Card>
+
+      <AdBanner />
     </>
   );
 }
