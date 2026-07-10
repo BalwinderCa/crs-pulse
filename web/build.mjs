@@ -346,7 +346,7 @@ const ADVANTAGES = [
   ['<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>', 'Never Miss a Draw',
     'A push notification lands on your phone the moment IRCC publishes a new Express Entry round — cutoff, category and invitations.'],
   ['<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>', 'Free to Use',
-    'Every calculator and every draw, free with ads. One optional one-time unlock adds personal analytics and removes ads — no subscriptions.'],
+    'Every calculator, every draw, every feature — free, supported by small banner ads. No purchases, no subscriptions, no locked screens.'],
   ['<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/>', 'Private by Design',
     'Your profile and scores never leave your phone. We don’t collect your immigration data — there is nothing to leak.'],
 ];
@@ -461,7 +461,7 @@ const FAQ = [
   ['Why is my score different from the IRCC tool?', 'Double-check each answer — small differences (language test scores, ECA outcome, work history dates) shift points significantly. Also make sure the app is updated, since IRCC occasionally changes the grid. The official IRCC tool is always the final word.'],
   ['How can I improve my CRS score?', 'The biggest levers: retake your language test for higher CLB levels, gain another year of skilled work experience, complete a higher credential, add French as a second language, or get a provincial nomination (+600 points). The calculator lets you try what-if scenarios to see each impact.'],
   ['Does the app work offline?', 'Yes. The calculator works fully offline, and the latest fetched draw history is cached on your device. You only need a connection to refresh draws or receive notifications.'],
-  ['Is CRS Pulse free?', 'CRS Pulse is free to download and use — draw tracking, all calculators, the timeline and push alerts cost nothing. The free version is ad-supported (Google AdMob), and an optional one-time purchase unlocks the personalised "Your Plan" analytics and removes all ads. No subscriptions, no trials. It is an independent tool and is not affiliated with IRCC or the Government of Canada.'],
+  ['Is CRS Pulse free?', 'CRS Pulse is free — draw tracking, all calculators, analytics, the timeline and push alerts cost nothing. The app is supported by small banner ads (Google AdMob). No in-app purchases, no subscriptions. It is an independent tool and is not affiliated with IRCC or the Government of Canada.'],
 ];
 
 function finalCta() {

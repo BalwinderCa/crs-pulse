@@ -16,7 +16,7 @@ The app does not require an account. Your profile and calculator inputs are stor
 
 ## 3. Free to use, ad-supported
 
-CRS Pulse is **free to download and use** — the calculators, live draws, draw insights, timeline, and push alerts are all available at no charge. The free version shows banner ads (Google AdMob). An optional **one-time in-app purchase**, billed by Apple's App Store or Google Play, unlocks the personalised "Your Plan" analytics and removes all ads. There are no trials and no subscriptions.
+CRS Pulse is **free** — the calculators, live draws, analytics, timeline, and push alerts are all available at no charge. The app shows small banner ads (Google AdMob). There are no in-app purchases, no trials, and no subscriptions.
 
 ## 4. Acceptable use
 
