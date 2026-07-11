@@ -1180,5 +1180,5 @@ writeFileSync(resolve(OUT, 'privacy.html'), doc('PRIVACY_POLICY.md', 'Privacy Po
 writeFileSync(resolve(OUT, 'terms.html'), doc('TERMS_OF_USE.md', 'Terms of Use'));
 // AdMob authorized-seller declaration; crspulse.com must be the developer website
 // on the App Store / Play listings for AdMob to crawl it.
-writeFileSync(resolve(OUT, 'app-ads.txt'), 'google.com, pub-4933939673966567, DIRECT, f08c47fec0942fa0\n');
+writeFileSync(resolve(OUT, 'app-ads.txt'), 'google.com, pub-4874088724567128, DIRECT, f08c47fec0942fa0\n');
 console.log('Built index, calculators, draws, features, privacy, terms → web/public/');
