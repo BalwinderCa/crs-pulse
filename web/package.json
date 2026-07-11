@@ -8,7 +8,6 @@
     "build": "node build.mjs"
   },
   "dependencies": {
-    "marked": "^12.0.2",
-    "qrcode": "^1.5.4"
+    "marked": "^12.0.2"
   }
 }
