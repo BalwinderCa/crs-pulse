@@ -40,7 +40,7 @@ const accentBtn = (href, label, pad = '14px 24px') =>
 
 // ------------------------------------------------------------------ CSS
 const CSS = `
-:root, :root[data-theme="dark"]{
+:root[data-theme="dark"]{
   --bg:#05090F; --bg2:#0A1220; --bg3:#16233A; --card:linear-gradient(158deg,rgba(30,46,74,0.55) 0%,rgba(10,19,34,0.55) 100%); --cardSolid:#0E1728; --input:#0A121F;
   --grad1:#14243E; --grad2:#0A1322;
   --text:#EEF4FF; --text2:#8399BC; --muted:#647E9E; --border:rgba(255,255,255,0.14);
@@ -49,12 +49,14 @@ const CSS = `
   --hairline:rgba(255,255,255,0.06);
   --shadow:0 1px 0 rgba(255,255,255,0.05) inset, 0 26px 60px -14px rgba(0,0,0,0.7); --navbg:rgba(6,10,18,0.55);
 }
-:root[data-theme="light"]{
+:root, :root[data-theme="light"]{
   --bg:#EEF3FB; --bg2:#FFFFFF; --bg3:#E4ECF8; --card:linear-gradient(158deg,rgba(255,255,255,0.7) 0%,rgba(243,248,255,0.55) 100%); --cardSolid:#FFFFFF; --input:#EEF3FB;
   --grad1:#FFFFFF; --grad2:#EAF1FB;
   --text:#0A1526; --text2:#4A5F80; --muted:#5A7091; --border:rgba(10,20,40,0.12);
   --accent:#E5342B; --accent2:#FF453A; --accentSoft:rgba(229,52,43,0.09); --accentGlow:rgba(229,52,43,0.18);
-  --violet:#8A63E8;
+  --violet:#8A63E8; --success:#0E9F6E;
+  /* light no longer inherits the dark block — carry the theme-neutral values it used to get from :root */
+  --warning:#FFB547; --danger:#DC2626; --cyan:#38CFEC;
   --hairline:rgba(10,20,40,0.05);
   --shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 22px 50px -16px rgba(30,50,90,0.22); --navbg:rgba(238,243,251,0.55);
 }
@@ -85,8 +87,6 @@ select{ appearance:none; -webkit-appearance:none;
 select:focus, input:focus{ outline:none; border-color:var(--accent)!important; box-shadow:0 0 0 3px var(--accentSoft); }
 @keyframes pulse{ 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
 @keyframes floaty{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-@keyframes floatA{ 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-14px) rotate(-3deg)} }
-@keyframes floatB{ 0%,100%{transform:translateY(0) rotate(3deg)} 50%{transform:translateY(12px) rotate(3deg)} }
 @keyframes fadeUp{ from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
 @keyframes drift1{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(60px,-40px) scale(1.12)} }
 @keyframes drift2{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-70px,50px) scale(0.92)} }
@@ -94,6 +94,29 @@ select:focus, input:focus{ outline:none; border-color:var(--accent)!important; b
 @media (prefers-reduced-motion: no-preference){
   [data-reveal]{ animation:fadeUp both linear; animation-timeline:view(); animation-range:entry 0% cover 20%; }
 }
+/* hero backdrop: masked grid mesh + pulse waveform (no raster image, no extra request) */
+/* no z-index here on purpose: it would form a stacking context and isolate the skyline's blend mode */
+.herobg{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.herobg::before{ content:""; position:absolute; inset:0;
+  background-image:linear-gradient(var(--hairline) 1px,transparent 1px),linear-gradient(90deg,var(--hairline) 1px,transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(ellipse 78% 68% at 52% 34%,#000 0%,rgba(0,0,0,.55) 45%,transparent 76%);
+  mask-image:radial-gradient(ellipse 78% 68% at 52% 34%,#000 0%,rgba(0,0,0,.55) 45%,transparent 76%); }
+[data-theme="light"] .herobg::before{ background-size:56px 56px; }
+.herobg .skyline{ position:absolute; left:0; right:0; bottom:0; width:100%; height:66%; object-fit:cover; object-position:center bottom;
+  opacity:.5;
+  --skyMaskY:linear-gradient(180deg,transparent 0%,#000 50%,#000 86%,transparent 100%);
+  --skyMaskX:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.16) 24%,rgba(0,0,0,0.7) 50%,#000 68%,#000 90%,transparent 100%);
+  -webkit-mask-image:var(--skyMaskY),var(--skyMaskX); mask-image:var(--skyMaskY),var(--skyMaskX);
+  -webkit-mask-composite:source-in; mask-composite:intersect; }
+/* light: same shot, desaturated so it reads as a soft skyline silhouette instead of a night photo */
+[data-theme="light"] .herobg .skyline{ opacity:.4; filter:grayscale(.45); height:78%;
+  --skyMaskY:linear-gradient(180deg,transparent 0%,#000 40%,#000 84%,transparent 100%);
+  --skyMaskX:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.08) 20%,rgba(0,0,0,0.4) 40%,#000 60%,#000 92%,transparent 100%); }
+.hero h1{ font-size:clamp(38px,6.4vw,62px); }
+.trustrow{ display:flex; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:13px; }
+.trustrow span{ display:inline-flex; align-items:center; gap:7px; }
+.trustrow svg{ color:var(--success); flex-shrink:0; }
 /* hover utilities (replace design's inline style-hover) */
 .navlink:hover{ color:var(--text)!important; background:var(--bg3); }
 .btn-accent:hover{ background:var(--accent2)!important; color:#fff!important; }
@@ -139,6 +162,8 @@ h1,h2,h3{ margin:0; }
 /* responsive */
 @media (max-width:960px){
   .hero{ grid-template-columns:1fr!important; }
+  /* stacked hero: skyline becomes a full-width horizon instead of a right-side glow */
+  .herobg .skyline{ height:38%; --skyMaskX:linear-gradient(90deg,transparent 0%,#000 18%,#000 82%,transparent 100%); }
   .calcbody{ grid-template-columns:1fr!important; }
   .calcresult{ position:static!important; }
   .poolgrid{ grid-template-columns:1fr!important; }
@@ -160,17 +185,25 @@ h1,h2,h3{ margin:0; }
 .doc-card{ padding:clamp(24px,5vw,44px); }
 `;
 
-const THEME_INIT = `<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('crspulse-theme')||'dark')}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>`;
+const THEME_INIT = `<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('crspulse-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>`;
 const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
 function setThemeIcons(t){var i=t==='dark'?'☀':'☾';document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.textContent=i})}
-setThemeIcons(document.documentElement.getAttribute('data-theme')||'dark');
+setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
 </script>`;
 
 // ------------------------------------------------------------------ chrome
 const blobs = () => `
   <div style="position:absolute;top:-160px;left:-160px;width:680px;height:680px;border-radius:50%;background:radial-gradient(circle,var(--accent) 0%,var(--accentGlow) 40%,transparent 72%);opacity:.5;filter:blur(60px);pointer-events:none;z-index:0;animation:drift1 16s ease-in-out infinite"></div>
   <div style="position:absolute;top:240px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--cyan) 0%,rgba(56,207,236,0.3) 45%,transparent 72%);opacity:.35;filter:blur(65px);pointer-events:none;z-index:0;animation:drift2 20s ease-in-out infinite"></div>`;
+
+// hero backdrop — masked grid mesh (CSS) + a dimmed Toronto skyline horizon (Unsplash, self-hosted)
+const heroBg = () => `
+<div class="herobg" aria-hidden="true">
+  <img class="skyline" src="/img/skyline.webp" width="1500" height="1040" alt="" decoding="async">
+</div>`;
+
+const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
 function nav(active, cta) {
   const link = (href, label, key) => {
@@ -254,7 +287,7 @@ function shell({ title, description, body }) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="index, follow">
-<meta name="theme-color" content="#05090F">
+<meta name="theme-color" content="#EEF3FB">
 <title>${title}</title>
 <meta name="description" content="${description}">
 <meta property="og:title" content="${title}">
@@ -275,46 +308,12 @@ ${THEME_SCRIPT}
 }
 
 // ------------------------------------------------------------------ shared content data
-const PHONE_MOCK = (withBadges) => `
+const PHONE_MOCK = () => `
 <div class="phonewrap" style="display:flex;justify-content:center;position:relative">
   <div style="position:absolute;inset:-60px;background:radial-gradient(circle at 55% 42%,var(--accentGlow),transparent 68%);filter:blur(30px);pointer-events:none;animation:ringPulse 5s ease-in-out infinite"></div>
-  ${withBadges ? `
-  <div style="position:absolute;top:24px;left:-46px;z-index:4;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 13px;box-shadow:0 20px 40px -16px rgba(0,0,0,0.5);animation:floatA 5s ease-in-out infinite">
-    <span style="font-size:16px">📈</span><span style="font-size:11.5px;font-weight:700;color:var(--text);line-height:1.3">CRS +38<br><span style="font-weight:500;color:var(--muted);font-size:10px">this month</span></span>
-  </div>
-  <div style="position:absolute;bottom:64px;right:-40px;z-index:4;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:10px 13px;box-shadow:0 20px 40px -16px rgba(0,0,0,0.5);animation:floatB 6s ease-in-out infinite">
-    <span style="width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 10px var(--success);flex-shrink:0"></span><span style="font-size:11.5px;font-weight:700;color:var(--text)">New draw · #424</span>
-  </div>` : ''}
-  <div style="position:relative;width:288px;height:600px;background:#05090F;border-radius:44px;padding:11px;box-shadow:0 40px 90px -20px rgba(0,0,0,0.75),0 0 0 1px rgba(255,255,255,0.06);border:1px solid #1C2B45;animation:floaty 6s ease-in-out infinite">
-    <div style="position:absolute;top:22px;left:50%;transform:translateX(-50%);width:110px;height:26px;background:#000;border-radius:14px;z-index:3"></div>
-    <div style="width:100%;height:100%;background:#060B14;border-radius:34px;overflow:hidden;display:flex;flex-direction:column">
-      <div style="padding:44px 18px 12px;display:flex;align-items:center;gap:8px">
-        <img src="/img/logo.svg" width="22" height="22" alt="">
-        <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px"><span style="color:#2BC8E8">CRS</span><span style="color:#FF3B30"> Pulse</span></span>
-      </div>
-      <div style="flex:1;overflow:hidden;padding:0 14px 14px;display:flex;flex-direction:column;gap:11px">
-        <div style="background:linear-gradient(155deg,#101C30,#0A1220);border:1px solid #1C2B45;border-radius:16px;padding:15px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div><div style="color:#6B85A8;font-size:9.5px;font-weight:700;letter-spacing:.8px">YOUR CRS SCORE</div><div style="font-family:'Space Grotesk',sans-serif;color:#F0F5FF;font-size:44px;font-weight:700;letter-spacing:-2px;line-height:1.1">512</div></div>
-            <div style="background:rgba(91,158,255,0.15);border:.5px solid rgba(91,158,255,0.3);color:#5B9EFF;padding:5px 10px;border-radius:9px;font-size:12px;font-weight:700">CEC</div>
-          </div>
-          <div style="border-top:1px solid #1C2B45;margin-top:11px;padding-top:9px;display:flex;align-items:center;gap:6px;color:#5B9EFF;font-size:12px;font-weight:700">Recalculate score <span style="margin-left:auto;color:#6B85A8">›</span></div>
-        </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0"><span style="color:#F0F5FF;font-size:13px;font-weight:700">Recent draws</span><span style="color:#6B85A8;font-size:10px">Last draw · 1 day ago</span></div>
-        <div style="background:linear-gradient(155deg,#101C30,#0A1220);border:1px solid #1C2B45;border-radius:16px;overflow:hidden">
-          ${[['#A78BFA', '#424', 'PNP', '534 invited · Jul 6', '708'], ['#5B9EFF', '#422', 'Healthcare', '4,000 invited · Jun 25', '475'], ['#FF3B30', '#418', 'French', '3,800 invited · May 28', '393']].map(([dot, no, cat, sub, cut], i) => `
-          ${i ? '<div style="height:1px;background:#1C2B45;margin:0 13px"></div>' : ''}
-          <div style="display:flex;align-items:center;gap:10px;padding:12px 13px">
-            <span style="width:9px;height:9px;border-radius:50%;background:${dot}"></span>
-            <div style="flex:1"><div style="display:flex;gap:6px;align-items:center"><span style="color:#6B85A8;font-size:11px;font-weight:600">${no}</span><span style="color:#F0F5FF;font-size:13px;font-weight:600">${cat}</span></div><div style="color:#6B85A8;font-size:11px">${sub}</div></div>
-            <div style="text-align:right"><div style="color:#6B85A8;font-size:8px;font-weight:700;letter-spacing:.5px">CUTOFF</div><div style="font-family:'Space Grotesk',sans-serif;color:#5B9EFF;font-size:19px;font-weight:700">${cut}</div></div>
-          </div>`).join('')}
-        </div>
-        <div style="margin-top:auto;display:flex;justify-content:space-around;padding:9px 0 2px;border-top:1px solid #1C2B45;color:#6B85A8;font-size:9px">
-          <span style="color:#5B9EFF;text-align:center">◎<br>Home</span><span style="text-align:center">▤<br>Draws</span><span style="text-align:center">▦<br>Plan</span><span style="text-align:center">◷<br>Timeline</span>
-        </div>
-      </div>
-    </div>
+  <div style="position:relative;width:288px;height:589px;animation:floaty 6s ease-in-out infinite">
+    <img src="/img/hero-screenshot.png" alt="" style="position:absolute;left:15.4px;top:14.4px;width:257.3px;height:560.2px;border-radius:40px;object-fit:cover;object-position:top center">
+    <img src="/img/iphone17pro.png" width="288" height="589" alt="CRS Pulse running on iPhone" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;filter:drop-shadow(0 40px 90px rgba(0,0,0,0.55))">
   </div>
 </div>`;
 
@@ -411,21 +410,24 @@ function home() {
 ${blobs()}
 <div style="position:relative;z-index:1">
 
-<section class="hero" style="max-width:1200px;margin:0 auto;padding:88px 24px 48px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center">
+<section style="position:relative">
+${heroBg()}
+<div class="hero" style="position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:88px 24px 84px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center">
   <div style="animation:fadeUp .7s .05s both">
     <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accentSoft);border:1px solid var(--border);color:var(--accent);padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:.2px;margin-bottom:26px;box-shadow:0 8px 24px -12px var(--accentGlow)">
       <span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;box-shadow:0 0 10px var(--success);animation:pulse 1.8s ease-in-out infinite"></span>
       Live IRCC draw tracking · Updated Jul 7, 2026
     </div>
-    <h1 style="font-family:'Space Grotesk',sans-serif;font-size:60px;line-height:1.02;letter-spacing:-2.5px;font-weight:700;margin:0 0 22px">Your Express Entry<br><span class="serif" style="font-weight:400;font-style:italic;letter-spacing:-1px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">command center.</span></h1>
+    <h1 style="font-family:'Space Grotesk',sans-serif;line-height:1.02;letter-spacing:-2.5px;font-weight:700;margin:0 0 22px">Your Express Entry<br><span class="serif" style="font-weight:400;font-style:italic;letter-spacing:-1px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">command center.</span></h1>
     <p style="font-size:18.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:520px">Calculate your CRS score with the official IRCC formula, follow live rounds of invitations, and track your PR application from profile to landing — all in one place. Your data stays on your device.</p>
     <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:26px">
       ${appBtn(false)}
       ${accentBtn('/calculators', 'Calculate my CRS score →')}
     </div>
-    <div style="display:flex;flex-wrap:wrap;gap:22px;color:var(--muted);font-size:13px"><span>✓ 4 official calculators</span><span>✓ No account required</span><span>✓ Free to use</span></div>
+    <div class="trustrow"><span>${CHECK}4 official calculators</span><span>${CHECK}No account required</span><span>${CHECK}Free to use</span></div>
   </div>
-  ${PHONE_MOCK(true)}
+  ${PHONE_MOCK()}
+</div>
 </section>
 
 <section style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2)">
@@ -1172,6 +1174,9 @@ ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canad
 mkdirSync(OUT, { recursive: true });
 mkdirSync(resolve(OUT, 'img'), { recursive: true });
 cpSync(resolve(ASSETS, 'logo.svg'), resolve(OUT, 'img/logo.svg'));
+cpSync(resolve(ASSETS, 'frame/iphone17pro.png'), resolve(OUT, 'img/iphone17pro.png'));
+cpSync(resolve(ASSETS, 'screenshots/hero_home.png'), resolve(OUT, 'img/hero-screenshot.png'));
+cpSync(resolve(ASSETS, 'bg/toronto-skyline.webp'), resolve(OUT, 'img/skyline.webp'));
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
