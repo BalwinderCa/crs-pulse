@@ -621,6 +621,7 @@ const en = {
     cancel: 'Cancel',
     openSettings: 'Open Settings',
     purchaseFailed: 'Purchase failed',
+    sponsored: 'Sponsored',
     noPurchaseFound: 'No previous purchase found to restore.',
     restoreFailed: 'Could not restore purchases.',
     close: 'Close',

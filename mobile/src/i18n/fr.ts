@@ -626,6 +626,7 @@ const fr: TranslationKeys = {
     cancel: 'Annuler',
     openSettings: 'Ouvrir les paramètres',
     purchaseFailed: 'Échec de l\'achat',
+    sponsored: 'Commandité',
     noPurchaseFound: 'Aucun achat antérieur à restaurer.',
     restoreFailed: 'Impossible de restaurer les achats.',
     close: 'Fermer',

@@ -584,6 +584,8 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
           <View style={s.statCell}><Text style={[s.opsBig, { color: c.textPrimary }]}>{fmt(i.myInventory)}</Text><Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.inInventory')}</Text></View>
         </View>
       </Card>
+
+      <AdBanner />
     </>
   );
 }

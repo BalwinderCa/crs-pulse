@@ -120,3 +120,14 @@ export const ADMOB_BANNER_AD_UNIT = {
   android: process.env.EXPO_PUBLIC_ADMOB_BANNER_ANDROID || '',
   ios: process.env.EXPO_PUBLIC_ADMOB_BANNER_IOS || '',
 } as const;
+
+/**
+ * AdMob *native* ad-unit IDs. Native ads render inside our own card UI (see
+ * `AdBanner`) instead of a fixed Google banner. These are a SEPARATE ad-unit
+ * type in AdMob — a banner unit id will not serve here. When empty the app
+ * falls back to the banner unit above, so this can be rolled out per-platform.
+ */
+export const ADMOB_NATIVE_AD_UNIT = {
+  android: process.env.EXPO_PUBLIC_ADMOB_NATIVE_ANDROID || '',
+  ios: process.env.EXPO_PUBLIC_ADMOB_NATIVE_IOS || '',
+} as const;
