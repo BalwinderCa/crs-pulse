@@ -982,7 +982,7 @@ const en = {
     reviewAppStore: 'Review on App Store',
     contactIntro: 'Questions, feedback, or something not working? We usually reply within a couple of days.',
     emailUs: 'Email us',
-    shareMessage: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration! {{url}}',
+    shareMessage: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration!',
     aboutBody: `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate IRCC Tracker built for aspiring Canadians like you.
 
 After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.

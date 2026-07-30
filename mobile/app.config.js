@@ -19,7 +19,6 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
 
 // Linked via `eas init` as @balwinder98/crs-pulse. Set EAS_PROJECT_ID to override.
 const projectId = process.env.EAS_PROJECT_ID || '255e43da-70b7-44a9-a50f-88522339a9cd';
-const appStoreId = process.env.EXPO_PUBLIC_APP_STORE_ID || '';
 const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://www.crspulse.com/privacy';
@@ -267,6 +266,5 @@ module.exports = () => ({
     },
     privacyPolicyUrl,
     githubRepoUrl: 'https://github.com/BalwinderCa/crs-pulse',
-    appStoreId: appStoreId || undefined,
   },
 });

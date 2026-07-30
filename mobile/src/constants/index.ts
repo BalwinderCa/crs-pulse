@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 export const APP_NAME = 'CRS Pulse';
@@ -5,8 +6,12 @@ export const APP_NAME = 'CRS Pulse';
 // drifts from the built binary.
 export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.1';
 
-/** Public URLs — no custom domain required; GitHub hosts the privacy policy. */
-export const GITHUB_REPO_URL = 'https://github.com/BalwinderCa/crs-pulse';
+/** Public store listing for this platform — what "Share App" sends. iOS is live;
+ *  the Play listing resolves once the Android build is published. */
+export const STORE_URL = Platform.OS === 'ios'
+  ? 'https://apps.apple.com/ca/app/crs-pulse-ircc-tracker/id6784619403'
+  : 'https://play.google.com/store/apps/details?id=com.crspulse.app';
+
 export const PRIVACY_POLICY_URL =
   'https://www.crspulse.com/privacy';
 /** Terms of Use (EULA) — required link on the IAP purchase surface (Apple 3.1.2).

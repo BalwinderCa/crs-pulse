@@ -11,7 +11,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList } from '@/types';
-import { GITHUB_REPO_URL, PRIVACY_POLICY_URL } from '@/constants';
+import { PRIVACY_POLICY_URL, STORE_URL } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -179,21 +179,22 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
 
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: t('menu.shareMessage', { url: GITHUB_REPO_URL }),
-        title: t('sideMenu.shareTitle'),
-      });
+      // iOS only builds the rich link preview (icon + title) when the link is a
+      // separate `url` item — a URL inside `message` stays plain text. Android
+      // ignores `url`, so there it has to be appended to the message instead.
+      const text = t('menu.shareMessage');
+      await Share.share(
+        Platform.OS === 'ios'
+          ? { message: text, url: STORE_URL, title: t('sideMenu.shareTitle') }
+          : { message: `${text} ${STORE_URL}`, title: t('sideMenu.shareTitle') },
+      );
     } catch {}
     onClose();
   };
 
-  const appStoreId = Constants.expoConfig?.extra?.appStoreId as string | undefined;
-
   const handleRate = () => {
-    if (Platform.OS === 'ios' && appStoreId) {
-      Linking.openURL(`https://apps.apple.com/app/id${appStoreId}`);
-      onClose();
-    }
+    Linking.openURL(`${STORE_URL}?action=write-review`);
+    onClose();
   };
 
   // Two groups of menu items
@@ -223,7 +224,8 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
     { icon: 'bug',   label: t('menu.reportIssue'), onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
     { icon: 'mail',  label: t('menu.contactUs'),   onPress: () => setDetail('contact'), accent: palette.blue },
     { icon: 'share', label: t('menu.shareApp'),    onPress: handleShare,                accent: palette.success },
-    ...(Platform.OS === 'ios' && appStoreId
+    // iOS only — the label says App Store, and Play has no write-review deep link.
+    ...(Platform.OS === 'ios'
       ? [{ icon: 'star' as const, label: t('menu.reviewAppStore'), onPress: handleRate, accent: palette.warning }]
       : []),
   ];
