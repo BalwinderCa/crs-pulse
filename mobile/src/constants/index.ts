@@ -86,6 +86,7 @@ export const STORAGE_KEYS = {
   DOC_CHECKLIST: 'crs_pulse.doc_checklist',
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
   PREMIUM: 'crs_pulse.premium',
+  REVIEW_PROMPTED: 'crs_pulse.review_prompted',
 } as const;
 
 /**

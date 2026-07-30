@@ -10,6 +10,7 @@ import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { maybeAskForReview } from '@/services/reviewPrompt';
 import { findChecklistProgram } from '../data/checklists';
 import type { RootStackParamList } from '@/types';
 
@@ -40,6 +41,10 @@ export default function DocumentChecklistScreen() {
     setChecked((prev) => {
       const next = { ...prev, [id]: !prev[id] };
       AsyncStorage.setItem(storageKey, JSON.stringify(next)).catch(() => {});
+      // Every document for this program is now ready — the one moment in the app
+      // we ask for a store review. Firing on the toggle rather than on `allDone`
+      // keeps it to the tap that completes the list, not every later visit.
+      if (Object.values(next).filter(Boolean).length === totalItems) void maybeAskForReview();
       return next;
     });
   };

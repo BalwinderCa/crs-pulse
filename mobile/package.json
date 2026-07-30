@@ -45,6 +45,7 @@
     "expo-sharing": "~13.0.1",
     "expo-splash-screen": "~0.29.0",
     "expo-status-bar": "~2.0.0",
+    "expo-store-review": "~8.0.1",
     "expo-system-ui": "~4.0.9",
     "expo-tracking-transparency": "~5.1.1",
     "i18next": "^26.3.1",
