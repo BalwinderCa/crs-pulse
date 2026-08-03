@@ -3,9 +3,11 @@ import i18n from '@/i18n';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS, MONETIZATION_ENABLED } from '@/constants';
 import { useProfileStore, DEFAULT_PROFILE } from '@/store/profileStore';
+import { useResolvedScheme } from '@/hooks/useColors';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
@@ -39,6 +41,7 @@ export default function RootNavigator() {
   const loadDraws = useDrawsStore((s) => s.load);
   const [ready, setReady] = useState(false);
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
+  const scheme = useResolvedScheme();
   const syncedLang = useRef<string | null>(null);
 
   useEffect(() => {
@@ -100,6 +103,11 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
+      {/* Android defaults to light status-bar icons whatever the theme, so the
+          clock and battery were invisible on the light palette. `style="auto"`
+          would follow the SYSTEM scheme and get it wrong whenever the in-app
+          theme setting overrides it — hence the resolved scheme. */}
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
       <Stack.Navigator
         initialRouteName={onboardingSeen ? 'Main' : 'Onboarding'}
         screenOptions={{ headerShown: false, animation: 'fade' }}
