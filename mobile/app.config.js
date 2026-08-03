@@ -17,6 +17,26 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
   );
 }
 
+// Android AdMob is not wired yet: the app IDs that shipped before belonged to
+// publisher pub-4933939673966567, which we do not own, so AdMob never filled.
+// The real account is pub-4874088724567128 (the one app-ads.txt on crspulse.com
+// authorizes) and it has no Android app yet. Until one exists the Android env
+// vars stay unset — the manifest falls back to Google's test app ID (needed or
+// the SDK crashes at init) and every ad unit id resolves empty, so AdBanner
+// renders nothing. Warn loudly rather than ship a build that silently earns $0.
+if (
+  process.env.APP_ENV === 'production' &&
+  !process.env.GOOGLE_ADMOB_ANDROID_APP_ID &&
+  process.env.EXPO_PUBLIC_MONETIZATION_ENABLED === 'true'
+) {
+  console.warn(
+    '[CRS Pulse] GOOGLE_ADMOB_ANDROID_APP_ID is unset — this Android build will show NO ads. ' +
+      'Create the Android app + banner/native ad units under publisher pub-4874088724567128, ' +
+      'then set GOOGLE_ADMOB_ANDROID_APP_ID / EXPO_PUBLIC_ADMOB_BANNER_ANDROID / ' +
+      'EXPO_PUBLIC_ADMOB_NATIVE_ANDROID in eas.json\'s production env.',
+  );
+}
+
 // Linked via `eas init` as @balwinder98/crs-pulse. Set EAS_PROJECT_ID to override.
 const projectId = process.env.EAS_PROJECT_ID || '255e43da-70b7-44a9-a50f-88522339a9cd';
 const privacyPolicyUrl =

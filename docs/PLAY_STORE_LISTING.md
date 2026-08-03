@@ -1,55 +1,98 @@
 # Google Play Store Listing
 
-## App name
-CRS Pulse – Express Entry Calculator
+Mirrors the live App Store listing (id 6784619403) so both stores describe the
+same app. When the iOS copy changes, update this file from it — the App Store
+text is the source of truth, since that is the version that has passed review.
 
-## Short description (80 chars)
+**Ads-only.** The app ships with AdMob banners and no purchasable product, so
+this listing must not mention an unlock, upgrade, subscription or Premium tier.
+The `react-native-iap` code is dormant: the paywall needs `billingAvailable`,
+which stays false while no product exists in Play Console. Declare
+**In-app purchases: No** and **Contains ads: Yes**.
+
+## App name (max 30 chars)
+CRS Pulse - IRCC Tracker
+
+## Short description (max 80 chars)
 Calculate your CRS score, track IRCC draws, and get alerts for new cutoffs.
 
-## Full description
+## Full description (max 4000 chars)
 
-CRS Pulse helps Canadian immigration applicants track their Express Entry journey — calculate your score, follow live draws, and manage your application from profile to PR. Everything stays private on your device.
+CRS Pulse is the all-in-one companion for Canadian Express Entry applicants. Calculate your score, get notified the instant a new draw is announced, and track your PR application from start to finish — completely private, with all your data stored on your device.
 
-**CRS Calculator** — Enter your age, education, language scores, and work experience to calculate your Comprehensive Ranking System score using the current IRCC formula. Supports IELTS, CELPIP, PTE Core, TEF and TCF language tests.
+CALCULATE YOUR SCORE
+• Comprehensive Ranking System (CRS) calculator using the official scoring formula
+• Supports every accepted language test: IELTS, CELPIP, PTE Core, TEF and TCF (with CLB conversion)
+• Federal Skilled Worker (FSW) 67-point eligibility grid
+• BC PNP Skills Immigration Registration System (SIRS) 200-point calculator
+• Saskatchewan (SINP) Expression of Interest 110-point grid
 
-**More eligibility calculators** — Check the Federal Skilled Worker 67-point grid, the BC PNP SIRS (200-point) score, and the Saskatchewan SINP EOI (110-point) score — all in one app.
+NEVER MISS A DRAW
+• Live IRCC Express Entry draw results, refreshed automatically
+• Push notification the moment a new draw is published
+• Filter draws by category — general, PNP, French, healthcare, trades, STEM and more
 
-**Live Draw History** — View official Express Entry draw results fetched directly from IRCC, with category filters (CEC, FSW, PNP, French, healthcare, trades, STEM and more). Each draw links to its official IRCC round page.
+DRAW INSIGHTS & ANALYTICS
+• Score trends and cut-off history across recent draws
+• See where you stand against the latest invitation scores
+• Express Entry pool distribution and the federal Immigration Levels Plan at a glance
 
-**Analytics (free, with an optional one-time unlock)** — The Draws section — live IRCC market data, draw history, category trends, draw cadence and momentum — is free. Your Plan unlocks your odds versus the current trend cutoff, cutoff forecasts, your place in the pool, percentile, and what-if scenarios with a one-time purchase (no subscription, no trial). Figures are derived from official IRCC draw data, the IRCC processing-times feed, and IRCC's published Express Entry pool composition; pool composition and annual targets are periodic IRCC snapshots (dated in-app), not real-time. Estimates only — not guarantees.
+TRACK YOUR APPLICATION
+• Milestone timeline from profile to ITA to PR confirmation
+• Estimated IRCC processing times by program and application type
+• Per-program document checklists with progress tracking
 
-**Application Tracker** — Follow your milestones (ITA, AOR, biometrics, medicals, PPR and more) on a local timeline, see live IRCC processing-time estimates by program and category, and work through per-program document checklists with progress tracking.
+PRIVATE BY DESIGN
+• All of your profile and application data stays on your device
+• No account, no sign-up required
 
-**Draw Alerts** — Optional push notifications when IRCC publishes a new draw.
+CRS Pulse provides estimates only. Scores, draw data, and processing times are for informational purposes and are not a guarantee of eligibility, invitation, or outcome. Always confirm details with official sources before making decisions.
 
-**English & French** — Full EN/FR support with an in-app language toggle, plus dark and light themes.
+CRS Pulse is an independent app and is not affiliated with, endorsed by, or sponsored by Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada.
 
-Your CRS profile stays on your device. No account required. No analytics trackers. The free version is ad-supported (Google AdMob); the one-time Premium unlock removes all ads.
+## What's new (max 500 chars)
 
-**In-app purchases:** Contains one optional in-app purchase — a one-time "Analytics unlock" (no subscription). The rest of the app is free.
+First Android release — everything above, now on Play:
+• CRS, FSW, BC PNP (SIRS) and Saskatchewan (SINP) calculators
+• Live IRCC draws with push alerts for new rounds
+• Application timeline, processing-time estimates and document checklists
+• Express Entry pool and Immigration Levels Plan insights
+• English & French, dark and light themes
 
-This is an unofficial calculator and is not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. All scores, predictions and timelines are estimates for guidance only and are not immigration advice. Always verify your score with the official IRCC CRS tool before making immigration decisions.
-
-## What's new (release notes, max 500 chars)
-
-> Trim anything that was already live in the previously published build.
-
-A big update! 🎉
-• New: live Express Entry pool composition & Immigration Levels targets
-• New: BC PNP (SIRS) and Saskatchewan (SINP) calculators
-• Now in English & French with an in-app language toggle
-• Redesigned home, draws and onboarding screens
-• "Your Plan" analytics shows your real odds
-• Live IRCC processing times & document checklists
-• Faster, more accurate draw alerts
-
-Thanks for using CRS Pulse!
+For later updates, mirror the iOS release notes for the matching version.
 
 ## Category
 Tools
+
+> iOS lists this app under Reference (secondary: Utilities). Play's nearest
+> equivalent is "Books & Reference"; Tools is kept because comparable
+> calculator/tracker apps rank there. Change it if you want strict parity.
+
+## Content rating
+Everyone (IARC) — matches the App Store's 4+.
 
 ## Contact email
 contact@crspulse.com
 
 ## Privacy policy
 https://www.crspulse.com/privacy
+
+## Graphic assets
+
+Play builds none of these from the app — every one is uploaded by hand under
+Main store listing, which is why the listing keeps showing old branding after a
+new build ships.
+
+| Asset | Spec | Status |
+|---|---|---|
+| App icon | 512×512 PNG, no alpha | `mobile/build/play-listing/play-icon-512.png` — current maple-leaf mark |
+| Feature graphic | 1024×500 PNG/JPEG, no alpha | `mobile/build/play-listing/play-feature-graphic.png` |
+| Phone screenshots | 2–8, min 320px, 9:16 | `mobile/build/screenshots/play-android/` — 8 shots, 1080×2400, captured on a Pixel 6 AVD (Android 15) running the release APK of 1.0.6 |
+
+Screenshots were taken on the AVD named `crspulse` with the SystemUI demo mode
+enabled (fixed 9:30 clock, full battery/signal, no notification icons) — rerun
+`adb shell am broadcast -a com.android.systemui.demo -e command enter` and
+friends before recapturing so the status bar stays consistent. App state is
+seeded straight into AsyncStorage rather than typed in; keep the seed SQL with
+the screenshots if you need to reproduce the same profile (CRS 545, CEC,
+applied 2026-05-15).

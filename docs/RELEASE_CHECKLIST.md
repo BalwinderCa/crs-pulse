@@ -41,6 +41,21 @@
 - [ ] Store listing copy from `docs/PLAY_STORE_LISTING.md`
 - [ ] Screenshots: Home calculator, Draws, Trends, Profile
 
+## Android AdMob — required before the first Play release
+
+- [ ] In AdMob under publisher **pub-4874088724567128** (the only account we own —
+      and the one `crspulse.com/app-ads.txt` authorizes): create the Android app
+      for `com.crspulse.app`, then a **Banner** and a **Native** ad unit
+- [ ] Add all three to `eas.json` → `build.production.env`:
+      `GOOGLE_ADMOB_ANDROID_APP_ID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID`,
+      `EXPO_PUBLIC_ADMOB_NATIVE_ANDROID`
+- [ ] Grant the Play service account (`eas-play-publisher@crspulseapp.iam.gserviceaccount.com`)
+      release permissions in Play Console → Users and permissions, or
+      `eas submit --platform android` fails with `403 PERMISSION_DENIED`
+
+Until the app IDs are set, a production Android build logs a warning and ships
+with ads disabled (empty ad units render nothing) rather than serving test ads.
+
 ## Build & submit
 
 ```bash
