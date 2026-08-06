@@ -491,6 +491,14 @@ export async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
     await storeReceipts(kv, receipts);
   }
 
+  // Delivery counts live nowhere else — receipts are pruned and tallies discarded,
+  // so without this line "how many users got draw #N?" is unanswerable after the
+  // fact. Queryable in the Cloudflare dashboard (observability is on).
+  console.log(
+    `draw_push draw=${latest.draw_number} sent=${tokens.length} ` +
+      `unregistered=${unregistered.length} receipts=${receipts.length}`,
+  );
+
   return { notified: true, draw_number: latest.draw_number, token_count: tokens.length };
 }
 

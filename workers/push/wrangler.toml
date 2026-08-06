@@ -12,6 +12,11 @@ preview_id = "51b5f45ff4034592bda05af1ebc4dfab"
 [triggers]
 crons = ["*/15 * * * *"]
 
+# Keeps the per-draw delivery counts (see the draw_push log in checkAndNotify)
+# queryable in the dashboard. Nothing user-identifying is logged.
+[observability]
+enabled = true
+
 # Production secrets (set via wrangler, never commit):
 #   wrangler secret put PUSH_API_SECRET   # protects /register and /revoke
 #   wrangler secret put SYNC_SECRET       # protects POST /sync
