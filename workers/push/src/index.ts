@@ -56,6 +56,11 @@ export interface Env {
   EMAIL_FROM?: string;
   /** Recipient for ops alerts (e.g. a stale draw mirror). Optional — alerting is skipped when unset. */
   ALERT_EMAIL?: string;
+  /**
+   * GitHub token with `actions: write` on the repo. Optional — when unset the
+   * mirror falls back to GitHub's own (unreliable) schedule. See kickMirror().
+   */
+  GITHUB_DISPATCH_TOKEN?: string;
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -587,6 +592,35 @@ async function checkMirrorFreshness(kv: KVNamespace, env: Env): Promise<void> {
   await kv.put(STALE_KEY, latest.date); // mark only after an alert actually went out
 }
 
+/**
+ * GitHub honours `schedule:` on a best-effort basis: the mirror's 15-minute cron
+ * actually fires ~10x/day (median gap ~2h), so a draw can go unnoticed for hours
+ * — that is how draw #433 (2026-08-06) was missed. Cloudflare's cron is reliable,
+ * so we dispatch the mirror ourselves every tick and let GitHub's schedule stay on
+ * only as a backstop. The run takes ~20s, so this tick's push reads the *previous*
+ * tick's commit — good enough at 15-minute resolution.
+ */
+async function kickMirror(env: Env): Promise<void> {
+  if (!env.GITHUB_DISPATCH_TOKEN) return;
+  try {
+    await fetch(
+      'https://api.github.com/repos/BalwinderCa/crs-pulse/actions/workflows/ircc-mirror.yml/dispatches',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'crs-pulse-push',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ref: 'main' }),
+      },
+    );
+  } catch {
+    // ponytail: best-effort — a dispatch failure must never block the push path.
+  }
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === 'OPTIONS') return corsPreflight();
@@ -736,6 +770,7 @@ export default {
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     // Prune devices that failed delivery on the previous draw, then notify on a
     // new draw and on any IRCC processing-times change (email subscribers only).
+    await kickMirror(env);
     await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV, env);
     await checkProcessingTimes(env.TOKENS_KV, env);

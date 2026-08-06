@@ -17,4 +17,6 @@ crons = ["*/15 * * * *"]
 #   wrangler secret put SYNC_SECRET       # protects POST /sync
 #   wrangler secret put RESEND_API_KEY    # Resend key for email alerts (draws + processing-time changes)
 #   wrangler secret put EMAIL_FROM        # verified sender, e.g. CRS Pulse <alerts@send.crspulse.com>
+#   wrangler secret put GITHUB_DISPATCH_TOKEN  # fine-grained PAT, repo crs-pulse, Actions: read+write
+#                                              # (drives the IRCC mirror on time — GitHub's own cron drops ~90% of ticks)
 # Email dispatch is skipped entirely unless BOTH RESEND_API_KEY and EMAIL_FROM are set.
