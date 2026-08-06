@@ -73,6 +73,14 @@ test('isStale flags only confidently-old draw dates', () => {
   assert.equal(isStale('not-a-date', now, 30), false); // unparseable — don't false-alarm
 });
 
+// checkMirrorRuns reuses isStale on ISO run timestamps with a sub-day threshold.
+test('isStale handles ISO timestamps and fractional-day thresholds', () => {
+  const now = Date.parse('2026-06-23T12:00:00Z');
+  const hours = 6 / 24;
+  assert.equal(isStale('2026-06-23T09:00:00Z', now, hours), false); // 3h — mirror healthy
+  assert.equal(isStale('2026-06-23T02:00:00Z', now, hours), true); // 10h — mirror down
+});
+
 // ─── checkAndNotify: the new-draw decision logic ──────────────────────────────
 test('checkAndNotify: first run records the draw WITHOUT notifying', async () => {
   const store = new MockKV();

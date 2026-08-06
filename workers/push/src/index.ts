@@ -541,7 +541,7 @@ const STALE_KEY = 'mirror_stale_alerted';
 const STALE_DAYS = 30;
 
 /**
- * True when an IRCC draw date (YYYY-MM-DD) is older than `maxAgeDays`. Empty or
+ * True when a date (YYYY-MM-DD or ISO timestamp) is older than `maxAgeDays`. Empty or
  * unparseable dates return false — a broken fetch is already caught by the mirror
  * workflow's red-on-failure gate, so this only alarms on data we can confidently
  * call stale. Pure — unit tested.
@@ -578,18 +578,77 @@ async function checkMirrorFreshness(kv: KVNamespace, env: Env): Promise<void> {
     `The CRS Pulse draw mirror's latest draw is #${latest.draw_number} (${latest.date}), ` +
     `${ageDays} days old. The "IRCC draw mirror" GitHub Action may have stopped or broken — ` +
     `no new-draw push notifications will be sent until it is fixed.`;
-  await fetch('https://api.resend.com/emails', {
+  const sent = await sendOpsAlert(env, `⚠️ CRS Pulse: draw mirror is stale (${ageDays}d)`, line);
+  if (sent) await kv.put(STALE_KEY, latest.date); // mark only after an alert actually went out
+}
+
+/** Ops email to ALERT_EMAIL. Returns false (and sends nothing) when alerting is unconfigured. */
+async function sendOpsAlert(env: Env, subject: string, line: string): Promise<boolean> {
+  if (!env.ALERT_EMAIL || !env.RESEND_API_KEY || !env.EMAIL_FROM) return false;
+  const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: env.EMAIL_FROM,
       to: [env.ALERT_EMAIL],
-      subject: `⚠️ CRS Pulse: draw mirror is stale (${ageDays}d)`,
+      subject,
       text: line,
       html: `<p>${esc(line)}</p>`,
     }),
   });
-  await kv.put(STALE_KEY, latest.date); // mark only after an alert actually went out
+  return res.ok;
+}
+
+const RUNS_STALE_KEY = 'mirror_runs_stale_alerted';
+const RUNS_STALE_HOURS = 6;
+
+/**
+ * checkMirrorFreshness only trips after 30 days, because draws are ~2 weeks apart
+ * and quiet stretches are normal — so a mirror that dies today hides for a month.
+ * This is the fast signal: ask GitHub when the mirror workflow last *succeeded*
+ * (same token that dispatches it) and alert within hours. One email per outage,
+ * re-armed on recovery.
+ */
+async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> {
+  if (!env.GITHUB_DISPATCH_TOKEN) return;
+
+  let lastSuccess: string;
+  try {
+    const res = await fetch(
+      'https://api.github.com/repos/BalwinderCa/crs-pulse/actions/workflows/ircc-mirror.yml/runs?status=success&per_page=1',
+      {
+        headers: {
+          Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'crs-pulse-push',
+        },
+      },
+    );
+    if (!res.ok) return; // GitHub API blip — the next tick retries
+    const body = (await res.json()) as { workflow_runs?: { updated_at?: string }[] };
+    const updatedAt = body.workflow_runs?.[0]?.updated_at;
+    if (!updatedAt) return;
+    lastSuccess = updatedAt;
+  } catch {
+    return;
+  }
+
+  const stale = isStale(lastSuccess, Date.now(), RUNS_STALE_HOURS / 24);
+  const alerted = await kv.get(RUNS_STALE_KEY);
+
+  if (!stale) {
+    if (alerted) await kv.delete(RUNS_STALE_KEY); // recovered — re-arm
+    return;
+  }
+  if (alerted) return; // already alerted this outage
+
+  const ageHours = Math.floor((Date.now() - Date.parse(lastSuccess)) / 3_600_000);
+  const line =
+    `The "IRCC draw mirror" GitHub Action last succeeded ${ageHours}h ago (${lastSuccess}). ` +
+    `The worker keeps dispatching it every 15 minutes, so this means GitHub Actions is failing ` +
+    `or the workflow is broken — a new draw would go unnoticed until it recovers.`;
+  const sent = await sendOpsAlert(env, `⚠️ CRS Pulse: draw mirror hasn't run in ${ageHours}h`, line);
+  if (sent) await kv.put(RUNS_STALE_KEY, lastSuccess);
 }
 
 /**
@@ -775,5 +834,6 @@ export default {
     await checkAndNotify(env.TOKENS_KV, env);
     await checkProcessingTimes(env.TOKENS_KV, env);
     await checkMirrorFreshness(env.TOKENS_KV, env);
+    await checkMirrorRuns(env.TOKENS_KV, env);
   },
 };
