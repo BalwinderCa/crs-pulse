@@ -23,7 +23,9 @@ type EePoolStore = {
   updateFromRounds: (rounds: unknown) => Promise<void>;
 };
 
-const STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// Same reason as processingTimesStore: the window runs from our fetch, not IRCC's
+// publish, so 7 days hid a fresh mirror update for up to a week.
+const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 export const useEePoolStore = create<EePoolStore>((set, get) => ({
   data: EE_POOL_FALLBACK,

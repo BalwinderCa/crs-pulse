@@ -19,7 +19,10 @@ type ProcessingTimesStore = {
   load: () => Promise<void>;
 };
 
-const STALE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+// IRCC refreshes monthly, but the window is measured from *our* fetch, not theirs —
+// at 7 days a fresh IRCC update stayed invisible for up to a week. 6h keeps boots
+// cheap while surfacing an update the same day.
+const STALE_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 function isValidFeed(v: unknown): v is LiveFeed {
   return !!v && typeof v === 'object' && typeof (v as LiveFeed).times === 'object';
