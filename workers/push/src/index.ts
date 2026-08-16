@@ -617,20 +617,27 @@ const RUNS_STALE_HOURS = 6;
  * (same token that dispatches it) and alert within hours. One email per outage,
  * re-armed on recovery.
  */
-async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> {
+export async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> {
   if (!env.GITHUB_DISPATCH_TOKEN) return;
 
   let lastSuccess: string;
   try {
+    // The compatibility flag enables this standard option at runtime; the
+    // package's baseline Worker RequestInit type predates that flag.
+    const requestInit: RequestInit & { cache: 'no-store' } = {
+      // This is a heartbeat, so a cached response is worse than no response:
+      // Cloudflare once served an eight-day-old successful-run listing and
+      // triggered a false outage alert while every mirror run was green.
+      cache: 'no-store',
+      headers: {
+        Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'crs-pulse-push',
+      },
+    };
     const res = await fetch(
       'https://api.github.com/repos/BalwinderCa/crs-pulse/actions/workflows/ircc-mirror.yml/runs?status=success&per_page=1',
-      {
-        headers: {
-          Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'crs-pulse-push',
-        },
-      },
+      requestInit,
     );
     if (!res.ok) return; // GitHub API blip — the next tick retries
     const body = (await res.json()) as { workflow_runs?: { updated_at?: string }[] };

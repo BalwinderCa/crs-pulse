@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkAndNotify, isAuthorized, isStale, mapCategory } from './index.ts';
+import { checkAndNotify, checkMirrorRuns, isAuthorized, isStale, mapCategory } from './index.ts';
 
 // Minimal in-memory KV (mirrors tokenStore.test.ts's MockKV).
 class MockKV {
@@ -79,6 +79,33 @@ test('isStale handles ISO timestamps and fractional-day thresholds', () => {
   const hours = 6 / 24;
   assert.equal(isStale('2026-06-23T09:00:00Z', now, hours), false); // 3h — mirror healthy
   assert.equal(isStale('2026-06-23T02:00:00Z', now, hours), true); // 10h — mirror down
+});
+
+test('checkMirrorRuns bypasses caches and re-arms after a recent successful run', async () => {
+  const store = new MockKV();
+  store.store.set('mirror_runs_stale_alerted', '2026-08-07T00:15:23Z');
+
+  const original = globalThis.fetch;
+  let requestInit: RequestInit | undefined;
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    requestInit = init;
+    return new Response(
+      JSON.stringify({ workflow_runs: [{ updated_at: new Date(Date.now() - 60_000).toISOString() }] }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as typeof fetch;
+
+  try {
+    await checkMirrorRuns(store as unknown as KVNamespace, {
+      TOKENS_KV: store as unknown as KVNamespace,
+      GITHUB_DISPATCH_TOKEN: 'test-token',
+    });
+  } finally {
+    globalThis.fetch = original;
+  }
+
+  assert.equal(requestInit?.cache, 'no-store');
+  assert.equal(store.store.has('mirror_runs_stale_alerted'), false);
 });
 
 // ─── checkAndNotify: the new-draw decision logic ──────────────────────────────
