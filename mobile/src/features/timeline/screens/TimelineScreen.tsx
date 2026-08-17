@@ -518,7 +518,7 @@ const s = StyleSheet.create({
   cardDate:  { fontSize: typography.xs, marginTop: 2 },
   cardNote:  { fontSize: typography.xs, marginTop: 3 },
   cardRight: { alignItems: 'flex-end' },
-  daysVal:   { fontSize: typography.sm, fontWeight: typography.bold, lineHeight: 18 },
+  daysVal:   { fontSize: typography.base, fontWeight: typography.bold, lineHeight: 22 },
   daysSub:   { fontSize: typography.xs, marginTop: 1 },
 
   empty:      { flexGrow: 1, alignItems: 'center', justifyContent: 'center',
