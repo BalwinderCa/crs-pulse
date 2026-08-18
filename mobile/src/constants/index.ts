@@ -85,8 +85,10 @@ export const STORAGE_KEYS = {
   CALCULATOR_INPUTS: 'crs_pulse.calculator_inputs',
   DOC_CHECKLIST: 'crs_pulse.doc_checklist',
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
+  NOTIFICATIONS_SEEN_PROCESSING: 'crs_pulse.notifications_seen_processing',
   PREMIUM: 'crs_pulse.premium',
   REVIEW_PROMPTED: 'crs_pulse.review_prompted',
+  APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
 } as const;
 
 /**
@@ -136,4 +138,16 @@ export const ADMOB_BANNER_AD_UNIT = {
 export const ADMOB_NATIVE_AD_UNIT = {
   android: process.env.EXPO_PUBLIC_ADMOB_NATIVE_ANDROID || '',
   ios: process.env.EXPO_PUBLIC_ADMOB_NATIVE_IOS || '',
+} as const;
+
+/**
+ * AdMob *app open* ad-unit IDs — the ONLY ad format Google permits on a launch
+ * / splash screen (a banner or interstitial painted over the splash is a policy
+ * violation). Another SEPARATE ad-unit type in AdMob: a banner or native unit id
+ * will not serve here. Empty means the splash never waits and no ad shows, so
+ * this can be rolled out per-platform.
+ */
+export const ADMOB_APP_OPEN_AD_UNIT = {
+  android: process.env.EXPO_PUBLIC_ADMOB_APP_OPEN_ANDROID || '',
+  ios: process.env.EXPO_PUBLIC_ADMOB_APP_OPEN_IOS || '',
 } as const;

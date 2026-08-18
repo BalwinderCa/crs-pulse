@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Logo } from '@/components/common/Logo';
 import { SideMenu } from '@/features/dashboard/components/SideMenu';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
+import { useProcessingTimesBadge } from '@/hooks/useProcessingTimesBadge';
 import { useDrawsStore } from '@/store/drawsStore';
 import { usePremiumStore } from '@/store/premiumStore';
 import { spacing, typography } from '@/theme';
@@ -39,6 +40,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
   const latestDraw = useDrawsStore((s) => s.draws[0]);
   const isPremium = usePremiumStore((s) => s.isPremium);
   const { seenDraw, loaded, markSeen } = useNotificationsStore();
+  const hasProcessingUpdate = useProcessingTimesBadge();
 
   // First run: initialize quietly so a fresh install doesn't start with a badge
   useEffect(() => {
@@ -91,6 +93,9 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               accessibilityLabel={t('common.openMenu')}
             >
               <Ionicons name="menu" size={26} color={c.textPrimary} />
+              {hasProcessingUpdate && (
+                <View style={[s.badge, s.menuBadge, { backgroundColor: palette.danger }]} />
+              )}
             </TouchableOpacity>
             <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
               {title}
@@ -155,6 +160,9 @@ const s = StyleSheet.create({
     position: 'absolute', top: 1, right: 1,
     width: 9, height: 9, borderRadius: 5,
   },
+  // The hamburger's top bar reaches the icon's corner, so the dot sits just
+  // outside it rather than on top of the glyph.
+  menuBadge: { top: -3, right: -4, width: 8, height: 8, borderRadius: 4 },
   titleText: {
     flexShrink: 1,
     fontSize: typography.xs, fontWeight: typography.semibold,

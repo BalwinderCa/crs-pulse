@@ -3,28 +3,37 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 
 /**
- * Tracks the latest draw number the user has SEEN on the notifications page
- * (separate from LAST_SEEN_DRAW, which the draws store syncs on every fetch
- * for push de-duplication). Drives the bell badge in the app header.
+ * Tracks what the user has already SEEN, so the app can badge what's new:
+ *  • `seenDraw`       — latest draw number seen on the notifications page
+ *    (separate from LAST_SEEN_DRAW, which the draws store syncs on every fetch
+ *    for push de-duplication). Drives the bell badge in the app header.
+ *  • `seenProcessing` — IRCC processing-times `updated` label seen on the
+ *    processing-times page. Drives the hamburger + menu-row badge.
  */
 
 type NotificationsStore = {
   seenDraw: number | null;
+  seenProcessing: string | null;
   loaded: boolean;
   load: () => Promise<void>;
   markSeen: (drawNumber: number) => Promise<void>;
-  /** Resets the seen-draw marker (used by "Reset All Data"). */
+  markProcessingSeen: (updated: string) => Promise<void>;
+  /** Resets the seen markers (used by "Reset All Data"). */
   clear: () => Promise<void>;
 };
 
 export const useNotificationsStore = create<NotificationsStore>((set) => ({
   seenDraw: null,
+  seenProcessing: null,
   loaded: false,
 
   load: async () => {
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW);
-      set({ seenDraw: raw ? parseInt(raw, 10) : null, loaded: true });
+      const [raw, proc] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW),
+        AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_PROCESSING),
+      ]);
+      set({ seenDraw: raw ? parseInt(raw, 10) : null, seenProcessing: proc, loaded: true });
     } catch {
       set({ loaded: true });
     }
@@ -37,10 +46,20 @@ export const useNotificationsStore = create<NotificationsStore>((set) => ({
     } catch {}
   },
 
-  clear: async () => {
-    set({ seenDraw: null });
+  markProcessingSeen: async (updated) => {
+    set({ seenProcessing: updated });
     try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW);
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS_SEEN_PROCESSING, updated);
+    } catch {}
+  },
+
+  clear: async () => {
+    set({ seenDraw: null, seenProcessing: null });
+    try {
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.NOTIFICATIONS_SEEN_DRAW,
+        STORAGE_KEYS.NOTIFICATIONS_SEEN_PROCESSING,
+      ]);
     } catch {}
   },
 }));

@@ -1,6 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { checkAndNotify, checkMirrorRuns, isAuthorized, isStale, mapCategory } from './index.ts';
+import {
+  checkAndNotify,
+  checkMirrorRuns,
+  checkProcessingTimes,
+  isAuthorized,
+  isStale,
+  mapCategory,
+} from './index.ts';
 
 // Minimal in-memory KV (mirrors tokenStore.test.ts's MockKV).
 class MockKV {
@@ -138,5 +145,45 @@ test('checkAndNotify: notifies and advances KV when a newer draw appears', async
     assert.equal(r.draw_number, 420);
     assert.equal(r.token_count, 0); // no tokens registered in this test
     assert.equal(store.store.get('last_draw_number'), '420');
+  });
+});
+
+// ─── checkProcessingTimes: the IRCC estimate-change decision logic ────────────
+const PROC = (months: number) => ({
+  updated: 'August 10, 2026',
+  // peopleWaiting drifts on every mirror refresh and must NOT count as a change.
+  times: { ee_cec: { months, peopleWaiting: Math.random() }, ee_fsw: { months: 6 } },
+});
+const env = {} as unknown as Parameters<typeof checkProcessingTimes>[1];
+
+test('checkProcessingTimes: first run records the baseline WITHOUT notifying', async () => {
+  const store = new MockKV();
+  await withMockMirror(PROC(6), async () => {
+    const r = await checkProcessingTimes(store as unknown as KVNamespace, env);
+    assert.equal(r.changed, false);
+    assert.ok(store.store.get('processing_times_months'));
+  });
+});
+
+test('checkProcessingTimes: unchanged months are not a change (peopleWaiting drift ignored)', async () => {
+  const store = new MockKV();
+  await withMockMirror(PROC(6), async () => {
+    await checkProcessingTimes(store as unknown as KVNamespace, env); // baseline
+    const r = await checkProcessingTimes(store as unknown as KVNamespace, env);
+    assert.equal(r.changed, false);
+  });
+});
+
+test('checkProcessingTimes: notifies and advances KV when months change', async () => {
+  const store = new MockKV();
+  await withMockMirror(PROC(6), async () => {
+    await checkProcessingTimes(store as unknown as KVNamespace, env); // baseline
+  });
+  const baseline = store.store.get('processing_times_months');
+  await withMockMirror(PROC(8), async () => {
+    const r = await checkProcessingTimes(store as unknown as KVNamespace, env);
+    assert.equal(r.changed, true);
+    assert.equal(r.token_count, 0); // no tokens registered in this test
+    assert.notEqual(store.store.get('processing_times_months'), baseline);
   });
 });

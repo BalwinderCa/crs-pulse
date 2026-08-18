@@ -24,7 +24,7 @@ import NotificationsScreen from '@/features/notifications/screens/NotificationsS
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
 import PaywallScreen from '@/features/paywall/screens/PaywallScreen';
 import { usePremiumStore } from '@/store/premiumStore';
-import { initAds } from '@/services/adsService';
+import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
@@ -35,6 +35,10 @@ import type { RootStackParamList } from '@/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const BOOT_TIMEOUT_MS = 5_000;
+// Hard cap on how long the splash waits for an app-open ad to load. Past this
+// the splash hides with no ad — a slow or unfilled request must never turn the
+// launch into a stall.
+const SPLASH_AD_TIMEOUT_MS = 3_000;
 
 export default function RootNavigator() {
   const { profile, load: loadProfile } = useProfileStore();
@@ -89,12 +93,20 @@ export default function RootNavigator() {
 
   // Hide splash as soon as ready — don't gate on profile, as loadProfile()
   // always sets a non-null value and the null guard below handles the brief gap.
-  // Defer AdMob init to after splash hides so it doesn't interfere with boot.
+  // When monetization is on, every 3rd launch holds the splash for one app-open
+  // ad first (the only format Google permits on a launch screen), capped at
+  // SPLASH_AD_TIMEOUT_MS. The other launches boot straight through.
+  // The ATT prompt still comes after the splash: it is ignored unless the app is
+  // 'active', which it is not while the splash covers the window.
   useEffect(() => {
-    if (ready) {
-      ExpoSplash.hideAsync().catch(() => {});
+    if (!ready) return;
+    void (async () => {
+      if (MONETIZATION_ENABLED && (await takeAppOpenAdTurn())) {
+        await showAppOpenAd(SPLASH_AD_TIMEOUT_MS);
+      }
+      await ExpoSplash.hideAsync().catch(() => {});
       if (MONETIZATION_ENABLED) setTimeout(() => void initAds(), 0);
-    }
+    })();
   }, [ready]);
 
   if (!ready || profile === null || onboardingSeen === null) {

@@ -15,6 +15,7 @@ import { PRIVACY_POLICY_URL, STORE_URL } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useProcessingTimesBadge } from '@/hooks/useProcessingTimesBadge';
 import { Logo } from '@/components/common/Logo';
 
 const MENU_WIDTH = Dimensions.get('window').width;
@@ -148,6 +149,8 @@ type MenuItem = {
   label: string;
   onPress: () => void;
   accent?: string;
+  /** Shows a red "something new here" dot before the chevron. */
+  badge?: boolean;
 };
 
 // ─── Main Drawer ──────────────────────────────────────────────────────────────
@@ -158,6 +161,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   const insets = useSafeAreaInsets();
   const { t }  = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const hasProcessingUpdate = useProcessingTimesBadge();
 
   const slideX          = useRef(new Animated.Value(-MENU_WIDTH)).current;
   const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -210,7 +214,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
 
   const groupOne: MenuItem[] = [
     { icon: 'checkbox',        label: t('menu.documentChecklists'),    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
-    { icon: 'hourglass',       label: t('menu.checkProcessingTimes'),  onPress: navigateTo('ProcessingTimes'),  accent: palette.warning },
+    { icon: 'hourglass',       label: t('menu.checkProcessingTimes'),  onPress: navigateTo('ProcessingTimes'),  accent: palette.warning, badge: hasProcessingUpdate },
   ];
 
   const groupAbout: MenuItem[] = [
@@ -243,6 +247,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
         <Ionicons name={item.icon} size={19} color={item.accent ?? accent} />
       </View>
       <Text style={[s.rowLabel, { color: c.textPrimary }]}>{item.label}</Text>
+      {item.badge && <View style={[s.rowBadge, { backgroundColor: palette.danger }]} />}
       <Ionicons name="chevron-forward" size={15} color={c.textMuted} />
     </TouchableOpacity>
   );
@@ -395,4 +400,5 @@ const s = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   rowLabel: { flex: 1, fontSize: typography.base, fontWeight: typography.medium },
+  rowBadge: { width: 8, height: 8, borderRadius: 4 },
 });

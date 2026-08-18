@@ -503,17 +503,18 @@ export async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
 }
 
 /**
- * Emails subscribers when IRCC's Express Entry processing-time estimates change.
+ * Notifies subscribers when IRCC's Express Entry processing-time estimates change,
+ * by push AND email (each channel no-ops when it has no recipients / no config).
  *
- * Email-only by design: there is no free push channel for processing times (the
- * free push notification is draw-only), so this no-ops entirely when email
- * dispatch isn't configured. It compares a key-sorted snapshot of id→months
- * against the KV baseline; the first run records the baseline silently so
- * existing subscribers aren't alerted on rollout.
+ * It compares a key-sorted snapshot of id→months against the KV baseline; the
+ * first run records the baseline silently so existing users aren't alerted on
+ * rollout. The baseline is recorded regardless of which channels are configured
+ * — otherwise enabling one later would fire a spurious "changed" alert.
  */
-async function checkProcessingTimes(kv: KVNamespace, env: Env): Promise<{ changed: boolean }> {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return { changed: false };
-
+export async function checkProcessingTimes(
+  kv: KVNamespace,
+  env: Env,
+): Promise<{ changed: boolean; token_count?: number }> {
   const current = await fetchProcessingTimesMonths();
   if (!current) return { changed: false };
 
@@ -531,18 +532,35 @@ async function checkProcessingTimes(kv: KVNamespace, env: Env): Promise<{ change
 
   await kv.put(PROCESSING_TIMES_KEY, signature);
 
-  const emails = await listEmails(kv);
-  if (emails.length > 0) {
-    await sendEmailNotifications(kv, env, {
-      subject: 'IRCC processing times updated',
-      kicker: 'PROCESSING TIMES',
-      heading: 'Processing times updated',
-      intro:
-        'IRCC has updated its Express Entry processing-time estimates. Open CRS Pulse to see the latest timelines for your application.',
-      ctaLabel: 'See the latest times',
-    });
-  }
-  return { changed: true };
+  // Email first, independent of push tokens (no-ops when RESEND_API_KEY is unset).
+  await sendEmailNotifications(kv, env, {
+    subject: 'IRCC processing times updated',
+    kicker: 'PROCESSING TIMES',
+    heading: 'Processing times updated',
+    intro:
+      'IRCC has updated its Express Entry processing-time estimates. Open CRS Pulse to see the latest timelines for your application.',
+    ctaLabel: 'See the latest times',
+  });
+
+  const tokens = await listTokens(kv);
+  if (tokens.length === 0) return { changed: true, token_count: 0 };
+
+  const { unregistered, receipts } = await sendExpoPush(
+    tokens,
+    'IRCC processing times updated',
+    'New Express Entry estimates are live — open CRS Pulse to see your timeline.',
+    { type: 'processing_times' },
+  );
+
+  if (unregistered.length > 0) await revokeTokens(kv, unregistered);
+  if (receipts.length > 0) await storeReceipts(kv, receipts);
+
+  console.log(
+    `processing_times_push sent=${tokens.length} ` +
+      `unregistered=${unregistered.length} receipts=${receipts.length}`,
+  );
+
+  return { changed: true, token_count: tokens.length };
 }
 
 const STALE_KEY = 'mirror_stale_alerted';
@@ -843,7 +861,7 @@ export default {
 
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
     // Prune devices that failed delivery on the previous draw, then notify on a
-    // new draw and on any IRCC processing-times change (email subscribers only).
+    // new draw and on any IRCC processing-times change.
     await kickMirror(env);
     await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV, env);

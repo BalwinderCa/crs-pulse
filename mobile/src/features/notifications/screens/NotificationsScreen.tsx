@@ -8,6 +8,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 import { AdBanner } from '@/components/common/AdBanner';
 import { useDrawsStore } from '@/store/drawsStore';
+import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useNotificationsStore } from '../store/notificationsStore';
 import { useDrawNotifications } from '@/hooks/useDrawNotifications';
 import { CATEGORY_LABELS } from '@/constants';
@@ -36,6 +37,7 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { draws } = useDrawsStore();
+  const procUpdated = useProcessingTimesStore((st) => st.updated);
   const { seenDraw, markSeen } = useNotificationsStore();
   const { enabled: alertsEnabled, toggle: toggleAlerts } = useDrawNotifications();
 
@@ -84,7 +86,28 @@ export default function NotificationsScreen() {
 
         <Text style={[s.sectionTitle, { color: c.textMuted }]}>{t('notifications.recentAlerts')}</Text>
 
-        {items.length === 0 ? (
+        {/* Pinned above the draws: the processing-times feed carries only its
+            current state, so there is no history to interleave by date. */}
+        {!!procUpdated && (
+          <View style={[s.item, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
+            <View style={[s.itemIcon, { backgroundColor: palette.warning + '14' }]}>
+              <Ionicons name="hourglass-outline" size={17} color={palette.warning} />
+            </View>
+            <View style={s.itemText}>
+              <Text style={[s.itemTitle, { color: c.textPrimary }]}>
+                {t('notifications.processingUpdated')}
+              </Text>
+              <Text style={[s.itemBody, { color: c.textSecondary }]}>
+                {t('notifications.processingUpdatedMeta')}
+              </Text>
+              <Text style={[s.itemTime, { color: c.textMuted }]}>
+                {t('notifications.processingUpdatedTime', { label: procUpdated })}
+              </Text>
+            </View>
+          </View>
+        )}
+
+        {items.length === 0 && !procUpdated ? (
           <Text style={[s.empty, { color: c.textMuted }]}>
             {t('notifications.noNotifications')} — {t('notifications.noNotificationsDesc')}
           </Text>

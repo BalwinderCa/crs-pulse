@@ -77,7 +77,7 @@ Stores in `src/store/`:
 | `processingTimesStore` | `LiveProcessingTimes` | IRCC processing times by category/type; 7-day cache with bundled fallback |
 | `eePoolStore` | `EePoolData` | Express Entry pool distribution + Immigration Levels Plan; 7-day cache with bundled fallback |
 
-These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`.
+These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`. It also tracks the last processing-times `updated` label seen — `useProcessingTimesBadge()` turns that into the red dot on the header hamburger and the side-menu "Check Processing Times" row, cleared when `ProcessingTimesScreen` mounts.
 
 ### Feature Structure
 
@@ -130,7 +130,7 @@ Four source files:
 
 Two entry points:
 - `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, `/health`, and `/sync` (manual trigger)
-- `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected
+- `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected. Also runs `checkProcessingTimes`, which pushes + emails when the processing-times mirror's id→months signature changes (`peopleWaiting` is ignored — it drifts every refresh)
 
 Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). Optional: `RESEND_API_KEY`/`EMAIL_FROM` (email alerts) and `ALERT_EMAIL` (recipient for the stale-mirror heartbeat — the cron emails it once if the draw mirror goes >30 days stale). KV binding: `TOKENS_KV`.
 
@@ -173,7 +173,7 @@ Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PU
 - `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
 - `iapService.ts` — Thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock" (`crs_pulse.analytics_unlock`); handles connect/buy/restore/entitlement check
 - `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
-- `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row), free users only, hidden for Premium, and self-hides on ad no-fill; `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
+- `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row), free users only, hidden for Premium, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 3rd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'); `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
 ### Premium / IAP Gate
 

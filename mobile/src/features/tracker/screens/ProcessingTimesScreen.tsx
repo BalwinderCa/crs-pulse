@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +8,8 @@ import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { useAccentColor } from '@/hooks/useAccentColor';
+import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
+import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useProcessingTimes } from '../hooks/useProcessingTimes';
 
 const OFFICIAL_URL =
@@ -27,6 +29,14 @@ export default function ProcessingTimesScreen() {
   const { contentFrameStyle } = useResponsiveLayout();
   const { categories, updatedLabel } = useProcessingTimes();
   const [open, setOpen] = useState<string | null>(categories[0]?.id ?? null);
+
+  // Opening this page is what "reading" a processing-times update means — clears
+  // the red dot on the header hamburger and the side-menu row.
+  const liveUpdated = useProcessingTimesStore((st) => st.updated);
+  const markProcessingSeen = useNotificationsStore((st) => st.markProcessingSeen);
+  useEffect(() => {
+    if (liveUpdated) markProcessingSeen(liveUpdated);
+  }, [liveUpdated, markProcessingSeen]);
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
