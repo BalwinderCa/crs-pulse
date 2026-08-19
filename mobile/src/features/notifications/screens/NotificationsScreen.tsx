@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,13 +10,14 @@ import { AdBanner } from '@/components/common/AdBanner';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useNotificationsStore } from '../store/notificationsStore';
+import { buildNotificationFeed } from '../utils/feed';
 import { useDrawNotifications } from '@/hooks/useDrawNotifications';
 import { CATEGORY_LABELS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 
-const MAX_ITEMS = 15;
+
 
 function timeAgo(dateStr: string, tr: (key: string, opts?: Record<string, unknown>) => string): string {
   // parseISO reads YYYY-MM-DD as local midnight; new Date() would read it as UTC
@@ -41,8 +42,9 @@ export default function NotificationsScreen() {
   const { seenDraw, markSeen } = useNotificationsStore();
   const { enabled: alertsEnabled, toggle: toggleAlerts } = useDrawNotifications();
 
-  const items = draws.slice(0, MAX_ITEMS);
   const latest = draws[0];
+
+  const items = useMemo(() => buildNotificationFeed(draws, procUpdated), [draws, procUpdated]);
 
   useEffect(() => {
     if (latest && latest.draw_number !== seenDraw) {
@@ -86,47 +88,47 @@ export default function NotificationsScreen() {
 
         <Text style={[s.sectionTitle, { color: c.textMuted }]}>{t('notifications.recentAlerts')}</Text>
 
-        {/* Pinned above the draws: the processing-times feed carries only its
-            current state, so there is no history to interleave by date. */}
-        {!!procUpdated && (
-          <View style={[s.item, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-            <View style={[s.itemIcon, { backgroundColor: palette.warning + '14' }]}>
-              <Ionicons name="hourglass-outline" size={17} color={palette.warning} />
-            </View>
-            <View style={s.itemText}>
-              <Text style={[s.itemTitle, { color: c.textPrimary }]}>
-                {t('notifications.processingUpdated')}
-              </Text>
-              <Text style={[s.itemBody, { color: c.textSecondary }]}>
-                {t('notifications.processingUpdatedMeta')}
-              </Text>
-              <Text style={[s.itemTime, { color: c.textMuted }]}>
-                {t('notifications.processingUpdatedTime', { label: procUpdated })}
-              </Text>
-            </View>
-          </View>
-        )}
-
-        {items.length === 0 && !procUpdated ? (
+        {items.length === 0 ? (
           <Text style={[s.empty, { color: c.textMuted }]}>
             {t('notifications.noNotifications')} — {t('notifications.noNotificationsDesc')}
           </Text>
         ) : (
-          items.map((draw, index) => (
-            <Fragment key={draw.draw_number}>
+          items.map((item, index) => (
+            <Fragment key={item.kind === 'draw' ? `draw-${item.draw.draw_number}` : 'processing'}>
               <View style={[s.item, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
-                <View style={[s.itemIcon, { backgroundColor: accent + '14' }]}>
-                  <Ionicons name="flash-outline" size={17} color={accent} />
-                </View>
-                <View style={s.itemText}>
-                  <Text style={[s.itemTitle, { color: c.textPrimary }]}>
-                    {t('notifications.newDraw', { number: draw.draw_number })}
-                  </Text>
-                  <Text style={[s.itemBody, { color: c.textSecondary }]}>
-                    {t('notifications.drawMeta', { category: CATEGORY_LABELS[draw.category] ?? draw.category, score: draw.cutoff_score })}
-                  </Text>
-                  <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(draw.date, t as (key: string, opts?: Record<string, unknown>) => string)}</Text>
-                </View>
+                {item.kind === 'draw' ? (
+                  <>
+                    <View style={[s.itemIcon, { backgroundColor: accent + '14' }]}>
+                      <Ionicons name="flash-outline" size={17} color={accent} />
+                    </View>
+                    <View style={s.itemText}>
+                      <Text style={[s.itemTitle, { color: c.textPrimary }]}>
+                        {t('notifications.newDraw', { number: item.draw.draw_number })}
+                      </Text>
+                      <Text style={[s.itemBody, { color: c.textSecondary }]}>
+                        {t('notifications.drawMeta', { category: CATEGORY_LABELS[item.draw.category] ?? item.draw.category, score: item.draw.cutoff_score })}
+                      </Text>
+                      <Text style={[s.itemTime, { color: c.textMuted }]}>{timeAgo(item.draw.date, t as (key: string, opts?: Record<string, unknown>) => string)}</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={[s.itemIcon, { backgroundColor: palette.warning + '14' }]}>
+                      <Ionicons name="hourglass-outline" size={17} color={palette.warning} />
+                    </View>
+                    <View style={s.itemText}>
+                      <Text style={[s.itemTitle, { color: c.textPrimary }]}>
+                        {t('notifications.processingUpdated')}
+                      </Text>
+                      <Text style={[s.itemBody, { color: c.textSecondary }]}>
+                        {t('notifications.processingUpdatedMeta')}
+                      </Text>
+                      <Text style={[s.itemTime, { color: c.textMuted }]}>
+                        {t('notifications.processingUpdatedTime', { label: item.label })}
+                      </Text>
+                    </View>
+                  </>
+                )}
               </View>
               {(index + 1) % 5 === 0 && <AdBanner />}
             </Fragment>
