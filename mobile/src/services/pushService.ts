@@ -125,18 +125,44 @@ export async function unregisterPushNotifications(): Promise<void> {
 }
 
 
-export function setupPushListeners(onNewDraw: () => void): () => void {
+export type PushHandlers = {
+  onNewDraw: () => void;
+  onProcessingTimes: () => void;
+};
+
+/**
+ * Routes an incoming push to the store that has to refetch. Both listeners and
+ * the cold-start path funnel through here so a new push type only needs adding
+ * once.
+ */
+function dispatch(type: unknown, handlers: PushHandlers): void {
+  if (type === 'new_draw') handlers.onNewDraw();
+  else if (type === 'processing_times') handlers.onProcessingTimes();
+}
+
+export function setupPushListeners(handlers: PushHandlers): () => void {
   const foregroundSub = Notifications.addNotificationReceivedListener((notification) => {
-    const type = notification.request.content.data?.type;
-    if (type === 'new_draw') onNewDraw();
+    dispatch(notification.request.content.data?.type, handlers);
   });
 
   const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-    const type = response.notification.request.content.data?.type;
-    if (type === 'new_draw') onNewDraw();
+    dispatch(response.notification.request.content.data?.type, handlers);
   });
 
+  // Tapping a push from a COLD start delivers the response before these
+  // listeners exist, so without this the launch that matters most refetches
+  // nothing. Cleared after handling so it fires once, not on every later boot.
+  let cancelled = false;
+  Notifications.getLastNotificationResponseAsync()
+    .then(async (response) => {
+      if (cancelled || !response) return;
+      dispatch(response.notification.request.content.data?.type, handlers);
+      await Notifications.clearLastNotificationResponseAsync().catch(() => {});
+    })
+    .catch(() => {});
+
   return () => {
+    cancelled = true;
     foregroundSub.remove();
     responseSub.remove();
   };

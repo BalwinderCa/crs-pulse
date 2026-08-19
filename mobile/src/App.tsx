@@ -41,6 +41,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { setupPushListeners } from '@/services/pushService';
 import { useDrawsStore } from '@/store/drawsStore';
+import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { installGlobalErrorHandler } from '@/services/errorReporter';
 
 // Capture uncaught JS errors as early as possible (idempotent).
@@ -62,8 +63,14 @@ function AppInner() {
   useNetworkStatus();
 
   useEffect(() => {
-    return setupPushListeners(() => {
-      useDrawsStore.getState().refresh().catch(() => {});
+    return setupPushListeners({
+      onNewDraw: () => {
+        useDrawsStore.getState().refresh().catch(() => {});
+      },
+      // force: the push is proof the 6h cache is stale.
+      onProcessingTimes: () => {
+        useProcessingTimesStore.getState().load(true).catch(() => {});
+      },
     });
   }, []);
 

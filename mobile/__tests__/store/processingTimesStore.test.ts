@@ -50,4 +50,38 @@ describe('processingTimesStore', () => {
     expect(useProcessingTimesStore.getState().times?.ee_fsw?.months).toBe(8);
     expect(spy).not.toHaveBeenCalled();
   });
+
+  // The exact scenario the push exists for: a fresh cache from minutes ago would
+  // otherwise hide the very change the alert announced, for up to 6 hours.
+  it('force bypasses the freshness window so a pushed change is visible immediately', async () => {
+    const first = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ updated: 'August 10, 2026', times: { ee_cec: { months: 6 } } }),
+    );
+    await useProcessingTimesStore.getState().load();
+    expect(useProcessingTimesStore.getState().updated).toBe('August 10, 2026');
+
+    first.mockImplementation(() =>
+      okJson({ updated: 'September 10, 2026', times: { ee_cec: { months: 8 } } }),
+    );
+
+    // Unforced: cache is seconds old, so the network is never touched.
+    await useProcessingTimesStore.getState().load();
+    expect(useProcessingTimesStore.getState().updated).toBe('August 10, 2026');
+
+    await useProcessingTimesStore.getState().load(true);
+    expect(useProcessingTimesStore.getState().updated).toBe('September 10, 2026');
+    expect(useProcessingTimesStore.getState().times?.ee_cec?.months).toBe(8);
+  });
+
+  it('a forced load that fails offline keeps the cached figures', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ updated: 'August 10, 2026', times: { ee_cec: { months: 6 } } }),
+    );
+    await useProcessingTimesStore.getState().load();
+
+    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('offline'));
+    await useProcessingTimesStore.getState().load(true);
+    expect(useProcessingTimesStore.getState().updated).toBe('August 10, 2026');
+    expect(useProcessingTimesStore.getState().times?.ee_cec?.months).toBe(6);
+  });
 });

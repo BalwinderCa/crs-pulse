@@ -16,7 +16,8 @@ type LiveFeed = { updated: string | null; times: LiveProcessingTimes };
 type ProcessingTimesStore = {
   times: LiveProcessingTimes | null;
   updated: string | null;
-  load: () => Promise<void>;
+  /** `force` skips the freshness window — used when a push tells us the data changed. */
+  load: (force?: boolean) => Promise<void>;
 };
 
 // IRCC refreshes monthly, but the window is measured from *our* fetch, not theirs —
@@ -32,7 +33,7 @@ export const useProcessingTimesStore = create<ProcessingTimesStore>((set, get) =
   times: null,
   updated: null,
 
-  load: async () => {
+  load: async (force = false) => {
     // 1. Hydrate from cache first (instant, offline-safe).
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEYS.PROCESSING_TIMES_CACHE);
@@ -40,7 +41,10 @@ export const useProcessingTimesStore = create<ProcessingTimesStore>((set, get) =
         const cached = JSON.parse(raw) as { feed: LiveFeed; fetchedAt: string };
         if (isValidFeed(cached.feed)) {
           set({ times: cached.feed.times, updated: cached.feed.updated });
-          if (Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return; // fresh
+          // A processing-times push IS the signal that this cache is wrong, so a
+          // forced load must reach the network — otherwise the alert fires and the
+          // app still shows the old figures until the window expires.
+          if (!force && Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return;
         }
       }
     } catch {
