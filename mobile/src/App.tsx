@@ -41,6 +41,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { setupPushListeners } from '@/services/pushService';
 import { useDrawsStore } from '@/store/drawsStore';
+import { useEePoolStore } from '@/store/eePoolStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { installGlobalErrorHandler } from '@/services/errorReporter';
 
@@ -66,6 +67,8 @@ function AppInner() {
     return setupPushListeners({
       onNewDraw: () => {
         useDrawsStore.getState().refresh().catch(() => {});
+        // Same IRCC feed backs the pool — a new draw makes its cache stale too.
+        useEePoolStore.getState().load(true).catch(() => {});
       },
       // force: the push is proof the 6h cache is stale.
       onProcessingTimes: () => {

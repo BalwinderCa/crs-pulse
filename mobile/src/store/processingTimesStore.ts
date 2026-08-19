@@ -53,7 +53,12 @@ export const useProcessingTimesStore = create<ProcessingTimesStore>((set, get) =
 
     // 2. Refresh from the mirror when missing or stale.
     try {
-      const res = await fetch(PROCESSING_TIMES_URL, { headers: { Accept: 'application/json' } });
+      // raw.githubusercontent serves `cache-control: max-age=300`, so without a
+      // cache-buster a forced load can still be handed a 5-minute-old copy — which
+      // is long enough to miss the very change the push announced.
+      const res = await fetch(`${PROCESSING_TIMES_URL}?_=${Date.now()}`, {
+        headers: { Accept: 'application/json', 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      });
       if (!res.ok) return; // keep cache / bundled fallback
       const feed = (await res.json()) as unknown;
       if (!isValidFeed(feed) || Object.keys(feed.times).length === 0) return; // ignore bad payload

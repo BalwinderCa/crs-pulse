@@ -19,7 +19,8 @@ type EePoolStore = {
   data: EePoolData;
   /** true once the live mirror (not just the bundled seed) has loaded. */
   live: boolean;
-  load: () => Promise<void>;
+  /** `force` skips the freshness window — a new draw changes this same feed. */
+  load: (force?: boolean) => Promise<void>;
   updateFromRounds: (rounds: unknown) => Promise<void>;
 };
 
@@ -53,7 +54,7 @@ export const useEePoolStore = create<EePoolStore>((set, get) => ({
     }
   },
 
-  load: async () => {
+  load: async (force = false) => {
     // 1. Hydrate from cache first (instant, offline-safe).
     try {
       const raw = await AsyncStorage.getItem(STORAGE_KEYS.EE_POOL_CACHE);
@@ -61,7 +62,10 @@ export const useEePoolStore = create<EePoolStore>((set, get) => ({
         const cached = JSON.parse(raw) as { data: EePoolData; fetchedAt: string };
         if (isEePoolData(cached.data)) {
           set({ data: cached.data, live: true });
-          if (Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return; // fresh
+          // The pool is derived from the SAME rounds feed as the draws, so a new-draw
+          // push means this snapshot is out of date too — analytics would otherwise
+          // score against a pool that predates the draw it is reacting to.
+          if (!force && Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return;
         }
       }
     } catch {

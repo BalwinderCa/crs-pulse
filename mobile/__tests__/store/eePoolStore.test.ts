@@ -76,4 +76,17 @@ describe('eePoolStore', () => {
     expect(useEePoolStore.getState().data.levels.prTarget).toBe(365000);
     expect(spy).not.toHaveBeenCalled();
   });
+
+  it('force bypasses the freshness window (a new draw restates the same feed)', async () => {
+    const state = useEePoolStore.getState();
+    const spy = jest.spyOn(global, 'fetch');
+    await state.load();
+    const afterFirst = spy.mock.calls.length;
+
+    await state.load();
+    expect(spy.mock.calls.length).toBe(afterFirst); // fresh cache — no network
+
+    await state.load(true);
+    expect(spy.mock.calls.length).toBeGreaterThan(afterFirst);
+  });
 });

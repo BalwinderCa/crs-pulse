@@ -84,4 +84,15 @@ describe('processingTimesStore', () => {
     expect(useProcessingTimesStore.getState().updated).toBe('August 10, 2026');
     expect(useProcessingTimesStore.getState().times?.ee_cec?.months).toBe(6);
   });
+
+  it('cache-busts the mirror so the CDN cannot serve a stale copy', async () => {
+    const spy = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ updated: 'August 10, 2026', times: { ee_cec: { months: 6 } } }),
+    );
+    await useProcessingTimesStore.getState().load();
+
+    const [url, init] = spy.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/[?&]_=\d+/); // raw.githubusercontent sends max-age=300
+    expect((init.headers as Record<string, string>)['Cache-Control']).toBe('no-cache');
+  });
 });
