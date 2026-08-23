@@ -23,6 +23,52 @@ const ASSETS = resolve(here, 'assets');
 
 const APP_STORE_URL = 'https://apps.apple.com/app/crs-pulse-ircc-tracker/id6784619403';
 const CONTACT = 'contact@crspulse.com';
+const SITE = 'https://www.crspulse.com';
+const BUILT = new Date().toISOString().slice(0, 10);
+
+// Every public page, in nav order. Single source of truth for <title>/<meta description>,
+// the markdown twin agents get via `Accept: text/markdown`, sitemap.xml and llms.txt.
+// vercel.json's redirects/headers must list the same paths — web/build.test.mjs asserts it.
+const PAGES = [
+  {
+    file: 'index', path: '/', priority: '1.0',
+    title: 'CRS Pulse \u2014 Express Entry CRS Calculator & IRCC Draw Tracker',
+    description: 'Calculate your Canada Express Entry CRS score, track live IRCC draws, and get push alerts for new rounds. Free, private, and on-device.',
+    llm: 'What CRS Pulse is, the four calculators, recent draws, privacy model and FAQ.',
+  },
+  {
+    file: 'calculators', path: '/calculators', priority: '0.9',
+    title: 'Calculators \u2014 CRS Pulse',
+    description: 'CRS, FSW 67-point, BC PNP SIRS and SINP EOI \u2014 four official Express Entry and provincial nominee calculators, computed live in your browser.',
+    llm: 'The four point grids with their inputs, maximums and pass marks. Run them in-browser, no upload.',
+  },
+  {
+    file: 'draws', path: '/draws', priority: '0.9',
+    title: 'Draws & Trends \u2014 CRS Pulse',
+    description: 'Every Express Entry draw, fetched straight from IRCC, with category filters, cutoff trends, pool composition and instant push alerts.',
+    llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
+  },
+  {
+    file: 'features', path: '/features', priority: '0.7',
+    title: 'Features \u2014 CRS Pulse',
+    description: 'Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics \u2014 free.',
+    llm: 'What the iPhone app does at each stage: tracker, checklists, timeline, alerts, analytics.',
+  },
+  {
+    file: 'privacy', path: '/privacy', priority: '0.5',
+    title: 'Privacy Policy \u2014 CRS Pulse',
+    description: 'Privacy Policy for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.',
+    llm: 'What is stored, where it is stored (on-device) and what leaves the phone.',
+  },
+  {
+    file: 'terms', path: '/terms', priority: '0.5',
+    title: 'Terms of Use \u2014 CRS Pulse',
+    description: 'Terms of Use for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.',
+    llm: 'Terms of use, including the estimates-only / not-immigration-advice disclaimer.',
+  },
+];
+const page = (file) => PAGES.find((p) => p.file === file);
+const mdPath = (p) => (p.path === '/' ? '/index.md' : `${p.path}.md`);
 
 const slug = (s) =>
   s.toLowerCase().replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -280,19 +326,28 @@ const footerFull = () => `
   </div>
 </footer>`;
 
-function shell({ title, description, body }) {
+function shell({ title, description, path, jsonld, noindex, body }) {
+  // `path` is set for the six real pages: it drives the canonical URL and the
+  // rel=alternate pointer at the markdown twin agents can ask for. The 404 page
+  // has no canonical home, so it passes neither and goes out noindex.
+  const head = path
+    ? `<link rel="canonical" href="${SITE}${path}">
+<link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">`
+    : '';
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow'}">
 <meta name="theme-color" content="#EEF3FB">
 <title>${title}</title>
 <meta name="description" content="${description}">
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:type" content="website">
+${head}
+${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>` : ''}
 ${THEME_INIT}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -522,11 +577,7 @@ ${heroBg()}
 </div>
 ${footerFull()}
 </div>`;
-  return shell({
-    title: 'CRS Pulse — Express Entry CRS Calculator & IRCC Draw Tracker',
-    description: 'Calculate your Canada Express Entry CRS score, track live IRCC draws, and get push alerts for new rounds. Free, private, and on-device.',
-    body,
-  });
+  return shell({ ...page('index'), jsonld: homeJsonLd(), body });
 }
 
 // ------------------------------------------------------------------ FEATURES
@@ -608,11 +659,7 @@ ${blobs()}
 </div>
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>`;
-  return shell({
-    title: 'Features — CRS Pulse',
-    description: 'Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics — free.',
-    body,
-  });
+  return shell({ ...page('features'), body });
 }
 
 // ------------------------------------------------------------------ DRAWS
@@ -718,11 +765,7 @@ ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canad
 <script>
 function filterDraws(cat,btn){document.querySelectorAll('#drawtable .drawrow').forEach(function(r){r.style.display=(cat==='All'||r.getAttribute('data-cat')===cat)?'':'none'});document.querySelectorAll('.filterchip').forEach(function(c){c.classList.remove('on')});btn.classList.add('on')}
 </script>`;
-  return shell({
-    title: 'Draws & Trends — CRS Pulse',
-    description: 'Every Express Entry draw, fetched straight from IRCC, with category filters, cutoff trends, pool composition and instant push alerts.',
-    body,
-  });
+  return shell({ ...page('draws'), body });
 }
 
 // ------------------------------------------------------------------ CALCULATORS
@@ -1151,24 +1194,340 @@ ${blobs()}
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>
 ${CALC_SCRIPT}`;
-  return shell({
-    title: 'Calculators — CRS Pulse',
-    description: 'CRS, FSW 67-point, BC PNP SIRS and SINP EOI — four official Express Entry and provincial nominee calculators, computed live in your browser.',
-    body,
-  });
+  return shell({ ...page('calculators'), body });
 }
 
 // ------------------------------------------------------------------ DOCS
-function doc(mdFile, title) {
-  const md = readFileSync(resolve(DOCS, mdFile), 'utf8');
+function doc(file, mdFile) {
+  const md = docMd(mdFile);
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
 ${blobs()}
 <main class="doc"><article class="doc-card">${addHeadingIds(marked.parse(md))}</article></main>
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>`;
-  return shell({ title: `${title} — CRS Pulse`, description: `${title} for CRS Pulse — the Express Entry CRS calculator and IRCC draw tracker.`, body });
+  return shell({ ...page(file), body });
 }
+
+// ------------------------------------------------------------------ AGENT SURFACES
+// Agents get the same six URLs as browsers, but as markdown: a request carrying
+// `Accept: text/markdown` is 307'd to the .md twin built here. It has to be a redirect,
+// not a rewrite — Vercel evaluates vercel.json rewrites *after* the filesystem phase, so
+// index.html would already have won. The twins are generated from the same constants as
+// the HTML so the two can't drift.
+const docMd = (mdFile) => readFileSync(resolve(DOCS, mdFile), 'utf8');
+const plain = (s) => String(s).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+const noIcon = (s) => plain(s).replace(/^[^\p{L}\d]+/u, '');
+const mdList = (items) => items.map((i) => `- ${i}`).join('\n');
+const mdTable = (head, rows) =>
+  [`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`, ...rows.map((r) => `| ${r.join(' | ')} |`)].join('\n');
+const MD_FOOTER = `---
+
+Unofficial. Not affiliated with, endorsed by, or connected to IRCC or the Government of Canada.
+All scores, predictions and timelines are estimates for guidance only and are not immigration
+advice. Verify with the official IRCC tools at canada.ca before making decisions.
+
+Contact: ${CONTACT} · iOS app: ${APP_STORE_URL}`;
+
+const mdHead = (file) => {
+  const p = page(file);
+  return `# ${p.title}\n\n> ${p.description}\n`;
+};
+
+// The four grids, keyed to the STATE0 shapes the in-browser calculators actually use,
+// so the input list an agent reads is the input list the form renders.
+const CALC_META = [
+  ['crs', 'CRS — Comprehensive Ranking System', '1,200', 'The official IRCC Express Entry formula: core human capital, spouse factors, skill transferability and additional points.'],
+  ['fsw', 'FSW 67-point grid', '100 (67 to be eligible)', 'Federal Skilled Worker six selection factors — the eligibility gate before Express Entry ranking.'],
+  ['sirs', 'BC PNP SIRS', '200', 'British Columbia Skills Immigration Registration System, scored on economic and human-capital factors.'],
+  ['sinp', 'Saskatchewan SINP EOI', '110 (60 to be eligible)', 'Saskatchewan International Skilled Worker Expression of Interest points assessment.'],
+];
+
+const homeMd = () => `${mdHead('index')}
+CRS Pulse is a free iPhone app and browser toolkit for people in (or heading for) the
+Canadian Express Entry pool. It scores a profile against the official IRCC and provincial
+point grids, tracks every round of invitations, and follows a PR application from profile
+to landing. Everything entered stays on the device — no account, no trackers.
+
+- Website: ${SITE}/
+- iOS App Store: ${APP_STORE_URL}
+- Agent guidance: ${SITE}/llms.txt
+
+## Calculators
+
+${mdList(CALC_META.map(([, name, max, desc]) => `**${name}** — max ${max}. ${desc}`))}
+
+All four run in the browser at ${SITE}/calculators — inputs are never uploaded.
+
+## What the app does
+
+${mdList(FEATURES_SMALL.map(([, title, desc]) => `**${title}** — ${plain(desc)}`))}
+
+## Recent Express Entry draws
+
+${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], HOME_DRAWS.map(([no, date, cat, invited, cutoff]) => [no, date, cat, invited, cutoff]))}
+
+Illustrative of the 2025–2026 season. Full history and trends: ${SITE}/draws
+
+## Privacy
+
+${mdList(PRIVACY_POINTS)}
+
+Full policy: ${SITE}/privacy
+
+## FAQ
+
+${FAQ.map(([q, a]) => `### ${q}\n\n${plain(a)}`).join('\n\n')}
+
+${MD_FOOTER}
+`;
+
+const calculatorsMd = () => `${mdHead('calculators')}
+Four point grids, each computed live in the browser. Nothing is sent to a server. These are
+estimates for planning — confirm a final score with the official IRCC or provincial tool.
+
+${CALC_META.map(([key, name, max, desc]) => `## ${name}
+
+Maximum: **${max}**
+
+${desc}
+
+Inputs: ${Object.keys(STATE0[key]).join(', ')}.`).join('\n\n')}
+
+## Which grid applies
+
+- Everyone in the Express Entry pool is ranked by **CRS**.
+- **FSW 67** is the eligibility test for the Federal Skilled Worker program; it does not
+  affect CRS ranking.
+- **BC PNP SIRS** and **SINP EOI** are provincial nominee streams. A provincial nomination
+  adds 600 CRS points, which is why nomination rounds show cutoffs above 700.
+
+Try them: ${SITE}/calculators
+
+${MD_FOOTER}
+`;
+
+const drawsMd = () => `${mdHead('draws')}
+The app pulls rounds of invitations straight from IRCC's public JSON feed and pushes an
+alert within about 15 minutes of publication. The table below is illustrative of the
+2025–2026 season; canada.ca is authoritative for current numbers.
+
+## Rounds of invitations
+
+${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], ALL_DRAWS.map((d) => [d.no, d.date, d.cat, d.invited, d.cutoff]))}
+
+Category filters available in the app: ${DRAW_FILTERS.join(', ')}.
+
+## Pool distribution by CRS band
+
+${mdTable(['CRS range', 'Candidates'], POOL.map(([label, count]) => [label, count]))}
+
+## What the numbers say
+
+${mdList(INSIGHTS.map(([, title, body]) => `**${title}** — ${plain(body)}`))}
+
+${MD_FOOTER}
+`;
+
+const featuresMd = () => `${mdHead('features')}
+CRS Pulse mirrors the real IRCC process at every step. Free on iPhone, no account.
+
+${FEATURE_BLOCKS.map((b) => `## ${noIcon(b.tag)}
+
+**${plain(b.title)}**
+
+${plain(b.body)}
+
+${mdList(b.points.map(plain))}`).join('\n\n')}
+
+${MD_FOOTER}
+`;
+
+const MD_PAGES = {
+  'index.md': homeMd,
+  'calculators.md': calculatorsMd,
+  'draws.md': drawsMd,
+  'features.md': featuresMd,
+  'privacy.md': () => docMd('PRIVACY_POLICY.md'),
+  'terms.md': () => docMd('TERMS_OF_USE.md'),
+};
+
+// ------------------------------------------------------------------ llms.txt
+// llmstxt.org layout: H1 name, blockquote summary, prose, then H2 link sections.
+// The "When to use this" section is the part agents actually route on.
+const llmsTxt = () => `# CRS Pulse
+
+> Free Canadian Express Entry toolkit: the official CRS formula plus the FSW 67-point,
+> BC PNP SIRS and Saskatchewan SINP grids, live IRCC rounds of invitations with push
+> alerts, and a PR application tracker. iPhone app plus in-browser calculators.
+
+CRS Pulse is an independent product. It is not affiliated with, endorsed by, or connected
+to IRCC or the Government of Canada, and nothing it produces is immigration advice.
+Every page on this site is also available as Markdown.
+
+## When to use this
+
+Reach for CRS Pulse when the question is about **Canadian Express Entry scoring, draw
+history, or PR application timing**. Specifically:
+
+- **Scoring a candidate profile.** Turn age, education, CLB language levels, Canadian and
+  foreign work experience, spouse factors and a provincial nomination into a CRS score out
+  of 1,200 — see ${SITE}/calculators.md for the exact input list per grid.
+- **Checking eligibility before ranking.** The FSW 67-point grid decides whether a profile
+  can enter the Federal Skilled Worker pool at all; CRS only ranks profiles already in it.
+- **Comparing a score against real cutoffs.** ${SITE}/draws.md carries round number, date,
+  category, invitations issued and cutoff CRS, plus the pool distribution by CRS band, so a
+  score can be placed against what actually got invited.
+- **Explaining category-based draws.** Why a French-language or healthcare round can cut off
+  near 380–480 while a general round sits above 500, and why nomination rounds exceed 700.
+- **Provincial nominee scoring.** BC PNP SIRS (200 points) and Saskatchewan SINP EOI
+  (110 points, 60 to qualify).
+- **Application-stage questions.** Processing-time estimates, per-program document
+  checklists, and the ITA → e-APR → AOR → biometrics → medical → PPR milestone sequence:
+  ${SITE}/features.md.
+
+How to call it:
+
+- Add \`Accept: text/markdown\` to a request for any page URL and you get Markdown back
+  (a 307 points you at the twin, so follow redirects). Appending \`.md\` to the path works
+  just as well: \`${SITE}/draws.md\`.
+- Start here: this file, then ${SITE}/sitemap.xml for the full URL list.
+- Draw figures on this site are illustrative of the 2025–2026 season. For live rounds, use
+  the app (which reads IRCC's feed directly) or canada.ca.
+
+## When not to use this
+
+- Case-specific legal or immigration advice, or anything binding — CRS Pulse produces
+  estimates only.
+- The authoritative value of a score or a live application status. IRCC's own tools are
+  the source of truth; always confirm there before acting.
+- Non-Canadian immigration programs.
+
+## Pages
+
+${PAGES.map((p) => `- [${p.title}](${SITE}${mdPath(p)}): ${p.llm}`).join('\n')}
+
+## Optional
+
+- [CRS Pulse on the App Store](${APP_STORE_URL}): the iPhone app, with push alerts and the
+  application tracker that the website does not carry.
+- [Contact](mailto:${CONTACT}): questions, corrections, or bug reports.
+`;
+
+// ------------------------------------------------------------------ sitemap + robots
+const sitemapXml = () => `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${PAGES.map((p) => `  <url>
+    <loc>${SITE}${p.path}</loc>
+    <lastmod>${BUILT}</lastmod>
+    <changefreq>${p.priority === '0.5' ? 'yearly' : 'weekly'}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join('\n')}
+</urlset>
+`;
+
+const robotsTxt = () => `# CRS Pulse — https://www.crspulse.com
+# Agent guidance and when-to-use: ${SITE}/llms.txt
+User-agent: *
+Allow: /
+
+Sitemap: ${SITE}/sitemap.xml
+`;
+
+// ------------------------------------------------------------------ 404
+// Static Vercel serves this with a real 404 status. The body is a site map rather than a
+// dead end, and it ends with the same links in markdown so an agent that lands here can
+// recover without parsing the design.
+function notFoundPage() {
+  const links = [
+    ...PAGES.map((p) => [p.path, p.title.replace(/ — CRS Pulse$/, ''), p.llm]),
+    ['/llms.txt', 'llms.txt', 'What this site is for and when an agent should use it.'],
+    ['/sitemap.xml', 'sitemap.xml', 'Every indexable URL with its last-modified date.'],
+  ];
+  const agentMd = [
+    '# 404 — page not found',
+    '',
+    'This path does not exist on crspulse.com. Start from one of these:',
+    '',
+    ...PAGES.map((p) => `- [${p.title.replace(/ — CRS Pulse$/, '')}](${SITE}${mdPath(p)})`),
+    `- [llms.txt](${SITE}/llms.txt) — when to use this site, and how to request Markdown`,
+    `- [sitemap.xml](${SITE}/sitemap.xml) — every indexable URL`,
+  ].join('\n');
+  const body = `${nav('', 'calc')}
+<div style="min-height:100vh;position:relative">
+${blobs()}
+<main style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:80px 24px 72px">
+  ${eyebrow('Error 404')}
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">This page doesn't <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">exist</span></h1>
+  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:620px">The link may be old or mistyped. Everything on crspulse.com lives at one of these pages:</p>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    ${links.map(([href, label, desc]) => `<a class="lift" href="${href}" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;color:var(--text)"><div style="font-size:15px;font-weight:700;margin-bottom:3px">${label}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${desc}</div></a>`).join('')}
+  </div>
+  <div style="margin-top:34px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
+    <div style="font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">For AI agents</div>
+    <pre style="margin:0;overflow-x:auto;font-size:12.5px;line-height:1.6;color:var(--text2);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap">${agentMd.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>
+  </div>
+</main>
+${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+</div>`;
+  return shell({ title: 'Page not found — CRS Pulse', description: 'That page does not exist on crspulse.com. Jump to the calculators, live IRCC draws, features or legal pages.', noindex: true, body });
+}
+
+// ------------------------------------------------------------------ JSON-LD
+// Homepage identity graph: the product, who publishes it, the site, and the FAQ that is
+// already rendered on the page (same source array, so the markup can't drift from it).
+const homeJsonLd = () => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': ['SoftwareApplication', 'MobileApplication'],
+      '@id': `${SITE}/#app`,
+      name: 'CRS Pulse',
+      alternateName: 'CRS Pulse — Express Entry Calculator',
+      url: `${SITE}/`,
+      description: page('index').description,
+      applicationCategory: 'UtilitiesApplication',
+      applicationSubCategory: 'Immigration calculator',
+      operatingSystem: 'iOS 16+',
+      installUrl: APP_STORE_URL,
+      downloadUrl: APP_STORE_URL,
+      inLanguage: ['en', 'fr'],
+      isAccessibleForFree: true,
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD', availability: 'https://schema.org/InStock', url: APP_STORE_URL },
+      featureList: FEATURES_SMALL.map(([, title, desc]) => `${title}: ${plain(desc)}`),
+      publisher: { '@id': `${SITE}/#org` },
+      sameAs: [APP_STORE_URL],
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${SITE}/#org`,
+      name: 'CRS Pulse',
+      url: `${SITE}/`,
+      logo: `${SITE}/img/logo.svg`,
+      email: CONTACT,
+      description: 'Independent publisher of CRS Pulse, an Express Entry CRS calculator and IRCC draw tracker. Not affiliated with IRCC or the Government of Canada.',
+      sameAs: [APP_STORE_URL],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE}/#website`,
+      url: `${SITE}/`,
+      name: 'CRS Pulse',
+      description: page('index').description,
+      inLanguage: 'en',
+      publisher: { '@id': `${SITE}/#org` },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': `${SITE}/#faq`,
+      mainEntity: FAQ.map(([q, a]) => ({
+        '@type': 'Question',
+        name: plain(q),
+        acceptedAnswer: { '@type': 'Answer', text: plain(a) },
+      })),
+    },
+  ],
+});
 
 // ------------------------------------------------------------------ build
 mkdirSync(OUT, { recursive: true });
@@ -1181,9 +1540,16 @@ writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
-writeFileSync(resolve(OUT, 'privacy.html'), doc('PRIVACY_POLICY.md', 'Privacy Policy'));
-writeFileSync(resolve(OUT, 'terms.html'), doc('TERMS_OF_USE.md', 'Terms of Use'));
+writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
+writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));
+writeFileSync(resolve(OUT, '404.html'), notFoundPage());
+// Markdown twins — reached from the HTML URL when the request carries
+// Accept: text/markdown (see vercel.json redirects), and directly at the .md path.
+for (const [name, render] of Object.entries(MD_PAGES)) writeFileSync(resolve(OUT, name), render());
+writeFileSync(resolve(OUT, 'llms.txt'), llmsTxt());
+writeFileSync(resolve(OUT, 'sitemap.xml'), sitemapXml());
+writeFileSync(resolve(OUT, 'robots.txt'), robotsTxt());
 // AdMob authorized-seller declaration; crspulse.com must be the developer website
 // on the App Store / Play listings for AdMob to crawl it.
 writeFileSync(resolve(OUT, 'app-ads.txt'), 'google.com, pub-4874088724567128, DIRECT, f08c47fec0942fa0\n');
-console.log('Built index, calculators, draws, features, privacy, terms → web/public/');
+console.log(`Built ${PAGES.length} pages (html + md), 404, llms.txt, sitemap.xml, robots.txt → web/public/`);

@@ -4,5 +4,36 @@
   "buildCommand": "npm --prefix web run build",
   "outputDirectory": "web/public",
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/",
+      "has": [{ "type": "header", "key": "accept", "value": ".*text/(x-)?markdown.*" }],
+      "destination": "/index.md",
+      "permanent": false
+    },
+    {
+      "source": "/:page(calculators|draws|features|privacy|terms)",
+      "has": [{ "type": "header", "key": "accept", "value": ".*text/(x-)?markdown.*" }],
+      "destination": "/:page.md",
+      "permanent": false
+    }
+  ],
+  "headers": [
+    {
+      "source": "/:page(|calculators|draws|features|privacy|terms)",
+      "headers": [{ "key": "Vary", "value": "Accept, Accept-Encoding" }]
+    },
+    {
+      "source": "/:page(index|calculators|draws|features|privacy|terms).md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "Vary", "value": "Accept, Accept-Encoding" }
+      ]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }]
+    }
+  ]
 }
