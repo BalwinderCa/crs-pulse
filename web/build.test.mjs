@@ -108,28 +108,14 @@ test('404 page is a recoverable site map, not a dead end', () => {
   assert.match(html, /# 404 — page not found/, 'needs the markdown body agents read');
 });
 
-// Negotiation has to live in `redirects`, not `rewrites`: the Edge Network evaluates
-// rewrites after the filesystem phase, where index.html has already answered.
-test('vercel.json negotiates markdown for every route', () => {
+// Negotiation lives in the root middleware (see web/middleware.test.mjs): it is the only
+// layer that can read q-values and answer 406. vercel.json must not also try — a rewrite
+// never fires for a path that exists on disk, and a redirect would pre-empt the
+// middleware and give up the same-URL property.
+test('vercel.json leaves negotiation to the middleware', () => {
   assert.ok(!vercel.rewrites, 'rewrites never fire for paths that exist on disk');
-  const covered = new Map();
-  for (const r of vercel.redirects) {
-    const has = acceptRule(r);
-    if (!has) continue;
-    for (const path of expand(r.source)) covered.set(path, { ...r, accept: has });
-  }
-  for (const [path, file] of ROUTES) {
-    const rule = covered.get(path);
-    assert.ok(rule, `no Accept-based redirect for ${path}`);
-    assert.ok(rule.destination.endsWith('.md'), `${path} must point at a markdown twin`);
-    assert.equal(rule.permanent, false, `${path}: negotiation is per-request, so 307 not 308`);
-    if (!rule.destination.includes(':')) assert.equal(rule.destination, `/${file}.md`);
-    // The regex is matched against the whole Accept header value by the Edge Network.
-    const re = new RegExp(`^(?:${rule.accept.value})$`);
-    assert.ok(re.test('text/markdown'), `${path}: bare text/markdown must match`);
-    assert.ok(re.test('text/markdown, text/plain;q=0.9, */*;q=0.8'), `${path}: markdown in a list must match`);
-    assert.ok(!re.test('text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'), `${path}: browsers must not match`);
-  }
+  const stale = (vercel.redirects || []).filter(acceptRule);
+  assert.deepEqual(stale, [], 'Accept-based redirects would pre-empt the middleware');
 });
 
 test('vercel.json sets Vary: Accept on both variants of every route', () => {
