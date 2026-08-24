@@ -11,7 +11,7 @@
 // canvas ({{ }} / sc-for / sc-if / DCLogic) is resolved to static HTML here; the
 // interactive bits (theme toggle, FAQ, draws filter, calculator engine) run as small
 // vanilla JS in-page. The legal markdown stays the single source of truth.
-import { readFileSync, writeFileSync, mkdirSync, cpSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, cpSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
@@ -1568,10 +1568,23 @@ const homeJsonLd = () => ({
 // ------------------------------------------------------------------ build
 mkdirSync(OUT, { recursive: true });
 mkdirSync(resolve(OUT, 'img'), { recursive: true });
-cpSync(resolve(ASSETS, 'logo.svg'), resolve(OUT, 'img/logo.svg'));
-cpSync(resolve(ASSETS, 'frame/iphone17pro.png'), resolve(OUT, 'img/iphone17pro.png'));
-cpSync(resolve(ASSETS, 'screenshots/hero_home.png'), resolve(OUT, 'img/hero-screenshot.png'));
-cpSync(resolve(ASSETS, 'bg/toronto-skyline.webp'), resolve(OUT, 'img/skyline.webp'));
+// Apple's Product Bezels asset is licensed to show our own app but must not enter this
+// public repo (web/.gitignore), so a fresh checkout is missing exactly one image. The
+// CI job only verifies the generated HTML/markdown — identical either way, since the
+// markup doesn't change — so there a missing asset is a warning. Anywhere else the
+// output gets deployed, so it is fatal.
+const assetsMayBeMissing = process.env.GITHUB_ACTIONS === 'true';
+function copyAsset(from, to) {
+  const src = resolve(ASSETS, from);
+  if (existsSync(src)) return cpSync(src, resolve(OUT, to));
+  if (!assetsMayBeMissing) throw new Error(`missing asset web/assets/${from} — a deployable build needs it`);
+  console.warn(`⚠ web/assets/${from} not in this checkout — image skipped (GITHUB_ACTIONS)`);
+}
+
+copyAsset('logo.svg', 'img/logo.svg');
+copyAsset('frame/iphone17pro.png', 'img/iphone17pro.png');
+copyAsset('screenshots/hero_home.png', 'img/hero-screenshot.png');
+copyAsset('bg/toronto-skyline.webp', 'img/skyline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());

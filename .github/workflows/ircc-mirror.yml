@@ -38,8 +38,16 @@ jobs:
         run: node .github/scripts/fetch-processing-times.mjs
 
       - name: Commit if changed
+        id: commit
         if: always()
         run: |
+          # The website bakes data/ee-rounds.json in at build time, so only a change to
+          # *that* file is worth a redeploy — processing times are app-only.
+          if git diff --quiet -- data/ee-rounds.json; then
+            echo "site=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "site=true" >> "$GITHUB_OUTPUT"
+          fi
           if git diff --quiet -- data/latest-draw.json data/ee-rounds.json data/processing-times.json; then
             echo "No data changes — nothing to commit."
             exit 0
@@ -50,6 +58,32 @@ jobs:
           git commit -m "chore(data): update IRCC draw + processing times [skip ci]"
           git push
 
+      # A new round changes every draw figure on crspulse.com, but the site is static:
+      # the numbers only move when it is rebuilt. The redeploy lives here rather than in
+      # a push-triggered workflow because the commit above carries [skip ci], which would
+      # suppress one. The Vercel project has no Git connection, so this is the CLI, not a
+      # deploy hook. Without VERCEL_TOKEN set the step is skipped and the mirror still
+      # commits — the site just waits for a manual `vercel --prod`.
+      - name: Redeploy the website with the new draw
+        id: redeploy
+        if: steps.commit.outputs.site == 'true' && env.VERCEL_TOKEN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: team_YK7kSy1qWtXPCwWsEcaBZ2eJ
+          VERCEL_PROJECT_ID: prj_AHUE6t4xiHAIjHKF5hWHBuBchr2Y
+        run: |
+          set -euo pipefail
+          # Apple's Product Bezels image is licensed to show our own app but must not
+          # enter this public repo, so it is absent from the checkout. Its licensed home
+          # is the live site, which is where we pull it back from. ponytail: if a deploy
+          # ever ships without it this breaks — recover with a local `vercel --prod`
+          # from a working copy that still has web/assets/frame/.
+          mkdir -p web/assets/frame
+          curl -fsS --retry 3 --retry-delay 2 --max-time 60 \
+            https://www.crspulse.com/img/iphone17pro.png -o web/assets/frame/iphone17pro.png
+          test -s web/assets/frame/iphone17pro.png
+          npx --yes vercel@54 --prod --yes --token "$VERCEL_TOKEN"
+
       # continue-on-error keeps the job running through a transient blip on one
       # feed, but a *persistent* fetch failure must not look green (that's how the
       # spoofed-UA outage hid for ~4 weeks). Turn the run red if either fetch failed.
@@ -59,5 +93,11 @@ jobs:
           echo "fetch outcomes — draw: ${{ steps.fetch_draw.outcome }}, times: ${{ steps.fetch_times.outcome }}"
           if [ "${{ steps.fetch_draw.outcome }}" != "success" ] || [ "${{ steps.fetch_times.outcome }}" != "success" ]; then
             echo "::error::IRCC mirror fetch failed — committed data may be stale."
+            exit 1
+          fi
+          # A silently-failing redeploy would leave the site showing an old draw
+          # indefinitely, which is the failure this step exists to prevent.
+          if [ "${{ steps.redeploy.outcome }}" = "failure" ]; then
+            echo "::error::Website redeploy failed — crspulse.com is still on the previous draw."
             exit 1
           fi

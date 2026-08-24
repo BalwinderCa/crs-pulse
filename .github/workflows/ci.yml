@@ -59,6 +59,32 @@ jobs:
       - name: Node tests
         run: npm test
 
+  website:
+    name: Website — build & tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Builds the site and asserts the agent surface: markdown twins, JSON-LD,
+      # sitemap/robots/llms.txt, the 404, and that vercel.json + middleware.js still
+      # cover every route. web/assets/frame is not in this public repo (Apple licence),
+      # so build.mjs skips that one image under GITHUB_ACTIONS — the generated HTML and
+      # markdown the tests check are identical either way.
+      - name: Build & test
+        run: npm test
+
   scripts:
     name: Mirror scripts — tests
     runs-on: ubuntu-latest
