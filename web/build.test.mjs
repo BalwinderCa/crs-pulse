@@ -9,6 +9,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { config as middlewareConfig, TWIN } from '../middleware.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(here, 'public');
@@ -46,6 +47,17 @@ test('every route ships an HTML page and a markdown twin', () => {
     assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}${path === '/' ? '/' : path}">`));
     const twin = path === '/' ? '/index.md' : `${path}.md`;
     assert.match(html, new RegExp(`<link rel="alternate" type="text/markdown" href="${SITE}${twin}">`));
+  }
+});
+
+// Asserted here rather than in middleware.test.mjs because this is the file that runs
+// the build — node --test runs test files concurrently, so a sibling cannot assume the
+// output directory exists yet.
+test('the middleware points every matched path at a twin the build emits', () => {
+  assert.deepEqual(Object.keys(TWIN), middlewareConfig.matcher);
+  assert.deepEqual(middlewareConfig.matcher, ROUTES.map(([path]) => path));
+  for (const [path, twin] of Object.entries(TWIN)) {
+    assert.ok(read(twin.slice(1)).startsWith('# '), `${path} -> ${twin} is not in the build output`);
   }
 });
 

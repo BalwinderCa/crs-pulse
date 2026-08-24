@@ -2,12 +2,7 @@
 // in web/ covers it; the middleware itself has to sit at the repo root for Vercel.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { qualityOf, chooseVariant, config, TWIN } from '../middleware.js';
-
-const OUT = resolve(dirname(fileURLToPath(import.meta.url)), 'public');
+import { qualityOf, chooseVariant, config } from '../middleware.js';
 
 const BROWSER = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8';
 
@@ -52,11 +47,4 @@ test('the matcher covers every public page and nothing else', () => {
   assert.deepEqual(config.matcher, ['/', '/calculators', '/draws', '/features', '/privacy', '/terms']);
   // Matching a .md path would make the middleware fetch itself.
   assert.ok(!config.matcher.some((m) => m.endsWith('.md')));
-});
-
-test('every matched path has a twin the build actually emits', () => {
-  assert.deepEqual(Object.keys(TWIN), config.matcher);
-  for (const [path, twin] of Object.entries(TWIN)) {
-    assert.ok(existsSync(resolve(OUT, twin.slice(1))), `${path} -> ${twin} is not in the build output`);
-  }
 });
