@@ -9,6 +9,11 @@ on:
   schedule:
     - cron: '*/15 * * * *'
   workflow_dispatch:
+    inputs:
+      force_redeploy:
+        description: 'Redeploy crspulse.com even if the draw data has not changed'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -66,7 +71,7 @@ jobs:
       # commits — the site just waits for a manual `vercel --prod`.
       - name: Redeploy the website with the new draw
         id: redeploy
-        if: steps.commit.outputs.site == 'true' && env.VERCEL_TOKEN != ''
+        if: (steps.commit.outputs.site == 'true' || inputs.force_redeploy) && env.VERCEL_TOKEN != ''
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: team_YK7kSy1qWtXPCwWsEcaBZ2eJ
