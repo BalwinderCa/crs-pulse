@@ -108,7 +108,11 @@ jobs:
           printf '{"projectId":"%s","orgId":"%s","projectName":"crs-pulse"}' \
             "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
 
-          npx --yes vercel@54 --prod --yes --debug \
+          for ep in v2/user v2/teams "v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID"; do
+            echo "  $ep -> $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/$ep")"
+          done
+
+          npx --yes vercel@54 --prod --yes \
             --scope balwinder-singhs-projects-04717683 --token "$VERCEL_TOKEN"
 
       # continue-on-error keeps the job running through a transient blip on one
