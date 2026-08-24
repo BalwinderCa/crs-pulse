@@ -88,29 +88,22 @@ jobs:
             https://www.crspulse.com/img/iphone17pro.png -o web/assets/frame/iphone17pro.png
           test -s web/assets/frame/iphone17pro.png
 
-          # Vercel's own failure here is "Could not retrieve Project Settings", which
-          # sounds like a linking problem but actually means the token cannot see this
-          # project. Check first so the log says which.
-          http=$(curl -s -o /tmp/vercel-project.json -w '%{http_code}' \
+          # The CLI resolves the acting user before it looks at the project, so a token
+          # scoped to a *team* rather than to the account dies at startup with the
+          # misleading "Could not retrieve Project Settings". Check both and say which.
+          user=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $VERCEL_TOKEN" https://api.vercel.com/v2/user)
+          proj=$(curl -s -o /dev/null -w '%{http_code}' \
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
-          if [ "$http" != "200" ]; then
-            echo "::error::VERCEL_TOKEN cannot read $VERCEL_PROJECT_ID in $VERCEL_ORG_ID (HTTP $http) — recreate the token scoped to that team."
-            head -c 400 /tmp/vercel-project.json
+          if [ "$user" != "200" ]; then
+            echo "::error::VERCEL_TOKEN has no user context (GET /v2/user -> $user), so it is scoped to a team. Recreate it at https://vercel.com/account/tokens with Scope set to your account, not the team."
             exit 1
           fi
-
-          # VERCEL_ORG_ID / VERCEL_PROJECT_ID alone are not enough for CLI 54 here: it
-          # still reports "Could not retrieve Project Settings" (the API check above
-          # proves the token can read the project). Write the link file the CLI reads
-          # locally — .vercel is gitignored, so this only exists for the run.
-          mkdir -p .vercel
-          printf '{"projectId":"%s","orgId":"%s","projectName":"crs-pulse"}' \
-            "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
-
-          for ep in v2/user v2/teams "v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID"; do
-            echo "  $ep -> $(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $VERCEL_TOKEN" "https://api.vercel.com/$ep")"
-          done
+          if [ "$proj" != "200" ]; then
+            echo "::error::VERCEL_TOKEN cannot read $VERCEL_PROJECT_ID in $VERCEL_ORG_ID (GET -> $proj)."
+            exit 1
+          fi
 
           npx --yes vercel@54 --prod --yes \
             --scope balwinder-singhs-projects-04717683 --token "$VERCEL_TOKEN"
