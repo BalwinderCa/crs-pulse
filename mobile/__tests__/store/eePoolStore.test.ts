@@ -71,7 +71,7 @@ describe('eePoolStore', () => {
       STORAGE_KEYS.EE_POOL_CACHE,
       JSON.stringify({ data: cachedData, fetchedAt: new Date().toISOString() }),
     );
-    const spy = jest.spyOn(global, 'fetch');
+    const spy = jest.spyOn(global, 'fetch').mockImplementation(() => okJson(roundsFeed));
     await useEePoolStore.getState().load();
     expect(useEePoolStore.getState().data.levels.prTarget).toBe(365000);
     expect(spy).not.toHaveBeenCalled();
@@ -79,7 +79,7 @@ describe('eePoolStore', () => {
 
   it('force bypasses the freshness window (a new draw restates the same feed)', async () => {
     const state = useEePoolStore.getState();
-    const spy = jest.spyOn(global, 'fetch');
+    const spy = jest.spyOn(global, 'fetch').mockImplementation(() => okJson(roundsFeed));
     await state.load();
     const afterFirst = spy.mock.calls.length;
 

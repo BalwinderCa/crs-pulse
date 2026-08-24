@@ -45,7 +45,9 @@ describe('processingTimesStore', () => {
         fetchedAt: new Date().toISOString(),
       }),
     );
-    const spy = jest.spyOn(global, 'fetch');
+    const spy = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ updated: 'unused', times: {} }),
+    );
     await useProcessingTimesStore.getState().load();
     expect(useProcessingTimesStore.getState().times?.ee_fsw?.months).toBe(8);
     expect(spy).not.toHaveBeenCalled();
