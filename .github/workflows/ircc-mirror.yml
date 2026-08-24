@@ -100,6 +100,13 @@ jobs:
             exit 1
           fi
 
+          # VERCEL_ORG_ID / VERCEL_PROJECT_ID alone are not enough for CLI 54 here: it
+          # still reports "Could not retrieve Project Settings" (the API check above
+          # proves the token can read the project). Write the link file the CLI reads
+          # locally — .vercel is gitignored, so this only exists for the run.
+          mkdir -p .vercel
+          printf '{"projectId":"%s","orgId":"%s"}' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
+
           npx --yes vercel@54 --prod --yes --token "$VERCEL_TOKEN"
 
       # continue-on-error keeps the job running through a transient blip on one
