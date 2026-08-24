@@ -18,6 +18,12 @@ import { marked } from 'marked';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(here, '../docs');
+// Rounds of invitations + pool distribution, mirrored from IRCC's public feed by
+// .github/workflows/ircc-mirror.yml. Every draw figure on the site comes from here —
+// a missing or empty file is a hard build failure, because shipping invented numbers
+// on an immigration site is worse than not shipping.
+const FEED = JSON.parse(readFileSync(resolve(here, '../data/ee-rounds.json'), 'utf8'));
+if (!FEED.rounds?.length || !FEED.pool?.length) throw new Error('data/ee-rounds.json has no usable rounds');
 const OUT = resolve(here, 'public');
 const ASSETS = resolve(here, 'assets');
 
@@ -386,14 +392,35 @@ const CALC_CARDS = [
   ['🧭', '200', 'BC PNP SIRS', 'Skills Immigration Registration System, 200-point scale.'],
   ['🧾', '110 · 60', 'Saskatchewan SINP', 'International Skilled Worker EOI points assessment.'],
 ];
-const HOME_DRAWS = [
-  ['424', 'Jul 6, 2026', 'Provincial Nominee Program', '534', '708', '#A78BFA'],
-  ['422', 'Jun 25, 2026', 'Healthcare & social services', '4,000', '475', '#5B9EFF'],
-  ['421', 'Jun 12, 2026', 'Canadian Experience Class', '3,000', '518', '#00E5A0'],
-  ['418', 'May 28, 2026', 'French-language proficiency', '3,800', '393', '#FF3B30'],
-  ['406', 'Apr 2, 2026', 'Trade occupations', '1,500', '477', '#FFB547'],
-  ['402', 'Mar 5, 2026', 'Senior managers', '250', '429', '#7DB6FF'],
+// IRCC publishes a free-text drawName; these give each one a short chip label and a
+// colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
+// so an unrecognised category is never mislabelled — it just falls back to "Other".
+const DRAW_CATEGORIES = [
+  [/provincial nominee/i, 'PNP', '#A78BFA'],
+  [/canadian experience/i, 'CEC', '#00E5A0'],
+  [/french/i, 'French', '#FF3B30'],
+  [/health|social service|physician|nurs/i, 'Healthcare', '#5B9EFF'],
+  [/stem|science|technolog|engineer|math/i, 'STEM', '#7DB6FF'],
+  [/transport/i, 'Transport', '#F59E0B'],
+  [/senior manager|executive/i, 'Managers', '#F472B6'],
+  [/military|armed forces/i, 'Military', '#94A3B8'],
+  [/trade/i, 'Trades', '#FFB547'],
+  [/education|teacher/i, 'Education', '#2BC8E8'],
+  [/agri/i, 'Agriculture', '#34D399'],
+  [/federal skilled worker|no program specified|general/i, 'General', '#7A94B8'],
 ];
+const categorise = (name) =>
+  DRAW_CATEGORIES.find(([re]) => re.test(name))?.slice(1) ?? ['Other', '#7A94B8'];
+
+const num = (n) => Number(n).toLocaleString('en-CA');
+const shortDate = (iso) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+const DRAWS = FEED.rounds.map((r) => {
+  const [cat, dot] = categorise(r.label || r.name);
+  return { no: r.number, date: shortDate(r.date), iso: r.date, label: r.label || r.name, cat, dot, invited: num(r.size), cutoff: String(r.crs), crs: r.crs, size: r.size };
+});
+const HOME_DRAWS = DRAWS.slice(0, 6).map((d) => [d.no, d.date, d.label, d.invited, d.cutoff, d.dot]);
 const PRIVACY_POINTS = [
   'All CRS inputs are stored locally on your device.',
   'No account or sign-up required to use any feature.',
@@ -403,7 +430,7 @@ const PRIVACY_POINTS = [
 const FAQ = [
   ['How accurate are the calculators?', 'They implement the official IRCC Comprehensive Ranking System grid and the published federal/provincial point grids (FSW 67-point, BC PNP SIRS, Saskatchewan SINP). They are precise estimates for planning — but IRCC’s own tool is authoritative, so always confirm your final score there before you act.'],
   ['Is CRS Pulse free?', 'Yes. Every calculator, live draws, draw history, category trends and the application tracker are free with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.'],
-  ['Where does the draw data come from?', 'The app fetches rounds of invitations directly from IRCC’s public JSON feed, with pull-to-refresh and category filters. Each draw links to its official IRCC round page. Figures shown on this website are illustrative of the 2025–2026 season; always verify current numbers at canada.ca.'],
+  ['Where does the draw data come from?', 'The app fetches rounds of invitations directly from IRCC’s public JSON feed, with pull-to-refresh and category filters. Each draw links to its official IRCC round page. This website mirrors the same feed, refreshed when the site is rebuilt — the app is always live.'],
   ['What happens to my personal data?', 'Your age, education, language scores and work history are stored only on your device. There is no account to create and no analytics tracker. If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data.'],
   ['How do draw alerts work?', 'A background service checks for new rounds every 15 minutes. When IRCC publishes a draw, you get a push notification — usually within about 15 minutes — with the category, cutoff score and number of invitations. You can turn alerts on or off any time.'],
   ['Do I need a job offer for Express Entry?', 'No. A valid job offer is not required for any of the three Express Entry programs. As of March 25, 2025, job offers no longer add CRS points, though they can still support certain category-based draws. Most invited candidates have no Canadian job offer.'],
@@ -471,7 +498,7 @@ ${heroBg()}
   <div style="animation:fadeUp .7s .05s both">
     <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accentSoft);border:1px solid var(--border);color:var(--accent);padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:.2px;margin-bottom:26px;box-shadow:0 8px 24px -12px var(--accentGlow)">
       <span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;box-shadow:0 0 10px var(--success);animation:pulse 1.8s ease-in-out infinite"></span>
-      Live IRCC draw tracking · Updated Jul 7, 2026
+      Live IRCC draw tracking · Updated ${FEED.updatedFull ?? FEED.updated}
     </div>
     <h1 style="font-family:'Space Grotesk',sans-serif;line-height:1.02;letter-spacing:-2.5px;font-weight:700;margin:0 0 22px">Your Express Entry<br><span class="serif" style="font-weight:400;font-style:italic;letter-spacing:-1px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">command center.</span></h1>
     <p style="font-size:18.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:520px">Calculate your CRS score with the official IRCC formula, follow live rounds of invitations, and track your PR application from profile to landing — all in one place. Your data stays on your device.</p>
@@ -663,33 +690,37 @@ ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canad
 }
 
 // ------------------------------------------------------------------ DRAWS
-const ALL_DRAWS = (() => {
-  const C = { CEC: '#00E5A0', PNP: '#A78BFA', French: '#FF3B30', Healthcare: '#5B9EFF', Trades: '#FFB547', STEM: '#7DB6FF', Education: '#2BC8E8', General: '#7A94B8' };
-  return [
-    ['424', 'Jul 6, 2026', 'PNP', '534', '708'], ['422', 'Jun 25, 2026', 'Healthcare', '4,000', '475'],
-    ['421', 'Jun 12, 2026', 'CEC', '3,000', '518'], ['420', 'Jun 10, 2026', 'PNP', '627', '736'],
-    ['418', 'May 28, 2026', 'French', '3,800', '393'], ['415', 'May 13, 2026', 'CEC', '3,500', '511'],
-    ['412', 'Apr 28, 2026', 'Education', '1,000', '463'], ['406', 'Apr 2, 2026', 'Trades', '1,500', '477'],
-    ['404', 'Mar 21, 2026', 'French', '4,500', '379'], ['402', 'Mar 5, 2026', 'General', '250', '429'],
-    ['399', 'Feb 19, 2026', 'Healthcare', '2,500', '481'], ['396', 'Jan 23, 2026', 'CEC', '3,000', '527'],
-    ['395', 'Dec 17, 2025', 'French', '6,000', '399'], ['392', 'Dec 3, 2025', 'PNP', '429', '744'],
-    ['389', 'Nov 19, 2025', 'STEM', '2,000', '491'], ['386', 'Nov 5, 2025', 'CEC', '3,200', '539'],
-  ].map(([no, date, cat, invited, cutoff]) => ({ no, date, cat, invited, cutoff, dot: C[cat] }));
+const ALL_DRAWS = DRAWS.slice(0, 16);
+// Chips follow the data: a category IRCC stops running drops off, a new one appears.
+const DRAW_FILTERS = ['All', ...new Set(ALL_DRAWS.map((d) => d.cat))];
+const POOL = FEED.pool.map((b) => [b.label, num(b.count), b.count]);
+
+// Every figure below is computed from the mirrored rounds, so the copy can't drift out
+// of step with the table sitting right above it.
+const INSIGHTS = (() => {
+  const general = DRAWS.filter((d) => ['CEC', 'General'].includes(d.cat));
+  const category = DRAWS.filter((d) => !['CEC', 'General', 'PNP'].includes(d.cat));
+  const pnp = DRAWS.filter((d) => d.cat === 'PNP');
+  const span = Math.max(1, Math.round((Date.parse(DRAWS[0].iso) - Date.parse(DRAWS[DRAWS.length - 1].iso)) / 86400000));
+  const range = (list) => {
+    const scores = list.map((d) => d.crs);
+    return `${Math.min(...scores)}–${Math.max(...scores)}`;
+  };
+  const out = [];
+  if (category.length && general.length) {
+    out.push(['📉', 'Category draws run lower', `Category-based rounds cut off at ${range(category)} over the last ${DRAWS.length} draws, while general and CEC rounds held at ${range(general)} — targeting a category can beat a raw CRS race.`]);
+  }
+  if (pnp.length) {
+    out.push(['🏆', 'A nomination changes everything', `Provincial Nominee rounds cut off at ${range(pnp)}, because a nomination adds 600 points on top of your base score.`]);
+  }
+  out.push(['⏱', `${DRAWS.length} rounds in ${span} days`, `That is IRCC's recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.`]);
+  out.push(['🎯', 'Know your odds', 'Premium analytics place your score against the live trend cutoff and forecast bands, plus your percentile in the pool.']);
+  return out;
 })();
-const DRAW_FILTERS = ['All', 'CEC', 'PNP', 'French', 'Healthcare', 'Trades', 'STEM'];
-const POOL = [
-  ['601–1200', '8,400', 8400], ['501–600', '23,600', 23600], ['451–500', '71,200', 71200],
-  ['491–500', '19,800', 19800], ['411–450', '58,300', 58300], ['0–410', '52,900', 52900],
-];
-const INSIGHTS = [
-  ['📉', 'Category draws run lower', 'French-language rounds dipped to 379–399 while general/CEC held around 507–539 — targeting a category can beat a raw CRS race.'],
-  ['🏆', 'A nomination changes everything', 'PNP rounds show cutoffs of 700+, because a provincial nomination adds 600 points on top of your base score.'],
-  ['⏱', 'Cadence is ~2 weeks', 'IRCC typically draws every two weeks. Push alerts notify you within ~15 minutes of a new round.'],
-  ['🎯', 'Know your odds', 'Premium analytics place your score against the live trend cutoff and forecast bands, plus your percentile in the pool.'],
-];
 
 function drawsPage() {
   // chart: recent 10, oldest→newest
+  const latest = DRAWS[0];
   const recent = ALL_DRAWS.slice(0, 10).slice().reverse();
   const cutoffs = recent.map((d) => Number(d.cutoff));
   const maxC = Math.max(...cutoffs), minC = Math.min(...cutoffs);
@@ -709,15 +740,15 @@ ${blobs()}
 <section style="max-width:1200px;margin:0 auto;padding:52px 24px 20px">
   ${eyebrow('Draws &amp; Trends')}
   <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Rounds of invitations, <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">live from IRCC</span></h1>
-  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">The app pulls every round directly from the official IRCC public feed. Filter by category, watch cutoff trends and draw cadence, and see where you sit in the pool. Figures below reflect the 2025–2026 season for illustration — verify current numbers at canada.ca.</p>
+  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">The app pulls every round directly from the official IRCC public feed. Filter by category, watch cutoff trends and draw cadence, and see where you sit in the pool. The figures below mirror IRCC's feed as of ${FEED.updatedFull ?? FEED.updated}; the app refreshes live.</p>
 </section>
 
 <section style="max-width:1200px;margin:0 auto;padding:14px 24px 8px">
   <div class="statgrid" data-reveal style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    ${stat('Latest draw · Jul 6', '708', 'PNP · 534 invited', true)}
-    ${stat('ITAs in 2026', '84,796', 'across 32 rounds YTD')}
-    ${stat('Candidate pool', '230k+', 'profiles competing')}
-    ${stat('Active categories', '10', 'for 2026 selection')}
+    ${stat(`Latest draw · ${latest.date.replace(/, \d{4}$/, '')}`, latest.cutoff, `${latest.label} · ${latest.invited} invited`, true)}
+    ${stat(`ITAs in ${FEED.ytd.year}`, num(FEED.ytd.invitations), `across ${FEED.ytd.rounds} rounds YTD`)}
+    ${stat('Candidate pool', num(FEED.poolTotal), `profiles competing${FEED.distributionAsOf ? ` · ${FEED.distributionAsOf}` : ''}`)}
+    ${stat('Active categories', String(FEED.ytd.categories), `for ${FEED.ytd.year} selection`)}
   </div>
 </section>
 
@@ -725,7 +756,7 @@ ${blobs()}
   <div data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:22px">
       <div><h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">CRS cutoff trend</h2><p style="font-size:13px;color:var(--text2);margin:0">Minimum score by round — most recent 10 draws (left → right)</p></div>
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--warning)"></span>Category-based</span></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--warning)"></span>Category &amp; provincial</span></div>
     </div>
     <div style="display:flex;align-items:flex-end;gap:12px;height:200px">${chart}</div>
   </div>
@@ -739,7 +770,7 @@ ${blobs()}
     <div class="drawinner" id="drawtable">
       <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
       ${ALL_DRAWS.map((d) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--accent)">${d.cutoff}</span></div></div>`).join('')}
-      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Illustrative 2025–2026 rounds · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
+      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
     </div>
   </div>
 </section>
@@ -1267,7 +1298,7 @@ ${mdList(FEATURES_SMALL.map(([, title, desc]) => `**${title}** — ${plain(desc)
 
 ${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], HOME_DRAWS.map(([no, date, cat, invited, cutoff]) => [no, date, cat, invited, cutoff]))}
 
-Illustrative of the 2025–2026 season. Full history and trends: ${SITE}/draws
+Mirrored from IRCC as of ${FEED.updatedFull ?? FEED.updated}. Full history and trends: ${SITE}/draws
 
 ## Privacy
 
@@ -1309,14 +1340,18 @@ ${MD_FOOTER}
 
 const drawsMd = () => `${mdHead('draws')}
 The app pulls rounds of invitations straight from IRCC's public JSON feed and pushes an
-alert within about 15 minutes of publication. The table below is illustrative of the
-2025–2026 season; canada.ca is authoritative for current numbers.
+alert within about 15 minutes of publication. The figures below mirror that feed as of
+${FEED.updatedFull ?? FEED.updated}; canada.ca is authoritative for anything newer.
+
+Year to date (${FEED.ytd.year}): **${num(FEED.ytd.invitations)} invitations** across
+**${FEED.ytd.rounds} rounds** in ${FEED.ytd.categories} categories. Candidate pool:
+**${num(FEED.poolTotal)}** profiles${FEED.distributionAsOf ? ` as of ${FEED.distributionAsOf}` : ''}.
 
 ## Rounds of invitations
 
-${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], ALL_DRAWS.map((d) => [d.no, d.date, d.cat, d.invited, d.cutoff]))}
+${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], ALL_DRAWS.map((d) => [d.no, d.date, d.label, d.invited, d.cutoff]))}
 
-Category filters available in the app: ${DRAW_FILTERS.join(', ')}.
+Category filters on this page: ${DRAW_FILTERS.join(', ')}.
 
 ## Pool distribution by CRS band
 
@@ -1392,8 +1427,9 @@ How to call it:
   (a 307 points you at the twin, so follow redirects). Appending \`.md\` to the path works
   just as well: \`${SITE}/draws.md\`.
 - Start here: this file, then ${SITE}/sitemap.xml for the full URL list.
-- Draw figures on this site are illustrative of the 2025–2026 season. For live rounds, use
-  the app (which reads IRCC's feed directly) or canada.ca.
+- Draw figures mirror IRCC's public feed as of ${FEED.updatedFull ?? FEED.updated} (latest
+  round #${DRAWS[0].no}). For anything newer, use the app — it reads IRCC's feed directly —
+  or canada.ca.
 
 ## When not to use this
 

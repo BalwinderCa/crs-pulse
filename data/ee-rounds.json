@@ -1,0 +1,224 @@
+{
+  "updated": "2026-08-19",
+  "updatedFull": "August 19, 2026",
+  "distributionAsOf": "August 16, 2026",
+  "rounds": [
+    {
+      "number": "437",
+      "date": "2026-08-19",
+      "dateFull": "August 19, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 382
+    },
+    {
+      "number": "436",
+      "date": "2026-08-18",
+      "dateFull": "August 18, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 1000,
+      "crs": 523
+    },
+    {
+      "number": "435",
+      "date": "2026-08-17",
+      "dateFull": "August 17, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 442,
+      "crs": 760
+    },
+    {
+      "number": "434",
+      "date": "2026-08-07",
+      "dateFull": "August 7, 2026",
+      "name": "Transport Occupations, 2026-Version 2",
+      "label": "Transport Occupations",
+      "size": 300,
+      "crs": 470
+    },
+    {
+      "number": "433",
+      "date": "2026-08-06",
+      "dateFull": "August 6, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 391
+    },
+    {
+      "number": "432",
+      "date": "2026-08-05",
+      "dateFull": "August 5, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 3000,
+      "crs": 516
+    },
+    {
+      "number": "431",
+      "date": "2026-08-04",
+      "dateFull": "August 4, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 507,
+      "crs": 768
+    },
+    {
+      "number": "430",
+      "date": "2026-07-23",
+      "dateFull": "July 23, 2026",
+      "name": "Skilled Military Recruits, 2026-Version 1",
+      "label": "Skilled Military Recruits",
+      "size": 4,
+      "crs": 368
+    },
+    {
+      "number": "429",
+      "date": "2026-07-22",
+      "dateFull": "July 22, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 399
+    },
+    {
+      "number": "428",
+      "date": "2026-07-21",
+      "dateFull": "July 21, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 2000,
+      "crs": 516
+    },
+    {
+      "number": "427",
+      "date": "2026-07-20",
+      "dateFull": "July 20, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 511,
+      "crs": 744
+    },
+    {
+      "number": "426",
+      "date": "2026-07-10",
+      "dateFull": "July 10, 2026",
+      "name": "Senior managers with Canadian Work Experience, 2026-Version 1",
+      "label": "Senior managers with Canadian Work Experience",
+      "size": 500,
+      "crs": 392
+    },
+    {
+      "number": "425",
+      "date": "2026-07-09",
+      "dateFull": "July 9, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 420
+    },
+    {
+      "number": "424",
+      "date": "2026-07-07",
+      "dateFull": "July 7, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 2000,
+      "crs": 517
+    },
+    {
+      "number": "423",
+      "date": "2026-07-06",
+      "dateFull": "July 6, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 534,
+      "crs": 708
+    },
+    {
+      "number": "422",
+      "date": "2026-06-25",
+      "dateFull": "June 25, 2026",
+      "name": "Healthcare and Social Services Occupations, 2026-Version 3",
+      "label": "Healthcare and Social Services Occupations",
+      "size": 4000,
+      "crs": 475
+    },
+    {
+      "number": "421",
+      "date": "2026-06-24",
+      "dateFull": "June 24, 2026",
+      "name": "Physicians with Canadian Work Experience, 2026-Version 1",
+      "label": "Physicians with Canadian Work Experience",
+      "size": 271,
+      "crs": 223
+    },
+    {
+      "number": "420",
+      "date": "2026-06-23",
+      "dateFull": "June 23, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 4000,
+      "crs": 516
+    },
+    {
+      "number": "419",
+      "date": "2026-06-22",
+      "dateFull": "June 22, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 955,
+      "crs": 730
+    },
+    {
+      "number": "418",
+      "date": "2026-05-28",
+      "dateFull": "May 28, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 4500,
+      "crs": 409
+    }
+  ],
+  "pool": [
+    {
+      "label": "601–1200",
+      "count": 439
+    },
+    {
+      "label": "501–600",
+      "count": 18657
+    },
+    {
+      "label": "451–500",
+      "count": 73554
+    },
+    {
+      "label": "401–450",
+      "count": 60631
+    },
+    {
+      "label": "351–400",
+      "count": 48600
+    },
+    {
+      "label": "301–350",
+      "count": 17269
+    },
+    {
+      "label": "0–300",
+      "count": 7709
+    }
+  ],
+  "poolTotal": 226859,
+  "ytd": {
+    "year": 2026,
+    "rounds": 49,
+    "invitations": 119865,
+    "categories": 9
+  }
+}
