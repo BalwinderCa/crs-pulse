@@ -1569,22 +1569,31 @@ const homeJsonLd = () => ({
 mkdirSync(OUT, { recursive: true });
 mkdirSync(resolve(OUT, 'img'), { recursive: true });
 // Apple's Product Bezels asset is licensed to show our own app but must not enter this
-// public repo (web/.gitignore), so a fresh checkout is missing exactly one image. The
-// CI job only verifies the generated HTML/markdown — identical either way, since the
-// markup doesn't change — so there a missing asset is a warning. Anywhere else the
-// output gets deployed, so it is fatal.
-const assetsMayBeMissing = process.env.GITHUB_ACTIONS === 'true';
-function copyAsset(from, to) {
+// public repo (web/.gitignore), so it is absent from every checkout — including the one
+// Vercel builds from. Its licensed home is the live site, so a build that needs it and
+// doesn't have it pulls it back from there.
+// ponytail: if a deploy ever ships without that image, later builds 404 here and fail
+// loudly — recover with a local `vercel --prod` from a working copy that still has
+// web/assets/frame/.
+const ASSET_ORIGIN = 'https://www.crspulse.com';
+// The CI job only checks generated HTML and markdown, which are identical either way,
+// so there a missing image is skipped rather than fetched — tests stay off the network.
+const testingOnly = process.env.GITHUB_ACTIONS === 'true';
+
+async function copyAsset(from, to) {
   const src = resolve(ASSETS, from);
   if (existsSync(src)) return cpSync(src, resolve(OUT, to));
-  if (!assetsMayBeMissing) throw new Error(`missing asset web/assets/${from} — a deployable build needs it`);
-  console.warn(`⚠ web/assets/${from} not in this checkout — image skipped (GITHUB_ACTIONS)`);
+  if (testingOnly) return console.warn(`⚠ web/assets/${from} not in this checkout — image skipped (GITHUB_ACTIONS)`);
+  const res = await fetch(`${ASSET_ORIGIN}/${to}`);
+  if (!res.ok) throw new Error(`web/assets/${from} is not in this checkout and ${ASSET_ORIGIN}/${to} returned ${res.status}`);
+  writeFileSync(resolve(OUT, to), Buffer.from(await res.arrayBuffer()));
+  console.log(`↓ web/assets/${from} not in this checkout — restored from ${ASSET_ORIGIN}`);
 }
 
-copyAsset('logo.svg', 'img/logo.svg');
-copyAsset('frame/iphone17pro.png', 'img/iphone17pro.png');
-copyAsset('screenshots/hero_home.png', 'img/hero-screenshot.png');
-copyAsset('bg/toronto-skyline.webp', 'img/skyline.webp');
+await copyAsset('logo.svg', 'img/logo.svg');
+await copyAsset('frame/iphone17pro.png', 'img/iphone17pro.png');
+await copyAsset('screenshots/hero_home.png', 'img/hero-screenshot.png');
+await copyAsset('bg/toronto-skyline.webp', 'img/skyline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
