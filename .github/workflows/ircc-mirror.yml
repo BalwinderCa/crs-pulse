@@ -105,9 +105,11 @@ jobs:
           # proves the token can read the project). Write the link file the CLI reads
           # locally — .vercel is gitignored, so this only exists for the run.
           mkdir -p .vercel
-          printf '{"projectId":"%s","orgId":"%s"}' "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
+          printf '{"projectId":"%s","orgId":"%s","projectName":"crs-pulse"}' \
+            "$VERCEL_PROJECT_ID" "$VERCEL_ORG_ID" > .vercel/project.json
 
-          npx --yes vercel@54 --prod --yes --token "$VERCEL_TOKEN"
+          npx --yes vercel@54 --prod --yes --debug \
+            --scope balwinder-singhs-projects-04717683 --token "$VERCEL_TOKEN"
 
       # continue-on-error keeps the job running through a transient blip on one
       # feed, but a *persistent* fetch failure must not look green (that's how the
