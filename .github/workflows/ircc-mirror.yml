@@ -97,7 +97,7 @@ jobs:
             -H "Authorization: Bearer $VERCEL_TOKEN" \
             "https://api.vercel.com/v9/projects/$VERCEL_PROJECT_ID?teamId=$VERCEL_ORG_ID")
           if [ "$user" != "200" ]; then
-            echo "::error::VERCEL_TOKEN has no user context (GET /v2/user -> $user), so it is scoped to a team. Recreate it at https://vercel.com/account/tokens with Scope set to your account, not the team."
+            echo "::error::VERCEL_TOKEN cannot resolve an account (GET /v2/user -> $user). The CLI needs an account-level token from https://vercel.com/account/tokens. Check a candidate before setting it: curl -s -o /dev/null -w '%{http_code}' -H \"Authorization: Bearer <token>\" https://api.vercel.com/v2/user  — it must print 200."
             exit 1
           fi
           if [ "$proj" != "200" ]; then
