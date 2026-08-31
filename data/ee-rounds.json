@@ -1,8 +1,17 @@
 {
-  "updated": "2026-08-19",
-  "updatedFull": "August 19, 2026",
-  "distributionAsOf": "August 16, 2026",
+  "updated": "2026-08-31",
+  "updatedFull": "August 31, 2026",
+  "distributionAsOf": "August 30, 2026",
   "rounds": [
+    {
+      "number": "438",
+      "date": "2026-08-31",
+      "dateFull": "August 31, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 562,
+      "crs": 697
+    },
     {
       "number": "437",
       "date": "2026-08-19",
@@ -173,52 +182,43 @@
       "label": "Provincial Nominee Program",
       "size": 955,
       "crs": 730
-    },
-    {
-      "number": "418",
-      "date": "2026-05-28",
-      "dateFull": "May 28, 2026",
-      "name": "French-Language proficiency 2026-Version 2",
-      "label": "French-Language proficiency",
-      "size": 4500,
-      "crs": 409
     }
   ],
   "pool": [
     {
       "label": "601–1200",
-      "count": 439
+      "count": 559
     },
     {
       "label": "501–600",
-      "count": 18657
+      "count": 19542
     },
     {
       "label": "451–500",
-      "count": 73554
+      "count": 74105
     },
     {
       "label": "401–450",
-      "count": 60631
+      "count": 60413
     },
     {
       "label": "351–400",
-      "count": 48600
+      "count": 46824
     },
     {
       "label": "301–350",
-      "count": 17269
+      "count": 17495
     },
     {
       "label": "0–300",
-      "count": 7709
+      "count": 7735
     }
   ],
-  "poolTotal": 226859,
+  "poolTotal": 226673,
   "ytd": {
     "year": 2026,
-    "rounds": 49,
-    "invitations": 119865,
+    "rounds": 50,
+    "invitations": 120427,
     "categories": 9
   }
 }
