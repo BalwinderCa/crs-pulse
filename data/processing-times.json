@@ -1,33 +1,33 @@
 {
-  "updated": "August 10, 2026",
+  "updated": "September 3, 2026",
   "times": {
     "aip": {
       "months": 26,
-      "peopleWaiting": 12100
+      "peopleWaiting": 11800
     },
     "caregivers": {
-      "months": 78,
-      "peopleWaiting": 37400
+      "months": 77,
+      "peopleWaiting": 36900
     },
     "ee_cec": {
       "months": 6,
-      "peopleWaiting": 59700
+      "peopleWaiting": 58900
     },
     "ee_fsw": {
-      "months": 6,
-      "peopleWaiting": 52400
+      "months": 7,
+      "peopleWaiting": 53800
     },
     "ee_pnp": {
       "months": 7,
-      "peopleWaiting": 11800
+      "peopleWaiting": 12800
     },
     "pnp_paper": {
       "months": 13,
-      "peopleWaiting": 102400
+      "peopleWaiting": 101500
     },
     "qc_skilled": {
       "months": 11,
-      "peopleWaiting": 21200
+      "peopleWaiting": 20400
     },
     "qc_business": {
       "months": 75,
@@ -39,43 +39,43 @@
     },
     "suv": {
       "months": 120,
-      "peopleWaiting": 47600
+      "peopleWaiting": 47500
     },
     "spouse_inland": {
-      "months": 27,
-      "peopleWaiting": 56800
+      "months": 26,
+      "peopleWaiting": 54700
     },
     "spouse_outland": {
-      "months": 17,
-      "peopleWaiting": 58000
+      "months": 18,
+      "peopleWaiting": 62600
     },
     "child": {
-      "months": 40,
-      "peopleWaiting": 60700
+      "months": 41,
+      "peopleWaiting": 60900
     },
     "parents": {
-      "months": 29,
-      "peopleWaiting": 39000
+      "months": 28,
+      "peopleWaiting": 37500
     },
     "refugee_gov": {
       "months": 14,
-      "peopleWaiting": 17600
+      "peopleWaiting": 17900
     },
     "refugee_private": {
       "months": 40,
-      "peopleWaiting": 72000
+      "peopleWaiting": 72200
     },
     "hc_case": {
       "months": 120,
-      "peopleWaiting": 55800
+      "peopleWaiting": 57900
     },
     "citizenship": {
       "months": 12,
-      "peopleWaiting": 328200
+      "peopleWaiting": 327100
     },
     "cit_proof": {
-      "months": 25,
-      "peopleWaiting": 121800
+      "months": 33,
+      "peopleWaiting": 136000
     }
   }
 }
