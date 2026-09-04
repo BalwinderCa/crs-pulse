@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-03",
-  "updatedFull": "September 3, 2026",
+  "updated": "2026-09-04",
+  "updatedFull": "September 4, 2026",
   "distributionAsOf": "August 30, 2026",
   "rounds": [
+    {
+      "number": "441",
+      "date": "2026-09-04",
+      "dateFull": "September 4, 2026",
+      "name": "Healthcare and Social Services Occupations, 2026-Version 3",
+      "label": "Healthcare and Social Services Occupations",
+      "size": 3500,
+      "crs": 475
+    },
     {
       "number": "440",
       "date": "2026-09-03",
@@ -173,15 +182,6 @@
       "label": "Healthcare and Social Services Occupations",
       "size": 4000,
       "crs": 475
-    },
-    {
-      "number": "421",
-      "date": "2026-06-24",
-      "dateFull": "June 24, 2026",
-      "name": "Physicians with Canadian Work Experience, 2026-Version 1",
-      "label": "Physicians with Canadian Work Experience",
-      "size": 271,
-      "crs": 223
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 226673,
   "ytd": {
     "year": 2026,
-    "rounds": 52,
-    "invitations": 122656,
+    "rounds": 53,
+    "invitations": 126156,
     "categories": 9
   }
 }
