@@ -659,7 +659,6 @@ const fr: TranslationKeys = {
     whatIfOutText: 'Probabilités projetées : {{label}}',
     streamLegend: 'Points au-dessus (+) ou en dessous (−) du seuil en direct de chaque volet',
     noProfilePaths: 'Votre profil maximise déjà les leviers CRS courants — une nomination provinciale est le principal boost restant.',
-    unlockCta: 'Débloquez tout ce qui précède — achat unique, à vous pour toujours.',
     gapYouClear: 'Vous dépassez la tendance actuelle',
     gapToHigh: '+{{pts}} pour Haute probabilité',
     gapToModerate: '+{{pts}} pour Probabilité modérée',

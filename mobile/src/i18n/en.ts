@@ -655,7 +655,6 @@ const en = {
     whatIfOutText: 'Projected odds: {{label}}',
     streamLegend: 'Points above (+) or below (−) each stream\'s live cutoff',
     noProfilePaths: 'Your profile already maxes the common CRS levers — a provincial nomination is the main remaining boost.',
-    unlockCta: 'Unlock everything above — one-time purchase, yours forever.',
     gapYouClear: 'You clear the current trend',
     gapToHigh: '+{{pts}} to High odds',
     gapToModerate: '+{{pts}} to Moderate odds',
