@@ -254,9 +254,14 @@ module.exports = () => ({
       'expo-build-properties',
       {
         android: {
-          compileSdkVersion: 35,
-          targetSdkVersion: 35,
-          buildToolsVersion: '35.0.0',
+          // Google Play requires new uploads to target Android 16 (API 36) as of
+          // 2026-08-31. A targetSdk 35 build is rejected at submit time with the
+          // (mislabelled) 'Target SDK of artifact is too low' error, which echoes
+          // the versionCode rather than the SDK level. Existing installs only need
+          // 35, but any UPDATE needs 36.
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
+          buildToolsVersion: '36.0.0',
         },
       },
     ],
