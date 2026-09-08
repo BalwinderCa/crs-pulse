@@ -17,13 +17,15 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
   );
 }
 
-// Android AdMob is not wired yet: the app IDs that shipped before belonged to
-// publisher pub-4933939673966567, which we do not own, so AdMob never filled.
-// The real account is pub-4874088724567128 (the one app-ads.txt on crspulse.com
-// authorizes) and it has no Android app yet. Until one exists the Android env
-// vars stay unset — the manifest falls back to Google's test app ID (needed or
-// the SDK crashes at init) and every ad unit id resolves empty, so AdBanner
-// renders nothing. Warn loudly rather than ship a build that silently earns $0.
+// Android AdMob IS wired: the app ID and every ad unit live under publisher
+// pub-4874088724567128 (the one app-ads.txt on crspulse.com authorizes) and are
+// set in eas.json's production env. The earlier IDs belonged to publisher
+// pub-4933939673966567, which we do not own, so AdMob never filled — hence the
+// guard below. It only fires for a production build run OUTSIDE the production
+// profile (bare `eas build --profile <other>`, a local `expo run`, or a wiped env),
+// where the manifest falls back to Google's test app ID (needed or the SDK
+// crashes at init) and every ad unit id resolves empty, so AdBanner renders
+// nothing. Warn loudly rather than ship a build that silently earns $0.
 if (
   process.env.APP_ENV === 'production' &&
   !process.env.GOOGLE_ADMOB_ANDROID_APP_ID &&
@@ -31,9 +33,10 @@ if (
 ) {
   console.warn(
     '[CRS Pulse] GOOGLE_ADMOB_ANDROID_APP_ID is unset — this Android build will show NO ads. ' +
-      'Create the Android app + banner/native ad units under publisher pub-4874088724567128, ' +
-      'then set GOOGLE_ADMOB_ANDROID_APP_ID / EXPO_PUBLIC_ADMOB_BANNER_ANDROID / ' +
-      'EXPO_PUBLIC_ADMOB_NATIVE_ANDROID in eas.json\'s production env.',
+      'The IDs already exist under publisher pub-4874088724567128; build with ' +
+      '--profile production, or set GOOGLE_ADMOB_ANDROID_APP_ID / ' +
+      'EXPO_PUBLIC_ADMOB_BANNER_ANDROID / EXPO_PUBLIC_ADMOB_NATIVE_ANDROID / ' +
+      'EXPO_PUBLIC_ADMOB_APP_OPEN_ANDROID in your build env.',
   );
 }
 
@@ -198,7 +201,10 @@ module.exports = () => ({
       backgroundColor: '#DF2C19',
     },
     package: 'com.crspulse.app',
-    versionCode: 13,
+    // No versionCode here on purpose: eas.json sets appVersionSource "remote",
+    // so EAS owns the counter and a value here is ignored for the build while
+    // still leaking a stale number into expo-constants. Read the real one with
+    // `eas build:version:get --platform android`.
     permissions: [
       'VIBRATE',
       'POST_NOTIFICATIONS',
@@ -218,10 +224,10 @@ module.exports = () => ({
     // com.android.vending.BILLING permission and the native billing client.
     ['react-native-iap', { paymentProvider: 'Play Store' }],
     // Google AdMob banner ads (shown to free users only; Premium removes them).
-    // The IDs below are Google's PUBLIC TEST app IDs — replace with your real
-    // AdMob app IDs (env GOOGLE_ADMOB_ANDROID_APP_ID / _IOS_APP_ID) before
-    // shipping, or the build serves only test ads. Changing these requires a
-    // native rebuild.
+    // The real app IDs come from GOOGLE_ADMOB_ANDROID_APP_ID / _IOS_APP_ID, set
+    // in eas.json's production env; the literals below are Google's PUBLIC TEST
+    // app IDs and are only a fallback for builds run without those vars.
+    // Changing the app ID requires a native rebuild.
     [
       'react-native-google-mobile-ads',
       {

@@ -32,7 +32,7 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle",
-        "credentialsSource": "local"
+        "credentialsSource": "remote"
       },
       "ios": {
         "distribution": "store",
@@ -71,7 +71,6 @@
         "ascAppId": "6784619403"
       },
       "android": {
-        "serviceAccountKeyPath": "./google-play-service-account.json",
         "track": "alpha"
       }
     }

@@ -42,6 +42,23 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
+**Store status (as of 2026-09-08).** iOS is live on the App Store at **v1.0.7 (build 46)**.
+Android is **not live** — the newest Play upload is **v1.0.6 / versionCode 18**, sitting in the
+**closed testing** track, and the app's Production track is Inactive. Google gates production
+access behind "12 testers opted in, for 14 continuous days"; the account currently has **0**,
+so `submit.production.android.track` stays `alpha` — a `production` submit would be rejected.
+Promote the track only after Play Console's "Apply for production" button goes live.
+
+**Android credentials are entirely remote — nothing store-related needs to be on disk.**
+Signing uses `credentialsSource: "remote"`: the JKS EAS holds (alias
+`bd121022349bbbb6c81fa86896c9f53d`) is the key Play has registered as the upload key
+(MD5 `48d2840e5102b54ea3eef698fdeb6292`), so no local `credentials.json` is needed.
+Submitting uses the Google Service Account key stored on EAS for
+`eas-play-publisher@crspulseapp.iam.gserviceaccount.com` (Active in Play Console's Users and
+permissions), which is why `submit.production.android` has no `serviceAccountKeyPath`.
+`GOOGLE_SERVICES_JSON` is an EAS secret, so builds get FCM config without the file being on
+disk; only a local `expo run:android` needs `mobile/google-services.json` fetched from Firebase.
+
 ## Architecture
 
 ### Data Flow
