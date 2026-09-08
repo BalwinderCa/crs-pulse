@@ -42,12 +42,36 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-09-08).** iOS is live on the App Store at **v1.0.7 (build 46)**.
-Android is **not live** — the newest Play upload is **v1.0.6 / versionCode 18**, sitting in the
-**closed testing** track, and the app's Production track is Inactive. Google gates production
+**Store status (as of 2026-09-08).** iOS is live on the App Store at **v1.0.7 (build 46)**,
+built from commit `ed8bc26`. Android is **not live** — the newest Play upload is
+**v1.0.7 / versionCode 21**, sitting in the **closed testing** track, and the app's Production
+track is Inactive. The two platforms are feature-identical: the only app-source difference from
+`ed8bc26` is the IAP removal below, and every `Platform.OS` branch is a platform idiom
+(keyboard avoidance, date picker, store URL, ad-unit choice, iOS-only ATT prompt) rather than a
+gated feature. Google gates production
 access behind "12 testers opted in, for 14 continuous days"; the account currently has **0**,
 so `submit.production.android.track` stays `alpha` — a `production` submit would be rejected.
 Promote the track only after Play Console's "Apply for production" button goes live.
+
+**Two Play upload gates that bit us on 2026-09-08, both easy to misread:**
+
+1. *Play Billing ≥ 8.0.0.* Rejected versionCode 19. Fixed by removing `react-native-iap`
+   entirely (see Monetisation below).
+2. *targetSdk ≥ 36.* Rejected versionCode 20 with `Target SDK of artifact is too low: 20` —
+   the trailing number is the **versionCode**, not an SDK level, so don't chase it. Parsing the
+   AAB manifest showed a correct build (minSdk 24, targetSdk 35). The real cause is Google's
+   2026-08-31 deadline: new uploads must target Android 16 (API 36); only *existing installs*
+   may stay at 35. The 2026-08-04 upload predated it, which is why it was the first build to
+   fail. Fixed by `expo-build-properties` compileSdk/targetSdk 36 + buildTools 36.0.0.
+
+**16 KB page sizes — a known, unresolved exposure.** Play requires apps targeting Android 15+ to
+support 16 KB memory pages (new apps since 2025-11-01, updates since 2026-05-01). 21 of 22
+arm64-v8a `.so` files in our AAB are 4 KB-aligned; only `libandroidx.graphics.path.so` is
+compliant. Those binaries ship prebuilt inside AARs (Hermes, React Native, Expo modules), so no
+linker flag fixes them — it needs an Expo SDK upgrade off 52 / RN 0.76.9. **Play accepted
+versionCode 21 to the alpha track anyway**, so this is not currently blocking closed testing, but
+expect it to surface on the production track. Verify alignment with an ELF program-header check
+before assuming a build is compliant.
 
 **Android credentials are entirely remote — nothing store-related needs to be on disk.**
 Signing uses `credentialsSource: "remote"`: the JKS EAS holds (alias
