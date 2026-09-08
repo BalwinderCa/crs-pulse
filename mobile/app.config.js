@@ -17,9 +17,14 @@ if (!googleServicesFile && process.env.APP_ENV === 'production') {
   );
 }
 
-// Android AdMob IS wired: the app ID and every ad unit live under publisher
-// pub-4874088724567128 (the one app-ads.txt on crspulse.com authorizes) and are
-// set in eas.json's production env. The earlier IDs belonged to publisher
+// Android AdMob IDs are correct but NOT yet serving. The app ID and all three
+// ad units live under publisher pub-4874088724567128 (the one app-ads.txt on
+// crspulse.com authorizes) and are set in eas.json's production env, so the
+// plumbing is right. The AdMob app itself is still "Requires review" with
+// "Limited ad serving — add store to lift limit": no Play listing is linked,
+// because the app is only in closed testing. Expect ~no Android fill until the
+// public Play launch lets us link the store (iOS, by contrast, is linked to App
+// Store 6784619403 and serving). The earlier IDs belonged to publisher
 // pub-4933939673966567, which we do not own, so AdMob never filled — hence the
 // guard below. It only fires for a production build run OUTSIDE the production
 // profile (bare `eas build --profile <other>`, a local `expo run`, or a wiped env),
@@ -220,9 +225,6 @@ module.exports = () => ({
     withKotlinMetadataVersionSkip,
     withNode20ForCodegen,
     withAdMobManifest,
-    // Google Play Billing (one-time analytics unlock). The plugin adds the
-    // com.android.vending.BILLING permission and the native billing client.
-    ['react-native-iap', { paymentProvider: 'Play Store' }],
     // Google AdMob banner ads (shown to free users only; Premium removes them).
     // The real app IDs come from GOOGLE_ADMOB_ANDROID_APP_ID / _IOS_APP_ID, set
     // in eas.json's production env; the literals below are Google's PUBLIC TEST

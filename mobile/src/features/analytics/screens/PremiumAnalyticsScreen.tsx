@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useDrawsStore } from '@/store/drawsStore';
-import { usePremiumStore } from '@/store/premiumStore';
-import { MONETIZATION_ENABLED } from '@/constants';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/types';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,7 +14,6 @@ import { Button } from '@/components/common/Button';
 import { AdBanner } from '@/components/common/AdBanner';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
-import type { Colors } from '@/theme/colors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { OddsGauge, ForecastBandChart, MiniBars, MarkerBar, HorizontalBars, TrendLineChart } from '../components/PremiumCharts';
@@ -44,27 +41,12 @@ export default function PremiumAnalyticsScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [tab, setTab] = useState<TabKey>('draws');
   const data = useAnalyticsData();
-  const isPremium = usePremiumStore((s) => s.isPremium);
-  const premiumLoaded = usePremiumStore((s) => s.loaded);
-  const billingAvailable = usePremiumStore((s) => s.billingAvailable);
 
-  // Freemium model: the Draws tab (live IRCC market + history) is free forever;
-  // the "Your Plan" tab (next-draw prediction, improvement plan, what-if,
-  // forecast, percentile, decision outlook) is the one-time unlock. Fails OPEN
-  // when billing is unavailable (iOS without StoreKit, emulator, or a transient
-  // outage) — never show a lock the user can't buy through. A CRS score is
-  // required for any analytics (everything is personalised to it).
-  const planLocked = MONETIZATION_ENABLED && premiumLoaded && !isPremium && billingAvailable;
+  // Both tabs are free: the app monetises with ads only, so there is no
+  // entitlement to check. A CRS score is still required for any analytics
+  // (everything is personalised to it).
   const noProfile = data.userScore === 0;
   const showPlan = tab === 'plan';
-
-  // After a successful purchase/restore this session, reveal the plan the user
-  // just unlocked (the Paywall closes itself once the entitlement is granted).
-  const wasPremium = useRef(isPremium);
-  useEffect(() => {
-    if (isPremium && !wasPremium.current) setTab('plan');
-    wasPremium.current = isPremium;
-  }, [isPremium]);
 
   const TABS: { key: TabKey; label: string }[] = [
     { key: 'draws', label: t('analytics.drawsTab') },
@@ -192,7 +174,6 @@ export default function PremiumAnalyticsScreen() {
         <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
           {TABS.map((t) => {
             const active = tab === t.key;
-            const showLock = t.key === 'plan' && planLocked;
             return (
               <TouchableOpacity
                 key={t.key}
@@ -203,7 +184,6 @@ export default function PremiumAnalyticsScreen() {
               >
                 <View style={s.segLabelRow}>
                   <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{t.label}</Text>
-                  {showLock && <Ionicons name="lock-closed" size={11} color={active ? palette.white : c.textMuted} />}
                 </View>
               </TouchableOpacity>
             );
@@ -211,17 +191,13 @@ export default function PremiumAnalyticsScreen() {
         </View>
 
         {showPlan ? (
-          planLocked ? (
-            <PlanTabSkeleton c={c} accent={accent} userScore={data.userScore} />
-          ) : (
-            <PlanTab
-              c={c} accent={accent} data={data}
-              chartWidth={chartWidth}
-              age={age} setAge={setAge} clb={clb} setClb={setClb}
-              french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
-              whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
-            />
-          )
+          <PlanTab
+            c={c} accent={accent} data={data}
+            chartWidth={chartWidth}
+            age={age} setAge={setAge} clb={clb} setClb={setClb}
+            french={french} setFrench={setFrench} pnp={pnp} setPnp={setPnp}
+            whatIfScore={whatIfScore} whatIfLabel={whatIfLabel}
+          />
         ) : (
           <DrawsTab c={c} accent={accent} data={data} chartWidth={chartWidth} />
         )}
@@ -586,205 +562,6 @@ function PlanTab({ c, accent, data, chartWidth, age, setAge, clb, setClb, french
       </Card>
 
       <AdBanner />
-    </>
-  );
-}
-
-// ─── Your Plan skeleton (locked preview with shimmer + unlock CTA) ────────────
-function PlanTabSkeleton({ c, accent, userScore }: { c: Colors; accent: string; userScore: number }) {
-  const { t } = useTranslation();
-  const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-
-  const lv = () => (
-    <View style={[s.lockVal, { backgroundColor: c.surfaceTertiary }]}>
-      <Text style={[s.lockValText, { color: c.textMuted }]}>-</Text>
-    </View>
-  );
-
-  const lb = (h: number) => (
-    <View style={[s.lockBlock, { height: h, borderColor: c.border }]}>
-      <Ionicons name="lock-closed" size={20} color={c.textMuted} />
-      <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.unlockToView')}</Text>
-    </View>
-  );
-
-  const IMPROVE_PATHS = [t('analytics.improveLanguage'), t('analytics.learnFrench'), t('analytics.getProvNom')];
-  const STREAMS       = ['Canadian Experience Class', 'French Language', 'Provincial Nominee', 'RNIP / Agri-Food'];
-  const SCORE_BANDS   = ['530\u2013559  \u2190 you', '500\u2013529', '470\u2013499', '440\u2013469', '< 440'];
-
-  return (
-    <>
-      <Card style={[s.card, { borderWidth: 1, borderColor: accent }]}>
-        <View style={[s.skimIcon, { backgroundColor: accent + '18' }]}>
-          <Ionicons name="analytics-outline" size={24} color={accent} />
-        </View>
-        <Text style={[s.lockTitle, { color: c.textPrimary }]}>{t('analytics.unlockPremium')}</Text>
-        <Text style={[s.lockBody, { color: c.textSecondary }]}>
-          {t('analytics.unlockDesc')}
-        </Text>
-        <Button
-          title={t('analytics.unlockButton')}
-          fullWidth
-          icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
-          onPress={() => nav.navigate('Paywall')}
-          style={{ marginTop: spacing.xs }}
-        />
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.nextDrawPredicted')}</Text>
-        <View style={[s.rowBetween, { marginTop: spacing.sm }]}>
-          <View style={{ gap: 5 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.expectedWindow')}</Text>
-            {lv()}
-          </View>
-          <View style={{ alignItems: 'flex-end', gap: 5 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.likelihood')}</Text>
-            {lv()}
-          </View>
-        </View>
-        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>{t('analytics.basedOnCadence')}</Text>
-      </Card>
-
-      <Card style={s.card}>
-        <View style={[s.rowBetween, { marginBottom: spacing.xs }]}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.howToImprove')}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.youNeed')}</Text>
-            {lv()}
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.pts')}</Text>
-          </View>
-        </View>
-        {IMPROVE_PATHS.map((label, i) => (
-          <View key={label} style={[s.gapRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-            <Ionicons name="arrow-up-circle-outline" size={16} color={accent} />
-            <Text style={[s.gapLabel, { color: c.textPrimary }]}>{label}</Text>
-            {lv()}
-          </View>
-        ))}
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.forecastNextDraw')}</Text>
-        {lb(110)}
-        <View style={[s.rowBetween, { marginTop: spacing.xs }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.likelyCutoff')}</Text>
-            {lv()}
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.confidence')}</Text>
-            {lv()}
-          </View>
-        </View>
-      </Card>
-
-      <Card style={s.card}>
-        <View style={s.rowBetween}>
-          <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whatIf')}</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-            <Text style={[s.caption, { color: c.textSecondary }]}>CRS</Text>
-            {lv()}
-          </View>
-        </View>
-        {[t('analytics.whatIfAge'), t('analytics.whatIfLanguage')].map((label) => (
-          <View key={label} style={{ marginTop: spacing.sm }}>
-            <View style={s.rowBetween}>
-              <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
-              {lv()}
-            </View>
-            <View style={{ height: 5, backgroundColor: c.surfaceTertiary, borderRadius: 3, marginTop: 8 }} />
-          </View>
-        ))}
-        {[t('analytics.whatIfFrench'), t('analytics.whatIfPnp')].map((label) => (
-          <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }}>
-            <Text style={[s.sliderLabel, { color: c.textSecondary }]}>{label}</Text>
-            <View style={[s.lockSwitch, { backgroundColor: c.surfaceTertiary }]}>
-              <Ionicons name="lock-closed" size={10} color={c.textMuted} />
-            </View>
-          </View>
-        ))}
-        <View style={[s.whatIfOut, { backgroundColor: c.surfaceTertiary + '50' }]}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={[s.caption, { color: c.textMuted }]}>{t('analytics.projectedOdds')}</Text>
-            {lv()}
-          </View>
-        </View>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.bestStream')}</Text>
-        {STREAMS.map((stream, i) => (
-          <View key={stream} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-            <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{stream}</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Text style={[s.caption, { color: c.textSecondary }]}>{t('analytics.cutoff')}</Text>
-              {lv()}{lv()}
-            </View>
-          </View>
-        ))}
-        <Text style={[s.caption, { color: c.textMuted, marginTop: spacing.xs }]}>{t('analytics.streamGapLegend')}</Text>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.expectedWait')}</Text>
-        {SCORE_BANDS.map((band, i) => (
-          <View key={band} style={[s.bandRow, i > 0 && { borderTopColor: c.border, borderTopWidth: StyleSheet.hairlineWidth }]}>
-            <Text style={[s.bandScore, { color: i === 0 ? accent : c.textPrimary, fontWeight: i === 0 ? typography.bold : typography.medium }]}>{band}</Text>
-            {lv()}
-          </View>
-        ))}
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.vsRecentCutoffs')}</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm, flexWrap: 'wrap' }}>
-          <Text style={[s.bodyText, { color: c.textPrimary }]}>{t('premiumCharts.percentileText', { score: userScore, percentile: '' })}</Text>
-          {lv()}
-          <Text style={[s.bodyText, { color: c.textPrimary }]}>%</Text>
-        </View>
-        <View style={[s.progressTrack, { backgroundColor: c.surfaceSecondary, marginTop: spacing.sm, alignItems: 'center', justifyContent: 'center' }]}>
-          <Ionicons name="lock-closed" size={11} color={c.textMuted} />
-        </View>
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.whereYouStand')}</Text>
-        {SCORE_BANDS.map((band, i) => (
-          <View key={band} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm }}>
-            <Text style={{ width: 92, fontSize: typography.xs, color: i === 0 ? accent : c.textSecondary, fontWeight: i === 0 ? typography.bold : typography.medium }}>{band}</Text>
-            {lv()}
-          </View>
-        ))}
-      </Card>
-
-      <Card style={s.card}>
-        <Text style={[s.kicker, { color: c.textMuted }]}>{t('analytics.decisionOutlook', { category: 'CEC' })}</Text>
-        <View style={[s.statGrid, { marginTop: spacing.sm }]}>
-          <View style={[s.statCell, { gap: spacing.xs }]}>
-            {lv()}
-            <Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.estDecision')}</Text>
-          </View>
-          <View style={[s.vDivTall, { backgroundColor: c.border }]} />
-          <View style={[s.statCell, { gap: spacing.xs }]}>
-            {lv()}
-            <Text style={[s.statCellLabel, { color: c.textMuted }]}>{t('analytics.inInventory')}</Text>
-          </View>
-        </View>
-      </Card>
-
-      <Card style={[s.card, { borderWidth: 1, borderColor: accent, alignItems: 'center' }]}>
-        <Text style={[s.lockBody, { color: c.textSecondary, textAlign: 'center' }]}>
-          {t('premiumCharts.unlockCta')}
-        </Text>
-        <Button
-          title={t('analytics.unlockButton')}
-          fullWidth
-          icon={<Ionicons name="lock-open-outline" size={18} color={palette.white} />}
-          onPress={() => nav.navigate('Paywall')}
-          style={{ marginTop: spacing.xs }}
-        />
-      </Card>
     </>
   );
 }

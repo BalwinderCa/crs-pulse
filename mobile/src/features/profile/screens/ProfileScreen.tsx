@@ -29,7 +29,6 @@ import { exportProfilePdf } from '@/utils/exportProfile';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function makeStyles(c: Colors, accent: string) {
@@ -296,8 +295,6 @@ export default function ProfileScreen() {
           <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>
         )}
       </Card>
-
-      <UpgradeBanner style={{ marginBottom: spacing.sm }} />
 
       {/* ── Profile Details (grouped) — hidden until the user has actually
            entered their profile, so fresh installs don't echo the defaults ── */}

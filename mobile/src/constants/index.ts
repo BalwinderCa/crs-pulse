@@ -86,21 +86,9 @@ export const STORAGE_KEYS = {
   DOC_CHECKLIST: 'crs_pulse.doc_checklist',
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
   NOTIFICATIONS_SEEN_PROCESSING: 'crs_pulse.notifications_seen_processing',
-  PREMIUM: 'crs_pulse.premium',
   REVIEW_PROMPTED: 'crs_pulse.review_prompted',
   APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
 } as const;
-
-/**
- * Google Play in-app products. `ANALYTICS_UNLOCK` is a one-time, non-consumable
- * managed product — buying it grants permanent access to the Analytics screen.
- * The id must match the product id created in the Play Console exactly.
- */
-export const IAP_PRODUCTS = {
-  ANALYTICS_UNLOCK: 'crs_pulse.analytics_unlock',
-} as const;
-
-export const IAP_SKUS: string[] = [IAP_PRODUCTS.ANALYTICS_UNLOCK];
 
 /**
  * Master monetization kill-switch. While `false` the app ships fully FREE:

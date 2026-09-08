@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (a freemium split — free draw insights and Google AdMob banner ads for free users, plus a one-time in-app purchase that unlocks the personalised "Your Plan" analytics and removes ads), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker; the in-app purchase is processed entirely by the app store (no payment data reaches us).
+CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (free draw insights plus the personalised "Your Plan" tab, monetised entirely with Google AdMob ads), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker. There are no in-app purchases and no payment data of any kind.
 
 The repository has two independent workspaces:
 - `mobile/` — Expo React Native app
@@ -90,7 +90,6 @@ Stores in `src/store/`:
 | `drawsStore` | `Draw[]`, cache timestamp | IRCC draw data; refreshes with 3× exponential backoff; 1-hour cache |
 | `timelineStore` | `Milestone[]` | Application timeline milestones, sorted by date |
 | `applicationStore` | `TrackedApplication` | The IRCC category/type the user is tracking + applied date |
-| `premiumStore` | `isPremium`, `billingAvailable`, `price` | Google Play one-time "Analytics unlock" entitlement. Play is the source of truth; the gate fails OPEN when no product is purchasable (iOS without a configured product, emulator, transient outage) |
 | `processingTimesStore` | `LiveProcessingTimes` | IRCC processing times by category/type; 7-day cache with bundled fallback |
 | `eePoolStore` | `EePoolData` | Express Entry pool distribution + Immigration Levels Plan; 7-day cache with bundled fallback |
 
@@ -104,12 +103,11 @@ Each screen area lives under `src/features/<name>/` and contains its own compone
 - `dashboard` — CRS calculator screen with score card and prediction
 - `calculators` — hub linking to all calculators
 - `draws` — live IRCC draws with category filters
-- `analytics` — premium analytics (2 tabs: free draw trends + paid personal odds)
+- `analytics` — analytics (2 tabs: draw trends + personal odds); both free
 - `timeline` — milestone tracker with add/edit/delete
 - `tracker` — application setup + IRCC processing-time estimates
 - `checklist` — per-program document checklists with progress tracking
 - `notifications` — draw notifications history with unread badge
-- `paywall` — one-time IAP modal for analytics unlock
 - `profile` — settings (the "Settings" bottom tab renders `profile`'s `ProfileScreen`)
 - `onboarding` — first-time 4-slide welcome flow
 - `faq` — accordion FAQ screen
@@ -131,7 +129,7 @@ Static reference data: `features/checklist/data/checklists.ts` (document checkli
 
 ### Navigation
 
-`RootNavigator` (stack) loads all stores on boot (profile, draws, timeline, application, processing times, EE pool, premium), hides splash screen when ready, then renders `MainNavigator` (5 bottom tabs): **Home → Timeline → Draws → Analytics → Settings**. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist` (hub + detail), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`, `Paywall` (modal).
+`RootNavigator` (stack) loads all stores on boot (profile, draws, timeline, application, processing times, EE pool), hides splash screen when ready, then renders `MainNavigator` (5 bottom tabs): **Home → Timeline → Draws → Analytics → Settings**. The stack also hosts pushed screens reached from menus/cards: `Onboarding`, `Calculators`, `CrsCalculator`, `SinpCalculator`, `FswCalculator`, `BcSirsCalculator`, `ApplicationSetup`, `DocumentChecklist` (hub + detail), `ProcessingTimes`, `Notifications`, `Faq`, `ReportIssue`.
 
 ### Theme System
 
@@ -188,13 +186,14 @@ Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PU
 
 `src/services/` holds cross-feature services:
 - `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
-- `iapService.ts` — Thin `react-native-iap` wrapper over Google Play Billing for the one-time "Analytics unlock" (`crs_pulse.analytics_unlock`); handles connect/buy/restore/entitlement check
 - `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
-- `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row), free users only, hidden for Premium, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 3rd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'); `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
+- `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row) for all users, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 3rd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'); `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
-### Premium / IAP Gate
+### Monetisation: ads only, no IAP
 
-The analytics "Your Plan" tab is gated behind a one-time Google Play managed product (`crs_pulse.analytics_unlock`). `premiumStore` is the source of truth — it connects to billing on init, verifies entitlement, and mirrors to AsyncStorage for fast cold starts. The gate **fails open** through `billingAvailable`: when no purchasable product loads (iOS without StoreKit, emulator, transient Play outage) `billingAvailable` becomes `false` and consumers treat that as "don't lock" — the analytics "Your Plan" tab unlocks (`planLocked = premiumLoaded && !isPremium && billingAvailable`) and the paywall/upgrade banner hide. Note `isPremium` itself is **not** force-set to `true`, so AdMob ads — which gate only on `isPremium` — keep showing for non-purchasers.
+**The app has no in-app purchase.** Everything, including the analytics "Your Plan" tab, is free; revenue comes from AdMob alone. `react-native-iap` was removed on 2026-09-08 because Google Play began rejecting uploads that bundle Play Billing < 8.0.0, and react-native-iap 12.x pins 7.0.0. Moving to a Billing-8 release (14.0.0+) would have required `react-native-nitro-modules`, Kotlin 2.1 and compileSdk 36 — an Expo SDK upgrade — so with the purchase never having been sold (Android had 0 installs, and the product was Play-only so it never loaded on iOS) the purchase path was dropped instead.
+
+Removed with it: `premiumStore`, `iapService`, the `paywall` feature, `UpgradeBanner`, the header PRO badge, and the locked "Your Plan" preview. Ads never gated on entitlement — `AdBanner` checks `MONETIZATION_ENABLED` and ad availability only — so ad behaviour is unchanged. **Do not reintroduce `react-native-iap` without first checking the Play Billing minimum**, which Google raises periodically.
 
 ### Testing
 

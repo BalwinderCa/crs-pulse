@@ -10,7 +10,6 @@ import { SideMenu } from '@/features/dashboard/components/SideMenu';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useProcessingTimesBadge } from '@/hooks/useProcessingTimesBadge';
 import { useDrawsStore } from '@/store/drawsStore';
-import { usePremiumStore } from '@/store/premiumStore';
 import { spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { palette } from '@/theme';
@@ -38,7 +37,6 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
   const isStack = variant === 'stack';
 
   const latestDraw = useDrawsStore((s) => s.draws[0]);
-  const isPremium = usePremiumStore((s) => s.isPremium);
   const { seenDraw, loaded, markSeen } = useNotificationsStore();
   const hasProcessingUpdate = useProcessingTimesBadge();
 
@@ -104,11 +102,6 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
 
           <View style={s.brandCenter}>
             <Logo size={20} />
-            {isPremium && (
-              <View style={[s.proBadge, { backgroundColor: palette.warning }]}>
-                <Text style={s.proText}>{t('proBadge')}</Text>
-              </View>
-            )}
           </View>
 
           <View style={s.sideRight}>
@@ -147,13 +140,6 @@ const s = StyleSheet.create({
   stackSide:   { minWidth: 40, flexDirection: 'row', alignItems: 'center' },
   stackRight:  { justifyContent: 'flex-end' },
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
-  proBadge: {
-    alignSelf: 'flex-start',
-    marginTop: -4, marginLeft: 3,
-    paddingHorizontal: 5, paddingVertical: 1,
-    borderRadius: 6,
-  },
-  proText: { fontSize: 9, fontWeight: typography.black, letterSpacing: 0.3, color: palette.navyDark },
   sideRight:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.md },
   iconBtn:     { padding: 2 },
   badge: {

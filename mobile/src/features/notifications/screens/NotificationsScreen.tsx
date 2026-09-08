@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { UpgradeBanner } from '@/components/common/UpgradeBanner';
 import { AdBanner } from '@/components/common/AdBanner';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
@@ -61,9 +60,6 @@ export default function NotificationsScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Upgrade banner for free users */}
-        <UpgradeBanner />
-
         {/* Push alerts toggle */}
         <View style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}>
           <View style={s.toggleRow}>
