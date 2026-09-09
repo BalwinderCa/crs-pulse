@@ -1,0 +1,7 @@
+executionPrerequisite: >-
+  App on the Analytics tab with the odds gauge settled.
+steps:
+  - echo: Close on the application timeline, populated by store-06-timeline.
+  - tap: { text: Timeline }
+  - wait: 2600
+  - await: { idle: true }

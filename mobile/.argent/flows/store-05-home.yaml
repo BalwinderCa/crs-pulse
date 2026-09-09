@@ -1,0 +1,10 @@
+# Home hub, populated. The CRS score card is filled because store-02-crs ran
+# earlier in the scene order and goldie clears data once per device, not per
+# flow, so the profile is still in AsyncStorage.
+steps:
+  - echo: Onboarding dismissed by store-01-draws; profile filled by store-02-crs.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - echo: Draw cards stream in from the IRCC feed; let them land.
+  - wait: 3000
+  - await: { idle: true }

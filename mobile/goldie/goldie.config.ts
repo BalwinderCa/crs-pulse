@@ -13,6 +13,13 @@
 // at 0, which is exactly what holds isCrsScoreReady false and puts the lock
 // overlay over the whole Analytics screen.
 
+// WARNING: a goldie.design.json sitting next to this file SILENTLY OVERRIDES
+// the theme/frame/template below - the studio Design panel writes it, and one
+// can also get auto-seeded. If a render does not match this config, check for
+// that file first (goldie/out/web/store.json .design shows what is actually in
+// effect). Delete it to hand control back to this config, or copy its values
+// up into theme.* here if you want to keep the look.
+
 const APP_ROOT = "/Users/balwindersingh/crs-pulse/mobile";
 
 const config = {
@@ -91,10 +98,32 @@ const config = {
     },
     {
       kind: "screenshot",
-      id: "checklist",
-      flow: "store-05-checklist",
-      headline: { "en-US": "Never miss a document" },
-      subhead: { "en-US": "Per-program checklists you can tick off as you go." },
+      id: "home",
+      flow: "store-05-home",
+      headline: { "en-US": "Your whole application, one screen" },
+      subhead: { "en-US": "Score, latest draw and progress the moment you open it." },
+    },
+    {
+      kind: "screenshot",
+      id: "timeline",
+      flow: "store-06-timeline",
+      headline: { "en-US": "Every milestone, dated" },
+      subhead: { "en-US": "ITA, AOR, biometrics, medical - logged as you go." },
+    },
+
+    // Exactly one preview scene. Clips are joined as recorded: Apple requires an
+    // app preview to be a plain screen recording, no bezel and no captions.
+    // Play takes no video upload (its promo is a YouTube link), so the Android
+    // render is a 1080x2400 portrait video to post there.
+    {
+      kind: "preview",
+      id: "preview",
+      segments: [
+        { id: "home",      flow: "store-preview-01-home" },
+        { id: "draws",     flow: "store-preview-02-draws" },
+        { id: "analytics", flow: "store-preview-03-analytics" },
+        { id: "timeline",  flow: "store-preview-04-timeline", holdSeconds: 2 },
+      ],
     },
   ],
 };

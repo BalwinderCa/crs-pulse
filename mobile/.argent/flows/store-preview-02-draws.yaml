@@ -1,0 +1,11 @@
+executionPrerequisite: >-
+  App open on the Home hub, settled, with the CRS profile already filled.
+steps:
+  - echo: Move to the live IRCC draw list.
+  - tap: { text: Draws }
+  - wait: 2500
+  - await: { idle: true }
+  - echo: Scroll so the reader sees this is real, current data.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.72, toX: 0.5, toY: 0.38, durationMs: 700 }
+  - wait: 1800

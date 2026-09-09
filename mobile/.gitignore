@@ -22,3 +22,4 @@ ios/
 .push-api-secret.local
 goldie/.builds/
 goldie/out/
+.argent/recordings/

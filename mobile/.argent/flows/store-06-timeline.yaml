@@ -1,0 +1,59 @@
+# Application timeline, populated with five milestones covering the usual
+# Express Entry journey. Milestones are created by this flow because a fresh
+# install has none and the app seeds no demo data.
+steps:
+  - echo: Onboarding dismissed by store-01-draws.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - await: { idle: true }
+  - tap: { text: Timeline }
+  - await: { visible: { text: No milestones yet } }
+  - echo: "Dates stay at the default (today) on purpose - iOS uses a compact"
+  - echo: DateTimePicker popover and Android a native dialog, and goldie shares
+  - echo: one flow across both devices, so date-picking cannot replay on both.
+  - echo: Milestone 1 of 5 - ITA.
+  - tap: { text: Add Your First Milestone }
+  - await: { visible: { text: Save } }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: Milestone 2 of 5 - Application Submitted.
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Application Submitted" } }
+  - tap: { text: "Application Submitted" }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: Milestone 3 of 5 - AOR Received.
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "AOR Received" } }
+  - tap: { text: "AOR Received" }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: Milestone 4 of 5 - Biometrics Completed.
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Biometrics Completed" } }
+  - tap: { text: "Biometrics Completed" }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: Milestone 5 of 5 - Medical Passed.
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Medical Passed" } }
+  - tap: { text: "Medical Passed" }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - await: { idle: true }
