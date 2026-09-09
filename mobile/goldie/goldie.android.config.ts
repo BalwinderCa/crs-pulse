@@ -1,3 +1,6 @@
+// GENERATED from goldie.config.ts - edit that file, then re-derive this one.
+// Differs ONLY in `devices` and the timeline scene flow, because iOS and
+// Android expose different native date pickers (see store-06-timeline-*.yaml).
 // goldie config for CRS Pulse — App Store + Google Play store assets.
 //
 // Both device families render from the SAME scenes and flows; argent flows
@@ -34,7 +37,7 @@ const config = {
     applicationId: "com.crspulse.app",
   },
 
-  devices: ["iphone-6.9"],
+  devices: ["pixel-10-pro"],
   locales: ["en-US"],
   appearance: "light",
 
@@ -106,7 +109,7 @@ const config = {
     {
       kind: "screenshot",
       id: "timeline",
-      flow: "store-06-timeline-ios",
+      flow: "store-06-timeline-android",
       headline: { "en-US": "Every milestone, dated" },
       subhead: { "en-US": "ITA, AOR, biometrics, medical - logged as you go." },
     },

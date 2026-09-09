@@ -1,0 +1,144 @@
+# Application timeline, populated with five back-dated milestones.
+#
+# PLATFORM-SPECIFIC: Android. iOS uses a compact DateTimePicker popover
+# ("Previous Month", day labelled "Tuesday, May 26", dismissed by tapping
+# outside); Android uses a native dialog ("Previous month", day labelled
+# "26 May 2026", confirmed with OK). goldie shares one flow across the devices
+# in a config, so the two platforms use separate configs - see
+# goldie.config.ts (iPhone) and goldie.android.config.ts (Play).
+#
+# Dates are absolute, chosen so that on the September 8, 2026 capture day they
+# read 105 / 95 / 95 / 45 / 30 days ago. Re-running much later shifts those
+# labels; regenerate the dates if the strip is ever rebuilt.
+steps:
+  - echo: Onboarding dismissed by store-01-draws.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - await: { idle: true }
+  - tap: { text: Timeline }
+  - await: { visible: { text: No milestones yet } }
+  - echo: "Milestone 1/5 - ITA, 105 days ago (May 26, 2026)."
+  - tap: { text: Add Your First Milestone }
+  - await: { visible: { text: Save } }
+  - await: { visible: { text: DATE } }
+  - tap: { x: 0.5, y: 0.276 }
+  - await: { visible: { text: "Previous month" } }
+  - echo: Picker opens on the current month; step back 4.
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - await: { idle: true }
+  - tap: { text: "26 May 2026" }
+  - await: { idle: true }
+  - tap: { text: OK }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: "Milestone 2/5 - Application Submitted, 95 days ago (June 5, 2026)."
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Application Submitted" } }
+  - echo: The picker list animates in and rows overlap while it does -
+  - echo: settle first or a neighbouring row wins the hit test.
+  - await: { idle: true }
+  - wait: 600
+  - tap: { text: "Application Submitted" }
+  - await: { idle: true }
+  - await: { visible: { text: DATE } }
+  - tap: { x: 0.5, y: 0.276 }
+  - await: { visible: { text: "Previous month" } }
+  - echo: Picker opens on the current month; step back 3.
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - await: { idle: true }
+  - tap: { text: "05 June 2026" }
+  - await: { idle: true }
+  - tap: { text: OK }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: "Milestone 3/5 - AOR Received, 95 days ago (June 5, 2026)."
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "AOR Received" } }
+  - echo: The picker list animates in and rows overlap while it does -
+  - echo: settle first or a neighbouring row wins the hit test.
+  - await: { idle: true }
+  - wait: 600
+  - tap: { text: "AOR Received" }
+  - await: { idle: true }
+  - await: { visible: { text: DATE } }
+  - tap: { x: 0.5, y: 0.276 }
+  - await: { visible: { text: "Previous month" } }
+  - echo: Picker opens on the current month; step back 3.
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - await: { idle: true }
+  - tap: { text: "05 June 2026" }
+  - await: { idle: true }
+  - tap: { text: OK }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: "Milestone 4/5 - Biometrics Completed, 45 days ago (July 25, 2026)."
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Biometrics Completed" } }
+  - echo: The picker list animates in and rows overlap while it does -
+  - echo: settle first or a neighbouring row wins the hit test.
+  - await: { idle: true }
+  - wait: 600
+  - tap: { text: "Biometrics Completed" }
+  - await: { idle: true }
+  - await: { visible: { text: DATE } }
+  - tap: { x: 0.5, y: 0.276 }
+  - await: { visible: { text: "Previous month" } }
+  - echo: Picker opens on the current month; step back 2.
+  - tap: { text: "Previous month" }
+  - tap: { text: "Previous month" }
+  - await: { idle: true }
+  - tap: { text: "25 July 2026" }
+  - await: { idle: true }
+  - tap: { text: OK }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - echo: "Milestone 5/5 - Medical Passed, 30 days ago (August 9, 2026)."
+  - tap: { text: Add Milestone }
+  - await: { visible: { text: Save } }
+  - echo: TYPE defaults to ITA; open the picker and choose this milestone.
+  - tap: { text: ITA }
+  - await: { visible: { text: "Medical Passed" } }
+  - echo: The picker list animates in and rows overlap while it does -
+  - echo: settle first or a neighbouring row wins the hit test.
+  - await: { idle: true }
+  - wait: 600
+  - echo: This entry sits low enough to fall under the pinned Custom row -
+  - echo: scroll it clear before tapping.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.62, toX: 0.5, toY: 0.50, durationMs: 600 }
+  - await: { idle: true }
+  - tap: { text: "Medical Passed" }
+  - await: { idle: true }
+  - await: { visible: { text: DATE } }
+  - tap: { x: 0.5, y: 0.276 }
+  - await: { visible: { text: "Previous month" } }
+  - echo: Picker opens on the current month; step back 1.
+  - tap: { text: "Previous month" }
+  - await: { idle: true }
+  - tap: { text: "09 August 2026" }
+  - await: { idle: true }
+  - tap: { text: OK }
+  - await: { idle: true }
+  - tap: { text: Save }
+  - await: { idle: true }
+  - await: { idle: true }
