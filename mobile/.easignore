@@ -1,25 +1,18 @@
+# EAS packages the project directory. Without this the upload was ~112 MB
+# against a 3.8 MB tracked tree, because gitignored paths were still included.
+# Nothing here is needed to build: EAS installs deps and prebuilds natively.
+
 node_modules/
 .expo/
-dist/
-web-build/
-coverage/
-.env
-.env.local
-.env.production
-google-services.json
-GoogleService-Info.plist
-google-play-service-account.json
-fcm-v1-service-account.json
-*firebase-adminsdk*.json
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
-*.orig.*
-android/
-ios/
-.push-api-secret.local
 
-# Allow EAS build to package google-services.json
-!google-services.json
+# Store-asset tooling: simulator/APK builds, rendered tiles, raw captures.
+goldie/.builds/
+goldie/out/
+# argent screen recordings from goldie capture runs.
+.argent/recordings/
+
+# Generated native projects. EAS prebuilds these itself, and a stale local copy
+# can carry an old version string into the build (ios/ still said 1.0.7 while
+# app.config.js said 1.0.8).
+ios/
+android/
