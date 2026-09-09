@@ -1,7 +1,7 @@
 {
-  "background": "linear-gradient(165deg, #0A1628 0%, #12294A 45%, #1A6DFF 100%)",
+  "background": "linear-gradient(160deg, #FB7185 0%, #F97316 100%)",
   "frame": "17-pro-blue",
-  "fontFamily": "-apple-system, \"SF Pro Display\", system-ui, sans-serif",
+  "fontFamily": "\"Montserrat\", system-ui, sans-serif",
   "order": [
     "draws",
     "home",
