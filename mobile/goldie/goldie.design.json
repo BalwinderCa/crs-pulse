@@ -4,11 +4,11 @@
   "fontFamily": "-apple-system, \"SF Pro Display\", system-ui, sans-serif",
   "order": [
     "draws",
-    "crs",
-    "analytics",
-    "calculators",
     "home",
-    "timeline"
+    "timeline",
+    "calculators",
+    "analytics",
+    "crs"
   ],
   "template": "editorial",
   "layout": "classic",

@@ -78,40 +78,40 @@ const config = {
       headline: { "en-US": "Every IRCC draw, the moment it lands" },
       subhead: { "en-US": "Live results, category filters and push alerts." },
     },
-    {
-      kind: "screenshot",
-      id: "crs",
-      flow: "store-02-crs",
-      headline: { "en-US": "Know exactly where you stand" },
-      subhead: { "en-US": "The official IRCC CRS formula, recalculated as you type." },
-    },
-    {
-      kind: "screenshot",
-      id: "analytics",
-      flow: "store-03-analytics",
-      headline: { "en-US": "See your odds before the next draw" },
-      subhead: { "en-US": "Your score against real cutoffs, and what would move it." },
-    },
-    {
-      kind: "screenshot",
-      id: "calculators",
-      flow: "store-04-calculators",
-      headline: { "en-US": "Four calculators, one app" },
-      subhead: { "en-US": "CRS, FSW 67-point, BC PNP SIRS and Saskatchewan EOI." },
-    },
-    {
+{
       kind: "screenshot",
       id: "home",
       flow: "store-05-home",
       headline: { "en-US": "Your whole application, one screen" },
       subhead: { "en-US": "Score, latest draw and progress the moment you open it." },
     },
-    {
+{
       kind: "screenshot",
       id: "timeline",
       flow: "store-06-timeline-ios",
       headline: { "en-US": "Every milestone, dated" },
       subhead: { "en-US": "ITA, AOR, biometrics, medical - logged as you go." },
+    },
+{
+      kind: "screenshot",
+      id: "calculators",
+      flow: "store-04-calculators",
+      headline: { "en-US": "Four calculators, one app" },
+      subhead: { "en-US": "CRS, FSW 67-point, BC PNP SIRS and Saskatchewan EOI." },
+    },
+{
+      kind: "screenshot",
+      id: "analytics",
+      flow: "store-03-analytics",
+      headline: { "en-US": "See your odds before the next draw" },
+      subhead: { "en-US": "Your score against real cutoffs, and what would move it." },
+    },
+{
+      kind: "screenshot",
+      id: "crs",
+      flow: "store-02-crs",
+      headline: { "en-US": "Know exactly where you stand" },
+      subhead: { "en-US": "The official IRCC CRS formula, recalculated as you type." },
     },
 
     // Exactly one preview scene. Clips are joined as recorded: Apple requires an
