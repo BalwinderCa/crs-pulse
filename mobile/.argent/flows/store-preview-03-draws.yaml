@@ -1,0 +1,10 @@
+executionPrerequisite: >-
+  App on the Timeline tab.
+steps:
+  - echo: Live IRCC draws; scroll so it reads as real, current data.
+  - tap: { text: Draws }
+  - wait: 900
+  - await: { idle: true }
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.72, toX: 0.5, toY: 0.40, durationMs: 700 }
+  - wait: 1200

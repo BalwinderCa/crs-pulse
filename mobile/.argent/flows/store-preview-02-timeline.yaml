@@ -1,0 +1,7 @@
+executionPrerequisite: >-
+  App open on the Home hub, settled.
+steps:
+  - echo: The application timeline, already populated with dated milestones.
+  - tap: { text: Timeline }
+  - await: { idle: true }
+  - wait: 1600

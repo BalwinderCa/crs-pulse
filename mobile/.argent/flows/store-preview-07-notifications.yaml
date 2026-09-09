@@ -1,0 +1,10 @@
+executionPrerequisite: >-
+  Side menu open over the Profile tab.
+steps:
+  - echo: Close the menu, then finish on the draw notification feed.
+  - tap: { text: Close menu }
+  - wait: 700
+  - await: { idle: true }
+  - tap: { text: Notifications }
+  - wait: 1200
+  - await: { idle: true }

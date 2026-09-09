@@ -1,0 +1,7 @@
+executionPrerequisite: >-
+  App on the Analytics tab with the gauge settled.
+steps:
+  - echo: Settings.
+  - tap: { text: Profile }
+  - await: { idle: true }
+  - wait: 1600

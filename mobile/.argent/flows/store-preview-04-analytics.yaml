@@ -1,0 +1,7 @@
+executionPrerequisite: >-
+  App on the Draws tab, scrolled part way down.
+steps:
+  - echo: The odds gauge is the payoff shot; its charts animate in.
+  - tap: { text: Analytics }
+  - wait: 2200
+  - await: { idle: true }

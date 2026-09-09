@@ -1,9 +1,7 @@
-# Preview segment 1/4 - open on the populated Home hub.
-# Owns its start state (leading launch:), so no executionPrerequisite.
 steps:
+  - echo: Open on the Home hub - score, tracker and latest draws.
   - launch: com.crspulse.app
   - await: { visible: { text: Recent Draws } }
-  - wait: 1200
+  - wait: 1000
   - await: { idle: true }
-  - echo: Let the score card and recent draws read before moving on.
-  - wait: 2200
+  - wait: 1200

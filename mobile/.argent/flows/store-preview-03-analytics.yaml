@@ -1,8 +1,0 @@
-executionPrerequisite: >-
-  App on the Draws tab, scrolled part way down the draw list.
-steps:
-  - echo: The personalised odds gauge is the payoff shot.
-  - tap: { text: Analytics }
-  - wait: 3200
-  - await: { idle: true }
-  - wait: 1500

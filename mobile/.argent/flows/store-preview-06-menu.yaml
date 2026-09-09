@@ -1,0 +1,8 @@
+executionPrerequisite: >-
+  App on the Profile tab.
+steps:
+  - echo: The side menu - checklists, processing times, FAQ and support.
+  - tap: { text: Open menu }
+  - wait: 1000
+  - await: { idle: true }
+  - wait: 1000
