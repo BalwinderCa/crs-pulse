@@ -1,0 +1,63 @@
+# CRS calculator showing a real score. A fresh install has age/education/marital
+# defaults but language scores at 0, so only education and language are set here.
+steps:
+  - echo: goldie clears app data once per device, not per flow, so onboarding is
+  - echo: already dismissed by the first scene (store-01-draws). Gate on a Home marker.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - await: { idle: true }
+  - echo: The home score card opens the Calculators hub, not the calculator itself.
+  - tap: { text: Calculate your score }
+  - await: { visible: { text: CRS Score } }
+  - tap: { text: CRS Score }
+  - await: { visible: { text: Language } }
+  - echo: Fresh installs default education to "High school"; a bachelor's reads
+  - echo: better and is the common case for Express Entry applicants.
+  - tap: { text: Education }
+  - await: { visible: { text: "Bachelor's" } }
+  - tap: { text: "Bachelor's" }
+  - await: { idle: true }
+  - tap: { text: Education }
+  - await: { idle: true }
+  - echo: Sections start collapsed; open Language - language scores are the only
+  - echo: inputs left unset on a fresh install, which is what holds the score at 0.
+  - tap: { text: Language }
+  - await: { idle: true }
+  - echo: Speaking and Listening are above the fold once Language expands.
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Speaking }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - tap: { text: Increase Listening }
+  - echo: Reading and Writing sit below the fold - scroll before touching them.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.72, toX: 0.5, toY: 0.42, durationMs: 700 }
+  - await: { idle: true }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Reading }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - tap: { text: Increase Writing }
+  - await: { idle: true }

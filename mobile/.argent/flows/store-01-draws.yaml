@@ -1,0 +1,14 @@
+# Live IRCC draws list. Needs no profile: the list comes from the IRCC feed.
+steps:
+  - echo: goldie clears app data first, so every flow starts at onboarding.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Skip } }
+  - tap: { text: Skip }
+  - await: { idle: true }
+  - echo: Draws is the third bottom tab.
+  - tap: { text: Draws }
+  - echo: The draw list fetches from the IRCC feed; filters render only once it lands.
+  - echo: A cold install has no cached draws, so the first fetch is the slow one.
+  - wait: 12000
+  - await: { visible: { text: All Time } }
+  - await: { idle: true }

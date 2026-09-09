@@ -20,3 +20,5 @@ fcm-v1-service-account.json
 android/
 ios/
 .push-api-secret.local
+goldie/.builds/
+goldie/out/

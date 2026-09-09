@@ -1,0 +1,18 @@
+# Analytics "Your Plan".
+#
+# Requires a CRS score: at userScore 0 the whole screen sits under a
+# "Complete your CRS score" lock overlay. It does NOT fill the profile itself,
+# because goldie clears app data once per device rather than per flow, so the
+# profile entered by store-02-crs is still in AsyncStorage when this runs.
+# That makes this scene dependent on store-02-crs running first, which the
+# config's scene order guarantees (draws, crs, analytics, calculators, checklist).
+steps:
+  - echo: Onboarding dismissed by store-01-draws; profile filled by store-02-crs.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - await: { idle: true }
+  - echo: Analytics is the fourth bottom tab.
+  - tap: { text: Analytics }
+  - echo: Charts animate in; let them settle before the capture.
+  - wait: 2500
+  - await: { idle: true }

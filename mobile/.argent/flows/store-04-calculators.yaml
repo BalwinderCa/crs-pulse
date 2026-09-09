@@ -1,0 +1,11 @@
+# Calculators hub: CRS, FSW 67-point, SINP EOI and BC PNP SIRS. No profile needed.
+steps:
+  - echo: goldie clears app data once per device, not per flow, so onboarding is
+  - echo: already dismissed by the first scene (store-01-draws). Gate on a Home marker.
+  - launch: com.crspulse.app
+  - await: { visible: { text: Recent Draws } }
+  - await: { idle: true }
+  - echo: Home card routing to the calculators hub.
+  - tap: { text: Calculate your score }
+  - await: { visible: { text: "FSW 67-Point Grid" } }
+  - await: { idle: true }
