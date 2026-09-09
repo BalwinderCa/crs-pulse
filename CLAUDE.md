@@ -42,11 +42,15 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-09-08).** iOS is live on the App Store at **v1.0.7 (build 46)**,
-built from commit `ed8bc26`. Android is **not live** — the newest Play upload is
-**v1.0.7 / versionCode 21**, sitting in the **closed testing** track, and the app's Production
-track is Inactive. The two platforms are feature-identical: the only app-source difference from
-`ed8bc26` is the IAP removal below, and every `Platform.OS` branch is a platform idiom
+**Store status (as of 2026-09-09).** iOS: **v1.0.7 (build 46)** is live; **v1.0.8 (build 51)**
+was submitted 2026-09-09 and is **Waiting for Review** (submission
+`77c88281-42ae-41bc-817c-124f04d59cde`). 1.0.8 exists because App Store Connect freezes
+screenshots on a live version — only Promotional Text is editable without review — so refreshing
+store assets costs a build and a review cycle. It also carries the IAP removal, which live 1.0.7
+does not. Android is **not live** — the newest Play upload is **v1.0.7 / versionCode 21**, in the
+**closed testing** track, with the Production track Inactive. The two platforms are
+feature-identical: the only app-source difference from `ed8bc26` (the commit 1.0.7 shipped from)
+is the IAP removal below, and every `Platform.OS` branch is a platform idiom
 (keyboard avoidance, date picker, store URL, ad-unit choice, iOS-only ATT prompt) rather than a
 gated feature. Google gates production
 access behind "12 testers opted in, for 14 continuous days"; the account currently has **0**,
