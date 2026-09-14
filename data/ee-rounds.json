@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-04",
-  "updatedFull": "September 4, 2026",
-  "distributionAsOf": "August 30, 2026",
+  "updated": "2026-09-14",
+  "updatedFull": "September 14, 2026",
+  "distributionAsOf": "September 13, 2026",
   "rounds": [
+    {
+      "number": "442",
+      "date": "2026-09-14",
+      "dateFull": "September 14, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 576,
+      "crs": 734
+    },
     {
       "number": "441",
       "date": "2026-09-04",
@@ -173,52 +182,43 @@
       "label": "Provincial Nominee Program",
       "size": 534,
       "crs": 708
-    },
-    {
-      "number": "422",
-      "date": "2026-06-25",
-      "dateFull": "June 25, 2026",
-      "name": "Healthcare and Social Services Occupations, 2026-Version 3",
-      "label": "Healthcare and Social Services Occupations",
-      "size": 4000,
-      "crs": 475
     }
   ],
   "pool": [
     {
       "label": "601–1200",
-      "count": 559
+      "count": 574
     },
     {
       "label": "501–600",
-      "count": 19542
+      "count": 20784
     },
     {
       "label": "451–500",
-      "count": 74105
+      "count": 72107
     },
     {
       "label": "401–450",
-      "count": 60413
+      "count": 61560
     },
     {
       "label": "351–400",
-      "count": 46824
+      "count": 46782
     },
     {
       "label": "301–350",
-      "count": 17495
+      "count": 17240
     },
     {
       "label": "0–300",
-      "count": 7735
+      "count": 7746
     }
   ],
-  "poolTotal": 226673,
+  "poolTotal": 226793,
   "ytd": {
     "year": 2026,
-    "rounds": 53,
-    "invitations": 126156,
+    "rounds": 54,
+    "invitations": 126732,
     "categories": 9
   }
 }
