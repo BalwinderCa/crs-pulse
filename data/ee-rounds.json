@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-14",
-  "updatedFull": "September 14, 2026",
+  "updated": "2026-09-15",
+  "updatedFull": "September 15, 2026",
   "distributionAsOf": "September 13, 2026",
   "rounds": [
+    {
+      "number": "443",
+      "date": "2026-09-15",
+      "dateFull": "September 15, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 2000,
+      "crs": 519
+    },
     {
       "number": "442",
       "date": "2026-09-14",
@@ -173,15 +182,6 @@
       "label": "Canadian Experience Class",
       "size": 2000,
       "crs": 517
-    },
-    {
-      "number": "423",
-      "date": "2026-07-06",
-      "dateFull": "July 6, 2026",
-      "name": "Provincial Nominee Program",
-      "label": "Provincial Nominee Program",
-      "size": 534,
-      "crs": 708
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 226793,
   "ytd": {
     "year": 2026,
-    "rounds": 54,
-    "invitations": 126732,
+    "rounds": 55,
+    "invitations": 128732,
     "categories": 9
   }
 }
