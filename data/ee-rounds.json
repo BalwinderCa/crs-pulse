@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-15",
-  "updatedFull": "September 15, 2026",
+  "updated": "2026-09-16",
+  "updatedFull": "September 16, 2026",
   "distributionAsOf": "September 13, 2026",
   "rounds": [
+    {
+      "number": "444",
+      "date": "2026-09-16",
+      "dateFull": "September 16, 2026",
+      "name": "Senior managers with Canadian Work Experience, 2026-Version 1",
+      "label": "Senior managers with Canadian Work Experience",
+      "size": 250,
+      "crs": 389
+    },
     {
       "number": "443",
       "date": "2026-09-15",
@@ -173,15 +182,6 @@
       "label": "French-Language proficiency",
       "size": 5000,
       "crs": 420
-    },
-    {
-      "number": "424",
-      "date": "2026-07-07",
-      "dateFull": "July 7, 2026",
-      "name": "Canadian Experience Class",
-      "label": "Canadian Experience Class",
-      "size": 2000,
-      "crs": 517
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 226793,
   "ytd": {
     "year": 2026,
-    "rounds": 55,
-    "invitations": 128732,
+    "rounds": 56,
+    "invitations": 128982,
     "categories": 9
   }
 }
