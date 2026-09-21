@@ -103,6 +103,9 @@ const CSS = `
   --accent:#E5342B; --accentInk:#C92A22; --accentBtn:#C92A22; --accent2:#C92A22; --accentSoft:#FDEDEC;
   --success:#0B7A55; --successSoft:#E6F4EF; --warning:#E08A1E; --warningInk:#8A5200; --warningSoft:#FDF1DF; --danger:#C0281F;
   --shadow:0 1px 2px rgba(13,23,38,.06); --navbg:rgba(255,255,255,.88);
+  --lift:0 18px 44px -20px rgba(13,23,38,.28), 0 2px 8px rgba(13,23,38,.05);
+  --phone:0 40px 80px -28px rgba(13,23,38,.45), 0 8px 24px -8px rgba(13,23,38,.18);
+  --heroTint:radial-gradient(60% 70% at 78% 28%, rgba(229,52,43,.10), transparent 70%), linear-gradient(180deg,#FDF7F6 0%,#FFFFFF 78%);
 }
 :root[data-theme="dark"]{
   --bg:#0B0F16; --bg2:#101720; --bg3:#1A2430; --card:#101720; --input:#0D141C;
@@ -111,6 +114,9 @@ const CSS = `
   --accent:#FF564B; --accentInk:#FF7A70; --accentBtn:#C92A22; --accent2:#FF7A70; --accentSoft:rgba(255,86,75,.12);
   --success:#3DD9A0; --successSoft:rgba(61,217,160,.12); --warning:#E8A54A; --warningInk:#F0B056; --warningSoft:rgba(240,176,86,.12); --danger:#FF6B61;
   --shadow:0 1px 2px rgba(0,0,0,.4); --navbg:rgba(11,15,22,.88);
+  --lift:0 18px 44px -20px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4);
+  --phone:0 40px 80px -28px rgba(0,0,0,.8), 0 8px 24px -8px rgba(0,0,0,.5);
+  --heroTint:radial-gradient(60% 70% at 78% 28%, rgba(255,86,75,.10), transparent 70%), linear-gradient(180deg,#121821 0%,#0B0F16 78%);
 }
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
@@ -178,6 +184,29 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 .cells{ display:grid; grid-template-columns:repeat(4,1fr); }
 .cells > div{ padding:18px 20px; border-left:1px solid var(--hairline); }
 .cells > div:first-child{ border-left:0; }
+/* ---- app-landing surfaces ---- */
+.hero-band{ background:var(--heroTint); border-bottom:1px solid var(--hairline); }
+.phone{ position:relative; border-radius:11.5%/5.6%; background:#0F151D; box-shadow:var(--phone); flex-shrink:0; }
+/* the device body stays dark in both themes: tied to --text it turned near-white in dark
+   mode, and a pale frame around a pale screenshot loses the phone's silhouette */
+.phone img{ display:block; width:100%; height:100%; object-fit:cover; object-position:top center; border-radius:9.6%/4.7%; }
+/* a real card lifted out of the app and set beside the phone — the genre's one
+   permitted flourish, and here it carries live numbers rather than decoration */
+.phonewrap{ position:relative; display:inline-block; }
+.floatcard{ position:absolute; z-index:2; background:var(--card); border:1px solid var(--border);
+  border-radius:14px; box-shadow:var(--lift); padding:16px 18px; }
+.card{ background:var(--card); border:1px solid var(--border); border-radius:14px; }
+.card-lift{ box-shadow:var(--lift); }
+.frow{ display:grid; grid-template-columns:1fr 300px; gap:56px; align-items:center; }
+.frow.flip{ grid-template-columns:300px 1fr; }
+.frow.flip .fshot{ order:-1; }
+.ftext{ max-width:520px; }
+.frow.flip .ftext{ margin-left:auto; }
+.fshot{ display:flex; justify-content:center; }
+.ticks{ display:flex; flex-direction:column; gap:10px; margin:20px 0 0; padding:0; }
+.ticks li{ list-style:none; display:flex; gap:10px; align-items:flex-start; font-size:15px; color:var(--text2); line-height:1.5; }
+.ticks svg{ color:var(--success); flex-shrink:0; margin-top:4px; }
+.statbar{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
 /* milestone rail */
 .rail{ display:flex; align-items:flex-start; gap:0; }
 .rail li{ flex:1; position:relative; padding-top:22px; list-style:none; }
@@ -218,6 +247,15 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 /* responsive */
 @media (max-width:900px){
   .hero{ grid-template-columns:1fr!important; gap:32px!important; }
+  .frow, .frow.flip{ grid-template-columns:1fr!important; gap:32px!important; }
+  .frow.flip .fshot{ order:0; }
+  .ftext, .frow.flip .ftext{ max-width:none; margin-left:0; }
+  .fshot{ justify-content:flex-start; }
+  .phonewrap{ display:block; }
+  .floatcard{ position:static!important; margin:20px auto 0; width:auto!important; max-width:340px; }
+  .hero .fshot, .hero > div:last-child{ justify-content:center; }
+  .hero .phone{ margin:0 auto; }
+  .statbar{ grid-template-columns:repeat(2,1fr); gap:22px 18px; }
   .split{ grid-template-columns:1fr!important; gap:28px!important; }
   .calcbody{ grid-template-columns:1fr!important; }
   .calcresult{ position:static!important; }
@@ -413,15 +451,6 @@ ${THEME_SCRIPT}
 }
 
 // ------------------------------------------------------------------ shared content data
-// App screenshots, in a CSS-drawn iPhone frame. Real captures of the shipping build —
-// there is no stock photography or illustration anywhere on this site.
-const phoneShot = (src, alt, w = 208) => `
-<figure style="margin:0;width:${w}px;flex-shrink:0">
-  <div style="position:relative;width:${w}px;height:${Math.round(w * 2.045)}px;border-radius:${Math.round(w * 0.135)}px;background:var(--text);padding:${Math.round(w * 0.028)}px;box-shadow:var(--shadow)">
-    <img src="${src}" alt="${alt}" width="520" height="1047" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${Math.round(w * 0.112)}px">
-  </div>
-</figure>`;
-
 const FEATURES_SMALL = [
   ['📈', 'Trends and analytics', 'Cutoff averages, draw cadence, and where your score sits against recent rounds.'],
   ['🔔', 'Draw alerts', 'A push notification when IRCC publishes a new round, usually within about 15 minutes.'],
@@ -492,10 +521,25 @@ const FAQ = [
 const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
 
 // ------------------------------------------------------------------ home components
+// Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
+// site is the actual app — no stock device photography, no invented UI.
+const SHOTS = {
+  home: ['/img/app-home.webp', 'The CRS Pulse home screen, showing a CRS score of 512 and the three most recent Express Entry draws'],
+  draws: ['/img/app-draws.webp', 'The draws screen, listing rounds #422 to #419 with cutoff, invitations and category filters'],
+  analytics: ['/img/app-analytics.webp', 'The analytics screen, showing moderate odds for the Canadian Experience Class with a forecast chart'],
+  timeline: ['/img/app-timeline.webp', 'The application timeline screen, prompting to log ITA, AOR and passport-request milestones'],
+};
+const phone = (key, w = 280) => {
+  const [src, alt] = SHOTS[key];
+  return `<div class="phone" style="width:${w}px;height:${Math.round(w * 2.0135)}px;padding:${Math.max(6, Math.round(w * 0.028))}px">
+  <img src="${src}" alt="${alt}" width="520" height="1047" loading="lazy" decoding="async">
+</div>`;
+};
+
 const catDot = (color, size = 9) =>
   `<span aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>`;
 
-// One stat cell. Every figure on the homepage goes through this so labels, numbers and
+// One stat cell. Every figure on the page goes through this so labels, numbers and
 // captions share one vertical rhythm.
 const cell = (label, value, caption, tone, size = 34) => `
 <div>
@@ -504,57 +548,57 @@ const cell = (label, value, caption, tone, size = 34) => `
   <div style="font-size:13px;line-height:1.45;color:var(--text2)">${caption}</div>
 </div>`;
 
-// The hero's product preview: the same four figures the app's home screen leads with.
-// The profile is an example, and says so — but the score is computed by the real CRS
-// grid, and the cutoff it is measured against is the real benchmark round, so the
-// arithmetic on screen is arithmetic the product would actually do.
-function heroPreview(sample) {
+// The card that sits beside the hero phone. The profile is an example and says so, but
+// the score comes out of the real CRS grid and the cutoff is the real benchmark round,
+// so the comparison on screen is one the product would actually make.
+function scoreCard(sample, floating) {
   const diff = sample.total - BENCHMARK.crs;
   const above = diff >= 0;
   const tone = above ? 'var(--success)' : 'var(--warningInk)';
   const soft = above ? 'var(--successSoft)' : 'var(--warningSoft)';
   return `
-<div class="panel" data-reveal style="overflow:hidden">
-  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:11px 20px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
-    <div style="display:flex;align-items:center;gap:8px">
-      <span aria-hidden="true" style="width:8px;height:8px;border-radius:2px;background:var(--accent)"></span>
-      <span style="font-size:13px;font-weight:600;color:var(--text)">Your score against the latest draw</span>
-    </div>
-    <span class="klabel" style="border:1px solid var(--border);border-radius:999px;padding:3px 9px;background:var(--bg)">Example profile</span>
+<div class="${floating ? 'floatcard' : 'card card-lift'}" style="${floating ? 'left:-118px;bottom:26px;width:266px' : 'padding:16px 18px;max-width:320px'}">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px">
+    <span class="klabel">Your score vs. latest draw</span>
+    <span class="klabel" style="border:1px solid var(--border);border-radius:999px;padding:2px 8px">Example</span>
   </div>
-  <div class="cells">
-    ${cell('CRS score', String(sample.total), 'of 1,200 possible')}
-    ${cell('Latest cutoff', BENCHMARK.cutoff, BENCHMARK.label)}
-    ${cell('Difference', `${above ? '+' : '−'}${Math.abs(diff)}`, above ? 'points above the cutoff' : 'points to make up', tone)}
-    <div>
-      <div class="klabel">Status</div>
-      <div style="margin:8px 0 5px;display:inline-flex;align-items:center;gap:7px;background:${soft};border-radius:6px;padding:4px 9px">
-        ${catDot(tone, 7)}<span style="font-size:13.5px;font-weight:600;color:${tone}">${above ? 'Above latest cutoff' : 'Below latest cutoff'}</span>
-      </div>
-      <div style="font-size:13px;line-height:1.45;color:var(--text2)">Round #${BENCHMARK.no} · ${shortDate(BENCHMARK.iso)}</div>
-    </div>
+  <div style="display:flex;align-items:baseline;gap:10px">
+    <span class="num" style="font-size:40px;line-height:1">${sample.total}</span>
+    <span style="font-size:13px;color:var(--text2)">vs. cutoff <span class="num" style="font-size:15px">${BENCHMARK.cutoff}</span></span>
   </div>
-  <p style="padding:11px 20px;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--muted);background:var(--bg2)">
-    Cutoffs mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated}. The example profile stands in for yours — <a class="link-accent" href="/calculators" style="font-weight:600">enter your own details</a> to replace it.
-  </p>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:${soft};border-radius:8px;padding:7px 10px">
+    ${catDot(tone, 7)}<span style="font-size:13px;font-weight:600;color:${tone}">${above ? `${diff} points above` : `${Math.abs(diff)} points below`} ${BENCHMARK.cat}</span>
+  </div>
+  <div style="margin-top:10px;font-size:12px;color:var(--muted)">Round #${BENCHMARK.no} · ${shortDate(BENCHMARK.iso)} · from IRCC</div>
 </div>`;
 }
 
-// Four capabilities as one editorial row divided by hairlines. Deliberately not cards.
-const TRUST = [
-  ['CRS calculations', 'The official IRCC grid out of 1,200, plus the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids.'],
-  ['IRCC draw tracking', 'Every round of invitations, read from the Government of Canada’s public feed.'],
-  ['Application tracking', 'ITA through final decision, measured against IRCC’s published processing times.'],
-  ['Privacy-focused', 'No account, no sign-up. What you enter stays on your device.'],
-];
-const trustStrip = () => `
-<div class="strip">
-  ${TRUST.map(([t, d]) => `<div><div style="font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:5px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
+// An alternating text/screenshot row — the spine of the page.
+const featureRow = ({ tag, title, body, points, shot, flip, extra }) => `
+<div class="frow${flip ? ' flip' : ''}" data-reveal>
+  <div class="ftext">
+    ${eyebrow(tag)}
+    <h2 class="h2">${title}</h2>
+    <p class="lede">${body}</p>
+    <ul class="ticks">${points.map((t) => `<li>${CHECK}<span>${t}</span></li>`).join('')}</ul>
+    ${extra || ''}
+  </div>
+  <div class="fshot">${shot}</div>
 </div>`;
 
-// A field as the calculator draws it — a label over a bordered control. Inert on purpose:
-// these are divs, not inputs, so the preview cannot be mistaken for a form that works
-// here. The whole block links through to the real calculator.
+const STATS = [
+  ['1,200', 'points in the CRS grid'],
+  ['4', 'official point grids'],
+  ['~15 min', 'from IRCC draw to alert'],
+  ['$0', 'free, and no account'],
+];
+const statBar = () => `
+<div class="statbar">
+  ${STATS.map(([n, l]) => `<div><div class="num" style="font-size:30px;line-height:1.1">${n}</div><div style="font-size:13.5px;color:var(--text2);margin-top:4px">${l}</div></div>`).join('')}
+</div>`;
+
+// A field as the calculator draws it. Inert on purpose: these are divs, not inputs, so
+// the preview cannot be mistaken for a form that works here — the block links through.
 const pvField = (label, value) => `
 <div style="display:flex;flex-direction:column;gap:6px">
   <span style="font-size:12.5px;font-weight:600;color:var(--text2)">${label}</span>
@@ -579,32 +623,30 @@ function calculatorPreview(sample) {
   const tone = strong ? 'var(--success)' : near ? 'var(--warningInk)' : 'var(--text2)';
   const soft = strong ? 'var(--successSoft)' : near ? 'var(--warningSoft)' : 'var(--bg3)';
   return `
-<a class="panel lift" href="/calculators" data-reveal style="display:block;color:var(--text);overflow:hidden">
-  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:11px 20px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
+<a class="card card-lift lift" href="/calculators" style="display:block;color:var(--text);overflow:hidden">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
     <span style="font-size:13px;font-weight:600">CRS — Express Entry score</span>
-    <span class="klabel">Preview</span>
+    <span class="klabel">Runs in your browser</span>
   </div>
-  <div class="split calcpv" style="display:grid;grid-template-columns:1fr 300px">
-    <div class="pvfields" style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start">
+  <div class="split calcpv" style="display:grid;grid-template-columns:1fr 260px">
+    <div class="pvfields" style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:13px;align-content:start">
       ${pvField('Marital status', 'Single / not married')}
       ${pvField('Age', '29')}
       ${pvField('Education level', 'Master’s / professional')}
       ${pvField('Canadian work experience', '3 years')}
       ${pvField('First language (CLB, all four)', 'CLB 9')}
       ${pvField('Foreign work experience', '1–2 years')}
-      ${pvField('Canadian education', 'None')}
-      ${pvField('Second official language', 'Not added')}
     </div>
-    <div class="pvscore" style="padding:20px;border-left:1px solid var(--hairline);background:var(--bg2)">
+    <div class="pvscore" style="padding:18px;border-left:1px solid var(--hairline);background:var(--bg2)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
         <span class="klabel">Your score</span>
         <span style="background:${soft};color:${tone};border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:700">${badge}</span>
       </div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px">
-        <span class="num" style="font-size:52px;line-height:1">${sample.total}</span>
-        <span style="font-size:15px;color:var(--muted);font-weight:600">/ 1,200</span>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px">
+        <span class="num" style="font-size:46px;line-height:1">${sample.total}</span>
+        <span style="font-size:14px;color:var(--muted);font-weight:600">/ 1,200</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:11px">${sample.rows.map(pvRow).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:10px">${sample.rows.map(pvRow).join('')}</div>
     </div>
   </div>
 </a>`;
@@ -612,52 +654,104 @@ function calculatorPreview(sample) {
 
 const MILESTONES = ['Profile', 'ITA', 'AOR', 'Biometrics', 'Medical', 'Background', 'Final decision'];
 const milestoneRail = () => `
-<ol class="rail" style="margin:0;padding:0" data-reveal>
+<ol class="rail" style="margin:0;padding:0">
   ${MILESTONES.map((m, i) => `<li${i === MILESTONES.length - 1 ? ' data-end' : ''}><span style="font-size:13.5px;font-weight:600;color:var(--text)">${m}</span></li>`).join('')}
 </ol>`;
 
 // ------------------------------------------------------------------ HOME
 function home() {
   // The example profile is run through the real CRS grid rather than written by hand, so
-  // the preview's total and its breakdown bars are the ones the calculator would produce
-  // from these six answers. Change the grid and this page changes with it.
+  // the score on the hero card and the breakdown bars in the calculator preview are the
+  // ones the calculator would produce from these answers.
   const sample = crsCalc({ ...STATE0.crs, education: 'masters', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, canadianWorkExp: 3 });
   const latest = DRAWS[0];
   const rest = DRAWS.slice(1, 6);
 
-  const body = `${nav('', 'calc')}
+  const body = `${nav('', 'app')}
 <main>
 
-<section style="padding:64px 0 56px">
-  <div class="wrap">
-    <div style="max-width:720px;margin-bottom:34px">
-      <h1 style="font-size:clamp(30px,4.6vw,46px);margin-bottom:18px">Your Express Entry score, draws, and application — in one place.</h1>
-      <p class="lede" style="margin-bottom:26px">Calculate your CRS score, follow Express Entry draws, and track your application milestones in one simple app.</p>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px">
-        <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
-        <a class="btn btn-quiet" href="/draws">View latest draws</a>
+<section class="hero-band">
+  <div class="wrap" style="padding-top:60px;padding-bottom:60px">
+    <div class="hero" style="display:grid;grid-template-columns:1.06fr .94fr;gap:56px;align-items:center">
+      <div>
+        <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg);border-radius:999px;padding:5px 13px 5px 8px;margin-bottom:22px">
+          ${APPLE(15)}<span style="font-size:12.5px;font-weight:600;color:var(--text)">Free on the App Store · iPhone</span>
+        </div>
+        <h1 style="font-size:clamp(33px,4.7vw,50px);margin-bottom:18px">Your Express Entry journey, in one app.</h1>
+        <p class="lede" style="font-size:18px;margin-bottom:28px">Calculate your CRS score with the official IRCC formula, get alerted within minutes of every draw, and track your application from profile to final decision.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+          ${appBtn()}
+          <a class="btn btn-quiet" href="/calculators">Calculate my CRS</a>
+        </div>
+        <div class="trustrow"><span>${CHECK}No account</span><span>${CHECK}English &amp; French</span><span>${CHECK}Data stays on your device</span></div>
       </div>
-      <div class="trustrow"><span>${CHECK}Free, no account</span><span>${CHECK}Four official point grids</span><span>${CHECK}iPhone app and in-browser calculators</span></div>
+      <div style="display:flex;justify-content:center">
+        <div class="phonewrap">
+          ${phone('home', 286)}
+          ${scoreCard(sample, true)}
+        </div>
+      </div>
     </div>
-    ${heroPreview(sample)}
   </div>
 </section>
 
-<section class="sect-tint" style="padding:30px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)">
-  <div class="wrap">${trustStrip()}</div>
+<section style="border-bottom:1px solid var(--hairline);background:var(--bg2)">
+  <div class="wrap" style="padding:28px 24px">${statBar()}</div>
 </section>
 
-<section class="sect" id="latest-draw" style="border-top:0">
+<section class="sect" style="border-top:0">
   <div class="wrap">
-    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:baseline;margin-bottom:22px">
-      <div>
+    ${featureRow({
+      tag: 'Draws & alerts',
+      title: 'Every IRCC draw, minutes after it happens.',
+      body: 'CRS Pulse watches the Government of Canada’s public feed and pushes you the category, cutoff and invitation count as soon as a round is published.',
+      points: ['A push notification usually within about 15 minutes', 'Filter the full history by category — CEC, PNP, French, healthcare, trades', 'Every round links to its official IRCC page'],
+      shot: phone('draws'),
+    })}
+  </div>
+</section>
+
+<section class="sect sect-tint">
+  <div class="wrap">
+    ${featureRow({
+      tag: 'Analytics',
+      title: 'See your odds, not just your score.',
+      body: 'A score on its own says little. CRS Pulse places yours against the live trend cutoff, estimates when the next round in your category is due, and shows what would move you up.',
+      points: ['Your odds against the current trend cutoff, by program', 'Predicted next draw from IRCC’s recent cadence', 'What each change is worth — nomination +600, French, Canadian work'],
+      shot: phone('analytics'),
+      flip: true,
+    })}
+  </div>
+</section>
+
+<section class="sect">
+  <div class="wrap">
+    ${featureRow({
+      tag: 'Application tracking',
+      title: 'Follow your file from ITA to decision.',
+      body: 'Log the dates that matter and the app keeps them in order, estimates where you stand against IRCC’s published processing times, and flags when you pass the typical window.',
+      points: ['Milestones for ITA, AOR, biometrics, medical and passport request', 'The IRCC document checklist for your program, with per-item progress', 'Processing-time estimates for the category you applied under'],
+      shot: phone('timeline'),
+    })}
+    <div class="card" style="margin-top:44px;padding:20px 24px 24px">
+      <div class="klabel" style="margin-bottom:18px">Milestones you can log</div>
+      ${milestoneRail()}
+    </div>
+  </div>
+</section>
+
+<section class="sect sect-tint" id="latest-draw">
+  <div class="wrap">
+    <div style="display:flex;flex-wrap:wrap;gap:14px 24px;justify-content:space-between;align-items:baseline;margin-bottom:22px">
+      <div style="max-width:660px">
+        ${eyebrow('Live from IRCC')}
         <h2 class="h2" style="margin-bottom:8px">Latest Express Entry draw</h2>
-        <p style="font-size:15px;color:var(--text2)">Round #${latest.no}, published by IRCC on ${longDate(latest.iso)}.</p>
+        <p style="font-size:15px;color:var(--text2)">Round #${latest.no}, published on ${longDate(latest.iso)}. The app reads this feed live; the figures below are mirrored when the site rebuilds.</p>
       </div>
       <a class="arrowlink" href="/draws">View draw history →</a>
     </div>
 
-    <div class="panel" data-reveal style="overflow:hidden">
+    <div class="card" style="overflow:hidden">
       <div style="display:flex;align-items:center;gap:9px;padding:13px 20px;border-bottom:1px solid var(--hairline);background:var(--bg2)">
         ${catDot(latest.dot)}<span style="font-size:14.5px;font-weight:700;color:var(--text)">${latest.cat}</span>
         <span style="font-size:13.5px;color:var(--text2)">${latest.label}</span>
@@ -668,14 +762,11 @@ function home() {
         ${cell('Draw date', shortDate(latest.iso), `round #${latest.no}`, null, 22)}
         ${cell(`Invitations in ${FEED.ytd.year}`, num(FEED.ytd.invitations), `across ${FEED.ytd.rounds} rounds so far`)}
       </div>
-    </div>
-
-    <div class="dlist" style="margin-top:14px">
-      <div>
-        <div class="dhead" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:0 20px 9px;border-bottom:1px solid var(--border)">
+      <div class="dlist">
+        <div class="dhead" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px 9px;border-top:1px solid var(--hairline)">
           ${['Round', 'Category', 'Invitations', 'Cutoff'].map((h, i) => `<span class="klabel"${i > 1 ? ' style="text-align:right"' : ''}>${h}</span>`).join('')}
         </div>
-        ${rest.map((d) => `<div class="drawrow" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px;border-bottom:1px solid var(--hairline);align-items:center">
+        ${rest.map((d) => `<div class="drawrow" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px;border-top:1px solid var(--hairline);align-items:center">
           <div><div style="font-size:14px;font-weight:700">#${d.no}</div><div style="color:var(--muted);font-size:12px">${d.date.replace(/, \d{4}$/, '')}</div></div>
           <div style="display:flex;align-items:center;gap:9px;min-width:0">${catDot(d.dot)}<span class="dcat" style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.label}</span></div>
           <div style="text-align:right;font-size:14px;color:var(--text2)" class="num">${d.invited}</div>
@@ -683,44 +774,20 @@ function home() {
         </div>`).join('')}
       </div>
     </div>
-    <p style="margin-top:11px;font-size:12.5px;color:var(--muted)">Mirrored from IRCC’s public feed on ${FEED.updatedFull ?? FEED.updated}. The app reads the feed live; always confirm current figures at canada.ca.</p>
-  </div>
-</section>
-
-<section class="sect sect-tint">
-  <div class="wrap">
-    <div style="max-width:620px;margin-bottom:26px">
-      ${eyebrow('CRS calculator')}
-      <h2 class="h2">Know your CRS score before you enter the pool.</h2>
-      <p class="lede">The Comprehensive Ranking System scores your age, education, language test results and work experience out of 1,200. CRS Pulse runs the published grid in your browser — change an answer and the score and its breakdown update as you go. Nothing you enter is uploaded.</p>
-    </div>
-    ${calculatorPreview(sample)}
-    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:20px">
-      <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
-      <span style="font-size:13.5px;color:var(--text2)">Also runs the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids.</span>
-    </div>
+    <p style="margin-top:11px;font-size:12.5px;color:var(--muted)">Mirrored from IRCC’s public feed on ${FEED.updatedFull ?? FEED.updated}. Always confirm current figures at canada.ca.</p>
   </div>
 </section>
 
 <section class="sect">
   <div class="wrap">
-    <div class="split" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
-      <div>
-        ${eyebrow('Application tracking')}
-        <h2 class="h2">Follow your application from profile to decision.</h2>
-        <p class="lede">Log the dates that matter and CRS Pulse keeps them in order, estimates where you are against IRCC’s published processing times for your program, and flags when you pass the typical window.</p>
-      </div>
-      <div style="border-top:1px solid var(--border)">
-        ${[['Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
-           ['Processing-time estimates', 'Based on IRCC’s published times for the category you applied under.'],
-           ['Draw alerts', 'A push notification when a new round is published, usually within about 15 minutes.']]
-          .map(([t, d]) => `<div style="padding:13px 0;border-bottom:1px solid var(--hairline)"><div style="font-size:14.5px;font-weight:700;margin-bottom:3px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
-        <p style="margin-top:12px;font-size:12.5px;color:var(--muted)">Tracking, checklists and alerts are features of the iPhone app.</p>
-      </div>
+    <div style="max-width:620px;margin-bottom:26px">
+      ${eyebrow('No download needed')}
+      <h2 class="h2">Four point grids, right here in your browser.</h2>
+      <p class="lede">The CRS formula plus the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. Change an answer and the score updates as you go — nothing you enter is uploaded.</p>
     </div>
-    <div class="panel" style="margin-top:36px;padding:20px 24px 24px">
-      <div class="klabel" style="margin-bottom:18px">Milestones you can log</div>
-      ${milestoneRail()}
+    ${calculatorPreview(sample)}
+    <div style="margin-top:20px">
+      <a class="btn btn-accent" href="/calculators">Open the calculators</a>
     </div>
   </div>
 </section>
@@ -731,8 +798,8 @@ function home() {
       <div>
         ${eyebrow('Privacy')}
         <h2 class="h2">Your immigration information is personal.</h2>
-        <p class="lede">CRS Pulse is designed to help you track your Express Entry journey without turning your immigration profile into a marketing product.</p>
-        <p style="margin-top:16px;font-size:14px;line-height:1.6;color:var(--text2);max-width:52ch">The app is free and carries Google AdMob banner ads, which use a device advertising identifier. On iPhone the app asks your permission first, and declining leaves every feature working.</p>
+        <p class="lede">CRS Pulse is built to help you track your Express Entry journey without turning your immigration profile into a marketing product.</p>
+        <p style="margin-top:16px;font-size:14px;line-height:1.6;color:var(--text2);max-width:52ch">The app is free and carries Google AdMob banner ads, which use a device advertising identifier. On iPhone it asks your permission first, and declining leaves every feature working.</p>
         <a class="arrowlink" href="/privacy" style="margin-top:16px">Read the privacy policy →</a>
       </div>
       <div style="border-top:1px solid var(--border)">
@@ -742,49 +809,30 @@ function home() {
   </div>
 </section>
 
-<section class="sect" id="app">
-  <div class="wrap">
-    <div style="max-width:600px;margin-bottom:30px">
-      ${eyebrow('iPhone app')}
-      <h2 class="h2">Keep your Express Entry journey with you.</h2>
-      <p class="lede">The app adds what a website cannot: draw alerts, your application timeline, document checklists, and processing-time estimates — in English and French, light and dark.</p>
-      <div style="margin-top:20px">${appBtn()}</div>
-    </div>
-    <div class="shots" style="display:flex;gap:24px;flex-wrap:wrap;justify-content:flex-start" data-reveal>
-      ${[['/img/app-home.webp', 'The CRS Pulse home screen, showing a CRS score of 512 and the three most recent draws'],
-         ['/img/app-draws.webp', 'The draws screen, listing recent rounds of invitations with category filters'],
-         ['/img/app-timeline.webp', 'The application timeline screen, with ITA, AOR and passport-request milestones']]
-        .map(([src, alt]) => phoneShot(src, alt)).join('')}
-    </div>
-    <div style="margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:0 48px;border-top:1px solid var(--border)">
-      ${FEATURES_SMALL.map(([, t, d]) => `<div style="padding:14px 0;border-bottom:1px solid var(--hairline)"><div style="font-size:14.5px;font-weight:700;margin-bottom:3px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
-    </div>
-  </div>
-</section>
-
-<section class="sect sect-tint" id="faq">
+<section class="sect" id="faq">
   <div class="wrap">
     <div style="max-width:820px">
-    <h2 class="h2" style="margin-bottom:6px">Common questions</h2>
-    <p class="lede" style="margin-bottom:22px">What a CRS score is, where the draw data comes from, and how your information is handled.</p>
-    <div style="border-top:1px solid var(--border)">
-      ${FAQ.map(([q, a]) => `<details class="faq"><summary>${q}</summary><div class="a">${a}</div></details>`).join('')}
-    </div>
+      <h2 class="h2" style="margin-bottom:6px">Common questions</h2>
+      <p class="lede" style="margin-bottom:22px">What a CRS score is, where the draw data comes from, and how your information is handled.</p>
+      <div style="border-top:1px solid var(--border)">
+        ${FAQ.map(([q, a]) => `<details class="faq"><summary>${q}</summary><div class="a">${a}</div></details>`).join('')}
+      </div>
     </div>
   </div>
 </section>
 
-<section class="sect">
-  <div class="wrap">
-    <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:center">
-      <div style="max-width:520px">
-        <h2 class="h2" style="margin-bottom:8px">Ready to check your CRS score?</h2>
-        <p style="font-size:16px;line-height:1.6;color:var(--text2)">Calculate your score and keep your Express Entry progress in one place.</p>
+<section class="hero-band" style="border-top:1px solid var(--hairline);border-bottom:0">
+  <div class="wrap" style="padding:56px 24px">
+    <div class="hero" style="display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center">
+      <div>
+        <h2 style="font-size:clamp(26px,3.4vw,36px);margin-bottom:12px">Check your CRS score tonight.</h2>
+        <p class="lede" style="margin-bottom:26px">Download CRS Pulse for iPhone, or run the calculators here in your browser. Free either way, and there is no account to create.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          ${appBtn()}
+          <a class="btn btn-quiet" href="/calculators">Calculate my CRS</a>
+        </div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
-        <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
-        ${appBtn()}
-      </div>
+      <div class="fshot">${phone('home', 190)}</div>
     </div>
   </div>
 </section>
@@ -1777,6 +1825,7 @@ copyAsset('logo.svg', 'img/logo.svg');
 // for the store listings.
 copyAsset('screenshots/02_home.webp', 'img/app-home.webp');
 copyAsset('screenshots/03_draws.webp', 'img/app-draws.webp');
+copyAsset('screenshots/05_analytics_plan.webp', 'img/app-analytics.webp');
 copyAsset('screenshots/06_timeline.webp', 'img/app-timeline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
