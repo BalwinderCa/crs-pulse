@@ -84,138 +84,141 @@ const addHeadingIds = (html) =>
 const APPLE = (s = 20) =>
   `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.86-.07 1.68-.75 3.04-.83 1.65-.13 2.9.65 3.71 1.94-1.94 1.16-1.64 3.66.32 4.86-.38 1.08-.9 2.15-1.65 3.2zm-3.62-14.6c-.05-1.7 1.4-3.1 3.14-3.18.28 1.88-1.65 3.4-3.14 3.18z"/></svg>`;
 
-const appBtn = (big = false) =>
-  `<a class="btn-dark" href="${APP_STORE_URL}" style="display:inline-flex;align-items:center;gap:10px;background:var(--text);color:var(--bg);padding:${big ? '15px 24px' : '14px 22px'};border-radius:12px;font-weight:600;transition:opacity .18s ease">${APPLE(big ? 22 : 20)}<span style="display:flex;flex-direction:column;line-height:1.1;text-align:left"><span style="font-size:10.5px;opacity:.7;font-weight:500">Download on the</span><span style="font-size:${big ? 17 : 16}px;font-weight:700">App Store</span></span></a>`;
+const appBtn = () =>
+  `<a class="btn btn-dark" href="${APP_STORE_URL}" style="gap:9px">${APPLE(19)}<span style="display:flex;flex-direction:column;line-height:1.15;text-align:left"><span style="font-size:10px;opacity:.75;font-weight:500">Download on the</span><span style="font-size:15px;font-weight:700">App Store</span></span></a>`;
 
-const accentBtn = (href, label, pad = '14px 24px') =>
-  `<a class="btn-accent" href="${href}" style="display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;padding:${pad};border-radius:12px;font-size:15px;font-weight:600;transition:background .18s ease">${label}</a>`;
+const accentBtn = (href, label) => `<a class="btn btn-accent" href="${href}">${label}</a>`;
 
 // ------------------------------------------------------------------ CSS
+// Restrained, document-like system: a near-white page, hairline rules instead of
+// floating cards, one red accent, and type doing the hierarchy work. Two accent
+// tokens on purpose — --accent is the fill (buttons, dots, bars) and --accentInk is
+// the darker sibling used for accent-coloured *text*, which is the only way the red
+// clears 4.5:1 on white.
 const CSS = `
-:root[data-theme="dark"]{
-  --bg:#05090F; --bg2:#0A1220; --bg3:#16233A; --card:linear-gradient(158deg,rgba(30,46,74,0.55) 0%,rgba(10,19,34,0.55) 100%); --cardSolid:#0E1728; --input:#0A121F;
-  --grad1:#14243E; --grad2:#0A1322;
-  --text:#EEF4FF; --text2:#8399BC; --muted:#647E9E; --border:rgba(255,255,255,0.14);
-  --accent:#FF453A; --accent2:#FF6B61; --accentSoft:rgba(255,69,58,0.13); --accentGlow:rgba(255,69,58,0.35);
-  --success:#00E5A0; --warning:#FFB547; --danger:#DC2626; --cyan:#38CFEC; --violet:#A78BFA;
-  --hairline:rgba(255,255,255,0.06);
-  --shadow:0 1px 0 rgba(255,255,255,0.05) inset, 0 26px 60px -14px rgba(0,0,0,0.7); --navbg:rgba(6,10,18,0.55);
-}
 :root, :root[data-theme="light"]{
-  --bg:#EEF3FB; --bg2:#FFFFFF; --bg3:#E4ECF8; --card:linear-gradient(158deg,rgba(255,255,255,0.7) 0%,rgba(243,248,255,0.55) 100%); --cardSolid:#FFFFFF; --input:#EEF3FB;
-  --grad1:#FFFFFF; --grad2:#EAF1FB;
-  --text:#0A1526; --text2:#4A5F80; --muted:#5A7091; --border:rgba(10,20,40,0.12);
-  --accent:#E5342B; --accent2:#FF453A; --accentSoft:rgba(229,52,43,0.09); --accentGlow:rgba(229,52,43,0.18);
-  --violet:#8A63E8; --success:#0E9F6E;
-  /* light no longer inherits the dark block — carry the theme-neutral values it used to get from :root */
-  --warning:#FFB547; --danger:#DC2626; --cyan:#38CFEC;
-  --hairline:rgba(10,20,40,0.05);
-  --shadow:0 1px 0 rgba(255,255,255,0.7) inset, 0 22px 50px -16px rgba(30,50,90,0.22); --navbg:rgba(238,243,251,0.55);
+  --bg:#FFFFFF; --bg2:#F7F9FC; --bg3:#EDF1F7; --card:#FFFFFF; --input:#FFFFFF;
+  --grad1:#FFFFFF; --grad2:#F7F9FC;
+  --text:#0D1726; --text2:#48596F; --muted:#616E80; --border:#DDE3EC; --hairline:#EAEEF4;
+  --accent:#E5342B; --accentInk:#C92A22; --accentBtn:#C92A22; --accent2:#C92A22; --accentSoft:#FDEDEC;
+  --success:#0B7A55; --successSoft:#E6F4EF; --warning:#E08A1E; --warningInk:#8A5200; --warningSoft:#FDF1DF; --danger:#C0281F;
+  --shadow:0 1px 2px rgba(13,23,38,.06); --navbg:rgba(255,255,255,.88);
 }
-[style*="var(--card)"]{ backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px); box-shadow:inset 0 1px 0 rgba(255,255,255,0.12); }
+:root[data-theme="dark"]{
+  --bg:#0B0F16; --bg2:#101720; --bg3:#1A2430; --card:#101720; --input:#0D141C;
+  --grad1:#131C27; --grad2:#0D141C;
+  --text:#EDF2F8; --text2:#9FB0C4; --muted:#7E8FA4; --border:#242F3D; --hairline:#1B242F;
+  --accent:#FF564B; --accentInk:#FF7A70; --accentBtn:#C92A22; --accent2:#FF7A70; --accentSoft:rgba(255,86,75,.12);
+  --success:#3DD9A0; --successSoft:rgba(61,217,160,.12); --warning:#E8A54A; --warningInk:#F0B056; --warningSoft:rgba(240,176,86,.12); --danger:#FF6B61;
+  --shadow:0 1px 2px rgba(0,0,0,.4); --navbg:rgba(11,15,22,.88);
+}
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
-body{ margin:0; color:var(--text);
-  background:
-    radial-gradient(1100px 720px at 8% -8%, rgba(255,69,58,0.12), transparent 58%),
-    radial-gradient(900px 620px at 100% 2%, rgba(56,207,236,0.07), transparent 55%),
-    radial-gradient(1000px 820px at 50% 118%, rgba(255,69,58,0.06), transparent 60%),
-    var(--bg);
-  background-attachment:fixed;
+body{ margin:0; background:var(--bg); color:var(--text);
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
-  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-[data-theme="light"] body{ background:
-  radial-gradient(1100px 720px at 8% -8%, rgba(229,52,43,0.09), transparent 58%),
-  radial-gradient(900px 620px at 100% 2%, rgba(45,120,239,0.06), transparent 55%),
-  var(--bg); background-attachment:fixed; }
-a{ color:var(--accent); text-decoration:none; }
-a:hover{ color:var(--accent2); }
+  font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+a{ color:var(--accentInk); text-decoration:none; }
+a:hover{ color:var(--accent); }
 ::selection{ background:var(--accent); color:#fff; }
-.serif{ font-family:'Newsreader',Georgia,serif; }
-select, input{ font-family:inherit; }
+h1,h2,h3,h4{ margin:0; font-family:'Space Grotesk',sans-serif; color:var(--text); letter-spacing:-.02em; line-height:1.15; }
+p{ margin:0; }
+/* numerals: one class for every figure on the site, so columns of numbers line up */
+.num{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+.sect{ padding:72px 0; border-top:1px solid var(--hairline); }
+.sect-tint{ background:var(--bg2); }
+.lede{ font-size:17px; line-height:1.65; color:var(--text2); max-width:62ch; }
+.klabel{ font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.h2{ font-size:29px; margin-bottom:12px; }
+.eyebrow{ font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--accentInk); margin-bottom:10px; }
+select, input, button{ font-family:inherit; }
 select{ appearance:none; -webkit-appearance:none;
   background-image:linear-gradient(45deg,transparent 50%,var(--text2) 50%),linear-gradient(135deg,var(--text2) 50%,transparent 50%);
   background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
 select:focus, input:focus{ outline:none; border-color:var(--accent)!important; box-shadow:0 0 0 3px var(--accentSoft); }
-@keyframes pulse{ 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:1;transform:scale(1.06)} }
-@keyframes floaty{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-@keyframes fadeUp{ from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
-@keyframes drift1{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(60px,-40px) scale(1.12)} }
-@keyframes drift2{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-70px,50px) scale(0.92)} }
-@keyframes ringPulse{ 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:.9;transform:scale(1.1)} }
+a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid var(--accentInk); outline-offset:2px; border-radius:4px; }
+@keyframes fadeUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
 @media (prefers-reduced-motion: no-preference){
-  [data-reveal]{ animation:fadeUp both linear; animation-timeline:view(); animation-range:entry 0% cover 20%; }
+  [data-reveal]{ animation:fadeUp both linear; animation-timeline:view(); animation-range:entry 0% cover 14%; }
 }
-/* hero backdrop: masked grid mesh + pulse waveform (no raster image, no extra request) */
-/* no z-index here on purpose: it would form a stacking context and isolate the skyline's blend mode */
-.herobg{ position:absolute; inset:0; pointer-events:none; overflow:hidden; }
-.herobg::before{ content:""; position:absolute; inset:0;
-  background-image:linear-gradient(var(--hairline) 1px,transparent 1px),linear-gradient(90deg,var(--hairline) 1px,transparent 1px);
-  background-size:64px 64px;
-  -webkit-mask-image:radial-gradient(ellipse 78% 68% at 52% 34%,#000 0%,rgba(0,0,0,.55) 45%,transparent 76%);
-  mask-image:radial-gradient(ellipse 78% 68% at 52% 34%,#000 0%,rgba(0,0,0,.55) 45%,transparent 76%); }
-[data-theme="light"] .herobg::before{ background-size:56px 56px; }
-.herobg .skyline{ position:absolute; left:0; right:0; bottom:0; width:100%; height:66%; object-fit:cover; object-position:center bottom;
-  opacity:.5;
-  --skyMaskY:linear-gradient(180deg,transparent 0%,#000 50%,#000 86%,transparent 100%);
-  --skyMaskX:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.16) 24%,rgba(0,0,0,0.7) 50%,#000 68%,#000 90%,transparent 100%);
-  -webkit-mask-image:var(--skyMaskY),var(--skyMaskX); mask-image:var(--skyMaskY),var(--skyMaskX);
-  -webkit-mask-composite:source-in; mask-composite:intersect; }
-/* light: same shot, desaturated so it reads as a soft skyline silhouette instead of a night photo */
-[data-theme="light"] .herobg .skyline{ opacity:.4; filter:grayscale(.45); height:78%;
-  --skyMaskY:linear-gradient(180deg,transparent 0%,#000 40%,#000 84%,transparent 100%);
-  --skyMaskX:linear-gradient(90deg,transparent 0%,rgba(0,0,0,0.08) 20%,rgba(0,0,0,0.4) 40%,#000 60%,#000 92%,transparent 100%); }
-.hero h1{ font-size:clamp(38px,6.4vw,62px); }
-.trustrow{ display:flex; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:13px; }
+@media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } html{ scroll-behavior:auto; } }
+/* buttons */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:8px;
+  font-size:15px; font-weight:600; line-height:1.2; border:1px solid transparent; transition:background .15s ease,border-color .15s ease,color .15s ease; }
+.btn-accent{ background:var(--accentBtn); color:#fff; }
+.btn-accent:hover{ filter:brightness(.88); color:#fff; }
+.btn-quiet{ background:var(--bg); color:var(--text); border-color:var(--border); }
+.btn-quiet:hover{ background:var(--bg3); color:var(--text); border-color:var(--text2); }
+.btn-dark{ background:var(--text); color:var(--bg); border-radius:9px; padding:11px 18px; }
+.btn-dark:hover{ background:var(--text2); color:var(--bg); }
+.arrowlink{ display:inline-flex; align-items:center; gap:6px; font-size:15px; font-weight:600; color:var(--accentInk); }
+.arrowlink:hover{ color:var(--accent); }
+/* panel: a bordered surface, not a floating card — no shadow, no blur, small radius */
+.panel{ background:var(--card); border:1px solid var(--border); border-radius:10px; }
+.navlink{ padding:7px 10px; border-radius:6px; font-size:14.5px; transition:color .15s ease,background .15s ease; }
+.navlink:hover{ color:var(--text)!important; background:var(--bg3); }
+.foot-link{ color:var(--text2); }
+.foot-link:hover{ color:var(--accentInk); }
+.link-accent{ color:var(--accentInk); }
+.link-accent:hover{ color:var(--accent)!important; }
+.theme-btn:hover{ color:var(--text)!important; border-color:var(--text2)!important; }
+.lift{ transition:border-color .15s ease,background .15s ease; }
+.lift:hover{ border-color:var(--text2)!important; }
+/* data rows */
+.drawrow{ transition:background .15s ease; }
+.drawrow:hover{ background:var(--bg2); }
+.trustrow{ display:flex; flex-wrap:wrap; gap:8px 22px; color:var(--text2); font-size:13.5px; }
 .trustrow span{ display:inline-flex; align-items:center; gap:7px; }
 .trustrow svg{ color:var(--success); flex-shrink:0; }
-/* hover utilities (replace design's inline style-hover) */
-.navlink:hover{ color:var(--text)!important; background:var(--bg3); }
-.btn-accent:hover{ background:var(--accent2)!important; color:#fff!important; }
-.btn-dark:hover{ opacity:.9; color:var(--bg); }
-.link-accent:hover{ color:var(--accent2)!important; }
-.foot-link:hover{ color:var(--accent)!important; }
-.theme-btn:hover{ color:var(--text)!important; border-color:var(--accent)!important; }
-.lift{ transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease; }
-.lift:hover{ border-color:var(--accent)!important; transform:translateY(-5px); box-shadow:var(--shadow); }
-.drawrow{ transition:background .18s ease; }
-.drawrow:hover{ background:var(--bg2); }
-/* faq accordion */
-.faq{ background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
-.faq summary{ list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px; padding:18px 20px; color:var(--text); font-size:16px; font-weight:600; transition:color .18s ease; }
+/* trust strip: hairline-separated editorial row, not four cards */
+.strip{ display:grid; grid-template-columns:repeat(4,1fr); }
+.strip > div{ padding:0 24px; border-left:1px solid var(--hairline); }
+.strip > div:first-child{ padding-left:0; border-left:0; }
+/* stat cells inside a panel, divided by hairlines */
+.cells{ display:grid; grid-template-columns:repeat(4,1fr); }
+.cells > div{ padding:18px 20px; border-left:1px solid var(--hairline); }
+.cells > div:first-child{ border-left:0; }
+/* milestone rail */
+.rail{ display:flex; align-items:flex-start; gap:0; }
+.rail li{ flex:1; position:relative; padding-top:22px; list-style:none; }
+.rail li::before{ content:""; position:absolute; top:5px; left:0; width:11px; height:11px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--accent); }
+.rail li::after{ content:""; position:absolute; top:10px; left:11px; right:0; height:1px; background:var(--border); }
+.rail li:last-child::after{ display:none; }
+.rail li[data-end]::before{ background:var(--accent); }
+/* faq accordion — hairline rows */
+.faq{ border-bottom:1px solid var(--hairline); }
+.faq summary{ list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px;
+  padding:16px 0; color:var(--text); font-size:16px; font-weight:600; transition:color .15s ease; }
 .faq summary::-webkit-details-marker{ display:none; }
-.faq summary::after{ content:"+"; font-size:22px; color:var(--accent); flex-shrink:0; transition:transform .2s ease; }
+.faq summary::after{ content:"+"; font-family:'Space Grotesk',sans-serif; font-size:20px; color:var(--accentInk); flex-shrink:0; transition:transform .2s ease; }
 .faq[open] summary::after{ transform:rotate(45deg); }
-.faq summary:hover{ color:var(--accent); }
-.faq .a{ padding:0 20px 20px; font-size:14.5px; line-height:1.65; color:var(--text2); }
+.faq summary:hover{ color:var(--accentInk); }
+.faq .a{ padding:0 0 18px; font-size:15px; line-height:1.65; color:var(--text2); max-width:70ch; }
 /* calculator controls */
-.chip{ cursor:pointer; padding:9px 14px; border-radius:10px; border:1px solid var(--border); background:var(--input); color:var(--text2); font-size:13px; font-weight:600; transition:all .18s ease; font-family:inherit; }
-.chip.on{ border-color:var(--accent); background:var(--accent); color:#fff; }
-.calctab{ cursor:pointer; padding:12px 18px; border:none; background:none; border-bottom:2px solid transparent; color:var(--text2); font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:8px; font-family:inherit; }
+.chip{ cursor:pointer; padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--input); color:var(--text2); font-size:13px; font-weight:600; transition:all .15s ease; }
+.chip.on{ border-color:var(--accentBtn); background:var(--accentBtn); color:#fff; }
+.calctab{ cursor:pointer; padding:12px 16px; border:none; background:none; border-bottom:2px solid transparent; color:var(--text2); font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:8px; }
 .calctab.on{ border-bottom-color:var(--accent); color:var(--text); font-weight:700; }
-/* filter chips (draws) */
-.filterchip{ cursor:pointer; padding:8px 15px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:600; font-family:inherit; }
-.filterchip.on{ border-color:var(--accent); background:var(--accent); color:#fff; }
+.filterchip{ cursor:pointer; padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:600; }
+.filterchip.on{ border-color:var(--accentBtn); background:var(--accentBtn); color:#fff; }
 /* doc pages */
-.doc{ max-width:840px; margin:0 auto; padding:36px 24px 70px; position:relative; z-index:1; }
-.doc-card{ background:var(--card); border:1px solid var(--border); border-radius:22px; padding:42px 44px 46px; }
-.doc-card h1{ font-family:'Space Grotesk',sans-serif; font-size:2rem; line-height:1.15; margin:.1em 0 .8em; color:var(--text); letter-spacing:-1px; }
-.doc-card h2{ font-family:'Space Grotesk',sans-serif; font-size:1.25rem; margin:2em 0 .6em; color:var(--text); }
-.doc-card h3{ font-size:1.05rem; margin:1.5em 0 .5em; color:var(--text); }
-.doc-card p,.doc-card li{ color:var(--text2); font-size:15px; line-height:1.7; }
-.doc-card a{ color:var(--accent); font-weight:500; }
-.doc-card a:hover{ color:var(--accent2); }
-.doc-card hr{ border:0; border-top:1px solid var(--border); margin:2em 0; }
-.doc-card code{ background:var(--bg3); padding:.1em .4em; border-radius:6px; font-size:.9em; }
+.doc{ max-width:760px; margin:0 auto; padding:40px 24px 72px; }
+.doc-card{ background:var(--card); }
+.doc-card h1{ font-size:2rem; margin:.1em 0 .8em; }
+.doc-card h2{ font-size:1.2rem; margin:2em 0 .6em; }
+.doc-card h3{ font-size:1.02rem; margin:1.5em 0 .5em; }
+.doc-card p,.doc-card li{ color:var(--text2); font-size:15.5px; line-height:1.7; }
+.doc-card a{ font-weight:500; }
+.doc-card hr{ border:0; border-top:1px solid var(--hairline); margin:2em 0; }
+.doc-card code{ background:var(--bg3); padding:.1em .4em; border-radius:4px; font-size:.9em; }
 .doc-card ul,.doc-card ol{ padding-left:1.3em; }
 .doc-card li{ margin:.3em 0; }
-.doc-card blockquote{ margin:1em 0; padding:.6em 1.1em; border-left:3px solid var(--accent); background:var(--accentSoft); border-radius:0 10px 10px 0; }
-h1,h2,h3{ margin:0; }
+.doc-card blockquote{ margin:1em 0; padding:.6em 1.1em; border-left:3px solid var(--accent); background:var(--bg2); }
 /* responsive */
-@media (max-width:960px){
-  .hero{ grid-template-columns:1fr!important; }
-  /* stacked hero: skyline becomes a full-width horizon instead of a right-side glow */
-  .herobg .skyline{ height:38%; --skyMaskX:linear-gradient(90deg,transparent 0%,#000 18%,#000 82%,transparent 100%); }
+@media (max-width:900px){
+  .hero{ grid-template-columns:1fr!important; gap:32px!important; }
+  .split{ grid-template-columns:1fr!important; gap:28px!important; }
   .calcbody{ grid-template-columns:1fr!important; }
   .calcresult{ position:static!important; }
   .poolgrid{ grid-template-columns:1fr!important; }
@@ -223,18 +226,56 @@ h1,h2,h3{ margin:0; }
   .fblock{ flex-direction:column!important; }
   .fblock .fvisual{ flex:none!important; max-width:100%!important; width:100%!important; }
   .featgrid{ grid-template-columns:1fr 1fr!important; }
-  .tile-big,.tile-wide{ grid-column:auto!important; grid-row:auto!important; }
+  .strip{ grid-template-columns:1fr 1fr; gap:22px 0; }
+  .strip > div:nth-child(odd){ padding-left:0; border-left:0; }
+  .rail{ display:block; }
+  .rail li{ padding:0 0 18px 22px; }
+  .rail li::before{ top:3px; left:0; }
+  .rail li::after{ top:14px; left:5px; right:auto; bottom:0; width:1px; height:auto; }
+  .rail li:last-child{ padding-bottom:0; }
 }
+/* Below this the header cannot hold logo + links + toggle + CTA without the CTA
+   falling off the edge, so the links step aside; the footer carries the full set. */
+@media (max-width:560px){ .navlinks{ display:none!important; } }
 @media (max-width:640px){
-  .navlinks{ display:none!important; }
+  body{ font-size:15.5px; }
+  /* one item per row reads better than two narrow columns of wrapped text */
+  .strip{ grid-template-columns:1fr; gap:0; }
+  .strip > div{ padding:14px 0 0; border-left:0; border-top:1px solid var(--border); }
+  .strip > div:first-child{ padding-top:0; border-top:0; }
+  /* the home draw list reflows instead of scrolling sideways, so the cutoff — the
+     number people came for — is never parked off-screen */
+  .dlist .dhead{ display:none!important; }
+  .dlist .drawrow{ grid-template-columns:1fr auto!important; gap:3px 14px!important; padding:13px 0!important; }
+  .dlist .drawrow > *:nth-child(1){ grid-column:1; grid-row:1; display:flex; align-items:baseline; gap:8px; }
+  .dlist .drawrow > *:nth-child(2){ grid-column:1; grid-row:2; }
+  .dlist .drawrow > *:nth-child(3){ grid-column:1; grid-row:3; text-align:left!important; font-size:13px!important; color:var(--muted)!important; }
+  .dlist .drawrow > *:nth-child(3)::after{ content:" invited"; }
+  .dlist .drawrow > *:nth-child(4){ grid-column:2; grid-row:1 / span 3; align-self:center; }
+  .dlist .dcat{ white-space:normal!important; }
+  /* the score is the payoff — it leads on a phone, with the inputs under it */
+  .calcpv .pvscore{ order:-1; border-left:0!important; border-bottom:1px solid var(--hairline); }
+  .pvfields{ grid-template-columns:1fr!important; }
+  .sect{ padding:48px 0; }
+  .wrap{ padding:0 18px; }
+  .h2{ font-size:24px; }
+  .lede{ font-size:16px; }
   .featgrid{ grid-template-columns:1fr!important; }
   .fields,.fields4{ grid-template-columns:1fr 1fr!important; }
   .footgrid{ grid-template-columns:1fr 1fr!important; }
+  .cells{ grid-template-columns:1fr 1fr; }
+  .cells > div{ border-left:0; border-top:1px solid var(--hairline); }
+  .cells > div:nth-child(2){ border-left:1px solid var(--hairline); border-top:0; }
+  .cells > div:nth-child(1){ border-top:0; }
+  .cells > div:nth-child(4){ border-left:1px solid var(--hairline); }
   .drawscroll{ overflow-x:auto; }
-  .drawscroll .drawinner{ min-width:640px; }
-  h1{ font-size:38px!important; }
+  .drawscroll .drawinner{ min-width:600px; }
+  .navlinks{ gap:0!important; }
+  .navlink{ padding:7px 7px; font-size:13.5px; }
+  .shots{ gap:12px!important; }
 }
-.doc-card{ padding:clamp(24px,5vw,44px); }
+@media (max-width:380px){ .navlink{ font-size:12.5px; padding:7px 5px; } }
+.doc-card{ padding:0; }
 `;
 
 const THEME_INIT = `<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('crspulse-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>`;
@@ -245,89 +286,92 @@ setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
 </script>`;
 
 // ------------------------------------------------------------------ chrome
-const blobs = () => `
-  <div style="position:absolute;top:-160px;left:-160px;width:680px;height:680px;border-radius:50%;background:radial-gradient(circle,var(--accent) 0%,var(--accentGlow) 40%,transparent 72%);opacity:.5;filter:blur(60px);pointer-events:none;z-index:0;animation:drift1 16s ease-in-out infinite"></div>
-  <div style="position:absolute;top:240px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,var(--cyan) 0%,rgba(56,207,236,0.3) 45%,transparent 72%);opacity:.35;filter:blur(65px);pointer-events:none;z-index:0;animation:drift2 20s ease-in-out infinite"></div>`;
-
-// hero backdrop — masked grid mesh (CSS) + a dimmed Toronto skyline horizon (Unsplash, self-hosted)
-const heroBg = () => `
-<div class="herobg" aria-hidden="true">
-  <img class="skyline" src="/img/skyline.webp" width="1500" height="1040" alt="" decoding="async">
-</div>`;
-
+// No decorative layer: the old drifting colour blobs and the skyline photo backdrop are
+// gone. Hierarchy on this site comes from type, hairlines and alignment.
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
 function nav(active, cta) {
   const link = (href, label, key) => {
     const on = active === key;
-    return `<a class="navlink" href="${href}" style="color:${on ? 'var(--text)' : 'var(--text2)'};${on ? 'background:var(--bg3);' : ''}padding:8px 12px;border-radius:8px;font-size:14.5px;font-weight:${on ? 600 : 500}">${label}</a>`;
+    return `<a class="navlink" href="${href}"${on ? ' aria-current="page"' : ''} style="color:${on ? 'var(--text)' : 'var(--text2)'};${on ? 'background:var(--bg3);' : ''}font-weight:${on ? 600 : 500}">${label}</a>`;
   };
+  // Two CTAs everywhere: the practical one (run the calculator) sits first, the App Store
+  // link second, so the header offers the same choice the hero does.
   const ctaBtn = cta === 'app'
-    ? `<a class="btn-accent" href="${APP_STORE_URL}" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:background .18s ease">Get the app</a>`
-    : `<a class="btn-accent" href="/calculators" style="display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#fff;padding:9px 16px;border-radius:10px;font-size:14px;font-weight:600;transition:background .18s ease">Try the calculator</a>`;
+    ? `<a class="btn btn-accent" href="${APP_STORE_URL}" style="padding:9px 15px;font-size:14px">Get the app</a>`
+    : `<a class="btn btn-accent" href="/calculators" style="padding:9px 15px;font-size:14px">Calculate CRS</a>`;
   return `
-<header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:var(--navbg);border-bottom:1px solid var(--border)">
-  <nav style="max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:24px">
-    <a href="/" style="display:flex;align-items:center;gap:10px;flex-shrink:0"><span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:-.5px;color:var(--accent)">CRS Pulse</span></a>
-    <div class="navlinks" style="display:flex;align-items:center;gap:4px;margin-left:16px">
+<header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:var(--navbg);border-bottom:1px solid var(--border)">
+  <nav class="wrap" aria-label="Main" style="padding-top:11px;padding-bottom:11px;display:flex;align-items:center;gap:14px">
+    <a href="/" style="display:flex;align-items:center;gap:8px;flex-shrink:0;color:var(--text)" aria-label="CRS Pulse home">
+      <span aria-hidden="true" style="width:9px;height:9px;border-radius:2px;background:var(--accent);flex-shrink:0"></span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.4px;color:var(--text)">CRS Pulse</span>
+    </a>
+    <div class="navlinks" style="display:flex;align-items:center;gap:2px;margin-left:10px">
       ${link('/calculators', 'Calculators', 'calc')}
-      ${link('/draws', 'Draws &amp; Trends', 'draws')}
+      ${link('/draws', 'Draws', 'draws')}
       ${link('/features', 'Features', 'features')}
     </div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
-      <button class="theme-btn" onclick="toggleTheme()" data-theme-icon aria-label="Toggle theme" style="width:38px;height:38px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .18s ease">☀</button>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <button class="theme-btn" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s ease">☀</button>
       ${ctaBtn}
     </div>
   </nav>
 </header>`;
 }
 
+const LEGAL_NOTE = 'CRS Pulse is an independent app. It is not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. Scores, predictions and timelines are estimates for guidance only and are not immigration advice — verify with the official IRCC tools at canada.ca before you act on them.';
+
 const footerSlim = (note) => `
-<footer style="border-top:1px solid var(--border);background:var(--bg2);position:relative;z-index:1">
-  <div style="max-width:1200px;margin:0 auto;padding:36px 24px;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center">
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--accent)">CRS Pulse</span>
-    <p style="font-size:12px;color:var(--muted);margin:0;max-width:620px">${note}</p>
+<footer style="border-top:1px solid var(--border);background:var(--bg2)">
+  <div class="wrap" style="padding:28px 24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center">
+    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--text)">CRS Pulse</span>
+    <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:640px">${note}</p>
   </div>
 </footer>`;
 
 const footerFull = () => `
-<footer style="border-top:1px solid var(--border);background:var(--bg2);position:relative;z-index:1">
-  <div style="max-width:1200px;margin:0 auto;padding:48px 24px 30px">
-    <div class="footgrid" style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;margin-bottom:36px">
+<footer style="border-top:1px solid var(--border);background:var(--bg2)">
+  <div class="wrap" style="padding:44px 24px 26px">
+    <div class="footgrid" style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:28px;margin-bottom:32px">
       <div>
-        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:var(--accent);margin-bottom:14px">CRS Pulse</div>
-        <p style="font-size:13.5px;line-height:1.6;color:var(--text2);margin:0;max-width:280px">IRCC tracker for Canadian immigration applicants. Calculate, track and follow Express Entry — privately, on your device.</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span aria-hidden="true" style="width:9px;height:9px;border-radius:2px;background:var(--accent)"></span>
+          <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text)">CRS Pulse</span>
+        </div>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--text2);max-width:260px">An Express Entry score calculator, IRCC draw tracker and application timeline for people applying for Canadian permanent residence.</p>
       </div>
       <div>
-        <div style="font-size:12.5px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Product</div>
-        <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px">
-          <a class="foot-link" href="/calculators" style="color:var(--text2)">Calculators</a>
-          <a class="foot-link" href="/draws" style="color:var(--text2)">Draws &amp; trends</a>
-          <a class="foot-link" href="/features" style="color:var(--text2)">Features</a>
-          <a class="foot-link" href="/#faq" style="color:var(--text2)">FAQ</a>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">Product</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+          <a class="foot-link" href="/calculators">Calculators</a>
+          <a class="foot-link" href="/draws">Draws &amp; trends</a>
+          <a class="foot-link" href="/features">Features</a>
+          <a class="foot-link" href="/#faq">FAQ</a>
         </div>
       </div>
       <div>
-        <div style="font-size:12.5px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Calculators</div>
-        <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px">
-          <a class="foot-link" href="/calculators" style="color:var(--text2)">CRS (Express Entry)</a>
-          <a class="foot-link" href="/calculators" style="color:var(--text2)">FSW 67-point grid</a>
-          <a class="foot-link" href="/calculators" style="color:var(--text2)">BC PNP SIRS</a>
-          <a class="foot-link" href="/calculators" style="color:var(--text2)">Saskatchewan SINP</a>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">Calculators</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+          <a class="foot-link" href="/calculators">CRS (Express Entry)</a>
+          <a class="foot-link" href="/calculators">FSW 67-point grid</a>
+          <a class="foot-link" href="/calculators">BC PNP SIRS</a>
+          <a class="foot-link" href="/calculators">Saskatchewan SINP</a>
         </div>
       </div>
       <div>
-        <div style="font-size:12.5px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px">Legal</div>
-        <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px">
-          <a class="foot-link" href="/privacy" style="color:var(--text2)">Privacy policy</a>
-          <a class="foot-link" href="/terms" style="color:var(--text2)">Terms of use</a>
-          <a class="foot-link" href="mailto:${CONTACT}" style="color:var(--text2)">Contact</a>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">App &amp; legal</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+          <a class="foot-link" href="${APP_STORE_URL}">iPhone app</a>
+          <a class="foot-link" href="/privacy">Privacy policy</a>
+          <a class="foot-link" href="/terms">Terms of use</a>
+          <a class="foot-link" href="mailto:${CONTACT}">Contact</a>
         </div>
       </div>
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:22px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center">
-      <p style="font-size:12px;line-height:1.6;color:var(--muted);margin:0;max-width:720px">Unofficial and not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. All scores, predictions and timelines are estimates for guidance only and are not immigration advice. Always verify with the official IRCC tools before making decisions.</p>
-      <span style="font-size:12px;color:var(--muted)">© ${new Date().getFullYear()} CRS Pulse</span>
+    <div style="border-top:1px solid var(--hairline);padding-top:20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:baseline">
+      <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:720px">${LEGAL_NOTE}</p>
+      <span style="font-size:12.5px;color:var(--muted)">© ${new Date().getFullYear()} CRS Pulse</span>
     </div>
   </div>
 </footer>`;
@@ -357,7 +401,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(
 ${THEME_INIT}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;0,6..72,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 <style>${CSS}</style>
 </head>
 <body>
@@ -369,22 +413,22 @@ ${THEME_SCRIPT}
 }
 
 // ------------------------------------------------------------------ shared content data
-const PHONE_MOCK = () => `
-<div class="phonewrap" style="display:flex;justify-content:center;position:relative">
-  <div style="position:absolute;inset:-60px;background:radial-gradient(circle at 55% 42%,var(--accentGlow),transparent 68%);filter:blur(30px);pointer-events:none;animation:ringPulse 5s ease-in-out infinite"></div>
-  <div style="position:relative;width:288px;height:589px;animation:floaty 6s ease-in-out infinite;border-radius:54px;background:linear-gradient(150deg,#4a4a52 0%,#1d1d22 22%,#101015 56%,#2b2b32 100%);box-shadow:0 40px 90px rgba(0,0,0,0.55),inset 0 0 0 1.5px rgba(255,255,255,0.14)">
-    <img src="/img/hero-screenshot.png" alt="CRS Pulse running on iPhone" style="position:absolute;left:15.4px;top:14.4px;width:257.3px;height:560.2px;border-radius:40px;object-fit:cover;object-position:top center">
-    <div aria-hidden="true" style="position:absolute;left:50%;top:26px;transform:translateX(-50%);width:86px;height:25px;border-radius:13px;background:#000"></div>
+// App screenshots, in a CSS-drawn iPhone frame. Real captures of the shipping build —
+// there is no stock photography or illustration anywhere on this site.
+const phoneShot = (src, alt, w = 208) => `
+<figure style="margin:0;width:${w}px;flex-shrink:0">
+  <div style="position:relative;width:${w}px;height:${Math.round(w * 2.045)}px;border-radius:${Math.round(w * 0.135)}px;background:var(--text);padding:${Math.round(w * 0.028)}px;box-shadow:var(--shadow)">
+    <img src="${src}" alt="${alt}" width="520" height="1047" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;object-position:top center;border-radius:${Math.round(w * 0.112)}px">
   </div>
-</div>`;
+</figure>`;
 
 const FEATURES_SMALL = [
-  ['📈', 'Trends & analytics', 'Cutoff averages, cadence and your personal odds and forecast bands.'],
-  ['🔔', 'Push alerts', 'Notified within ~15 minutes when IRCC publishes a new draw.'],
-  ['🗂', 'Application tracker', 'Live processing-time estimates for the program you applied to.'],
-  ['✅', 'Document checklists', 'Per-program IRCC checklists with per-item progress.'],
-  ['🕓', 'Application timeline', 'Log ITA, AOR, biometrics, medical, PPR and custom milestones.'],
-  ['🔒', 'Private & on-device', 'No account, no trackers. Your profile stays on your phone.'],
+  ['📈', 'Trends and analytics', 'Cutoff averages, draw cadence, and where your score sits against recent rounds.'],
+  ['🔔', 'Draw alerts', 'A push notification when IRCC publishes a new round, usually within about 15 minutes.'],
+  ['🗂', 'Application tracker', 'Processing-time estimates for the program and category you applied under.'],
+  ['✅', 'Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
+  ['🕓', 'Application timeline', 'Log ITA, AOR, biometrics, medical, passport request and your own milestones.'],
+  ['🔒', 'On-device by default', 'No account. Your profile, timeline and checklists stay on your phone.'],
 ];
 const CALC_CARDS = [
   ['⚡', '1,200', 'CRS score', 'Comprehensive Ranking System — the official Express Entry formula.'],
@@ -396,214 +440,357 @@ const CALC_CARDS = [
 // colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
 // so an unrecognised category is never mislabelled — it just falls back to "Other".
 const DRAW_CATEGORIES = [
-  [/provincial nominee/i, 'PNP', '#A78BFA'],
-  [/canadian experience/i, 'CEC', '#00E5A0'],
-  [/french/i, 'French', '#FF3B30'],
-  [/health|social service|physician|nurs/i, 'Healthcare', '#5B9EFF'],
-  [/stem|science|technolog|engineer|math/i, 'STEM', '#7DB6FF'],
-  [/transport/i, 'Transport', '#F59E0B'],
-  [/senior manager|executive/i, 'Managers', '#F472B6'],
-  [/military|armed forces/i, 'Military', '#94A3B8'],
-  [/trade/i, 'Trades', '#FFB547'],
-  [/education|teacher/i, 'Education', '#2BC8E8'],
-  [/agri/i, 'Agriculture', '#34D399'],
-  [/federal skilled worker|no program specified|general/i, 'General', '#7A94B8'],
+  [/provincial nominee/i, 'PNP', '#7C5BD0'],
+  [/canadian experience/i, 'CEC', '#0E8A63'],
+  [/french/i, 'French', '#D3342B'],
+  [/health|social service|physician|nurs/i, 'Healthcare', '#2E6FD4'],
+  [/stem|science|technolog|engineer|math/i, 'STEM', '#4A8ADB'],
+  [/transport/i, 'Transport', '#C07A0A'],
+  [/senior manager|executive/i, 'Managers', '#C24E87'],
+  [/military|armed forces/i, 'Military', '#6B7A8D'],
+  [/trade/i, 'Trades', '#B07310'],
+  [/education|teacher/i, 'Education', '#1F8AA8'],
+  [/agri/i, 'Agriculture', '#1B8F63'],
+  [/federal skilled worker|no program specified|general/i, 'General', '#5B7392'],
 ];
 const categorise = (name) =>
-  DRAW_CATEGORIES.find(([re]) => re.test(name))?.slice(1) ?? ['Other', '#7A94B8'];
+  DRAW_CATEGORIES.find(([re]) => re.test(name))?.slice(1) ?? ['Other', '#5B7392'];
 
 const num = (n) => Number(n).toLocaleString('en-CA');
 const shortDate = (iso) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const longDate = (iso) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 
 const DRAWS = FEED.rounds.map((r) => {
   const [cat, dot] = categorise(r.label || r.name);
   return { no: r.number, date: shortDate(r.date), iso: r.date, label: r.label || r.name, cat, dot, invited: num(r.size), cutoff: String(r.crs), crs: r.crs, size: r.size };
 });
 const HOME_DRAWS = DRAWS.slice(0, 6).map((d) => [d.no, d.date, d.label, d.invited, d.cutoff, d.dot]);
+// The general-stream benchmark a raw CRS score is actually comparable against. PNP rounds
+// cut off above 700 because a nomination adds 600 points, and category rounds are scoped
+// to an occupation — neither is a fair yardstick, so neither is used as one.
+const BENCHMARK = DRAWS.find((d) => ['CEC', 'General'].includes(d.cat)) ?? DRAWS[0];
 const PRIVACY_POINTS = [
-  'All CRS inputs are stored locally on your device.',
-  'No account or sign-up required to use any feature.',
-  'No third-party analytics trackers.',
-  'Push notifications use an anonymous token only — no personal data.',
+  'Your CRS inputs, timeline and checklists are stored on your device, not on our servers.',
+  'There is no account and no sign-up — there is nothing to log in to.',
+  'The calculators on this website run entirely in your browser; nothing you enter is uploaded.',
+  'Draw alerts register an anonymous push token only, never your immigration details.',
 ];
 const FAQ = [
-  ['How accurate are the calculators?', 'They implement the official IRCC Comprehensive Ranking System grid and the published federal/provincial point grids (FSW 67-point, BC PNP SIRS, Saskatchewan SINP). They are precise estimates for planning — but IRCC’s own tool is authoritative, so always confirm your final score there before you act.'],
-  ['Is CRS Pulse free?', 'Yes. Every calculator, live draws, draw history, category trends and the application tracker are free with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.'],
-  ['Where does the draw data come from?', 'The app fetches rounds of invitations directly from IRCC’s public JSON feed, with pull-to-refresh and category filters. Each draw links to its official IRCC round page. This website mirrors the same feed, refreshed when the site is rebuilt — the app is always live.'],
-  ['What happens to my personal data?', 'Your age, education, language scores and work history are stored only on your device. There is no account to create and no analytics tracker. If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data.'],
+  ['What is a CRS score?', 'The Comprehensive Ranking System score is the number IRCC uses to rank candidates in the Express Entry pool, out of 1,200. Every round of invitations has a cutoff; candidates at or above it are invited to apply for permanent residence.'],
+  ['How is my CRS score calculated?', 'From core human capital (age, education, official-language ability and Canadian work experience), spouse factors, skill transferability, and additional points such as a provincial nomination (+600), Canadian study, French ability or a sibling in Canada. CRS Pulse implements that published grid, along with the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. IRCC’s own tool is authoritative, so confirm your final score there before you act on it.'],
+  ['Does CRS Pulse use official IRCC draw data?', 'Yes. The app reads rounds of invitations from IRCC’s public JSON feed, and each draw links to its official IRCC round page. This website mirrors the same feed and refreshes when the site is rebuilt; the app is always live.'],
+  ['Can I track my Express Entry application?', 'Yes, in the iPhone app. Log milestones such as ITA, AOR, biometrics, medical and passport request on a timeline, work through the document checklist for your program, and see an estimated decision window based on IRCC’s published processing times. The tracker is in the app, not on this website.'],
+  ['Is CRS Pulse free?', 'Yes. Every calculator, live draws, draw history, analytics and the application tracker are free, with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.'],
+  ['What happens to my personal data?', 'Your age, education, language scores and work history are stored only on your device. There is no account to create and no analytics tracker. If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data. The app does show Google AdMob banner ads, which use a device advertising identifier; on iPhone it asks permission first, and declining still leaves the app fully usable.'],
   ['How do draw alerts work?', 'A background service checks for new rounds every 15 minutes. When IRCC publishes a draw, you get a push notification — usually within about 15 minutes — with the category, cutoff score and number of invitations. You can turn alerts on or off any time.'],
-  ['Do I need a job offer for Express Entry?', 'No. A valid job offer is not required for any of the three Express Entry programs. As of March 25, 2025, job offers no longer add CRS points, though they can still support certain category-based draws. Most invited candidates have no Canadian job offer.'],
-  ['What is a category-based draw?', 'Instead of inviting the highest overall CRS scores, IRCC can invite candidates who meet a specific priority — such as French-language proficiency or work in healthcare, trades or STEM. These draws often have much lower cutoffs than general rounds, so targeting a category can be a strong strategy.'],
-  ['Which platforms is the app on?', 'CRS Pulse is available on iPhone via the App Store, with a full English and French interface plus dark and light themes. The calculators on this website run right in your browser, no download required.'],
+  ['What is a category-based draw?', 'Instead of inviting the highest overall CRS scores, IRCC can invite candidates who meet a specific priority — such as French-language ability or work in healthcare, trades or STEM. These rounds often cut off well below a general round, so targeting a category can matter more than raising a raw score.'],
+  ['Do I need a job offer for Express Entry?', 'No. A valid job offer is not required for any of the three Express Entry programs. Since March 25, 2025, job offers no longer add CRS points, though they can still support certain category-based draws. Most invited candidates have no Canadian job offer.'],
 ];
 
-const eyebrow = (t) => `<div style="color:var(--accent);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">${t}</div>`;
-const serifSpan = (t) => `<span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px">${t}</span>`;
+const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
 
-const featureBigTile = () => `
-<div class="lift tile-big" style="grid-column:span 2;grid-row:span 2;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px;position:relative;overflow:hidden;display:flex;flex-direction:column">
-  <div style="position:absolute;top:-40px;right:-30px;width:200px;height:200px;background:radial-gradient(circle,var(--accentSoft),transparent 70%);pointer-events:none"></div>
-  <div style="width:46px;height:46px;border-radius:13px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:16px">🧮</div>
-  <h3 style="font-size:20px;font-weight:700;margin:0 0 7px;color:var(--text);letter-spacing:-.4px">Four official calculators</h3>
-  <p style="font-size:14px;line-height:1.55;color:var(--text2);margin:0 0 22px;max-width:340px">The IRCC CRS formula plus FSW, BC PNP and Saskatchewan grids — computed live on your device.</p>
-  <div style="margin-top:auto;display:flex;align-items:center;gap:22px;flex-wrap:wrap">
-    <div style="width:104px;height:104px;border-radius:50%;background:conic-gradient(var(--accent) 0% 68%, var(--bg3) 68% 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-      <div style="width:80px;height:80px;border-radius:50%;background:var(--cardSolid);display:flex;flex-direction:column;align-items:center;justify-content:center">
-        <span style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--text);letter-spacing:-1px;line-height:1">512</span><span style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted)">CRS</span>
+// ------------------------------------------------------------------ home components
+const catDot = (color, size = 9) =>
+  `<span aria-hidden="true" style="width:${size}px;height:${size}px;border-radius:50%;background:${color};flex-shrink:0;display:inline-block"></span>`;
+
+// One stat cell. Every figure on the homepage goes through this so labels, numbers and
+// captions share one vertical rhythm.
+const cell = (label, value, caption, tone, size = 34) => `
+<div>
+  <div class="klabel">${label}</div>
+  <div class="num" style="font-size:${size}px;line-height:1.15;margin:6px 0 3px;color:${tone || 'var(--text)'}">${value}</div>
+  <div style="font-size:13px;line-height:1.45;color:var(--text2)">${caption}</div>
+</div>`;
+
+// The hero's product preview: the same four figures the app's home screen leads with.
+// The profile is an example, and says so — but the score is computed by the real CRS
+// grid, and the cutoff it is measured against is the real benchmark round, so the
+// arithmetic on screen is arithmetic the product would actually do.
+function heroPreview(sample) {
+  const diff = sample.total - BENCHMARK.crs;
+  const above = diff >= 0;
+  const tone = above ? 'var(--success)' : 'var(--warningInk)';
+  const soft = above ? 'var(--successSoft)' : 'var(--warningSoft)';
+  return `
+<div class="panel" data-reveal style="overflow:hidden">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:11px 20px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span aria-hidden="true" style="width:8px;height:8px;border-radius:2px;background:var(--accent)"></span>
+      <span style="font-size:13px;font-weight:600;color:var(--text)">Your score against the latest draw</span>
+    </div>
+    <span class="klabel" style="border:1px solid var(--border);border-radius:999px;padding:3px 9px;background:var(--bg)">Example profile</span>
+  </div>
+  <div class="cells">
+    ${cell('CRS score', String(sample.total), 'of 1,200 possible')}
+    ${cell('Latest cutoff', BENCHMARK.cutoff, BENCHMARK.label)}
+    ${cell('Difference', `${above ? '+' : '−'}${Math.abs(diff)}`, above ? 'points above the cutoff' : 'points to make up', tone)}
+    <div>
+      <div class="klabel">Status</div>
+      <div style="margin:8px 0 5px;display:inline-flex;align-items:center;gap:7px;background:${soft};border-radius:6px;padding:4px 9px">
+        ${catDot(tone, 7)}<span style="font-size:13.5px;font-weight:600;color:${tone}">${above ? 'Above latest cutoff' : 'Below latest cutoff'}</span>
       </div>
-    </div>
-    <div style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:10px">
-      ${[['Core human capital', '460', '82%'], ['Skill transferability', '50', '50%'], ['Additional points', '30', '24%']].map(([l, v, w]) => `<div><div style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--text2);margin-bottom:4px"><span>${l}</span><span style="color:var(--text);font-weight:700">${v}</span></div><div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${w};background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div></div>`).join('')}
+      <div style="font-size:13px;line-height:1.45;color:var(--text2)">Round #${BENCHMARK.no} · ${shortDate(BENCHMARK.iso)}</div>
     </div>
   </div>
+  <p style="padding:11px 20px;border-top:1px solid var(--hairline);font-size:12.5px;color:var(--muted);background:var(--bg2)">
+    Cutoffs mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated}. The example profile stands in for yours — <a class="link-accent" href="/calculators" style="font-weight:600">enter your own details</a> to replace it.
+  </p>
+</div>`;
+}
+
+// Four capabilities as one editorial row divided by hairlines. Deliberately not cards.
+const TRUST = [
+  ['CRS calculations', 'The official IRCC grid out of 1,200, plus the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids.'],
+  ['IRCC draw tracking', 'Every round of invitations, read from the Government of Canada’s public feed.'],
+  ['Application tracking', 'ITA through final decision, measured against IRCC’s published processing times.'],
+  ['Privacy-focused', 'No account, no sign-up. What you enter stays on your device.'],
+];
+const trustStrip = () => `
+<div class="strip">
+  ${TRUST.map(([t, d]) => `<div><div style="font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:5px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
 </div>`;
 
-const featureWideTile = () => `
-<div class="lift tile-wide" style="grid-column:span 2;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px;position:relative;overflow:hidden">
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-    <div style="width:40px;height:40px;border-radius:11px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:19px">📊</div>
-    <div><h3 style="font-size:16px;font-weight:700;margin:0;color:var(--text)">Live draws from IRCC</h3><p style="font-size:12.5px;color:var(--text2);margin:2px 0 0">Every round, with category filters</p></div>
+// A field as the calculator draws it — a label over a bordered control. Inert on purpose:
+// these are divs, not inputs, so the preview cannot be mistaken for a form that works
+// here. The whole block links through to the real calculator.
+const pvField = (label, value) => `
+<div style="display:flex;flex-direction:column;gap:6px">
+  <span style="font-size:12.5px;font-weight:600;color:var(--text2)">${label}</span>
+  <span style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--input);font-size:14px;font-weight:500;color:var(--text)">
+    ${value}<span aria-hidden="true" style="color:var(--muted);font-size:10px">▾</span>
+  </span>
+</div>`;
+
+const pvRow = ({ label, val, max }) => `
+<div>
+  <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px;margin-bottom:5px">
+    <span style="color:var(--text2)">${label}</span>
+    <span style="color:var(--text)"><span class="num">${val}</span> <span style="color:var(--muted);font-weight:500">/ ${max}</span></span>
   </div>
-  <div style="display:flex;flex-direction:column;gap:8px">
-    <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:9px 12px"><span style="width:8px;height:8px;border-radius:50%;background:#A78BFA"></span><span style="font-size:12.5px;color:var(--text);font-weight:600;flex:1">PNP · 534 invited</span><span style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--accent)">708</span></div>
-    <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:9px 12px"><span style="width:8px;height:8px;border-radius:50%;background:var(--cyan)"></span><span style="font-size:12.5px;color:var(--text);font-weight:600;flex:1">Healthcare · 4,000 invited</span><span style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--accent)">475</span></div>
+  <div style="height:5px;background:var(--bg3);border-radius:3px;overflow:hidden"><div style="height:100%;width:${max ? Math.round((val / max) * 100) : 0}%;background:var(--accent);border-radius:3px"></div></div>
+</div>`;
+
+function calculatorPreview(sample) {
+  const strong = sample.total >= 520;
+  const near = sample.total >= 470;
+  const badge = strong ? 'Competitive' : near ? 'In range' : 'Build it up';
+  const tone = strong ? 'var(--success)' : near ? 'var(--warningInk)' : 'var(--text2)';
+  const soft = strong ? 'var(--successSoft)' : near ? 'var(--warningSoft)' : 'var(--bg3)';
+  return `
+<a class="panel lift" href="/calculators" data-reveal style="display:block;color:var(--text);overflow:hidden">
+  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:11px 20px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
+    <span style="font-size:13px;font-weight:600">CRS — Express Entry score</span>
+    <span class="klabel">Preview</span>
   </div>
-</div>`;
+  <div class="split calcpv" style="display:grid;grid-template-columns:1fr 300px">
+    <div class="pvfields" style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start">
+      ${pvField('Marital status', 'Single / not married')}
+      ${pvField('Age', '29')}
+      ${pvField('Education level', 'Master’s / professional')}
+      ${pvField('Canadian work experience', '3 years')}
+      ${pvField('First language (CLB, all four)', 'CLB 9')}
+      ${pvField('Foreign work experience', '1–2 years')}
+      ${pvField('Canadian education', 'None')}
+      ${pvField('Second official language', 'Not added')}
+    </div>
+    <div class="pvscore" style="padding:20px;border-left:1px solid var(--hairline);background:var(--bg2)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
+        <span class="klabel">Your score</span>
+        <span style="background:${soft};color:${tone};border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:700">${badge}</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:16px">
+        <span class="num" style="font-size:52px;line-height:1">${sample.total}</span>
+        <span style="font-size:15px;color:var(--muted);font-weight:600">/ 1,200</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:11px">${sample.rows.map(pvRow).join('')}</div>
+    </div>
+  </div>
+</a>`;
+}
 
-const smallTile = ([icon, title, desc]) => `
-<div class="lift" style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px">
-  <div style="width:42px;height:42px;border-radius:12px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:14px">${icon}</div>
-  <h3 style="font-size:15px;font-weight:700;margin:0 0 6px;color:var(--text)">${title}</h3>
-  <p style="font-size:12.5px;line-height:1.5;color:var(--text2);margin:0">${desc}</p>
-</div>`;
-
-const homeFeatureGrid = () => `
-<div class="featgrid" style="display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(158px,auto);gap:16px" data-reveal>
-  ${featureBigTile()}
-  ${featureWideTile()}
-  ${FEATURES_SMALL.map(smallTile).join('')}
-</div>`;
+const MILESTONES = ['Profile', 'ITA', 'AOR', 'Biometrics', 'Medical', 'Background', 'Final decision'];
+const milestoneRail = () => `
+<ol class="rail" style="margin:0;padding:0" data-reveal>
+  ${MILESTONES.map((m, i) => `<li${i === MILESTONES.length - 1 ? ' data-end' : ''}><span style="font-size:13.5px;font-weight:600;color:var(--text)">${m}</span></li>`).join('')}
+</ol>`;
 
 // ------------------------------------------------------------------ HOME
 function home() {
+  // The example profile is run through the real CRS grid rather than written by hand, so
+  // the preview's total and its breakdown bars are the ones the calculator would produce
+  // from these six answers. Change the grid and this page changes with it.
+  const sample = crsCalc({ ...STATE0.crs, education: 'masters', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, canadianWorkExp: 3 });
+  const latest = DRAWS[0];
+  const rest = DRAWS.slice(1, 6);
+
   const body = `${nav('', 'calc')}
-<div style="min-height:100vh;position:relative;overflow-x:hidden">
-${blobs()}
-<div style="position:relative;z-index:1">
+<main>
 
-<section style="position:relative">
-${heroBg()}
-<div class="hero" style="position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:88px 24px 84px;display:grid;grid-template-columns:1.05fr 0.95fr;gap:48px;align-items:center">
-  <div style="animation:fadeUp .7s .05s both">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accentSoft);border:1px solid var(--border);color:var(--accent);padding:7px 14px;border-radius:999px;font-size:12.5px;font-weight:600;letter-spacing:.2px;margin-bottom:26px;box-shadow:0 8px 24px -12px var(--accentGlow)">
-      <span style="width:7px;height:7px;border-radius:50%;background:var(--success);display:inline-block;box-shadow:0 0 10px var(--success);animation:pulse 1.8s ease-in-out infinite"></span>
-      Live IRCC draw tracking · Updated ${FEED.updatedFull ?? FEED.updated}
-    </div>
-    <h1 style="font-family:'Space Grotesk',sans-serif;line-height:1.02;letter-spacing:-2.5px;font-weight:700;margin:0 0 22px">Your Express Entry<br><span class="serif" style="font-weight:400;font-style:italic;letter-spacing:-1px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">command center.</span></h1>
-    <p style="font-size:18.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:520px">Calculate your CRS score with the official IRCC formula, follow live rounds of invitations, and track your PR application from profile to landing — all in one place. Your data stays on your device.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:26px">
-      ${appBtn(false)}
-      ${accentBtn('/calculators', 'Calculate my CRS score →')}
-    </div>
-    <div class="trustrow"><span>${CHECK}4 official calculators</span><span>${CHECK}No account required</span><span>${CHECK}Free to use</span></div>
-  </div>
-  ${PHONE_MOCK()}
-</div>
-</section>
-
-<section style="border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2)">
-  <div class="statgrid" data-reveal style="max-width:1100px;margin:0 auto;padding:26px 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
-    ${[['1,200', 'max CRS points modelled'], ['4', 'official calculators'], ['~15&nbsp;min', 'new-draw push alerts'], ['$0', 'free · data on-device']].map(([n, l]) => `<div style="text-align:center"><div style="font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--text);letter-spacing:-1px">${n}</div><div style="color:var(--muted);font-size:12.5px;margin-top:2px">${l}</div></div>`).join('')}
-  </div>
-</section>
-
-<section style="max-width:1200px;margin:0 auto;padding:80px 24px 40px">
-  <div style="max-width:640px;margin-bottom:44px">
-    ${eyebrow('Everything, in one app')}
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:38px;line-height:1.1;letter-spacing:-1.2px;font-weight:700;margin:0 0 14px">Built for the whole Express Entry ${serifSpan('journey')}</h2>
-    <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0">From your first CRS estimate to the day IRCC decides — CRS Pulse mirrors the official process at every step.</p>
-  </div>
-  ${homeFeatureGrid()}
-</section>
-
-<section style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-  <div style="max-width:1200px;margin:0 auto;padding:72px 24px">
-    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:36px">
-      <div style="max-width:600px">
-        ${eyebrow('Four calculators, one profile')}
-        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;line-height:1.1;letter-spacing:-1px;font-weight:700;margin:0 0 12px">Know your ${serifSpan('number')} before you enter the pool</h2>
-        <p style="font-size:16px;line-height:1.6;color:var(--text2);margin:0">Federal and provincial scoring grids, computed instantly in your browser. No sign-up, nothing sent to a server.</p>
+<section style="padding:64px 0 56px">
+  <div class="wrap">
+    <div style="max-width:720px;margin-bottom:34px">
+      <h1 style="font-size:clamp(30px,4.6vw,46px);margin-bottom:18px">Your Express Entry score, draws, and application — in one place.</h1>
+      <p class="lede" style="margin-bottom:26px">Calculate your CRS score, follow Express Entry draws, and track your application milestones in one simple app.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px">
+        <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
+        <a class="btn btn-quiet" href="/draws">View latest draws</a>
       </div>
-      ${accentBtn('/calculators', 'Open calculators →', '12px 20px')}
+      <div class="trustrow"><span>${CHECK}Free, no account</span><span>${CHECK}Four official point grids</span><span>${CHECK}iPhone app and in-browser calculators</span></div>
     </div>
-    <div class="featgrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px" data-reveal>
-      ${CALC_CARDS.map(([icon, meta, title, desc]) => `<a class="lift" href="/calculators" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;color:var(--text)"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><div style="width:42px;height:42px;border-radius:11px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:20px">${icon}</div><span style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--accent)">${meta}</span></div><h3 style="font-size:16px;font-weight:700;margin:0 0 6px">${title}</h3><p style="font-size:13px;line-height:1.5;color:var(--text2);margin:0">${desc}</p></a>`).join('')}
+    ${heroPreview(sample)}
+  </div>
+</section>
+
+<section class="sect-tint" style="padding:30px 0;border-top:1px solid var(--hairline);border-bottom:1px solid var(--hairline)">
+  <div class="wrap">${trustStrip()}</div>
+</section>
+
+<section class="sect" id="latest-draw" style="border-top:0">
+  <div class="wrap">
+    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:baseline;margin-bottom:22px">
+      <div>
+        <h2 class="h2" style="margin-bottom:8px">Latest Express Entry draw</h2>
+        <p style="font-size:15px;color:var(--text2)">Round #${latest.no}, published by IRCC on ${longDate(latest.iso)}.</p>
+      </div>
+      <a class="arrowlink" href="/draws">View draw history →</a>
+    </div>
+
+    <div class="panel" data-reveal style="overflow:hidden">
+      <div style="display:flex;align-items:center;gap:9px;padding:13px 20px;border-bottom:1px solid var(--hairline);background:var(--bg2)">
+        ${catDot(latest.dot)}<span style="font-size:14.5px;font-weight:700;color:var(--text)">${latest.cat}</span>
+        <span style="font-size:13.5px;color:var(--text2)">${latest.label}</span>
+      </div>
+      <div class="cells">
+        ${cell('CRS cutoff', latest.cutoff, 'minimum score invited')}
+        ${cell('Invitations', latest.invited, 'candidates invited to apply')}
+        ${cell('Draw date', shortDate(latest.iso), `round #${latest.no}`, null, 22)}
+        ${cell(`Invitations in ${FEED.ytd.year}`, num(FEED.ytd.invitations), `across ${FEED.ytd.rounds} rounds so far`)}
+      </div>
+    </div>
+
+    <div class="dlist" style="margin-top:14px">
+      <div>
+        <div class="dhead" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:0 20px 9px;border-bottom:1px solid var(--border)">
+          ${['Round', 'Category', 'Invitations', 'Cutoff'].map((h, i) => `<span class="klabel"${i > 1 ? ' style="text-align:right"' : ''}>${h}</span>`).join('')}
+        </div>
+        ${rest.map((d) => `<div class="drawrow" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px;border-bottom:1px solid var(--hairline);align-items:center">
+          <div><div style="font-size:14px;font-weight:700">#${d.no}</div><div style="color:var(--muted);font-size:12px">${d.date.replace(/, \d{4}$/, '')}</div></div>
+          <div style="display:flex;align-items:center;gap:9px;min-width:0">${catDot(d.dot)}<span class="dcat" style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.label}</span></div>
+          <div style="text-align:right;font-size:14px;color:var(--text2)" class="num">${d.invited}</div>
+          <div style="text-align:right"><span class="num" style="font-size:17px">${d.cutoff}</span></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <p style="margin-top:11px;font-size:12.5px;color:var(--muted)">Mirrored from IRCC’s public feed on ${FEED.updatedFull ?? FEED.updated}. The app reads the feed live; always confirm current figures at canada.ca.</p>
+  </div>
+</section>
+
+<section class="sect sect-tint">
+  <div class="wrap">
+    <div style="max-width:620px;margin-bottom:26px">
+      ${eyebrow('CRS calculator')}
+      <h2 class="h2">Know your CRS score before you enter the pool.</h2>
+      <p class="lede">The Comprehensive Ranking System scores your age, education, language test results and work experience out of 1,200. CRS Pulse runs the published grid in your browser — change an answer and the score and its breakdown update as you go. Nothing you enter is uploaded.</p>
+    </div>
+    ${calculatorPreview(sample)}
+    <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:20px">
+      <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
+      <span style="font-size:13.5px;color:var(--text2)">Also runs the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids.</span>
     </div>
   </div>
 </section>
 
-<section style="max-width:1200px;margin:0 auto;padding:72px 24px">
-  <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:30px">
-    <div style="max-width:600px">
-      ${eyebrow('Live rounds of invitations')}
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;line-height:1.1;letter-spacing:-1px;font-weight:700;margin:0 0 12px">Every draw, ${serifSpan('straight')} from IRCC</h2>
-      <p style="font-size:16px;line-height:1.6;color:var(--text2);margin:0">Category filters, cutoff trends and cadence — pulled from the official public feed.</p>
+<section class="sect">
+  <div class="wrap">
+    <div class="split" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
+      <div>
+        ${eyebrow('Application tracking')}
+        <h2 class="h2">Follow your application from profile to decision.</h2>
+        <p class="lede">Log the dates that matter and CRS Pulse keeps them in order, estimates where you are against IRCC’s published processing times for your program, and flags when you pass the typical window.</p>
+      </div>
+      <div style="border-top:1px solid var(--border)">
+        ${[['Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
+           ['Processing-time estimates', 'Based on IRCC’s published times for the category you applied under.'],
+           ['Draw alerts', 'A push notification when a new round is published, usually within about 15 minutes.']]
+          .map(([t, d]) => `<div style="padding:13px 0;border-bottom:1px solid var(--hairline)"><div style="font-size:14.5px;font-weight:700;margin-bottom:3px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
+        <p style="margin-top:12px;font-size:12.5px;color:var(--muted)">Tracking, checklists and alerts are features of the iPhone app.</p>
+      </div>
     </div>
-    <a class="link-accent" href="/draws" style="display:inline-flex;align-items:center;gap:6px;color:var(--accent);font-size:14.5px;font-weight:600">See all draws &amp; trends →</a>
-  </div>
-  <div class="drawscroll" data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden">
-    <div class="drawinner">
-      <div style="display:grid;grid-template-columns:90px 1fr 130px 110px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
-      ${HOME_DRAWS.map(([no, date, cat, inv, cut, dot]) => `<div class="drawrow" style="display:grid;grid-template-columns:90px 1fr 130px 110px;gap:12px;padding:15px 22px;border-bottom:1px solid var(--border);align-items:center"><div><div style="font-weight:700;font-size:14px;color:var(--text)">#${no}</div><div style="color:var(--muted);font-size:11.5px">${date}</div></div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${cat}</span></div><div style="text-align:right;font-size:14.5px;color:var(--text2)">${inv}</div><div style="text-align:right"><span style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${cut}</span></div></div>`).join('')}
-      <div style="padding:12px 22px;color:var(--muted);font-size:11.5px">Recent rounds shown for illustration · always verify current figures at canada.ca. The app syncs the live IRCC feed.</div>
-    </div>
-  </div>
-</section>
-
-<section style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
-  <div class="hero" style="max-width:1000px;margin:0 auto;padding:64px 24px;display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center">
-    <div>
-      <div style="width:52px;height:52px;border-radius:14px;background:rgba(0,229,160,0.12);color:var(--success);display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:20px">🔒</div>
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:32px;line-height:1.1;letter-spacing:-1px;font-weight:700;margin:0 0 14px">Private ${serifSpan('by design')}</h2>
-      <p style="font-size:16px;line-height:1.65;color:var(--text2);margin:0 0 18px">Your age, education, language scores and work history never leave your phone. There's no account to create and no analytics tracker following you around.</p>
-      <a class="link-accent" href="#faq" style="font-size:14.5px;font-weight:600">Read the privacy details →</a>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      ${PRIVACY_POINTS.map((p) => `<div style="display:flex;align-items:flex-start;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:13px;padding:16px"><span style="color:var(--success);font-size:16px;margin-top:1px">✓</span><span style="font-size:14.5px;line-height:1.5;color:var(--text2)">${p}</span></div>`).join('')}
+    <div class="panel" style="margin-top:36px;padding:20px 24px 24px">
+      <div class="klabel" style="margin-bottom:18px">Milestones you can log</div>
+      ${milestoneRail()}
     </div>
   </div>
 </section>
 
-<section id="download" style="max-width:1200px;margin:0 auto;padding:90px 24px">
-  <div data-reveal style="background:linear-gradient(150deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:26px;padding:60px 40px;text-align:center;position:relative;overflow:hidden">
-    <div style="position:absolute;top:-60px;right:-40px;width:260px;height:260px;background:radial-gradient(circle,var(--accentSoft),transparent 70%);pointer-events:none"></div>
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:40px;line-height:1.05;letter-spacing:-1.5px;font-weight:700;margin:0 auto 16px;max-width:560px">Track your Express Entry ${serifSpan('journey')} today</h2>
-    <p style="font-size:17px;line-height:1.6;color:var(--text2);margin:0 auto 30px;max-width:500px">Free to download. No account. Available on iPhone — and try the calculators right here in your browser.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${appBtn(true)}${accentBtn('/calculators', 'Open the calculators →', '16px 26px')}</div>
+<section class="sect sect-tint" id="privacy-note">
+  <div class="wrap">
+    <div class="split" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
+      <div>
+        ${eyebrow('Privacy')}
+        <h2 class="h2">Your immigration information is personal.</h2>
+        <p class="lede">CRS Pulse is designed to help you track your Express Entry journey without turning your immigration profile into a marketing product.</p>
+        <p style="margin-top:16px;font-size:14px;line-height:1.6;color:var(--text2);max-width:52ch">The app is free and carries Google AdMob banner ads, which use a device advertising identifier. On iPhone the app asks your permission first, and declining leaves every feature working.</p>
+        <a class="arrowlink" href="/privacy" style="margin-top:16px">Read the privacy policy →</a>
+      </div>
+      <div style="border-top:1px solid var(--border)">
+        ${PRIVACY_POINTS.map((p) => `<p style="padding:14px 0;border-bottom:1px solid var(--hairline);font-size:14.5px;line-height:1.6;color:var(--text2)">${p}</p>`).join('')}
+      </div>
+    </div>
   </div>
 </section>
 
-<section id="faq" style="border-top:1px solid var(--border);background:var(--bg2)">
-  <div style="max-width:820px;margin:0 auto;padding:80px 24px">
-    <div style="text-align:center;margin-bottom:40px">
-      ${eyebrow('FAQ')}
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:36px;line-height:1.08;letter-spacing:-1.2px;font-weight:700;margin:0 0 12px">Questions, ${serifSpan('answered')}</h2>
-      <p style="font-size:16px;line-height:1.6;color:var(--text2);margin:0">How CRS Pulse works, what it costs, and how your data is handled.</p>
+<section class="sect" id="app">
+  <div class="wrap">
+    <div style="max-width:600px;margin-bottom:30px">
+      ${eyebrow('iPhone app')}
+      <h2 class="h2">Keep your Express Entry journey with you.</h2>
+      <p class="lede">The app adds what a website cannot: draw alerts, your application timeline, document checklists, and processing-time estimates — in English and French, light and dark.</p>
+      <div style="margin-top:20px">${appBtn()}</div>
     </div>
-    <div data-reveal style="display:flex;flex-direction:column;gap:10px">
+    <div class="shots" style="display:flex;gap:24px;flex-wrap:wrap;justify-content:flex-start" data-reveal>
+      ${[['/img/app-home.webp', 'The CRS Pulse home screen, showing a CRS score of 512 and the three most recent draws'],
+         ['/img/app-draws.webp', 'The draws screen, listing recent rounds of invitations with category filters'],
+         ['/img/app-timeline.webp', 'The application timeline screen, with ITA, AOR and passport-request milestones']]
+        .map(([src, alt]) => phoneShot(src, alt)).join('')}
+    </div>
+    <div style="margin-top:36px;display:grid;grid-template-columns:1fr 1fr;gap:0 48px;border-top:1px solid var(--border)">
+      ${FEATURES_SMALL.map(([, t, d]) => `<div style="padding:14px 0;border-bottom:1px solid var(--hairline)"><div style="font-size:14.5px;font-weight:700;margin-bottom:3px">${t}</div><p style="font-size:13.5px;line-height:1.55;color:var(--text2)">${d}</p></div>`).join('')}
+    </div>
+  </div>
+</section>
+
+<section class="sect sect-tint" id="faq">
+  <div class="wrap">
+    <div style="max-width:820px">
+    <h2 class="h2" style="margin-bottom:6px">Common questions</h2>
+    <p class="lede" style="margin-bottom:22px">What a CRS score is, where the draw data comes from, and how your information is handled.</p>
+    <div style="border-top:1px solid var(--border)">
       ${FAQ.map(([q, a]) => `<details class="faq"><summary>${q}</summary><div class="a">${a}</div></details>`).join('')}
     </div>
-    <div style="margin-top:24px;border:1px solid var(--border);border-radius:16px;padding:20px;background:var(--card)">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="color:var(--warning);font-size:16px">⚠</span><span style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700">Important disclaimer</span></div>
-      <p style="font-size:13px;line-height:1.65;color:var(--text2);margin:0">CRS Pulse is unofficial and not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. All scores, predictions and timelines are estimates for guidance only and are not immigration advice. Always verify with the official IRCC tools before making decisions.</p>
     </div>
   </div>
 </section>
 
-</div>
-${footerFull()}
-</div>`;
+<section class="sect">
+  <div class="wrap">
+    <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:space-between;align-items:center">
+      <div style="max-width:520px">
+        <h2 class="h2" style="margin-bottom:8px">Ready to check your CRS score?</h2>
+        <p style="font-size:16px;line-height:1.6;color:var(--text2)">Calculate your score and keep your Express Entry progress in one place.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <a class="btn btn-accent" href="/calculators">Calculate my CRS</a>
+        ${appBtn()}
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+${footerFull()}`;
   return shell({ ...page('index'), jsonld: homeJsonLd(), body });
 }
 
@@ -666,11 +853,10 @@ function featuresPage() {
 </div>`;
   const body = `${nav('features', 'calc')}
 <div style="min-height:100vh;position:relative">
-${blobs()}
 <div style="position:relative;z-index:1">
 <section style="max-width:1200px;margin:0 auto;padding:52px 24px 24px">
   ${eyebrow('Features')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">From your first estimate to <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">landing day</span></h1>
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">From your first estimate to <span style="color:var(--accentInk)">landing day</span></h1>
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">CRS Pulse mirrors the real IRCC process at every step. Here's everything the app does — the same information you get on your iPhone, laid out in one place.</p>
 </section>
 <section style="max-width:1200px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
@@ -680,7 +866,7 @@ ${blobs()}
   <div style="background:linear-gradient(150deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:24px;padding:52px 40px;text-align:center">
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;letter-spacing:-1px;font-weight:700;margin:0 0 14px">Have it all in your pocket</h2>
     <p style="font-size:16px;color:var(--text2);margin:0 auto 26px;max-width:460px">Free on iPhone. No account, no trackers, your data on-device.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${appBtn(true)}${accentBtn('/calculators', 'Try the calculators →', '16px 26px')}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${appBtn()}${accentBtn('/calculators', 'Try the calculators →')}</div>
   </div>
 </section>
 </div>
@@ -714,7 +900,7 @@ const INSIGHTS = (() => {
     out.push(['🏆', 'A nomination changes everything', `Provincial Nominee rounds cut off at ${range(pnp)}, because a nomination adds 600 points on top of your base score.`]);
   }
   out.push(['⏱', `${DRAWS.length} rounds in ${span} days`, `That is IRCC's recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.`]);
-  out.push(['🎯', 'Know your odds', 'Premium analytics place your score against the live trend cutoff and forecast bands, plus your percentile in the pool.']);
+  out.push(['🎯', 'Know your odds', 'The analytics tab places your score against the live trend cutoff and forecast bands, plus your percentile in the pool — free, like the rest of the app.']);
   return out;
 })();
 
@@ -735,11 +921,10 @@ function drawsPage() {
 
   const body = `${nav('draws', 'app')}
 <div style="min-height:100vh;position:relative">
-${blobs()}
 <div style="position:relative;z-index:1">
 <section style="max-width:1200px;margin:0 auto;padding:52px 24px 20px">
   ${eyebrow('Draws &amp; Trends')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Rounds of invitations, <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">live from IRCC</span></h1>
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Rounds of invitations, <span style="color:var(--accentInk)">live from IRCC</span></h1>
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">The app pulls every round directly from the official IRCC public feed. Filter by category, watch cutoff trends and draw cadence, and see where you sit in the pool. The figures below mirror IRCC's feed as of ${FEED.updatedFull ?? FEED.updated}; the app refreshes live.</p>
 </section>
 
@@ -952,6 +1137,81 @@ function calcForms() {
   return crsForm + fswForm + bcForm + sinpForm;
 }
 
+// The CRS grid, kept as source text so it has exactly one definition: it is interpolated
+// into the in-browser calculator engine below, and evaluated here at build time so the
+// homepage preview can show a score the calculator itself would produce.
+const CRS_CALC_SRC = `
+function crsCalc(i){
+  var married = i.maritalStatus === 'married';
+  var AGE_S = {17:0,18:99,19:105,20:110,21:110,22:110,23:110,24:110,25:110,26:110,27:110,28:110,29:110,30:105,31:99,32:94,33:88,34:83,35:77,36:72,37:66,38:61,39:55,40:50,41:39,42:28,43:17,44:6};
+  var AGE_M = {17:0,18:90,19:95,20:100,21:100,22:100,23:100,24:100,25:100,26:100,27:100,28:100,29:100,30:95,31:90,32:85,33:80,34:75,35:70,36:65,37:60,38:55,39:50,40:45,41:35,42:25,43:15,44:5};
+  var ageC = Math.min(55, Math.max(17, i.age));
+  var agePts = (married ? AGE_M : AGE_S)[ageC] || 0;
+  var EDU_S = {less_than_secondary:0,secondary:30,'1year':90,'2year':98,bachelors:120,two_or_more:128,masters:135,phd:150};
+  var EDU_M = {less_than_secondary:0,secondary:28,'1year':84,'2year':91,bachelors:112,two_or_more:119,masters:126,phd:140};
+  var eduPts = (married ? EDU_M : EDU_S)[i.education] || 0;
+  var fl = function(clb){ return married
+    ? (clb>=10?32:clb===9?29:clb===8?22:clb===7?16:clb===6?8:clb>=4?6:0)
+    : (clb>=10?34:clb===9?31:clb===8?23:clb===7?17:clb===6?9:clb>=4?6:0); };
+  var F = i.firstLang;
+  var firstLangPts = fl(F.speaking)+fl(F.listening)+fl(F.reading)+fl(F.writing);
+  var sl = function(clb){ return clb>=9?6:clb>=7?3:clb>=5?1:0; };
+  var S = i.hasSecondLang ? i.secondLang : {speaking:0,listening:0,reading:0,writing:0};
+  var secondRaw = sl(S.speaking)+sl(S.listening)+sl(S.reading)+sl(S.writing);
+  var secondLangPts = Math.min(married?22:24, secondRaw);
+  var CWE_S = {0:0,1:40,2:53,3:64,4:72,5:80}, CWE_M = {0:0,1:35,2:46,3:56,4:63,5:70};
+  var cwePts = (married ? CWE_M : CWE_S)[i.canadianWorkExp] || 0;
+  var coreTotal = agePts + eduPts + firstLangPts + secondLangPts + cwePts;
+  var spEdu=0, spLang=0, spCwe=0;
+  if (married) {
+    var SPE = {less_than_secondary:0,secondary:2,'1year':6,'2year':7,bachelors:8,two_or_more:9,masters:10,phd:10};
+    spEdu = SPE[i.spouseEducation]||0;
+    var spl = function(clb){ return clb>=9?5:clb>=7?3:clb>=5?1:0; };
+    var SP = i.spouseLang;
+    spLang = spl(SP.speaking)+spl(SP.listening)+spl(SP.reading)+spl(SP.writing);
+    var SPC = {0:0,1:5,2:7,3:8,4:9,5:10};
+    spCwe = SPC[i.spouseCanadianWorkExp]||0;
+  }
+  var spouseTotal = spEdu + spLang + spCwe;
+  var minClb = Math.min(F.speaking,F.listening,F.reading,F.writing);
+  var topTier = ['two_or_more','masters','phd'].indexOf(i.education)>=0;
+  var postSec = i.education!=='less_than_secondary' && i.education!=='secondary';
+  var cwe=i.canadianWorkExp, fwe=i.foreignWorkExp;
+  var eduLang=0;
+  if(postSec){ if(topTier){ if(minClb>=9)eduLang=50; else if(minClb>=7)eduLang=25; } else { if(minClb>=9)eduLang=25; else if(minClb>=7)eduLang=13; } }
+  var eduCWE=0;
+  if(postSec && cwe>=1){ if(topTier)eduCWE=cwe>=2?50:25; else eduCWE=cwe>=2?25:13; }
+  var eduPtsT = Math.min(50, Math.min(50,eduLang)+Math.min(50,eduCWE));
+  var fweLang=0;
+  if(fwe>=1 && minClb>=7){ var hf=fwe>=3, hl=minClb>=9; if(hf&&hl)fweLang=50; else if(hf)fweLang=25; else if(hl)fweLang=25; else fweLang=13; }
+  var fweCWE=0;
+  if(fwe>=1 && cwe>=1){ if(fwe>=3&&cwe>=2)fweCWE=50; else if(fwe>=3)fweCWE=25; else if(cwe>=2)fweCWE=25; else fweCWE=13; }
+  var tradePts=0;
+  if(i.hasTradeCert){ if(minClb>=7)tradePts=50; else if(minClb>=5)tradePts=25; }
+  var foreignPts = Math.min(50, Math.min(50,fweLang)+Math.min(50,fweCWE));
+  var skillPts = Math.min(100, eduPtsT + foreignPts + Math.min(50,tradePts));
+  var addPts = 0;
+  if (i.hasProvincialNomination) addPts = 600;
+  else {
+    if (i.canadianEducation==='3year_plus') addPts+=30; else if (i.canadianEducation==='1_2year') addPts+=15;
+    if (i.hasSiblingInCanada) addPts+=15;
+    if (i.frenchNCLC7) addPts += (minClb>=5 ? 50 : 25);
+    addPts = Math.min(600, addPts);
+  }
+  var total = Math.min(1200, coreTotal + spouseTotal + skillPts + addPts);
+  return { total:total, minClb:minClb, rows:[
+    { label:'Age', val:agePts, max:married?100:110 },
+    { label:'Education', val:eduPts, max:married?140:150 },
+    { label:'Language (1st + 2nd)', val:firstLangPts + secondLangPts, max:married?150:160 },
+    { label:'Canadian work experience', val:cwePts, max:married?70:80 },
+    { label:'Spouse factors', val:spouseTotal, max:40 },
+    { label:'Skill transferability', val:skillPts, max:100 },
+    { label:'Additional points', val:addPts, max:600 },
+  ] };
+}
+`;
+const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
+
 // Client engine: calc functions verbatim from the design component.
 const CALC_SCRIPT = `<script>
 (function(){
@@ -964,74 +1224,7 @@ const CALC_SCRIPT = `<script>
   function setPath(f,v){ var p=f.split('.'); var o=state; for(var i=0;i<p.length-1;i++){ o=o[p[i]]; } o[p[p.length-1]]=v; }
   function bar(pct,color){ return 'height:100%;border-radius:6px;width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color; }
 
-  function crsCalc(i){
-    var married = i.maritalStatus === 'married';
-    var AGE_S = {17:0,18:99,19:105,20:110,21:110,22:110,23:110,24:110,25:110,26:110,27:110,28:110,29:110,30:105,31:99,32:94,33:88,34:83,35:77,36:72,37:66,38:61,39:55,40:50,41:39,42:28,43:17,44:6};
-    var AGE_M = {17:0,18:90,19:95,20:100,21:100,22:100,23:100,24:100,25:100,26:100,27:100,28:100,29:100,30:95,31:90,32:85,33:80,34:75,35:70,36:65,37:60,38:55,39:50,40:45,41:35,42:25,43:15,44:5};
-    var ageC = Math.min(55, Math.max(17, i.age));
-    var agePts = (married ? AGE_M : AGE_S)[ageC] || 0;
-    var EDU_S = {less_than_secondary:0,secondary:30,'1year':90,'2year':98,bachelors:120,two_or_more:128,masters:135,phd:150};
-    var EDU_M = {less_than_secondary:0,secondary:28,'1year':84,'2year':91,bachelors:112,two_or_more:119,masters:126,phd:140};
-    var eduPts = (married ? EDU_M : EDU_S)[i.education] || 0;
-    var fl = function(clb){ return married
-      ? (clb>=10?32:clb===9?29:clb===8?22:clb===7?16:clb===6?8:clb>=4?6:0)
-      : (clb>=10?34:clb===9?31:clb===8?23:clb===7?17:clb===6?9:clb>=4?6:0); };
-    var F = i.firstLang;
-    var firstLangPts = fl(F.speaking)+fl(F.listening)+fl(F.reading)+fl(F.writing);
-    var sl = function(clb){ return clb>=9?6:clb>=7?3:clb>=5?1:0; };
-    var S = i.hasSecondLang ? i.secondLang : {speaking:0,listening:0,reading:0,writing:0};
-    var secondRaw = sl(S.speaking)+sl(S.listening)+sl(S.reading)+sl(S.writing);
-    var secondLangPts = Math.min(married?22:24, secondRaw);
-    var CWE_S = {0:0,1:40,2:53,3:64,4:72,5:80}, CWE_M = {0:0,1:35,2:46,3:56,4:63,5:70};
-    var cwePts = (married ? CWE_M : CWE_S)[i.canadianWorkExp] || 0;
-    var coreTotal = agePts + eduPts + firstLangPts + secondLangPts + cwePts;
-    var spEdu=0, spLang=0, spCwe=0;
-    if (married) {
-      var SPE = {less_than_secondary:0,secondary:2,'1year':6,'2year':7,bachelors:8,two_or_more:9,masters:10,phd:10};
-      spEdu = SPE[i.spouseEducation]||0;
-      var spl = function(clb){ return clb>=9?5:clb>=7?3:clb>=5?1:0; };
-      var SP = i.spouseLang;
-      spLang = spl(SP.speaking)+spl(SP.listening)+spl(SP.reading)+spl(SP.writing);
-      var SPC = {0:0,1:5,2:7,3:8,4:9,5:10};
-      spCwe = SPC[i.spouseCanadianWorkExp]||0;
-    }
-    var spouseTotal = spEdu + spLang + spCwe;
-    var minClb = Math.min(F.speaking,F.listening,F.reading,F.writing);
-    var topTier = ['two_or_more','masters','phd'].indexOf(i.education)>=0;
-    var postSec = i.education!=='less_than_secondary' && i.education!=='secondary';
-    var cwe=i.canadianWorkExp, fwe=i.foreignWorkExp;
-    var eduLang=0;
-    if(postSec){ if(topTier){ if(minClb>=9)eduLang=50; else if(minClb>=7)eduLang=25; } else { if(minClb>=9)eduLang=25; else if(minClb>=7)eduLang=13; } }
-    var eduCWE=0;
-    if(postSec && cwe>=1){ if(topTier)eduCWE=cwe>=2?50:25; else eduCWE=cwe>=2?25:13; }
-    var eduPtsT = Math.min(50, Math.min(50,eduLang)+Math.min(50,eduCWE));
-    var fweLang=0;
-    if(fwe>=1 && minClb>=7){ var hf=fwe>=3, hl=minClb>=9; if(hf&&hl)fweLang=50; else if(hf)fweLang=25; else if(hl)fweLang=25; else fweLang=13; }
-    var fweCWE=0;
-    if(fwe>=1 && cwe>=1){ if(fwe>=3&&cwe>=2)fweCWE=50; else if(fwe>=3)fweCWE=25; else if(cwe>=2)fweCWE=25; else fweCWE=13; }
-    var tradePts=0;
-    if(i.hasTradeCert){ if(minClb>=7)tradePts=50; else if(minClb>=5)tradePts=25; }
-    var foreignPts = Math.min(50, Math.min(50,fweLang)+Math.min(50,fweCWE));
-    var skillPts = Math.min(100, eduPtsT + foreignPts + Math.min(50,tradePts));
-    var addPts = 0;
-    if (i.hasProvincialNomination) addPts = 600;
-    else {
-      if (i.canadianEducation==='3year_plus') addPts+=30; else if (i.canadianEducation==='1_2year') addPts+=15;
-      if (i.hasSiblingInCanada) addPts+=15;
-      if (i.frenchNCLC7) addPts += (minClb>=5 ? 50 : 25);
-      addPts = Math.min(600, addPts);
-    }
-    var total = Math.min(1200, coreTotal + spouseTotal + skillPts + addPts);
-    return { total:total, minClb:minClb, rows:[
-      { label:'Age', val:agePts, max:married?100:110 },
-      { label:'Education', val:eduPts, max:married?140:150 },
-      { label:'Language (1st + 2nd)', val:firstLangPts + secondLangPts, max:married?150:160 },
-      { label:'Canadian work experience', val:cwePts, max:married?70:80 },
-      { label:'Spouse factors', val:spouseTotal, max:40 },
-      { label:'Skill transferability', val:skillPts, max:100 },
-      { label:'Additional points', val:addPts, max:600 },
-    ] };
-  }
+${CRS_CALC_SRC}
   function fswCalc(i){
     var LANG = { clb9plus:6, clb8:5, clb7:4, below7:0 };
     var EDU = { phd:25, masters_professional:23, two_or_more:22, bachelors_3yr:21, diploma_2yr:19, diploma_1yr:15, secondary:5 };
@@ -1104,7 +1297,7 @@ const CALC_SCRIPT = `<script>
       var r=crsCalc(state.crs); var strong=r.total>=520, near=r.total>=470;
       return { label:'Comprehensive Ranking System', total:r.total, max:'1,200',
         badgeText: strong?'Competitive':near?'In range':'Build it up',
-        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(strong?'rgba(0,229,160,0.15)':near?'rgba(255,181,71,0.15)':'var(--bg3)')+';color:'+(strong?'var(--success)':near?'var(--warning)':'var(--text2)'),
+        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(strong?'var(--successSoft)':near?'var(--warningSoft)':'var(--bg3)')+';color:'+(strong?'var(--success)':near?'var(--warningInk)':'var(--text2)'),
         barPct:Math.round(r.total/1200*100),
         note: strong?'At or above many recent general/CEC cutoffs. A provincial nomination adds 600 points.':'Recent CEC cutoffs sat around 507–518; category draws can go far lower. A nomination adds 600 points.',
         rows:r.rows, grad:grad };
@@ -1112,7 +1305,7 @@ const CALC_SCRIPT = `<script>
       var r=fswCalc(state.fsw);
       return { label:'FSW six selection factors', total:r.total, max:'100',
         badgeText: r.pass?'Eligible (67+)':'Below 67',
-        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'rgba(0,229,160,0.15)':'rgba(220,38,38,0.15)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
+        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'var(--successSoft)':'var(--accentSoft)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
         barPct:Math.round(r.total/100*100),
         note: r.pass?'You meet the 67-point pass mark. You must also meet the CLB 7 and 1-year work minimums.':'You need at least 67 points, CLB 7 in all abilities, and 1 year of skilled work to qualify.',
         rows:r.rows, grad:grad };
@@ -1128,7 +1321,7 @@ const CALC_SCRIPT = `<script>
       var r=sinpCalc(state.sinp);
       return { label:'Saskatchewan SINP EOI', total:r.total, max:'110',
         badgeText: r.pass?'Qualifies (60+)':'Below 60',
-        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'rgba(0,229,160,0.15)':'rgba(220,38,38,0.15)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
+        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'var(--successSoft)':'var(--accentSoft)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
         barPct:Math.round(r.total/110*100),
         note: r.pass?'You meet the 60-point minimum to enter the EOI pool. Draws select the highest scores.':'You need at least 60 points to be placed in the SINP EOI pool.',
         rows:r.rows, grad:grad };
@@ -1183,11 +1376,10 @@ function calculatorsPage() {
     .map(([id, icon, label], i) => `<button class="calctab${i === 0 ? ' on' : ''}" data-tab="${id}"><span style="font-size:16px">${icon}</span> ${label}</button>`).join('');
   const body = `${nav('calc', 'app')}
 <div style="min-height:100vh;position:relative">
-${blobs()}
 <div style="position:relative;z-index:1">
 <section style="max-width:1200px;margin:0 auto;padding:52px 24px 24px">
   ${eyebrow('Calculators')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Score yourself against <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">every grid</span></h1>
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Score yourself against <span style="color:var(--accentInk)">every grid</span></h1>
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:640px">Pick a program below. Everything computes live in your browser — nothing is sent anywhere. These are estimates for planning; always confirm with the official IRCC or provincial tool.</p>
 </section>
 <section style="max-width:1200px;margin:0 auto;padding:0 24px">
@@ -1233,7 +1425,6 @@ function doc(file, mdFile) {
   const md = docMd(mdFile);
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
-${blobs()}
 <main class="doc"><article class="doc-card">${addHeadingIds(marked.parse(md))}</article></main>
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>`;
@@ -1278,7 +1469,8 @@ const homeMd = () => `${mdHead('index')}
 CRS Pulse is a free iPhone app and browser toolkit for people in (or heading for) the
 Canadian Express Entry pool. It scores a profile against the official IRCC and provincial
 point grids, tracks every round of invitations, and follows a PR application from profile
-to landing. Everything entered stays on the device — no account, no trackers.
+to landing. Everything you enter stays on the device, and there is no account to create.
+The app carries Google AdMob banner ads; nothing else tracks you.
 
 - Website: ${SITE}/
 - iOS App Store: ${APP_STORE_URL}
@@ -1491,10 +1683,9 @@ function notFoundPage() {
   ].join('\n');
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
-${blobs()}
 <main style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:80px 24px 72px">
   ${eyebrow('Error 404')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">This page doesn't <span class="serif" style="font-style:italic;font-weight:400;letter-spacing:-.5px;background:linear-gradient(100deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">exist</span></h1>
+  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">This page doesn't <span style="color:var(--accentInk)">exist</span></h1>
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:620px">The link may be old or mistyped. Everything on crspulse.com lives at one of these pages:</p>
   <div style="display:flex;flex-direction:column;gap:10px">
     ${links.map(([href, label, desc]) => `<a class="lift" href="${href}" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;color:var(--text)"><div style="font-size:15px;font-weight:700;margin-bottom:3px">${label}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${desc}</div></a>`).join('')}
@@ -1581,8 +1772,12 @@ function copyAsset(from, to) {
 }
 
 copyAsset('logo.svg', 'img/logo.svg');
-copyAsset('screenshots/hero_home.png', 'img/hero-screenshot.png');
-copyAsset('bg/toronto-skyline.webp', 'img/skyline.webp');
+// Real captures of the shipping iOS build, shown in the app section. WebP because they
+// are the page's only raster payload; the PNG originals stay under assets/screenshots
+// for the store listings.
+copyAsset('screenshots/02_home.webp', 'img/app-home.webp');
+copyAsset('screenshots/03_draws.webp', 'img/app-draws.webp');
+copyAsset('screenshots/06_timeline.webp', 'img/app-timeline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
