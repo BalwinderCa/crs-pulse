@@ -1,0 +1,15 @@
+# The Vercel build renders only the static marketing site: web/build.mjs reads web/,
+# docs/*.md and data/ee-rounds.json, and middleware.js handles content negotiation.
+# The rest of the monorepo — the Expo app (~800 MB with its native dirs) and the
+# Cloudflare Worker — is dead weight that aborted `vercel deploy` mid-upload at 226 MB.
+# Allowlist, so a new top-level workspace can never silently re-inflate the tarball.
+/*
+!/web
+!/docs
+!/data
+!/middleware.js
+!/vercel.json
+
+# Build inputs only — the output dir is generated on Vercel.
+/web/node_modules
+/web/public
