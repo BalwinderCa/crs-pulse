@@ -1,7 +1,7 @@
 node_modules
 public
 .vercel
-# Apple's official Product Bezels asset — license restricts redistribution;
-# used locally + deployed to Vercel (which uploads based on this file, not git),
-# but must not enter this public repo's history. See web/build.mjs comments.
+# The site no longer ships an Apple Product Bezels image — the phone frame in
+# PHONE_MOCK is drawn in CSS. Kept ignored so a licensed bezel dropped here for
+# local experiments can never reach this public repo's history.
 assets/frame
