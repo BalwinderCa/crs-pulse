@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   checkAndNotify,
   checkMirrorRuns,
+  lastSuccessFrom,
   checkProcessingTimes,
   isAuthorized,
   isStale,
@@ -91,13 +92,20 @@ test('isStale handles ISO timestamps and fractional-day thresholds', () => {
 test('checkMirrorRuns bypasses caches and re-arms after a recent successful run', async () => {
   const store = new MockKV();
   store.store.set('mirror_runs_stale_alerted', '2026-08-07T00:15:23Z');
+  store.store.set('mirror_runs_stale_pending', '2026-08-07T00:15:23Z');
 
   const original = globalThis.fetch;
+  let requestUrl: string | undefined;
   let requestInit: RequestInit | undefined;
-  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+  globalThis.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
+    requestUrl = String(input);
     requestInit = init;
     return new Response(
-      JSON.stringify({ workflow_runs: [{ updated_at: new Date(Date.now() - 60_000).toISOString() }] }),
+      JSON.stringify({
+        workflow_runs: [
+          { updated_at: new Date(Date.now() - 60_000).toISOString(), conclusion: 'success' },
+        ],
+      }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
     );
   }) as typeof fetch;
@@ -112,7 +120,80 @@ test('checkMirrorRuns bypasses caches and re-arms after a recent successful run'
   }
 
   assert.equal(requestInit?.cache, 'no-store');
+  // A per-call param, so no cache between us and GitHub can replay an old listing.
+  assert.match(requestUrl ?? '', /[?&]_cb=\d+/);
   assert.equal(store.store.has('mirror_runs_stale_alerted'), false);
+  assert.equal(store.store.has('mirror_runs_stale_pending'), false);
+});
+
+// A stale reading is recorded, not mailed: that is the guard against the cached
+// GitHub listings that mailed out mirror outages which never happened.
+test('checkMirrorRuns does not email on the first stale reading', async () => {
+  const store = new MockKV();
+  const sends: string[] = [];
+
+  const original = globalThis.fetch;
+  globalThis.fetch = (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    if (url.includes('resend.com')) {
+      sends.push(url);
+      return new Response('{}', { status: 200 });
+    }
+    return new Response(
+      JSON.stringify({
+        workflow_runs: [
+          { updated_at: new Date(Date.now() - 50 * 3_600_000).toISOString(), conclusion: 'success' },
+        ],
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as typeof fetch;
+
+  const env = {
+    TOKENS_KV: store as unknown as KVNamespace,
+    GITHUB_DISPATCH_TOKEN: 'test-token',
+    ALERT_EMAIL: 'ops@example.com',
+    RESEND_API_KEY: 'rk',
+    EMAIL_FROM: 'alerts@example.com',
+  };
+
+  try {
+    await checkMirrorRuns(store as unknown as KVNamespace, env);
+    assert.equal(sends.length, 0); // first sighting — recorded only
+    assert.equal(store.store.has('mirror_runs_stale_pending'), true);
+
+    // A tick later, still stale: now it is real and mails exactly once.
+    store.store.set('mirror_runs_stale_pending', new Date(Date.now() - 20 * 60_000).toISOString());
+    await checkMirrorRuns(store as unknown as KVNamespace, env);
+    assert.equal(sends.length, 1);
+    assert.equal(store.store.has('mirror_runs_stale_alerted'), true);
+
+    await checkMirrorRuns(store as unknown as KVNamespace, env);
+    assert.equal(sends.length, 1); // still one email for the same outage
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('lastSuccessFrom takes the newest success, or bounds the age when none is on the page', () => {
+  assert.equal(
+    lastSuccessFrom([
+      { updated_at: '2026-09-19T10:00:00Z', conclusion: 'failure' },
+      { updated_at: '2026-09-19T09:00:00Z', conclusion: 'success' },
+      { updated_at: '2026-09-19T08:00:00Z', conclusion: 'success' },
+    ]),
+    '2026-09-19T09:00:00Z',
+  );
+  // No success on the page — the last one is older than the page, so report the
+  // oldest run we can see and understate the outage rather than invent one.
+  assert.equal(
+    lastSuccessFrom([
+      { updated_at: '2026-09-19T10:00:00Z', conclusion: 'failure' },
+      { updated_at: '2026-09-19T08:00:00Z', conclusion: 'failure' },
+    ]),
+    '2026-09-19T08:00:00Z',
+  );
+  assert.equal(lastSuccessFrom([]), null);
 });
 
 // ─── checkAndNotify: the new-draw decision logic ──────────────────────────────

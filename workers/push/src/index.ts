@@ -626,62 +626,129 @@ async function sendOpsAlert(env: Env, subject: string, line: string): Promise<bo
 }
 
 const RUNS_STALE_KEY = 'mirror_runs_stale_alerted';
+const RUNS_PENDING_KEY = 'mirror_runs_stale_pending';
 const RUNS_STALE_HOURS = 6;
+/**
+ * A stale reading must survive a second, later tick before it emails. Cron ticks
+ * are 15 minutes apart, so any gap under that but comfortably above zero works.
+ */
+const RUNS_CONFIRM_MS = 10 * 60_000;
+
+type RunSummary = { updated_at?: string; conclusion?: string | null; status?: string };
 
 /**
- * checkMirrorFreshness only trips after 30 days, because draws are ~2 weeks apart
- * and quiet stretches are normal — so a mirror that dies today hides for a month.
- * This is the fast signal: ask GitHub when the mirror workflow last *succeeded*
- * (same token that dispatches it) and alert within hours. One email per outage,
- * re-armed on recovery.
+ * A page of the mirror workflow's most recent runs, newest first — or null when
+ * GitHub is unreachable (the next tick retries rather than guessing).
+ *
+ * Every response the heartbeat has ever acted on wrongly was a *stale* one: a
+ * cache somewhere between the worker and GitHub replayed an old listing whose
+ * newest success was days back, while every real run was green (2026-08-17 and
+ * again through 2026-09). `cache: 'no-store'` alone did not stop it, because
+ * GitHub serves this endpoint `public, max-age=60, s-maxage=60` and we only
+ * control our own end. A unique query param per call cannot be answered from
+ * anyone's cache, whoever is holding it.
+ *
+ * Unfiltered on purpose: reading the runs themselves also tells us whether the
+ * mirror is failing or not running at all, which the alert now says out loud.
  */
-export async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> {
-  if (!env.GITHUB_DISPATCH_TOKEN) return;
-
-  let lastSuccess: string;
+async function fetchMirrorRuns(env: Env): Promise<RunSummary[] | null> {
+  // 30 runs spans ~7.5h at the 15-minute cadence — wider than RUNS_STALE_HOURS,
+  // so a page with no success in it is itself evidence of an outage.
+  const url =
+    'https://api.github.com/repos/BalwinderCa/crs-pulse/actions/workflows/ircc-mirror.yml/runs' +
+    `?per_page=30&_cb=${Date.now()}`;
   try {
     // The compatibility flag enables this standard option at runtime; the
     // package's baseline Worker RequestInit type predates that flag.
     const requestInit: RequestInit & { cache: 'no-store' } = {
-      // This is a heartbeat, so a cached response is worse than no response:
-      // Cloudflare once served an eight-day-old successful-run listing and
-      // triggered a false outage alert while every mirror run was green.
       cache: 'no-store',
       headers: {
         Authorization: `Bearer ${env.GITHUB_DISPATCH_TOKEN}`,
         Accept: 'application/vnd.github+json',
         'User-Agent': 'crs-pulse-push',
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
       },
     };
-    const res = await fetch(
-      'https://api.github.com/repos/BalwinderCa/crs-pulse/actions/workflows/ircc-mirror.yml/runs?status=success&per_page=1',
-      requestInit,
-    );
-    if (!res.ok) return; // GitHub API blip — the next tick retries
-    const body = (await res.json()) as { workflow_runs?: { updated_at?: string }[] };
-    const updatedAt = body.workflow_runs?.[0]?.updated_at;
-    if (!updatedAt) return;
-    lastSuccess = updatedAt;
+    const res = await fetch(url, requestInit);
+    if (!res.ok) return null; // GitHub API blip — the next tick retries
+    const body = (await res.json()) as { workflow_runs?: RunSummary[] };
+    return body.workflow_runs ?? null;
   } catch {
-    return;
+    return null;
   }
+}
+
+/**
+ * When the mirror workflow last *succeeded*, from a page of recent runs. With no
+ * success on the page the true answer is older than the page, so the oldest run
+ * on it is returned as a lower bound on the age — understating an outage rather
+ * than inventing one. Pure — unit tested.
+ */
+export function lastSuccessFrom(runs: RunSummary[]): string | null {
+  const stamped = runs.filter((r) => r.updated_at);
+  if (stamped.length === 0) return null;
+  const success = stamped.find((r) => r.conclusion === 'success');
+  return (success ?? stamped[stamped.length - 1]!).updated_at!;
+}
+
+/**
+ * checkMirrorFreshness only trips after 30 days, because draws are ~2 weeks apart
+ * and quiet stretches are normal — so a mirror that dies today hides for a month.
+ * This is the fast signal: ask GitHub when the mirror workflow last succeeded and
+ * alert within hours. One email per outage, re-armed on recovery.
+ *
+ * A single stale-looking reading is never enough to email: it is recorded and must
+ * still look stale on a later tick. That is what stops a cached GitHub response
+ * from mailing out a mirror outage that never happened.
+ */
+export async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> {
+  if (!env.GITHUB_DISPATCH_TOKEN) return;
+
+  const runs = await fetchMirrorRuns(env);
+  if (!runs) return;
+  const lastSuccess = lastSuccessFrom(runs);
+  if (!lastSuccess) return;
 
   const stale = isStale(lastSuccess, Date.now(), RUNS_STALE_HOURS / 24);
   const alerted = await kv.get(RUNS_STALE_KEY);
 
   if (!stale) {
     if (alerted) await kv.delete(RUNS_STALE_KEY); // recovered — re-arm
+    await kv.delete(RUNS_PENDING_KEY); // healthy reading clears any unconfirmed suspicion
     return;
   }
   if (alerted) return; // already alerted this outage
 
+  // First stale reading: record it and wait for the next tick to agree.
+  const pending = await kv.get(RUNS_PENDING_KEY);
+  const pendingAt = pending ? Date.parse(pending) : NaN;
+  if (Number.isNaN(pendingAt)) {
+    await kv.put(RUNS_PENDING_KEY, new Date().toISOString());
+    return;
+  }
+  if (Date.now() - pendingAt < RUNS_CONFIRM_MS) return; // same tick's retry — not a confirmation
+
   const ageHours = Math.floor((Date.now() - Date.parse(lastSuccess)) / 3_600_000);
+  const newest = runs[0];
+  const newestAgeHours = newest?.updated_at
+    ? Math.floor((Date.now() - Date.parse(newest.updated_at)) / 3_600_000)
+    : null;
+  const detail =
+    newestAgeHours === null
+      ? ''
+      : ` The most recent run of any kind finished ${newestAgeHours}h ago (${
+          newest?.conclusion ?? newest?.status ?? 'unknown'
+        }).`;
   const line =
-    `The "IRCC draw mirror" GitHub Action last succeeded ${ageHours}h ago (${lastSuccess}). ` +
-    `The worker keeps dispatching it every 15 minutes, so this means GitHub Actions is failing ` +
-    `or the workflow is broken — a new draw would go unnoticed until it recovers.`;
+    `The "IRCC draw mirror" GitHub Action last succeeded ${ageHours}h ago (${lastSuccess}).` +
+    `${detail} The worker keeps dispatching it every 15 minutes, so this means GitHub Actions ` +
+    `is failing or the workflow is broken — a new draw would go unnoticed until it recovers.`;
   const sent = await sendOpsAlert(env, `⚠️ CRS Pulse: draw mirror hasn't run in ${ageHours}h`, line);
-  if (sent) await kv.put(RUNS_STALE_KEY, lastSuccess);
+  if (sent) {
+    await kv.put(RUNS_STALE_KEY, lastSuccess);
+    await kv.delete(RUNS_PENDING_KEY);
+  }
 }
 
 /**
