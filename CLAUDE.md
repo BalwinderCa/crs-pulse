@@ -29,9 +29,25 @@ npm run type-check     # TypeScript check (no emit)
 
 ```bash
 npm run dev            # Local worker dev server (wrangler dev)
+npm run test           # node --test (tests are colocated as src/*.test.ts)
 npm run deploy         # Deploy to Cloudflare
 npm run type-check     # TypeScript check (no emit)
 ```
+
+**Deploy from `main`, from the right account.** The worker lives on the Cloudflare account
+"Balwinderxcode@gmail.com's Account" (workers.dev subdomain `balwinderxcode`). Before deploying,
+confirm with `npx wrangler whoami` and `npx wrangler kv namespace list` that the logged-in account
+owns KV `588cfb0021b2409e9f5dc1083b0497e8`. Wrangler deploys whatever is checked out, so run
+`npm test` first. On 2026-09-22 a deploy from the wrong checkout quietly shipped an older version.
+That same account is also the **registrar** for `crspulse.com` (Cloudflare Registrar), not just its
+DNS host, so losing access to it means losing control of the domain as well as the worker.
+
+**Shipped apps hardcode `crs-pulse-push.balwinderxcode.workers.dev`** (`mobile/eas.json`), and
+that hostname belongs to this account. Moving the worker to another account would stop released
+builds from reaching `/register` and `/revoke`. Pushes would still arrive, since delivery is
+worker → Expo, but a token that changes could no longer re-register. Put the worker behind a custom
+domain and ship an app update before any move. Never rotate `PUSH_API_SECRET` without an app
+release for the same reason: shipped builds send it as the bearer on `/register`.
 
 ### EAS Builds (from `mobile/`)
 
@@ -92,7 +108,7 @@ disk; only a local `expo run:android` needs `mobile/google-services.json` fetche
 ### Data Flow
 
 ```
-GitHub Actions mirror (data/latest-draw.json) → Cloudflare Worker (every 15 min, KV cache)
+GitHub Actions mirror (data/latest-draw.json) ⇄ Cloudflare Worker (every 15 min, KV cache)
                        ↓ (new draw detected)
               Expo Push Notification API
                        ↓
@@ -104,9 +120,9 @@ GitHub Actions mirror (data/processing-times.json) → processingTimesStore (7-d
 GitHub Actions mirror (data/ee-pool.json) → eePoolStore (7-day cache)
 ```
 
-The worker reads draws from a GitHub-hosted mirror (`raw.githubusercontent.com/.../data/latest-draw.json`), not IRCC directly — canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520. The mobile app still fetches the IRCC JSON feed directly.
+The worker reads draws from a GitHub-hosted mirror (`raw.githubusercontent.com/.../data/latest-draw.json`), not IRCC directly — canada.ca (Akamai) rejects Cloudflare Worker egress with HTTP 520. The mobile app still fetches the IRCC JSON feed directly. GitHub often skips scheduled workflow runs (the mirror's own 15-minute cron ran only about 10 times a day), so the worker triggers the mirror workflow itself on every cron tick via `workflow_dispatch` (`GITHUB_DISPATCH_TOKEN`). Each tick's push reads the previous tick's commit.
 
-The worker also exposes HTTP endpoints (`/register`, `/revoke`, `/health`, `/sync`) that `pushService.ts` calls to manage Expo push tokens stored in Cloudflare KV.
+`pushService.ts` calls `/register` and `/revoke` to manage the Expo push tokens stored in Cloudflare KV. `/health`, `/sync` and `/stats` are for operators, not the app.
 
 ### Mobile State Management (Zustand + AsyncStorage)
 
@@ -178,7 +194,11 @@ Two entry points:
   ```
 - `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected. Also runs `checkProcessingTimes`, which pushes + emails when the processing-times mirror's id→months signature changes (`peopleWaiting` is ignored — it drifts every refresh)
 
-Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). Optional: `RESEND_API_KEY`/`EMAIL_FROM` (email alerts) and `ALERT_EMAIL` (recipient for the stale-mirror heartbeat — the cron emails it once if the draw mirror goes >30 days stale). KV binding: `TOKENS_KV`.
+Revoking deletes the `token:` key and leaves a `revoked:<token>` marker in KV that expires after 1 hour, so a legacy migration can't bring the token back. That marker is also the easiest way to find your own device's token for a single-device test push: turn notifications off in the app, read the one `revoked:` key, then turn them back on. The app never displays its token. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer for register/revoke; ships in the app binary), `SYNC_SECRET` (bearer for `/sync` and `/stats`; ops-only). Optional: `GITHUB_DISPATCH_TOKEN` (fine-grained PAT, Actions read+write on this repo; drives and monitors the mirror), `RESEND_API_KEY`/`EMAIL_FROM` (email alerts) and `ALERT_EMAIL` (ops alert recipient). KV binding: `TOKENS_KV`.
+
+**Two mirror heartbeats email `ALERT_EMAIL`, once per outage, and re-arm when the mirror recovers:**
+- `checkMirrorRuns` sends an alert when the mirror workflow hasn't *succeeded* for 6 hours. It reads GitHub's run list, which GitHub marks `public, max-age=60` and which a cache between the worker and GitHub once replayed as days-old data. That caused daily false alarms while every run was green. The request therefore adds a unique `_cb` param (`cache: 'no-store'` alone wasn't enough), and a stale reading only sends email if it's still stale on a later tick (`mirror_runs_stale_pending`). If an alert does fire, check the real run history before assuming the mirror is down.
+- `checkMirrorFreshness` sends an alert when the newest mirrored draw is more than 30 days old. This catches a mirror that runs green but has stopped fetching new data.
 
 ## Key Conventions
 
