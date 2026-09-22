@@ -166,13 +166,16 @@ Static reference data: `features/checklist/data/checklists.ts` (document checkli
 ### Push Worker (`workers/push/src/`)
 
 Four source files:
-- `index.ts` — HTTP handler (`/register`, `/revoke`, `/health`, `/sync`) + scheduled cron entry point
+- `index.ts` — HTTP handler (`/register`, `/revoke`, `/health`, `/sync`, `/stats`) + scheduled cron entry point
 - `tokenStore.ts` — KV token storage (register/revoke/list/migrate legacy single-array format)
 - `expoValidate.ts` — Validates Expo push tokens with Expo API before storing
 - `expoReceipts.ts` — Polls Expo receipt API for async delivery status; revokes failed tokens
 
 Two entry points:
-- `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, `/health`, and `/sync` (manual trigger)
+- `fetch(request, env)` — HTTP handler for `/register`, `/revoke`, `/health`, `/sync` (manual trigger), and `/stats` (registry counts — push tokens by platform, email subscribers, pending receipts, last draw; never returns a token or address). `/sync` and `/stats` are gated on `SYNC_SECRET`, deliberately not `PUSH_API_SECRET`, which ships inside every app binary:
+  ```bash
+  curl -H "Authorization: Bearer $SYNC_SECRET" https://crs-pulse-push.balwinderxcode.workers.dev/stats
+  ```
 - `scheduled(event, env)` — Cron trigger every 15 minutes; reads the GitHub draw mirror, compares to KV-cached last draw, fans out Expo push notifications if a new draw is detected. Also runs `checkProcessingTimes`, which pushes + emails when the processing-times mirror's id→months signature changes (`peopleWaiting` is ignored — it drifts every refresh)
 
 Revoked tokens are tombstoned in KV (not deleted) so legacy migrations don't resurrect them. Runs on wrangler 4. Secrets required: `PUSH_API_SECRET` (bearer token for register/revoke), `SYNC_SECRET` (manual sync auth). Optional: `RESEND_API_KEY`/`EMAIL_FROM` (email alerts) and `ALERT_EMAIL` (recipient for the stale-mirror heartbeat — the cron emails it once if the draw mirror goes >30 days stale). KV binding: `TOKENS_KV`.

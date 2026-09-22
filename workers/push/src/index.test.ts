@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
+import worker, {
   checkAndNotify,
+  collectStats,
   checkMirrorRuns,
   lastSuccessFrom,
   checkProcessingTimes,
@@ -267,4 +268,55 @@ test('checkProcessingTimes: notifies and advances KV when months change', async 
     assert.equal(r.token_count, 0); // no tokens registered in this test
     assert.notEqual(store.store.get('processing_times_months'), baseline);
   });
+});
+
+// ─── /stats ───────────────────────────────────────────────────────────────────
+test('collectStats counts tokens by platform without exposing any of them', async () => {
+  const store = new MockKV();
+  store.store.set('token:ExponentPushToken[a]', 'ios');
+  store.store.set('token:ExponentPushToken[b]', 'ios');
+  store.store.set('token:ExponentPushToken[c]', 'android');
+  store.store.set('email:someone@example.com', '1');
+  store.store.set('last_draw_number', '433');
+
+  const stats = await collectStats(store as unknown as KVNamespace);
+
+  assert.deepEqual(stats, {
+    tokens: { total: 3, ios: 2, android: 1, unknown: 0 },
+    emails: 1,
+    pending_receipts: 0,
+    last_draw_number: 433,
+  });
+  assert.doesNotMatch(JSON.stringify(stats), /ExponentPushToken|example\.com/);
+});
+
+// Past the per-invocation KV budget the split is dropped, not the whole answer.
+test('collectStats reports the total alone for a very large registry', async () => {
+  const store = new MockKV();
+  for (let i = 0; i < 801; i++) store.store.set(`token:t${i}`, 'ios');
+
+  const stats = await collectStats(store as unknown as KVNamespace);
+
+  assert.deepEqual(stats.tokens, { total: 801, ios: null, android: null, unknown: null });
+  assert.equal(stats.last_draw_number, null);
+});
+
+test('GET /stats requires SYNC_SECRET, not the push key shipped in the app', async () => {
+  const store = new MockKV();
+  const env = {
+    TOKENS_KV: store as unknown as KVNamespace,
+    SYNC_SECRET: 'ops-secret',
+    PUSH_API_SECRET: 'app-key',
+  };
+  const get = (auth?: string) =>
+    worker.fetch(
+      new Request('https://worker/stats', auth ? { headers: { Authorization: auth } } : {}),
+      env,
+    );
+
+  assert.equal((await get()).status, 401);
+  assert.equal((await get('Bearer app-key')).status, 401);
+  const ok = await get('Bearer ops-secret');
+  assert.equal(ok.status, 200);
+  assert.equal(((await ok.json()) as { tokens: { total: number } }).tokens.total, 0);
 });

@@ -11,6 +11,7 @@ import {
   registerEmail,
   revokeEmail,
   listEmails,
+  TOKEN_PREFIX,
 } from './tokenStore.ts';
 import { validateTokenWithExpo } from './expoValidate.ts';
 import { fetchExpoReceipts } from './expoReceipts.ts';
@@ -752,6 +753,61 @@ export async function checkMirrorRuns(kv: KVNamespace, env: Env): Promise<void> 
 }
 
 /**
+ * Each token's platform lives in its KV value, so the iOS/Android split costs one
+ * read per token. Workers cap KV operations per invocation at 1,000, so past this
+ * size /stats reports the total alone rather than failing outright.
+ */
+const STATS_PLATFORM_LOOKUP_MAX = 800;
+
+export interface PushStats {
+  tokens: { total: number; ios: number | null; android: number | null; unknown: number | null };
+  emails: number;
+  pending_receipts: number;
+  last_draw_number: number | null;
+}
+
+/**
+ * Registry counts for GET /stats — the only way to see how many devices get
+ * pushes without opening the Cloudflare dashboard. Counts only; no token or
+ * email is ever returned.
+ */
+export async function collectStats(kv: KVNamespace): Promise<PushStats> {
+  const [tokens, emails, receipts, lastDrawRaw] = await Promise.all([
+    listTokens(kv),
+    listEmails(kv),
+    listReceipts(kv),
+    kv.get(LAST_DRAW_KEY),
+  ]);
+
+  let split: { ios: number | null; android: number | null; unknown: number | null } = {
+    ios: null,
+    android: null,
+    unknown: null,
+  };
+  if (tokens.length <= STATS_PLATFORM_LOOKUP_MAX) {
+    const counts = { ios: 0, android: 0, unknown: 0 };
+    for (let i = 0; i < tokens.length; i += 50) {
+      const platforms = await Promise.all(
+        tokens.slice(i, i + 50).map((t) => kv.get(TOKEN_PREFIX + t)),
+      );
+      for (const p of platforms) {
+        if (p === 'ios' || p === 'android') counts[p]++;
+        else counts.unknown++;
+      }
+    }
+    split = counts;
+  }
+
+  const lastDraw = lastDrawRaw ? parseInt(lastDrawRaw, 10) : NaN;
+  return {
+    tokens: { total: tokens.length, ...split },
+    emails: emails.length,
+    pending_receipts: receipts.length,
+    last_draw_number: Number.isNaN(lastDraw) ? null : lastDraw,
+  };
+}
+
+/**
  * GitHub honours `schedule:` on a best-effort basis: the mirror's 15-minute cron
  * actually fires ~10x/day (median gap ~2h), so a draw can go unnoticed for hours
  * — that is how draw #433 (2026-08-06) was missed. Cloudflare's cron is reliable,
@@ -906,6 +962,18 @@ export default {
 
       await revokeEmail(env.TOKENS_KV, email);
       return json({ message: 'Email revoked.' });
+    }
+
+    // Ops-only. Gated on SYNC_SECRET, not PUSH_API_SECRET: the push key ships
+    // inside every app binary, so anyone could extract it and read these counts.
+    if (url.pathname === '/stats' && request.method === 'GET') {
+      if (!env.SYNC_SECRET) {
+        return json({ message: 'SYNC_SECRET not configured' }, 503);
+      }
+      if (!isAuthorized(request, env.SYNC_SECRET)) {
+        return json({ message: 'Unauthorized' }, 401);
+      }
+      return json(await collectStats(env.TOKENS_KV));
     }
 
     if (url.pathname === '/sync' && request.method === 'POST') {
