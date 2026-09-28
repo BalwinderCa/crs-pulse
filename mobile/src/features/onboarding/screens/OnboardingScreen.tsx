@@ -92,13 +92,13 @@ export default function OnboardingScreen() {
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
       {/* Top row: language toggle (left) + skip (right) */}
       <View style={[s.topRow, { paddingTop: insets.top + spacing.sm }]}>
-        <TouchableOpacity onPress={toggleLanguage} hitSlop={12} style={s.langBtn}>
+        <TouchableOpacity ph-label="onboarding-language" onPress={toggleLanguage} hitSlop={12} style={s.langBtn}>
           <Ionicons name="globe-outline" size={18} color={accent} />
           <Text style={[s.langText, { color: accent }]}>{t('onboarding.languageBtn')}</Text>
         </TouchableOpacity>
 
         {!isLast ? (
-          <TouchableOpacity onPress={finish} hitSlop={12}>
+          <TouchableOpacity ph-label="onboarding-skip" onPress={finish} hitSlop={12}>
             <Text style={[s.skip, { color: c.textMuted }]}>{t('onboarding.skip')}</Text>
           </TouchableOpacity>
         ) : (
@@ -190,7 +190,7 @@ export default function OnboardingScreen() {
             />
           ))}
         </View>
-        <TouchableOpacity
+        <TouchableOpacity ph-label="onboarding-next"
           style={[s.cta, { backgroundColor: accent }]}
           onPress={next}
           activeOpacity={0.8}

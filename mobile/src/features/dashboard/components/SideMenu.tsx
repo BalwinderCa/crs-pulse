@@ -97,7 +97,7 @@ function ContactView({ onClose }: { onClose: () => void }) {
           {t('menu.contactIntro')}
         </Text>
         {rows.map((row) => (
-          <TouchableOpacity
+          <TouchableOpacity ph-label="menu-email-us"
             key={row.label}
             style={[cv.row, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
             onPress={row.onPress}
@@ -145,6 +145,8 @@ const dv = StyleSheet.create({
 // ─── Menu groups ──────────────────────────────────────────────────────────────
 
 type MenuItem = {
+  /** Stable analytics label (`menu-<id>`); `label` is translated. */
+  id: string;
   icon: React.ComponentProps<typeof Ionicons>['name'];
   label: string;
   onPress: () => void;
@@ -213,29 +215,29 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   };
 
   const groupOne: MenuItem[] = [
-    { icon: 'checkbox',        label: t('menu.documentChecklists'),    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
-    { icon: 'hourglass',       label: t('menu.checkProcessingTimes'),  onPress: navigateTo('ProcessingTimes'),  accent: palette.warning, badge: hasProcessingUpdate },
+    { id: 'checklists', icon: 'checkbox',        label: t('menu.documentChecklists'),    onPress: navigateTo('DocumentChecklist'), accent: palette.success },
+    { id: 'processing-times', icon: 'hourglass',       label: t('menu.checkProcessingTimes'),  onPress: navigateTo('ProcessingTimes'),  accent: palette.warning, badge: hasProcessingUpdate },
   ];
 
   const groupAbout: MenuItem[] = [
-    { icon: 'help-circle',       label: t('menu.faq'),           onPress: navigateTo('Faq'),          accent: palette.blue },
-    { icon: 'information-circle', label: t('menu.aboutUs'),       onPress: () => setDetail('about'),   accent: palette.purple },
-    { icon: 'lock-closed',        label: t('menu.privacyPolicy'), onPress: () => setDetail('privacy'), accent: palette.success },
-    { icon: 'document-text',      label: t('menu.terms'),         onPress: () => setDetail('terms'),   accent: palette.blue },
+    { id: 'faq', icon: 'help-circle',       label: t('menu.faq'),           onPress: navigateTo('Faq'),          accent: palette.blue },
+    { id: 'about', icon: 'information-circle', label: t('menu.aboutUs'),       onPress: () => setDetail('about'),   accent: palette.purple },
+    { id: 'privacy', icon: 'lock-closed',        label: t('menu.privacyPolicy'), onPress: () => setDetail('privacy'), accent: palette.success },
+    { id: 'terms', icon: 'document-text',      label: t('menu.terms'),         onPress: () => setDetail('terms'),   accent: palette.blue },
   ];
 
   const groupTwo: MenuItem[] = [
-    { icon: 'bug',   label: t('menu.reportIssue'), onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
-    { icon: 'mail',  label: t('menu.contactUs'),   onPress: () => setDetail('contact'), accent: palette.blue },
-    { icon: 'share', label: t('menu.shareApp'),    onPress: handleShare,                accent: palette.success },
+    { id: 'report-issue', icon: 'bug',   label: t('menu.reportIssue'), onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
+    { id: 'contact', icon: 'mail',  label: t('menu.contactUs'),   onPress: () => setDetail('contact'), accent: palette.blue },
+    { id: 'share', icon: 'share', label: t('menu.shareApp'),    onPress: handleShare,                accent: palette.success },
     // iOS only — the label says App Store, and Play has no write-review deep link.
     ...(Platform.OS === 'ios'
-      ? [{ icon: 'star' as const, label: t('menu.reviewAppStore'), onPress: handleRate, accent: palette.warning }]
+      ? [{ id: 'review', icon: 'star' as const, label: t('menu.reviewAppStore'), onPress: handleRate, accent: palette.warning }]
       : []),
   ];
 
   const renderItem = (item: MenuItem, idx: number, arr: MenuItem[]) => (
-    <TouchableOpacity
+    <TouchableOpacity ph-label={`menu-${item.id}`}
       key={item.label}
       style={[s.row, idx < arr.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.border }]}
       onPress={item.onPress}

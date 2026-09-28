@@ -44,6 +44,8 @@ import { useDrawsStore } from '@/store/drawsStore';
 import { useEePoolStore } from '@/store/eePoolStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { installGlobalErrorHandler } from '@/services/errorReporter';
+import { PostHogProvider } from 'posthog-react-native';
+import { analytics, ANALYTICS_AUTOCAPTURE } from '@/services/analyticsService';
 
 // Capture uncaught JS errors as early as possible (idempotent).
 installGlobalErrorHandler();
@@ -93,7 +95,13 @@ export default function App() {
       <SafeAreaProvider>
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback />}>
-            <AppInner />
+            {analytics ? (
+              <PostHogProvider client={analytics} autocapture={ANALYTICS_AUTOCAPTURE}>
+                <AppInner />
+              </PostHogProvider>
+            ) : (
+              <AppInner />
+            )}
           </Suspense>
         </ErrorBoundary>
         <ToastHost />

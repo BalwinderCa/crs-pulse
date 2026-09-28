@@ -51,7 +51,9 @@
         "EXPO_PUBLIC_ADMOB_NATIVE_IOS": "ca-app-pub-4874088724567128/2521223683",
         "EXPO_PUBLIC_ADMOB_APP_OPEN_ANDROID": "ca-app-pub-4874088724567128/1819934387",
         "EXPO_PUBLIC_ADMOB_APP_OPEN_IOS": "ca-app-pub-4874088724567128/7072261064",
-        "EXPO_PUBLIC_MONETIZATION_ENABLED": "true"
+        "EXPO_PUBLIC_MONETIZATION_ENABLED": "true",
+        "EXPO_PUBLIC_POSTHOG_KEY": "phc_B6cfSjHfowwLnGsM73hPhTeqm7MWep8Lgsxe6za9Zamj",
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://us.i.posthog.com"
       }
     },
     "production-apk": {

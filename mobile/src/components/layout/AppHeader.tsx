@@ -65,7 +65,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
       {isStack ? (
         /* Internal page: back chevron (left) · centered title (flex) · right slot */
         <>
-          <TouchableOpacity
+          <TouchableOpacity ph-label="header-back"
             onPress={onBackPress ?? (() => navigation.goBack())}
             hitSlop={16}
             style={[s.iconBtn, s.stackSide]}
@@ -83,7 +83,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
         /* Main tab page: menu + label (left) · brand lockup (center) · actions (right) */
         <>
           <View style={s.sideLeft}>
-            <TouchableOpacity
+            <TouchableOpacity ph-label="header-menu"
               onPress={() => setMenuOpen(true)}
               hitSlop={12}
               style={s.iconBtn}
@@ -106,7 +106,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
 
           <View style={s.sideRight}>
             {right}
-            <TouchableOpacity
+            <TouchableOpacity ph-label="header-notifications"
               onPress={() => navigation.navigate('Notifications')}
               hitSlop={12}
               style={s.iconBtn}

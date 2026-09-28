@@ -26,6 +26,7 @@ import {
 import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { exportProfilePdf } from '@/utils/exportProfile';
+import { track } from '@/services/analyticsService';
 import type { Colors } from '@/theme/colors';
 import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -220,7 +221,9 @@ export default function ProfileScreen() {
     setExporting(true);
     try {
       const shared = await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
-      if (!shared) {
+      if (shared) {
+        track('pdf_exported');
+      } else {
         Alert.alert(t('profile.sharingUnavailable'), t('profile.sharingUnavailableMsg'));
       }
     } catch {
@@ -318,7 +321,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>{t('profile.profileReport')}</Text>
         <Text style={styles.hint}>{t('profile.downloadPdfHint')}</Text>
         <View style={styles.exportRow}>
-          <TouchableOpacity
+          <TouchableOpacity ph-label="profile-export-pdf"
             style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
             onPress={handleExportPdf}
             disabled={exporting}
@@ -336,7 +339,7 @@ export default function ProfileScreen() {
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>
-        <TouchableOpacity
+        <TouchableOpacity ph-label="profile-notifications"
           style={styles.notifRow}
           onPress={() => navigation.navigate('Notifications')}
           activeOpacity={0.7}
@@ -412,7 +415,7 @@ export default function ProfileScreen() {
       {/* ── Danger Zone ── */}
       <Card style={styles.section}>
         <Text style={styles.dangerTitle}>{t('profile.dangerZone')}</Text>
-        <Button
+        <Button ph-label="profile-reset-data"
           title={t('profile.resetAllData')}
           variant="danger"
           onPress={() => {

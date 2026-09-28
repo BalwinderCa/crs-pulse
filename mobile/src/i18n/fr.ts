@@ -25,7 +25,8 @@ const fr: TranslationKeys = {
     slide2Title: 'Connaissez votre score',
     slide2Body: 'La grille complète du SGC de l\'IRCC fonctionne sur votre appareil. Consultez le détail de votre score, les catégories de tirage qui vous correspondent et des outils comme le calculateur SINP.',
     slide3Title: 'Conçu pour la confidentialité',
-    slide3Body: 'Tout reste sur votre téléphone — aucun compte, aucune inscription, aucun suivi. Conçu pour tous ceux qui visent la RP canadienne, où que vous soyez.',
+    // [REVIEW]
+    slide3Body: 'Votre profil reste sur votre téléphone — aucun compte, aucune inscription. Conçu pour tous ceux qui visent la RP canadienne, où que vous soyez.',
     welcomeSub: 'Votre compagnon IRCC gratuit vers la RP canadienne.',
     welcomeFeat0: 'Suivi des tirages IRCC et alertes instantanées',
     welcomeFeat1: 'Calculateurs SGC, TQF et PCP provinciaux',
@@ -946,6 +947,7 @@ Ce qui me motive chaque jour, c’est la conviction que chacun mérite une chanc
 Votre soutien compte énormément pour moi. Je continue de créer des outils plus intelligents pour vous aider à améliorer votre profil et à suivre votre progression vers la résidence permanente.
 
 Merci de faire confiance à CRS Pulse dans votre parcours d’immigration. Continuez — le Canada vous attend !`,
+    // [REVIEW] paragraphe PostHog
     privacyBody: `CRS Pulse respecte votre vie privée.
 
 Toutes les données que vous saisissez (âge, études, résultats linguistiques, expérience de travail) sont stockées localement sur votre appareil uniquement. Nous ne collectons, ne transmettons ni ne partageons jamais avec qui que ce soit les informations de profil que vous saisissez.
@@ -954,7 +956,9 @@ Les notifications push (si activées) enregistrent votre appareil auprès de not
 
 L’historique des tirages est récupéré directement du flux de données public officiel d’IRCC (canada.ca) et mis en cache sur l’appareil pour une utilisation hors ligne.
 
-CRS Pulse est gratuit et financé par la publicité : les bannières sont diffusées par Google AdMob, qui peut utiliser un identifiant d’appareil pour diffuser et mesurer les publicités (sur iOS, uniquement avec votre consentement via App Tracking Transparency). Il n’y a aucun achat intégré ni abonnement, et nous n’utilisons aucun autre outil d’analyse ni de suivi tiers.
+CRS Pulse est gratuit et financé par la publicité : les bannières sont diffusées par Google AdMob, qui peut utiliser un identifiant d’appareil pour diffuser et mesurer les publicités (sur iOS, uniquement avec votre consentement via App Tracking Transparency). Il n’y a aucun achat intégré ni abonnement.
+
+Des statistiques d’utilisation anonymes (PostHog) nous indiquent quels écrans et fonctionnalités sont utilisés, jamais vos scores ni votre profil.
 
 Politique complète : {{url}}
 

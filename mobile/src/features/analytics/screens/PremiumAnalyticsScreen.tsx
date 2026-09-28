@@ -175,7 +175,7 @@ export default function PremiumAnalyticsScreen() {
           {TABS.map((t) => {
             const active = tab === t.key;
             return (
-              <TouchableOpacity
+              <TouchableOpacity ph-label={`analytics-tab-${t.key}`}
                 key={t.key}
                 style={[s.segBtn, active && { backgroundColor: accent }]}
                 onPress={() => setTab(t.key)}
@@ -222,7 +222,7 @@ export default function PremiumAnalyticsScreen() {
               <Text style={[s.lockBody, { color: c.textSecondary }]}>
                 {t('analytics.completeCrsBody')}
               </Text>
-              <Button
+              <Button ph-label="analytics-calculate-crs"
                 title={t('analytics.calculateCrs')}
                 fullWidth
                 icon={<Ionicons name="calculator-outline" size={18} color={palette.white} />}

@@ -21,7 +21,7 @@ const en = {
     slide2Title: 'Know Your Score',
     slide2Body: 'The full IRCC CRS grid runs on your device. See your score breakdown, which draw categories fit you, and tools like the SINP calculator.',
     slide3Title: 'Private by Design',
-    slide3Body: 'Everything stays on your phone — no account, no sign-up, no tracking. Built for everyone on the path to Canadian PR, wherever you are.',
+    slide3Body: 'Your profile stays on your phone — no account, no sign-up. Built for everyone on the path to Canadian PR, wherever you are.',
     welcomeSub: 'Your free IRCC Companion for the path to Canadian PR.',
     welcomeFeat0: 'Live IRCC draw tracking & instant alerts',
     welcomeFeat1: 'CRS, FSW & provincial PNP calculators',
@@ -954,7 +954,9 @@ Push notifications (if enabled) register your device with our server so we can a
 
 Draw history is fetched directly from the official IRCC public data feed (canada.ca) and cached on-device for offline use.
 
-CRS Pulse is free and supported by banner ads: ads are served by Google AdMob, which may use a device identifier to deliver and measure ads (on iOS, only with your App Tracking Transparency consent). There are no in-app purchases and no subscriptions, and we use no other third-party analytics or trackers.
+CRS Pulse is free and supported by banner ads: ads are served by Google AdMob, which may use a device identifier to deliver and measure ads (on iOS, only with your App Tracking Transparency consent). There are no in-app purchases and no subscriptions.
+
+Anonymous usage analytics (PostHog) show us which screens and features are used, never your scores or profile.
 
 Full policy: {{url}}
 

@@ -195,7 +195,7 @@ export default function ApplicationSetupScreen() {
                 )}
               </>
             )}
-            <TouchableOpacity
+            <TouchableOpacity ph-label="setup-skip"
               style={[s.notAppliedBtn, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
               onPress={() => finish(null)}
               activeOpacity={0.65}
@@ -215,7 +215,7 @@ export default function ApplicationSetupScreen() {
 
       {/* Footer CTA */}
       <View style={[s.footer, { paddingBottom: insets.bottom + spacing.base, borderTopColor: c.border }]}>
-        <TouchableOpacity
+        <TouchableOpacity ph-label="setup-next"
           style={[s.cta, { backgroundColor: canNext ? accent : c.surfaceTertiary }]}
           onPress={next}
           disabled={!canNext}

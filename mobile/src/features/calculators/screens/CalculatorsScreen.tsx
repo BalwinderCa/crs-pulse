@@ -39,7 +39,7 @@ export default function CalculatorsScreen() {
         </Text>
 
         {calcEntries.map((calc) => (
-          <TouchableOpacity
+          <TouchableOpacity ph-label={`calculator-${calc.route}`}
             key={calc.title}
             style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
             onPress={() => navigation.navigate(calc.route)}

@@ -69,7 +69,7 @@ export default function ChecklistHubScreen() {
           const pct = total === 0 ? 0 : done / total;
           const complete = done >= total && total > 0;
           return (
-            <TouchableOpacity
+            <TouchableOpacity ph-label={`checklist-${p.id}`}
               key={p.id}
               style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
               onPress={() => navigation.navigate('DocumentChecklistDetail', { programId: p.id })}

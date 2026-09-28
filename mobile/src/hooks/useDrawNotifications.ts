@@ -9,6 +9,7 @@ import {
   unregisterPushNotifications,
   type PushRegisterFailure,
 } from '@/services/pushService';
+import { track } from '@/services/analyticsService';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -63,6 +64,7 @@ export function useDrawNotifications() {
     if (!enabled) {
       const result = await registerForPushNotifications();
       if (!result.ok) {
+        track('push_enable_failed', { reason: result.reason });
         if (result.reason === 'permission_denied') {
           Alert.alert(i18n.t('common.notificationsDisabled'), i18n.t('common.notifPermissionDenied'), [
             { text: i18n.t('common.cancel'), style: 'cancel' },
@@ -77,6 +79,7 @@ export function useDrawNotifications() {
       await unregisterPushNotifications();
     }
     const next = !enabled;
+    track(next ? 'push_enabled' : 'push_disabled');
     setEnabled(next);
     await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, next ? 'true' : 'false');
   }, [enabled, failureKey]);

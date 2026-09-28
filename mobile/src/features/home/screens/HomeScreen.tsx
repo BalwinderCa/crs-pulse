@@ -109,7 +109,7 @@ export default function HomeScreen() {
                 <Text style={[s.catText, { color: accent }]}>{cat}</Text>
               </View>
             </View>
-            <TouchableOpacity
+            <TouchableOpacity ph-label="home-calculate-crs"
               style={[s.calcLink, { borderTopColor: c.border }]}
               onPress={() => stackNav.navigate('Calculators')}
               activeOpacity={0.65}
@@ -120,7 +120,7 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </>
         ) : (
-          <TouchableOpacity style={s.setupRow} onPress={() => stackNav.navigate('Calculators')} activeOpacity={0.7}>
+          <TouchableOpacity ph-label="home-setup-calculators" style={s.setupRow} onPress={() => stackNav.navigate('Calculators')} activeOpacity={0.7}>
             <View style={[s.setupIcon, { backgroundColor: accent + '18' }]}>
               <Ionicons name="calculator-outline" size={22} color={accent} />
             </View>
@@ -138,7 +138,7 @@ export default function HomeScreen() {
         <Card style={s.appCard}>
           <View style={s.appHeader}>
             <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('home.myApplication')}</Text>
-            <TouchableOpacity
+            <TouchableOpacity ph-label="home-edit-application"
               onPress={() => stackNav.navigate('ApplicationSetup')}
               hitSlop={10}
               accessibilityRole="button"
@@ -250,7 +250,7 @@ export default function HomeScreen() {
         </Card>
       ) : (
         <Card style={s.appCard}>
-          <TouchableOpacity
+          <TouchableOpacity ph-label="home-setup-application"
             style={s.setupRow}
             onPress={() => stackNav.navigate('ApplicationSetup')}
             activeOpacity={0.7}
@@ -269,7 +269,7 @@ export default function HomeScreen() {
 
       {/* Timeline peek */}
       <Card style={s.appCard}>
-        <TouchableOpacity
+        <TouchableOpacity ph-label="home-open-timeline"
           style={s.setupRow}
           onPress={() => tabNav.navigate('Timeline')}
           activeOpacity={0.7}

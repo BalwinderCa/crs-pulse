@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +23,7 @@ import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScr
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
 import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService';
+import { trackScreen } from '@/services/analyticsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
@@ -45,6 +46,7 @@ export default function RootNavigator() {
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
   const scheme = useResolvedScheme();
   const syncedLang = useRef<string | null>(null);
+  const navigationRef = useNavigationContainerRef<RootStackParamList>();
 
   useEffect(() => {
     loadDraws().catch(() => {});
@@ -111,7 +113,11 @@ export default function RootNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
+      onStateChange={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
+    >
       {/* Android defaults to light status-bar icons whatever the theme, so the
           clock and battery were invisible on the light palette. `style="auto"`
           would follow the SYSTEM scheme and get it wrong whenever the in-app

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (free draw insights plus the personalised "Your Plan" tab, monetised entirely with Google AdMob ads), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user data stays on-device — only anonymous Expo push tokens are sent to the worker. There are no in-app purchases and no payment data of any kind.
+CRS Pulse is a React Native (Expo) mobile app for Canadian Express Entry immigration applicants. It bundles several eligibility calculators (CRS, FSW 67-point grid, BC PNP SIRS, SINP EOI), fetches live IRCC draw results, provides analytics (free draw insights plus the personalised "Your Plan" tab, monetised entirely with Google AdMob ads), tracks the user's application with a milestone timeline / processing-time estimates / per-program document checklists, and delivers push notifications via a Cloudflare Worker. All user profile data stays on-device. Only anonymous Expo push tokens go to the worker, and anonymous usage events (screens, taps, lifecycle) go to PostHog. There are no in-app purchases and no payment data of any kind.
 
 The repository has two independent workspaces:
 - `mobile/` — Expo React Native app
@@ -231,13 +231,14 @@ Copy `mobile/.env.example` to `mobile/.env.local`. Required vars:
 | `EXPO_PUBLIC_PUSH_API_KEY` | Bearer token matching worker's `PUSH_API_SECRET` |
 | `EAS_PROJECT_ID` | From `eas init` or expo.dev |
 
-Optional: `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_ERROR_REPORT_URL`. AdMob IDs (`GOOGLE_ADMOB_ANDROID_APP_ID`/`_IOS_APP_ID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID`/`_IOS`) are set in `eas.json`'s `production` env for release builds (dev falls back to Google test IDs); the app ID and ad-unit IDs must share one AdMob publisher account.
+Optional: `EXPO_PUBLIC_POSTHOG_KEY`/`_HOST` (analytics; off when unset and in dev), `EXPO_PUBLIC_APP_STORE_ID`, `EXPO_PUBLIC_PRIVACY_POLICY_URL`, `EXPO_PUBLIC_ERROR_REPORT_URL`. AdMob IDs (`GOOGLE_ADMOB_ANDROID_APP_ID`/`_IOS_APP_ID`, `EXPO_PUBLIC_ADMOB_BANNER_ANDROID`/`_IOS`) are set in `eas.json`'s `production` env for release builds (dev falls back to Google test IDs); the app ID and ad-unit IDs must share one AdMob publisher account.
 
 ### Services & Observability
 
 `src/services/` holds cross-feature services:
 - `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
 - `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
+- `analyticsService.ts` — Anonymous PostHog analytics: lifecycle events, screen views (reported from `RootNavigator`'s `onStateChange`, since PostHog's screen autocapture doesn't support React Navigation 7), and taps. `personProfiles: 'never'`, no session replay, and touch autocapture is narrowed to `testID`/`ph-label` because its default records the tapped element's text, which on calculator screens is the user's own data. Custom events go through `track()`, whose `EventProperties` map types every event and its allowed properties: `crs_calculated`, `push_enabled`/`_disabled`/`_enable_failed`, `pdf_exported`, `milestone_added`, `checklist_item_checked`, `ad_shown`. Key buttons carry a stable `ph-label` (e.g. `home-calculate-crs`, `menu-<id>`, `draws-filter-<category>`) so taps are readable in PostHog; add one to any new button you want to measure. **Never send calculator inputs, scores, timeline or checklist data as event properties.** The public privacy policy (`docs/PRIVACY_POLICY.md`) promises this.
 - `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row) for all users, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 3rd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'); `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
 ### Monetisation: ads only, no IAP

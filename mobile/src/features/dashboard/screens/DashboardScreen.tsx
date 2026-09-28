@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +20,7 @@ import type { ProgramCategory, RootStackParamList } from '@/types';
 import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { track } from '@/services/analyticsService';
 
 const EDU_OPTIONS_EN = [
   { key: 'lessThanSecondary', value: 'less_than_secondary' },
@@ -380,6 +381,14 @@ export default function DashboardScreen() {
       inputs.firstLangReading, inputs.firstLangWriting],
   );
 
+  // Counts the moment a score first appears (language scores reach CLB 4), not
+  // every edit afterwards and not revisits with a score already on file.
+  const hadScore = useRef(scoreReady);
+  useEffect(() => {
+    if (scoreReady && !hadScore.current) track('crs_calculated');
+    hadScore.current = scoreReady;
+  }, [scoreReady]);
+
   // Autosave (debounced 800 ms)
   useEffect(() => {
     const t = setTimeout(() => {
@@ -708,7 +717,7 @@ export default function DashboardScreen() {
       {/* ── Floating Analytics button + score pill ── */}
       <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="box-none">
         {scoreReady && (
-          <TouchableOpacity
+          <TouchableOpacity ph-label="crs-open-analytics"
             style={[st.fab, { backgroundColor: accent }]}
             onPress={() => navigation.navigate('Main', { screen: 'Analytics' })}
             activeOpacity={0.8}

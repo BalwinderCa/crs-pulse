@@ -207,14 +207,14 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             <Text style={[s.modalBtnTxt, { color: c.textMuted }]}>{t('timeline.cancel')}</Text>
           </TouchableOpacity>
           <Text style={[s.modalTitle, { color: c.textPrimary }]}>{editing ? t('timeline.editMilestone') : t('timeline.addMilestone')}</Text>
-          <TouchableOpacity onPress={handleSave} style={[s.modalBtn, { borderColor: accent }]}>
+          <TouchableOpacity ph-label="milestone-save" onPress={handleSave} style={[s.modalBtn, { borderColor: accent }]}>
             <Text style={[s.modalBtnTxt, { color: accent, fontWeight: typography.bold }]}>{t('timeline.save')}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Delete row — only in edit mode */}
         {editing && (
-          <TouchableOpacity
+          <TouchableOpacity ph-label="milestone-delete"
             style={[s.deleteRow, { borderBottomColor: c.border }]}
             onPress={handleDelete}
           >
@@ -452,7 +452,7 @@ export default function TimelineScreen() {
             })}
           </View>
 
-          <TouchableOpacity
+          <TouchableOpacity ph-label="timeline-add-first"
             style={[s.emptyBtn, { backgroundColor: accent }]}
             onPress={() => setModalMilestone(undefined)}
             accessible={true}
@@ -470,7 +470,7 @@ export default function TimelineScreen() {
               <MilestoneCard item={item} onEdit={() => setModalMilestone(item)} onDelete={() => remove(item.id)} />
             </View>
           ))}
-          <TouchableOpacity
+          <TouchableOpacity ph-label="timeline-add"
             style={[s.bottomAdd, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
             onPress={() => setModalMilestone(undefined)}
             accessible={true}

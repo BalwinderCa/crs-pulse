@@ -73,7 +73,7 @@ export function DrawCard({ draw, userScore }: Props) {
   const formattedDate = useMemo(() => format(parseISO(draw.date.slice(0, 10)), 'MMMM d yyyy'), [draw.date]);
 
   return (
-    <TouchableOpacity
+    <TouchableOpacity ph-label="draw-open-ircc"
       onPress={() => Linking.openURL(`${IRCC_ROUNDS_URL}?q=${draw.draw_number}`)}
       activeOpacity={0.7}
       accessible={true}

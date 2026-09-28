@@ -87,7 +87,7 @@ export default function DrawsScreen() {
       <View style={styles.filterWrap}>
         <View style={styles.filterRow}>
           {DRAW_FILTERS.map((f) => (
-            <TouchableOpacity
+            <TouchableOpacity ph-label={`draws-filter-${f.value}`}
               key={f.value}
               onPress={() => setActiveFilter(f.value)}
               style={[styles.filterBtn, activeFilter === f.value && styles.filterBtnActive]}

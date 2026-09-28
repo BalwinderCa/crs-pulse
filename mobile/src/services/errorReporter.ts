@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 /**
  * Production-safe error reporting.
  *
- * Privacy-first by design (the app is local-first and ships no analytics SDKs):
+ * Privacy-first by design (the app is local-first; analyticsService sends only anonymous usage events):
  * reports carry ONLY a message, stack, app version, platform and timestamp —
  * never CRS inputs or any user data. With no endpoint configured the reporter
  * is local-only (an in-memory ring buffer the UI can surface), so the default

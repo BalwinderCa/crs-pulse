@@ -1,6 +1,7 @@
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ADMOB_APP_OPEN_AD_UNIT, STORAGE_KEYS } from '@/constants';
+import { track } from '@/services/analyticsService';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler.
 declare const require: (module: string) => unknown;
@@ -178,6 +179,7 @@ export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
             timer = setTimeout(() => finish(false), SHOW_CEILING_MS);
             try {
               ad.show();
+              track('ad_shown', { format: 'app_open' });
             } catch {
               finish(false);
             }

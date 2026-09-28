@@ -8,6 +8,7 @@ import {
 } from '@/constants';
 import { borderRadius, palette, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
+import { track } from '@/services/analyticsService';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler
 // (the project's tsconfig pulls no node types).
@@ -30,6 +31,7 @@ interface AdsModule {
   BannerAd: React.ComponentType<{
     unitId: string;
     size: string;
+    onAdLoaded?: () => void;
     onAdFailedToLoad?: () => void;
   }>;
   BannerAdSize: { ANCHORED_ADAPTIVE_BANNER: string };
@@ -91,6 +93,7 @@ export function AdBanner() {
       <BannerAd
         unitId={BANNER_UNIT_ID}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        onAdLoaded={() => track('ad_shown', { format: 'banner' })}
         onAdFailedToLoad={() => setFailed(true)}
       />
     </View>
@@ -108,8 +111,12 @@ function NativeAdCard() {
     ads!.NativeAd!.createForAdRequest(NATIVE_UNIT_ID)
       .then((next) => {
         loaded = next;
-        if (cancelled) next.destroy();
-        else setAd(next);
+        if (cancelled) {
+          next.destroy();
+        } else {
+          setAd(next);
+          track('ad_shown', { format: 'native' });
+        }
       })
       .catch(() => undefined); // no fill — the slot just stays empty
     return () => {

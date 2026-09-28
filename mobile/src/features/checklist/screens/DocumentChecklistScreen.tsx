@@ -13,6 +13,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { maybeAskForReview } from '@/services/reviewPrompt';
 import { findChecklistProgram } from '../data/checklists';
 import type { RootStackParamList } from '@/types';
+import { track } from '@/services/analyticsService';
 
 export default function DocumentChecklistScreen() {
   const c = useColors();
@@ -41,6 +42,7 @@ export default function DocumentChecklistScreen() {
     setChecked((prev) => {
       const next = { ...prev, [id]: !prev[id] };
       AsyncStorage.setItem(storageKey, JSON.stringify(next)).catch(() => {});
+      if (next[id]) track('checklist_item_checked');
       // Every document for this program is now ready — the one moment in the app
       // we ask for a store review. Firing on the toggle rather than on `allDone`
       // keeps it to the tap that completes the list, not every later visit.

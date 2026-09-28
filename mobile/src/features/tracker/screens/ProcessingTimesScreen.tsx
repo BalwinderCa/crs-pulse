@@ -57,7 +57,7 @@ export default function ProcessingTimesScreen() {
               key={cat.id}
               style={[s.card, { borderColor: c.border, backgroundColor: c.surfaceCard }]}
             >
-              <TouchableOpacity
+              <TouchableOpacity ph-label={`processing-${cat.id}`}
                 style={s.catRow}
                 onPress={() => setOpen(expanded ? null : cat.id)}
                 activeOpacity={0.6}
@@ -103,7 +103,7 @@ export default function ProcessingTimesScreen() {
           );
         })}
 
-        <TouchableOpacity
+        <TouchableOpacity ph-label="processing-official-link"
           style={[s.officialRow, { borderColor: c.border, backgroundColor: c.surfaceSecondary }]}
           onPress={() => Linking.openURL(OFFICIAL_URL).catch(() => {})}
           activeOpacity={0.65}
