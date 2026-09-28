@@ -59,8 +59,8 @@ eas submit                                      # Submit to app stores
 ```
 
 **Store status (as of 2026-09-27).** iOS: **v1.0.8 (build 51)** is live. **v1.0.9 (build 54)**
-was submitted 2026-09-27 and is **Waiting for Review**, set to **manual release**, so after
-approval someone must click "Release This Version" in App Store Connect before users get it.
+was submitted 2026-09-27 and is **Waiting for Review**, set to **release automatically** once
+approved (1.0.8 used manual release).
 1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
 onboarding/privacy copy that goes with it. The App Store privacy label was updated the same day:
 Product Interaction, Device ID and Coarse Location each gained the Analytics purpose. Android is
