@@ -32,6 +32,13 @@ export function createAnalytics(apiKey: string | null, dev: boolean): PostHog | 
     enableSessionReplay: false,
     // Makes identify() a no-op, so no code path can attach data to a person.
     personProfiles: 'never',
+    // PostHog reads these from expo-localization, which doesn't compile on
+    // Xcode 26 at SDK 52 (non-exhaustive switch over calendar identifiers).
+    // Hermes' Intl gives the same two values without a native module.
+    customAppProperties: (properties) => {
+      const { locale, timeZone } = Intl.DateTimeFormat().resolvedOptions();
+      return { ...properties, $locale: locale, $timezone: timeZone };
+    },
   });
 }
 

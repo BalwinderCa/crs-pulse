@@ -291,8 +291,6 @@ module.exports = () => ({
         },
       },
     ],
-    // Locale for PostHog's device properties (analyticsService).
-    'expo-localization',
   ],
   scheme: 'crspulse',
   extra: {
