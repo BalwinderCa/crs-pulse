@@ -161,7 +161,7 @@ module.exports = () => ({
   name: 'CRS Pulse',
   slug: 'crs-pulse',
   owner: 'balwinder98',
-  version: '1.0.8',
+  version: '1.0.9',
   newArchEnabled: true,
   orientation: 'portrait',
   icon: './assets/icon.png',
