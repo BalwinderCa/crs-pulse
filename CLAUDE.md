@@ -58,20 +58,34 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-09-09).** iOS: **v1.0.7 (build 46)** is live; **v1.0.8 (build 51)**
-was submitted 2026-09-09 and is **Waiting for Review** (submission
-`77c88281-42ae-41bc-817c-124f04d59cde`). 1.0.8 exists because App Store Connect freezes
-screenshots on a live version — only Promotional Text is editable without review — so refreshing
-store assets costs a build and a review cycle. It also carries the IAP removal, which live 1.0.7
-does not. Android is **not live** — the newest Play upload is **v1.0.7 / versionCode 21**, in the
-**closed testing** track, with the Production track Inactive. The two platforms are
-feature-identical: the only app-source difference from `ed8bc26` (the commit 1.0.7 shipped from)
-is the IAP removal below, and every `Platform.OS` branch is a platform idiom
-(keyboard avoidance, date picker, store URL, ad-unit choice, iOS-only ATT prompt) rather than a
-gated feature. Google gates production
-access behind "12 testers opted in, for 14 continuous days"; the account currently has **0**,
-so `submit.production.android.track` stays `alpha` — a `production` submit would be rejected.
-Promote the track only after Play Console's "Apply for production" button goes live.
+**Store status (as of 2026-09-27).** iOS: **v1.0.8 (build 51)** is live. **v1.0.9 (build 54)**
+was submitted 2026-09-27 and is **Waiting for Review**, set to **manual release**, so after
+approval someone must click "Release This Version" in App Store Connect before users get it.
+1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
+onboarding/privacy copy that goes with it. The App Store privacy label was updated the same day:
+Product Interaction, Device ID and Coarse Location each gained the Analytics purpose. Android is
+**not live**. The newest Play upload is **v1.0.9 / versionCode 23**, in the **closed testing**
+track, with the Production track Inactive. versionCode 23 was built from `3b850fd`, one commit
+before iOS build 54, so it still bundles `expo-localization` and PostHog reads the locale from
+it. The two platforms are otherwise feature-identical: every `Platform.OS` branch is a platform
+idiom (keyboard avoidance, date picker, store URL, ad-unit choice, iOS-only ATT prompt) rather
+than a gated feature. Google gates production access behind "12 testers opted in, for 14
+continuous days"; the account currently has **0**, so `submit.production.android.track` stays
+`alpha` — a `production` submit would be rejected. Promote the track only after Play Console's
+"Apply for production" button goes live.
+
+**Two EAS build failures from 1.0.9 (2026-09-27), both from adding PostHog on SDK 52:**
+
+1. *Bundle JavaScript: `Unable to resolve module @posthog/core/surveys`.* That subpath only
+   exists in `@posthog/core`'s package.json `"exports"`, which Metro on SDK 52 ignores.
+   `mobile/metro.config.js` maps `@posthog/core/*` to its CommonJS build rather than turning on
+   `unstable_enablePackageExports` for every dependency. Delete it after the SDK 53+ upgrade.
+2. *iOS `XCODE_BUILD_ERROR: switch must be exhaustive`* in `ExpoLocalization`. EAS's
+   `macos-sequoia-15.6-xcode-26.0` image adds `Calendar.Identifier` cases that
+   `expo-localization` 16.0.1 (SDK 52's latest) doesn't handle. It was removed, and PostHog gets
+   `$locale`/`$timezone` from Hermes' `Intl` instead. **Before adding any native module on SDK
+   52, check it compiles on Xcode 26.** Run `npx expo export` to catch bundling errors locally
+   before spending a ~10-minute EAS upload.
 
 **Two Play upload gates that bit us on 2026-09-08, both easy to misread:**
 
