@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-16",
-  "updatedFull": "September 16, 2026",
-  "distributionAsOf": "September 13, 2026",
+  "updated": "2026-09-28",
+  "updatedFull": "September 28, 2026",
+  "distributionAsOf": "September 27, 2026",
   "rounds": [
+    {
+      "number": "445",
+      "date": "2026-09-28",
+      "dateFull": "September 28, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 733,
+      "crs": 725
+    },
     {
       "number": "444",
       "date": "2026-09-16",
@@ -173,52 +182,43 @@
       "label": "Senior managers with Canadian Work Experience",
       "size": 500,
       "crs": 392
-    },
-    {
-      "number": "425",
-      "date": "2026-07-09",
-      "dateFull": "July 9, 2026",
-      "name": "French-Language proficiency 2026-Version 2",
-      "label": "French-Language proficiency",
-      "size": 5000,
-      "crs": 420
     }
   ],
   "pool": [
     {
       "label": "601–1200",
-      "count": 574
+      "count": 728
     },
     {
       "label": "501–600",
-      "count": 20784
+      "count": 21070
     },
     {
       "label": "451–500",
-      "count": 72107
+      "count": 73131
     },
     {
       "label": "401–450",
-      "count": 61560
+      "count": 62611
     },
     {
       "label": "351–400",
-      "count": 46782
+      "count": 47298
     },
     {
       "label": "301–350",
-      "count": 17240
+      "count": 17359
     },
     {
       "label": "0–300",
-      "count": 7746
+      "count": 7707
     }
   ],
-  "poolTotal": 226793,
+  "poolTotal": 229904,
   "ytd": {
     "year": 2026,
-    "rounds": 56,
-    "invitations": 128982,
+    "rounds": 57,
+    "invitations": 129715,
     "categories": 9
   }
 }
