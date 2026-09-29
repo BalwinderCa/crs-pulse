@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-28",
-  "updatedFull": "September 28, 2026",
+  "updated": "2026-09-29",
+  "updatedFull": "September 29, 2026",
   "distributionAsOf": "September 27, 2026",
   "rounds": [
+    {
+      "number": "446",
+      "date": "2026-09-29",
+      "dateFull": "September 29, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 2000,
+      "crs": 518
+    },
     {
       "number": "445",
       "date": "2026-09-28",
@@ -173,15 +182,6 @@
       "label": "Provincial Nominee Program",
       "size": 511,
       "crs": 744
-    },
-    {
-      "number": "426",
-      "date": "2026-07-10",
-      "dateFull": "July 10, 2026",
-      "name": "Senior managers with Canadian Work Experience, 2026-Version 1",
-      "label": "Senior managers with Canadian Work Experience",
-      "size": 500,
-      "crs": 392
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 229904,
   "ytd": {
     "year": 2026,
-    "rounds": 57,
-    "invitations": 129715,
+    "rounds": 58,
+    "invitations": 131715,
     "categories": 9
   }
 }
