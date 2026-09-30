@@ -51,7 +51,9 @@ Analytics is disabled in development builds.
 
 ### Website (crspulse.com)
 
-The website uses Vercel Web Analytics to count page views. It sets no cookies and stores nothing on your device. For each visit it records the page, the referring site, your country, browser, operating system and device type. Vercel does not store your IP address or build a profile of you, and visits cannot be linked across days or across websites. The calculators on the website run entirely in your browser; nothing you enter is sent anywhere.
+The website uses Vercel Web Analytics to count page views. It sets no cookies and stores nothing on your device. For each visit it records the page, the referring site, your country, browser, operating system and device type. Vercel does not store your IP address or build a profile of you, and visits cannot be linked across days or across websites. The website also sends page views, time on page and clicks to PostHog, through `t.crspulse.com`. Click events record which link or button was clicked, never the text on the page, so calculator results are not included. It sets no cookies and stores nothing on your device: PostHog recognises a returning visitor only within the same day, from a one-way hash it computes on its servers. As with the app, PostHog stores the IP address and an approximate location (country, region and city) with each event. There is no session recording.
+
+The calculators on the website run entirely in your browser; nothing you enter is sent anywhere.
 
 ### Google AdMob (ads)
 
@@ -61,7 +63,7 @@ The app shows banner ads served by Google AdMob. AdMob may collect device identi
 
 - No user accounts or login
 - No in-app purchases or payment information
-- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK in the app, and Vercel's cookieless page-view counts on the website, all described above
+- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK in the app, and cookieless page-view analytics on the website (Vercel and PostHog), all described above
 - No session recordings
 - No sale of personal data
 - No immigration profile data on our servers
