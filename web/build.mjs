@@ -32,6 +32,13 @@ const CONTACT = 'contact@crspulse.com';
 const SITE = 'https://www.crspulse.com';
 const BUILT = new Date().toISOString().slice(0, 10);
 
+// The newest round, for the draws page's title/description. The site rebuilds on
+// every mirror commit, so search snippets show the current cutoff.
+const LATEST = FEED.rounds[0];
+const YEAR = String(LATEST.date).slice(0, 4);
+const fmtN = (n) => Number(n).toLocaleString('en-CA');
+const SHORT_DATE = new Date(`${LATEST.date}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
 // Every public page, in nav order. Single source of truth for <title>/<meta description>,
 // the markdown twin agents get via `Accept: text/markdown`, sitemap.xml and llms.txt.
 // vercel.json's redirects/headers must list the same paths — web/build.test.mjs asserts it.
@@ -44,19 +51,19 @@ const PAGES = [
   },
   {
     file: 'calculators', path: '/calculators', priority: '0.9',
-    title: 'Calculators \u2014 CRS Pulse',
-    description: 'CRS, FSW 67-point, BC PNP SIRS and SINP EOI \u2014 four official Express Entry and provincial nominee calculators, computed live in your browser.',
+    title: `CRS Calculator ${YEAR}: Express Entry, FSW, BC PNP & SINP`,
+    description: 'Free CRS score calculator for Express Entry, plus the FSW 67-point grid, BC PNP SIRS and Saskatchewan SINP EOI points. Runs in your browser, nothing uploaded.',
     llm: 'The four point grids with their inputs, maximums and pass marks. Run them in-browser, no upload.',
   },
   {
     file: 'draws', path: '/draws', priority: '0.9',
-    title: 'Draws & Trends \u2014 CRS Pulse',
-    description: 'Every Express Entry draw, fetched straight from IRCC, with category filters, cutoff trends, pool composition and instant push alerts.',
+    title: `Express Entry Draws ${YEAR}: Latest CRS Cutoffs | CRS Pulse`,
+    description: `Latest Express Entry draw #${LATEST.number} (${SHORT_DATE}): ${LATEST.label}, CRS ${LATEST.crs}, ${fmtN(LATEST.size)} ITAs. Every round from IRCC with cutoff trends and pool data.`,
     llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
   },
   {
     file: 'features', path: '/features', priority: '0.7',
-    title: 'Features \u2014 CRS Pulse',
+    title: 'Express Entry App: Draw Alerts, PR Tracker & Checklists',
     description: 'Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics \u2014 free.',
     llm: 'What the iPhone app does at each stage: tracker, checklists, timeline, alerts, analytics.',
   },
@@ -456,8 +463,19 @@ function shell({ title, description, path, jsonld, noindex, body }) {
 <meta property="og:title" content="${title}">
 <meta property="og:description" content="${description}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="CRS Pulse">
+<meta property="og:locale" content="en_CA">
+${path ? `<meta property="og:url" content="${SITE}${path}">` : ''}
+<meta property="og:image" content="${SITE}/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="CRS Pulse: Express Entry CRS calculator and IRCC draw tracker">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="${SITE}/img/og.png">
 ${head}
-${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>` : ''}
+${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
 ${VERCEL_ANALYTICS}
 ${POSTHOG_WEB}
@@ -1489,7 +1507,7 @@ function calculatorsPage() {
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>
 ${CALC_SCRIPT}`;
-  return shell({ ...page('calculators'), body });
+  return shell({ ...page('calculators'), jsonld: calcJsonLd(), body });
 }
 
 // ------------------------------------------------------------------ DOCS
@@ -1775,6 +1793,38 @@ ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canad
 // ------------------------------------------------------------------ JSON-LD
 // Homepage identity graph: the product, who publishes it, the site, and the FAQ that is
 // already rendered on the page (same source array, so the markup can't drift from it).
+// Home > page, so results show the site path instead of a bare URL.
+const crumbsJsonLd = (path, title) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'CRS Pulse', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: title.replace(/\s*[|\u2014]\s*CRS Pulse$/, ''), item: `${SITE}${path}` },
+  ],
+});
+
+// The four in-browser calculators as free web applications.
+const calcJsonLd = () => ({
+  '@context': 'https://schema.org',
+  '@graph': [
+    ['CRS calculator (Express Entry)', 'Comprehensive Ranking System score out of 1,200, using IRCC\u2019s published grid.'],
+    ['FSW 67-point calculator', 'Federal Skilled Worker selection grid: six factors, 67 points to be eligible.'],
+    ['BC PNP SIRS calculator', 'British Columbia Skills Immigration Registration System score out of 200.'],
+    ['SINP EOI points calculator', 'Saskatchewan Immigrant Nominee Program Expression of Interest score out of 110.'],
+  ].map(([name, description]) => ({
+    '@type': 'WebApplication',
+    name,
+    description,
+    url: `${SITE}/calculators`,
+    applicationCategory: 'UtilitiesApplication',
+    browserRequirements: 'Requires JavaScript',
+    operatingSystem: 'Any',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD' },
+    publisher: { '@id': `${SITE}/#org` },
+  })),
+});
+
 const homeJsonLd = () => ({
   '@context': 'https://schema.org',
   '@graph': [
@@ -1844,6 +1894,9 @@ function copyAsset(from, to) {
 }
 
 copyAsset('logo.svg', 'img/logo.svg');
+// Social preview (1200x630). Regenerate from og-source.html with headless Chrome:
+// chrome --headless=new --window-size=1200,630 --screenshot=og.png og-source.html
+copyAsset('og.png', 'img/og.png');
 // Real captures of the shipping iOS build, shown in the app section. WebP because they
 // are the page's only raster payload; the PNG originals stay under assets/screenshots
 // for the store listings.
