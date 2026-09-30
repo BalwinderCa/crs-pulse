@@ -1,6 +1,6 @@
 # CRS Pulse Privacy Policy
 
-**Effective date:** September 29, 2026  
+**Effective date:** September 30, 2026  
 **App:** CRS Pulse – Express Entry Calculator  
 **Contact:** contact@crspulse.com
 
@@ -49,6 +49,10 @@ Like any internet request, sending these events reveals your device's IP address
 
 Analytics is disabled in development builds.
 
+### Website (crspulse.com)
+
+The website uses Vercel Web Analytics to count page views. It sets no cookies and stores nothing on your device. For each visit it records the page, the referring site, your country, browser, operating system and device type. Vercel does not store your IP address or build a profile of you, and visits cannot be linked across days or across websites. The calculators on the website run entirely in your browser; nothing you enter is sent anywhere.
+
 ### Google AdMob (ads)
 
 The app shows banner ads served by Google AdMob. AdMob may collect device identifiers and ad-interaction data to serve and measure ads, as described in [Google's privacy policy](https://policies.google.com/privacy). On iOS, the app first asks for App Tracking Transparency permission; if you decline, ads are still shown but are not personalised using your device identifier.
@@ -57,7 +61,7 @@ The app shows banner ads served by Google AdMob. AdMob may collect device identi
 
 - No user accounts or login
 - No in-app purchases or payment information
-- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK described above
+- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK in the app, and Vercel's cookieless page-view counts on the website, all described above
 - No session recordings
 - No sale of personal data
 - No immigration profile data on our servers

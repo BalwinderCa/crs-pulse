@@ -316,6 +316,10 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 .doc-card{ padding:0; }
 `;
 
+// Vercel Web Analytics: cookieless page views, served first-party from /_vercel/insights.
+// Does nothing until Web Analytics is enabled on the Vercel project (the script 404s).
+const VERCEL_ANALYTICS = `<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>`;
 const THEME_INIT = `<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('crspulse-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>`;
 const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
@@ -437,6 +441,7 @@ function shell({ title, description, path, jsonld, noindex, body }) {
 ${head}
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld).replace(/</g, '\\u003c')}</script>` : ''}
 ${THEME_INIT}
+${VERCEL_ANALYTICS}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
