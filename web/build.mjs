@@ -155,6 +155,52 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   [data-reveal]{ animation:fadeUp both linear; animation-timeline:view(); animation-range:entry 0% cover 14%; }
 }
 @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } html{ scroll-behavior:auto; } }
+/* header */
+.sitehead{ position:sticky; top:0; z-index:50; background:var(--navbg); backdrop-filter:saturate(1.4) blur(14px); -webkit-backdrop-filter:saturate(1.4) blur(14px); border-bottom:1px solid var(--hairline); }
+.headbar{ display:flex; align-items:center; gap:28px; height:64px; }
+.brand{ display:flex; align-items:center; gap:10px; flex-shrink:0; color:var(--text); }
+.brand:hover{ color:var(--text); }
+.brandmark{ width:32px; height:32px; border-radius:9px; display:block; box-shadow:0 1px 2px rgba(201,42,34,.25), inset 0 0 0 1px rgba(255,255,255,.08); transition:transform .2s ease; }
+.brand:hover .brandmark{ transform:rotate(-6deg) scale(1.04); }
+.wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18.5px; letter-spacing:-.45px; line-height:1; }
+.navlinks{ display:flex; align-items:stretch; gap:22px; height:100%; }
+.navlink{ position:relative; display:flex; align-items:center; font-size:14.5px; font-weight:500; color:var(--text2); transition:color .15s ease; }
+.navlink:hover{ color:var(--text); }
+.navlink[aria-current="page"]{ color:var(--text); font-weight:600; }
+.navlink[aria-current="page"]::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:var(--accent); }
+.headright{ margin-left:auto; display:flex; align-items:center; gap:10px; }
+.livechip{ display:inline-flex; align-items:center; gap:8px; height:34px; padding:0 12px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:500; font-variant-numeric:tabular-nums; white-space:nowrap; transition:border-color .15s ease, color .15s ease; }
+.livechip:hover{ color:var(--text); border-color:var(--text2); }
+.livechip b{ color:var(--text); font-weight:700; }
+.livesep{ width:1px; height:12px; background:var(--border); }
+.livedot{ position:relative; width:7px; height:7px; border-radius:50%; background:var(--success); }
+@media (prefers-reduced-motion: no-preference){
+  .livedot::after{ content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--success); opacity:0; animation:livering 2.4s ease-out infinite; }
+}
+@keyframes livering{ 0%{ transform:scale(.4); opacity:.7 } 80%,100%{ transform:scale(1.25); opacity:0 } }
+.theme-btn{ width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s ease, border-color .15s ease; flex-shrink:0; }
+.headcta{ padding:0 15px; height:34px; font-size:14px; border-radius:9px; gap:7px; }
+.menu{ display:none; position:relative; }
+.menu summary{ list-style:none; width:36px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.menu summary::-webkit-details-marker{ display:none; }
+.burger{ display:flex; flex-direction:column; gap:5px; width:15px; }
+.burger i{ display:block; height:1.6px; border-radius:2px; background:var(--text); transition:transform .2s ease; }
+.menu[open] .burger i:first-child{ transform:translateY(3.3px) rotate(45deg); }
+.menu[open] .burger i:last-child{ transform:translateY(-3.3px) rotate(-45deg); }
+.menupanel{ position:absolute; right:0; top:calc(100% + 10px); width:min(280px, calc(100vw - 32px)); padding:8px; border-radius:14px; border:1px solid var(--border); background:var(--card); box-shadow:var(--lift); display:flex; flex-direction:column; }
+.menulink{ padding:11px 12px; border-radius:9px; font-size:15px; font-weight:500; color:var(--text); }
+.menulink:hover{ background:var(--bg2); color:var(--text); }
+.menulink{ position:relative; }
+.menulink[aria-current="page"]{ background:var(--bg2); font-weight:600; }
+.menulink[aria-current="page"]::before{ content:""; position:absolute; left:0; top:11px; bottom:11px; width:2.5px; border-radius:2px; background:var(--accent); }
+.menufoot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; padding:10px 4px 2px; border-top:1px solid var(--hairline); }
+@media (max-width:980px){ .headright > .livechip{ display:none; } }
+@media (max-width:760px){
+  .headbar{ gap:16px; height:58px; }
+  .navlinks, .head-theme{ display:none!important; }
+  .menu{ display:block; }
+}
+@media (max-width:360px){ .wordmark{ font-size:16.5px; } .headcta{ padding:0 11px; font-size:13px; } }
 /* skip link: off-screen until focused */
 .skip{ position:absolute; left:12px; top:-60px; z-index:100; background:var(--text); color:var(--bg); padding:10px 14px; border-radius:8px; font-weight:600; font-size:14px; }
 .skip:focus{ top:12px; color:var(--bg); }
@@ -164,7 +210,7 @@ p, li{ text-wrap:pretty; }
 .calctab{ display:inline-flex; align-items:center; gap:8px; }
 .calctab svg{ opacity:.8; flex-shrink:0; }
 .btn:active{ transform:translateY(1px) scale(.985); }
-.theme-btn:hover{ color:var(--text)!important; border-color:var(--text2)!important; }
+.theme-btn:hover{ color:var(--text); border-color:var(--text2); }
 /* calculator score bar: phones only, hidden while the full result card is visible */
 .scorebar{ display:none; }
 @media (max-width:900px){
@@ -200,7 +246,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .foot-link:hover{ color:var(--accentInk); }
 .link-accent{ color:var(--accentInk); }
 .link-accent:hover{ color:var(--accent)!important; }
-.theme-btn:hover{ color:var(--text)!important; border-color:var(--text2)!important; }
+.theme-btn:hover{ color:var(--text); border-color:var(--text2); }
 .lift{ transition:border-color .15s ease,background .15s ease; }
 .lift:hover{ border-color:var(--text2)!important; }
 /* data rows */
@@ -307,7 +353,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 }
 /* Below this the header cannot hold logo + links + toggle + CTA without the CTA
    falling off the edge, so the links step aside; the footer carries the full set. */
-@media (max-width:560px){ .navlinks{ display:none!important; } }
+
 @media (max-width:640px){
   body{ font-size:15.5px; }
   /* one item per row reads better than two narrow columns of wrapped text */
@@ -341,12 +387,10 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
   .cells > div:nth-child(4){ border-left:1px solid var(--hairline); }
   .drawscroll{ overflow-x:auto; }
   .drawscroll .drawinner{ min-width:600px; }
-  .navlinks{ gap:0!important; }
-  .navlink{ padding:7px 7px; font-size:13.5px; }
   .shots{ gap:12px!important; }
 }
 @media (max-width:430px){ .fields{ grid-template-columns:minmax(0,1fr)!important; } }
-@media (max-width:380px){ .navlink{ font-size:12.5px; padding:7px 5px; } }
+
 .doc-card{ padding:0; }
 `;
 
@@ -401,6 +445,8 @@ const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
 function setThemeIcons(t){var i=t==='dark'?${JSON.stringify(icon('sun', 17))}:${JSON.stringify(icon('moon', 16))};document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.innerHTML=i})}
 setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
+document.addEventListener('click',function(e){document.querySelectorAll('details.menu[open]').forEach(function(m){if(!m.contains(e.target))m.removeAttribute('open')})});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('details.menu[open]').forEach(function(m){m.removeAttribute('open');m.querySelector('summary').focus()})});
 </script>`;
 
 // ------------------------------------------------------------------ chrome
@@ -409,31 +455,37 @@ setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
 function nav(active, cta) {
-  const link = (href, label, key) => {
-    const on = active === key;
-    return `<a class="navlink" href="${href}"${on ? ' aria-current="page"' : ''} style="color:${on ? 'var(--text)' : 'var(--text2)'};${on ? 'background:var(--bg3);' : ''}font-weight:${on ? 600 : 500}">${label}</a>`;
-  };
-  // Two CTAs everywhere: the practical one (run the calculator) sits first, the App Store
-  // link second, so the header offers the same choice the hero does.
+  const links = [['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/features', 'Features', 'features']];
+  const link = ([href, label, key], cls) =>
+    `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
+  // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
-    ? `<a class="btn btn-accent" href="${APP_STORE_URL}" style="padding:9px 15px;font-size:14px">Get the app</a>`
-    : `<a class="btn btn-accent" href="/calculators" style="padding:9px 15px;font-size:14px">Calculate CRS</a>`;
+    ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>Get the app</span></a>`
+    : `<a class="btn btn-accent headcta" href="/calculators">Calculate CRS</a>`;
+  const latest = DRAWS[0];
+  const live = `<a class="livechip" href="/draws" title="Latest Express Entry draw: round #${latest.no}, ${latest.label}, ${latest.date}"><span class="livedot" aria-hidden="true"></span><span>#${latest.no}</span><span class="livesep" aria-hidden="true"></span><span>CRS <b>${latest.cutoff}</b></span></a>`;
+  const themeBtn = (cls) => `<button class="theme-btn ${cls}" type="button" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode">${icon('moon', 16)}</button>`;
   return `
 <a class="skip" href="#content">Skip to content</a>
-<header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:var(--navbg);border-bottom:1px solid var(--border)">
-  <nav class="wrap" aria-label="Main" style="padding-top:11px;padding-bottom:11px;display:flex;align-items:center;gap:14px">
-    <a href="/" style="display:flex;align-items:center;gap:8px;flex-shrink:0;color:var(--text)" aria-label="CRS Pulse home">
-      <span aria-hidden="true" style="width:9px;height:9px;border-radius:2px;background:var(--accent);flex-shrink:0"></span>
-      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.4px;color:var(--text)">CRS Pulse</span>
+<header class="sitehead">
+  <nav class="wrap headbar" aria-label="Main">
+    <a class="brand" href="/" aria-label="CRS Pulse home">
+      <img src="/img/logo-mark.png" width="32" height="32" alt="" class="brandmark">
+      <span class="wordmark">CRS Pulse</span>
     </a>
-    <div class="navlinks" style="display:flex;align-items:center;gap:2px;margin-left:10px">
-      ${link('/calculators', 'Calculators', 'calc')}
-      ${link('/draws', 'Draws', 'draws')}
-      ${link('/features', 'Features', 'features')}
-    </div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <button class="theme-btn" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s ease">${icon('moon', 16)}</button>
+    <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}</div>
+    <div class="headright">
+      ${live}
+      ${themeBtn('head-theme')}
       ${ctaBtn}
+      <details class="menu">
+        <summary aria-label="Open menu"><span class="burger" aria-hidden="true"><i></i><i></i></span></summary>
+        <div class="menupanel">
+          ${links.map((l) => link(l, 'menulink')).join('')}
+          <a class="menulink" href="/#faq">FAQ</a>
+          <div class="menufoot">${live}${themeBtn('menu-theme')}</div>
+        </div>
+      </details>
     </div>
   </nav>
 </header>
@@ -456,7 +508,7 @@ const footerFull = () => `
     <div class="footgrid" style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:28px;margin-bottom:32px">
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-          <span aria-hidden="true" style="width:9px;height:9px;border-radius:2px;background:var(--accent)"></span>
+          <img src="/img/logo-mark.png" width="22" height="22" alt="" style="border-radius:6px;display:block">
           <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text)">CRS Pulse</span>
         </div>
         <p style="font-size:13.5px;line-height:1.6;color:var(--text2);max-width:260px">An Express Entry score calculator, IRCC draw tracker and application timeline for people applying for Canadian permanent residence.</p>
@@ -1973,6 +2025,7 @@ copyAsset('logo.svg', 'img/logo.svg');
 // Social preview (1200x630). Regenerate from og-source.html with headless Chrome:
 // chrome --headless=new --window-size=1200,630 --screenshot=og.png og-source.html
 copyAsset('og.png', 'img/og.png');
+copyAsset('logo-mark.png', 'img/logo-mark.png');
 copyAsset('favicon.png', 'favicon.png');
 copyAsset('apple-touch-icon.png', 'apple-touch-icon.png');
 // Real captures of the shipping iOS build, shown in the app section. WebP because they
