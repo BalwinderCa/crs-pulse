@@ -6,11 +6,14 @@ export const APP_NAME = 'CRS Pulse';
 // drifts from the built binary.
 export const APP_VERSION = Constants.expoConfig?.version ?? '1.0.1';
 
+/** Play package name (app.config.js `android.package`). */
+export const ANDROID_PACKAGE = 'com.crspulse.app';
+
 /** Public store listing for this platform — what "Share App" sends. iOS is live;
  *  the Play listing resolves once the Android build is published. */
 export const STORE_URL = Platform.OS === 'ios'
   ? 'https://apps.apple.com/ca/app/crs-pulse-ircc-tracker/id6784619403'
-  : 'https://play.google.com/store/apps/details?id=com.crspulse.app';
+  : `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
 export const PRIVACY_POLICY_URL =
   'https://www.crspulse.com/privacy';

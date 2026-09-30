@@ -934,6 +934,7 @@ const en = {
     contactUs: 'Contact Us',
     shareApp: 'Share App',
     reviewAppStore: 'Review on App Store',
+    reviewPlayStore: 'Rate on Google Play',
     contactIntro: 'Questions, feedback, or something not working? We usually reply within a couple of days.',
     emailUs: 'Email us',
     shareMessage: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration!',

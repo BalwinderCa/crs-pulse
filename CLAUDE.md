@@ -68,9 +68,14 @@ Product Interaction, Device ID and Coarse Location each gained the Analytics pur
 track, with the Production track Inactive. versionCode 23 was built from `3b850fd`, one commit
 before iOS build 54, so it still bundles `expo-localization` and PostHog reads the locale from
 it. The two platforms are otherwise feature-identical: every `Platform.OS` branch is a platform
-idiom (keyboard avoidance, date picker, store URL, ad-unit choice, iOS-only ATT prompt) rather
-than a gated feature. Google gates production access behind "12 testers opted in, for 14
-continuous days"; the account currently has **0**, so `submit.production.android.track` stays
+idiom (keyboard avoidance, date picker, store URL, share payload, ad-unit choice, iOS-only ATT
+prompt, where the side menu's review item links) rather than a gated feature. Keep it that way:
+when a feature can't work the same on one platform, adapt it rather than hiding it there. (The
+review item was iOS-only through Android versionCode 23; from the next build Android shows "Rate
+on Google Play", which opens the Play listing because Play has no write-review deep link.) Google gates production access behind "12 testers opted in, for 14
+continuous days"; the account reached **12 opted-in testers on 2026-09-29**, so the earliest
+the button can go live is **2026-10-13**, and only if none of them opt out before then (dropping
+below 12 restarts the clock). Until then `submit.production.android.track` stays
 `alpha` — a `production` submit would be rejected. Promote the track only after Play Console's
 "Apply for production" button goes live.
 

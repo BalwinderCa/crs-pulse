@@ -935,6 +935,8 @@ const fr: TranslationKeys = {
     contactUs: 'Nous contacter',
     shareApp: 'Partager l’application',
     reviewAppStore: 'Évaluer sur l’App Store',
+    // [REVIEW] libellé Google Play
+    reviewPlayStore: 'Évaluer sur Google Play',
     contactIntro: 'Une question, un commentaire ou un problème ? Nous répondons généralement en quelques jours.',
     emailUs: 'Écrivez-nous',
     shareMessage: 'Découvrez CRS Pulse — calculateur CRS et suivi des tirages Entrée express gratuit pour l’immigration au Canada !',

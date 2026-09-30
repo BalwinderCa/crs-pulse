@@ -11,7 +11,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { RootStackParamList } from '@/types';
-import { PRIVACY_POLICY_URL, STORE_URL } from '@/constants';
+import { ANDROID_PACKAGE, PRIVACY_POLICY_URL, STORE_URL } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -199,7 +199,13 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
   };
 
   const handleRate = () => {
-    Linking.openURL(`${STORE_URL}?action=write-review`);
+    if (Platform.OS === 'ios') {
+      Linking.openURL(`${STORE_URL}?action=write-review`);
+    } else {
+      // Play has no write-review deep link; the listing's "Rate this app" section
+      // is one scroll away. Prefer the Play Store app, then the web listing.
+      Linking.openURL(`market://details?id=${ANDROID_PACKAGE}`).catch(() => Linking.openURL(STORE_URL));
+    }
     onClose();
   };
 
@@ -230,10 +236,7 @@ export function SideMenu({ visible, onClose, onOpen }: Props) {
     { id: 'report-issue', icon: 'bug',   label: t('menu.reportIssue'), onPress: navigateTo('ReportIssue'), accent: palette.canadaRed },
     { id: 'contact', icon: 'mail',  label: t('menu.contactUs'),   onPress: () => setDetail('contact'), accent: palette.blue },
     { id: 'share', icon: 'share', label: t('menu.shareApp'),    onPress: handleShare,                accent: palette.success },
-    // iOS only — the label says App Store, and Play has no write-review deep link.
-    ...(Platform.OS === 'ios'
-      ? [{ id: 'review', icon: 'star' as const, label: t('menu.reviewAppStore'), onPress: handleRate, accent: palette.warning }]
-      : []),
+    { id: 'review', icon: 'star', label: t(Platform.OS === 'ios' ? 'menu.reviewAppStore' : 'menu.reviewPlayStore'), onPress: handleRate, accent: palette.warning },
   ];
 
   const renderItem = (item: MenuItem, idx: number, arr: MenuItem[]) => (
