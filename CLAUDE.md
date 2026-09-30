@@ -58,9 +58,9 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-09-27).** iOS: **v1.0.8 (build 51)** is live. **v1.0.9 (build 54)**
-was submitted 2026-09-27 and is **Waiting for Review**, set to **release automatically** once
-approved (1.0.8 used manual release).
+**Store status (as of 2026-09-29).** iOS: **v1.0.9 (build 54)** is live. It was submitted
+2026-09-27 and released automatically on approval; PostHog shows Apple's review devices on
+2026-09-28/29 and the first real users from 2026-09-29 ~07:20 UTC.
 1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
 onboarding/privacy copy that goes with it. The App Store privacy label was updated the same day:
 Product Interaction, Device ID and Coarse Location each gained the Analytics purpose. Android is
@@ -253,6 +253,8 @@ Optional: `EXPO_PUBLIC_POSTHOG_KEY`/`_HOST` (analytics; off when unset and in de
 - `pushService.ts` — Expo token register/revoke against the worker; skips on simulator/Expo Go
 - `errorReporter.ts` — Production-safe error reporter; ring-buffer of recent errors, POST to optional `EXPO_PUBLIC_ERROR_REPORT_URL`; no-ops/console in dev; installs global JS error handler
 - `analyticsService.ts` — Anonymous PostHog analytics: lifecycle events, screen views (reported from `RootNavigator`'s `onStateChange`, since PostHog's screen autocapture doesn't support React Navigation 7), and taps. `personProfiles: 'never'`, no session replay, and touch autocapture is narrowed to `testID`/`ph-label` because its default records the tapped element's text, which on calculator screens is the user's own data. Custom events go through `track()`, whose `EventProperties` map types every event and its allowed properties: `crs_calculated`, `push_enabled`/`_disabled`/`_enable_failed`, `pdf_exported`, `milestone_added`, `checklist_item_checked`, `ad_shown`. Key buttons carry a stable `ph-label` (e.g. `home-calculate-crs`, `menu-<id>`, `draws-filter-<category>`) so taps are readable in PostHog; add one to any new button you want to measure. **Never send calculator inputs, scores, timeline or checklist data as event properties.** The public privacy policy (`docs/PRIVACY_POLICY.md`) promises this. Production builds send events to `https://t.crspulse.com`, PostHog's managed reverse proxy (a CNAME on `crspulse.com` to `proxyhog.com`), so blocklists that match `*.posthog.com` don't drop them. Builds up to and including 1.0.9 still post straight to `us.i.posthog.com`. Keep that CNAME in place for as long as proxied builds are installed.
+
+**PostHog stores each event's IP address and GeoIP city/region** — the project's "Discard client IP data" setting (`anonymize_ips`) is off. `docs/PRIVACY_POLICY.md` (also served at `crspulse.com/privacy`) discloses exactly that, and the App Store label declares Coarse Location for Analytics. If you turn the setting on, update the policy's PostHog section to match. When reading the data, exclude bots: Google Play pre-launch devices (Android, `OnePlus8Pro`, Google IP ranges) and Apple App Review (Cupertino iPhone, and an iPad) show up within an hour of each upload or review.
 - `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws/Notifications lists (after every 5th row) for all users, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 3rd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'); `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
 ### Monetisation: ads only, no IAP
