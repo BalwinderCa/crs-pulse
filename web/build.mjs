@@ -265,10 +265,30 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .cells > div:first-child{ border-left:0; }
 /* ---- app-landing surfaces ---- */
 .hero-band{ background:var(--heroTint); border-bottom:1px solid var(--hairline); }
-.phone{ position:relative; border-radius:11.5%/5.6%; background:#0F151D; box-shadow:var(--phone); flex-shrink:0; }
-/* the device body stays dark in both themes: tied to --text it turned near-white in dark
-   mode, and a pale frame around a pale screenshot loses the phone's silhouette */
-.phone img{ display:block; width:100%; height:100%; object-fit:cover; object-position:top center; border-radius:9.6%/4.7%; }
+/* iPhone Pro frame (see phone() in the builder). Proportions follow a 6.3" Pro:
+   band ~1.1% of width, bezel ~3.4%, screen corner radius ~13.6%. */
+.iphone{ position:relative; flex-shrink:0; container-type:inline-size; padding:1.15%; border-radius:15.8% / 7.35%;
+  background:linear-gradient(135deg,#E3E3E6 0%,#8E8E93 18%,#D6D6DA 34%,#77777D 52%,#C9C9CE 70%,#8A8A90 86%,#DADADE 100%);
+  box-shadow:var(--phone), inset 0 0 0 .5px rgba(255,255,255,.55), inset 0 0 1px 1px rgba(0,0,0,.25); }
+:root[data-theme="dark"] .iphone{ background:linear-gradient(135deg,#6B6B70 0%,#2E2E32 20%,#55555A 38%,#232327 56%,#4A4A4F 74%,#2A2A2E 90%,#5A5A5F 100%); }
+.ibezel{ background:#050506; border-radius:14.9% / 6.95%; padding:3.3%; box-shadow:inset 0 0 0 1px rgba(255,255,255,.04); }
+.iscreen{ position:relative; overflow:hidden; border-radius:12.2% / 5.62%; background:#F2F6FF; }
+.iscreen::after{ content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(115deg,rgba(255,255,255,.16) 0%,rgba(255,255,255,0) 32%); }
+.iscreen img{ display:block; width:100%; height:auto; }
+.istatus{ position:relative; height:16.3cqw; display:flex; align-items:center; justify-content:space-between; padding:0 7.5cqw 0 10.5cqw; color:#0D1726; }
+.itime{ font:600 4.35cqw/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif; letter-spacing:-.01em; }
+.iicons svg{ display:block; width:17.5cqw; height:auto; }
+.iisland{ position:absolute; left:50%; top:3.1cqw; transform:translateX(-50%); width:30cqw; height:8.9cqw; border-radius:99px; background:#000; }
+.iisland::after{ content:""; position:absolute; right:3.2cqw; top:50%; width:3.1cqw; height:3.1cqw; transform:translateY(-50%); border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#2B3A55 0%,#0B0F18 60%); }
+.ib{ position:absolute; width:1.1%; border-radius:2px; background:linear-gradient(90deg,#6F6F74,#C8C8CC 50%,#7A7A80); }
+:root[data-theme="dark"] .ib{ background:linear-gradient(90deg,#2A2A2E,#5E5E63 50%,#2A2A2E); }
+.ib-action{ left:-.9%; top:17.5%; height:3.6%; }
+.ib-volup{ left:-.9%; top:24.5%; height:6.6%; }
+.ib-voldn{ left:-.9%; top:32.8%; height:6.6%; }
+.ib-side{ right:-.9%; top:25.5%; height:10.2%; }
+
 /* a real card lifted out of the app and set beside the phone — the genre's one
    permitted flourish, and here it carries live numbers rather than decoration */
 .phonewrap{ position:relative; display:inline-block; }
@@ -333,7 +353,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
   .phonewrap{ display:block; }
   .floatcard{ position:static!important; margin:20px auto 0; width:auto!important; max-width:340px; }
   .hero .fshot, .hero > div:last-child{ justify-content:center; }
-  .hero .phone{ margin:0 auto; }
+  .hero .iphone{ margin:0 auto; }
   .statbar{ grid-template-columns:repeat(2,1fr); gap:22px 18px; }
   .split{ grid-template-columns:1fr!important; gap:28px!important; }
   .calcbody{ grid-template-columns:minmax(0,1fr)!important; }
@@ -678,10 +698,19 @@ const SHOTS = {
   analytics: ['/img/app-analytics.webp', 'The analytics screen, showing moderate odds for the Canadian Experience Class with a forecast chart'],
   timeline: ['/img/app-timeline.webp', 'The application timeline screen, prompting to log ITA, AOR and passport-request milestones'],
 };
+// An iPhone Pro drawn in CSS: titanium band, side buttons, black bezel, Dynamic Island
+// and a 9:41 status bar. The screenshots are cropped below the status bar, so the drawn
+// bar is what gives the screen a true iPhone aspect (~1:2.17). Everything inside is sized
+// in cqw, so one frame scales to any width.
+const STATUS_ICONS = `<svg viewBox="0 0 68 12" aria-hidden="true"><g fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="4.5" y="6" width="3" height="6" rx="1"/><rect x="9" y="3.5" width="3" height="8.5" rx="1"/><rect x="13.5" y="1" width="3" height="11" rx="1"/><path d="M29 2.6a10 10 0 0 1 7 2.8l1.2-1.3A11.8 11.8 0 0 0 29 .8a11.8 11.8 0 0 0-8.2 3.3L22 5.4a10 10 0 0 1 7-2.8zm0 3.5a6.5 6.5 0 0 1 4.5 1.8l1.2-1.3A8.3 8.3 0 0 0 29 4.3a8.3 8.3 0 0 0-5.7 2.3l1.2 1.3A6.5 6.5 0 0 1 29 6.1zm0 3.4a3 3 0 0 1 2 .8L29 12.4 27 10.3a3 3 0 0 1 2-.8z"/><rect x="42" y="1" width="22" height="10.5" rx="3.2" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="1"/><rect x="43.8" y="2.8" width="16.4" height="6.9" rx="1.8"/><path d="M65.3 4.3v3.9a2 2 0 0 0 0-3.9z" fill-opacity=".45"/></g></svg>`;
 const phone = (key, w = 280) => {
   const [src, alt] = SHOTS[key];
-  return `<div class="phone" style="width:${w}px;height:${Math.round(w * 2.0135)}px;padding:${Math.max(6, Math.round(w * 0.028))}px">
-  <img src="${src}" alt="${alt}" width="520" height="1047" loading="lazy" decoding="async">
+  return `<div class="iphone" style="width:${w}px">
+  <span class="ib ib-action" aria-hidden="true"></span><span class="ib ib-volup" aria-hidden="true"></span><span class="ib ib-voldn" aria-hidden="true"></span><span class="ib ib-side" aria-hidden="true"></span>
+  <div class="ibezel"><div class="iscreen">
+    <div class="istatus" aria-hidden="true"><span class="itime">9:41</span><span class="iisland"></span><span class="iicons">${STATUS_ICONS}</span></div>
+    <img src="${src}" alt="${alt}" width="520" height="1047" loading="lazy" decoding="async">
+  </div></div>
 </div>`;
 };
 
