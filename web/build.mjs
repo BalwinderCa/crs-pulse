@@ -107,7 +107,7 @@ const CSS = `
   --bg:#FFFFFF; --bg2:#F7F9FC; --bg3:#EDF1F7; --card:#FFFFFF; --input:#FFFFFF;
   --grad1:#FFFFFF; --grad2:#F7F9FC;
   --text:#0D1726; --text2:#48596F; --muted:#616E80; --border:#DDE3EC; --hairline:#EAEEF4;
-  --accent:#E5342B; --accentInk:#C92A22; --accentBtn:#C92A22; --accent2:#C92A22; --accentSoft:#FDEDEC;
+  --catbar:#B9C3D1; --accent:#E5342B; --accentInk:#C92A22; --accentBtn:#C92A22; --accent2:#C92A22; --accentSoft:#FDEDEC;
   --success:#0B7A55; --successSoft:#E6F4EF; --warning:#E08A1E; --warningInk:#8A5200; --warningSoft:#FDF1DF; --danger:#C0281F;
   --shadow:0 1px 2px rgba(13,23,38,.06); --navbg:rgba(255,255,255,.88);
   --lift:0 18px 44px -20px rgba(13,23,38,.28), 0 2px 8px rgba(13,23,38,.05);
@@ -118,7 +118,7 @@ const CSS = `
   --bg:#0B0F16; --bg2:#101720; --bg3:#1A2430; --card:#101720; --input:#0D141C;
   --grad1:#131C27; --grad2:#0D141C;
   --text:#EDF2F8; --text2:#9FB0C4; --muted:#7E8FA4; --border:#242F3D; --hairline:#1B242F;
-  --accent:#FF564B; --accentInk:#FF7A70; --accentBtn:#C92A22; --accent2:#FF7A70; --accentSoft:rgba(255,86,75,.12);
+  --catbar:#3A4757; --accent:#FF564B; --accentInk:#FF7A70; --accentBtn:#C92A22; --accent2:#FF7A70; --accentSoft:rgba(255,86,75,.12);
   --success:#3DD9A0; --successSoft:rgba(61,217,160,.12); --warning:#E8A54A; --warningInk:#F0B056; --warningSoft:rgba(240,176,86,.12); --danger:#FF6B61;
   --shadow:0 1px 2px rgba(0,0,0,.4); --navbg:rgba(11,15,22,.88);
   --lift:0 18px 44px -20px rgba(0,0,0,.7), 0 2px 8px rgba(0,0,0,.4);
@@ -155,9 +155,35 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   [data-reveal]{ animation:fadeUp both linear; animation-timeline:view(); animation-range:entry 0% cover 14%; }
 }
 @media (prefers-reduced-motion: reduce){ *{ animation:none!important; transition:none!important; } html{ scroll-behavior:auto; } }
+/* skip link: off-screen until focused */
+.skip{ position:absolute; left:12px; top:-60px; z-index:100; background:var(--text); color:var(--bg); padding:10px 14px; border-radius:8px; font-weight:600; font-size:14px; }
+.skip:focus{ top:12px; color:var(--bg); }
+#content:focus{ outline:none; }
+h1,h2,h3{ text-wrap:balance; }
+p, li{ text-wrap:pretty; }
+.calctab{ display:inline-flex; align-items:center; gap:8px; }
+.calctab svg{ opacity:.8; flex-shrink:0; }
+.btn:active{ transform:translateY(1px) scale(.985); }
+.theme-btn:hover{ color:var(--text)!important; border-color:var(--text2)!important; }
+/* calculator score bar: phones only, hidden while the full result card is visible */
+.scorebar{ display:none; }
+@media (max-width:900px){
+  .scorebar{ display:flex; align-items:center; justify-content:space-between; gap:14px; position:fixed; left:12px; right:12px; bottom:calc(12px + env(safe-area-inset-bottom)); z-index:40;
+    padding:12px 16px; border-radius:14px; background:var(--navbg); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); border:1px solid var(--border); box-shadow:var(--lift); color:var(--text);
+    transition:transform .25s ease, opacity .25s ease; }
+  .scorebar.hide{ transform:translateY(140%); opacity:0; pointer-events:none; }
+  .calcbody{ padding-bottom:110px!important; }
+  /* one swipeable row of tabs instead of three wrapped rows */
+  .calctabs{ flex-wrap:nowrap!important; overflow-x:auto; scrollbar-width:none; margin:0 -24px; padding:0 24px; }
+  .calctabs::-webkit-scrollbar{ display:none; }
+  .calctab{ white-space:nowrap; flex-shrink:0; }
+}
+/* form controls fill their cell and may shrink below their longest option */
+.fields > *, .fields4 > *{ min-width:0; }
+label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizing:border-box; }
 /* buttons */
 .btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:8px;
-  font-size:15px; font-weight:600; line-height:1.2; border:1px solid transparent; transition:background .15s ease,border-color .15s ease,color .15s ease; }
+  font-size:15px; font-weight:600; line-height:1.2; border:1px solid transparent; transition:background .15s ease,border-color .15s ease,color .15s ease,transform .12s ease; }
 .btn-accent{ background:var(--accentBtn); color:#fff; }
 .btn-accent:hover{ filter:brightness(.88); color:#fff; }
 .btn-quiet{ background:var(--bg); color:var(--text); border-color:var(--border); }
@@ -264,7 +290,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   .hero .phone{ margin:0 auto; }
   .statbar{ grid-template-columns:repeat(2,1fr); gap:22px 18px; }
   .split{ grid-template-columns:1fr!important; gap:28px!important; }
-  .calcbody{ grid-template-columns:1fr!important; }
+  .calcbody{ grid-template-columns:minmax(0,1fr)!important; }
   .calcresult{ position:static!important; }
   .poolgrid{ grid-template-columns:1fr!important; }
   .statgrid{ grid-template-columns:repeat(2,1fr)!important; }
@@ -291,7 +317,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   /* the home draw list reflows instead of scrolling sideways, so the cutoff — the
      number people came for — is never parked off-screen */
   .dlist .dhead{ display:none!important; }
-  .dlist .drawrow{ grid-template-columns:1fr auto!important; gap:3px 14px!important; padding:13px 0!important; }
+  .dlist .drawrow{ grid-template-columns:1fr auto!important; gap:3px 14px!important; padding:13px 16px!important; }
   .dlist .drawrow > *:nth-child(1){ grid-column:1; grid-row:1; display:flex; align-items:baseline; gap:8px; }
   .dlist .drawrow > *:nth-child(2){ grid-column:1; grid-row:2; }
   .dlist .drawrow > *:nth-child(3){ grid-column:1; grid-row:3; text-align:left!important; font-size:13px!important; color:var(--muted)!important; }
@@ -306,7 +332,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   .h2{ font-size:24px; }
   .lede{ font-size:16px; }
   .featgrid{ grid-template-columns:1fr!important; }
-  .fields,.fields4{ grid-template-columns:1fr 1fr!important; }
+  .fields,.fields4{ grid-template-columns:repeat(2,minmax(0,1fr))!important; }
   .footgrid{ grid-template-columns:1fr 1fr!important; }
   .cells{ grid-template-columns:1fr 1fr; }
   .cells > div{ border-left:0; border-top:1px solid var(--hairline); }
@@ -319,6 +345,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   .navlink{ padding:7px 7px; font-size:13.5px; }
   .shots{ gap:12px!important; }
 }
+@media (max-width:430px){ .fields{ grid-template-columns:minmax(0,1fr)!important; } }
 @media (max-width:380px){ .navlink{ font-size:12.5px; padding:7px 5px; } }
 .doc-card{ padding:0; }
 `;
@@ -345,10 +372,34 @@ posthog.init('phc_B6cfSjHfowwLnGsM73hPhTeqm7MWep8Lgsxe6za9Zamj', {
   mask_all_text: true,
 });
 </script>`;
-const THEME_INIT = `<script>(function(){try{document.documentElement.setAttribute('data-theme',localStorage.getItem('crspulse-theme')||'light')}catch(e){document.documentElement.setAttribute('data-theme','light')}})();</script>`;
+// One line-icon set (24px grid, 1.75 stroke, currentColor) in place of emoji, which
+// render differently on every OS and clash with the type.
+const ICON_PATHS = {
+  trend: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  trendDown: '<path d="M3 7l6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
+  bell: '<path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  folder: '<path d="M3 7.5A2 2 0 0 1 5 5.5h4l2 2h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  checklist: '<rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 9l1.5 1.5L12 8M8 15l1.5 1.5L12 14M14.5 9.5H17M14.5 15.5H17"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  lock: '<rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  calc: '<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7.5h7M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01M8.5 15h.01M12 15h.01M15.5 15h.01"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  pin: '<path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.2"/>',
+  award: '<circle cx="12" cy="9" r="5.5"/><path d="M9 13.8L8 21l4-2 4 2-1-7.2"/>',
+  timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5M10 2.5h4"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r=".9"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+};
+const icon = (name, size = 18) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
+
+// Follows the OS setting until the visitor picks a theme with the toggle.
+const THEME_INIT = `<script>(function(){var t;try{t=localStorage.getItem('crspulse-theme')}catch(e){}if(!t){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)})();</script>`;
 const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
-function setThemeIcons(t){var i=t==='dark'?'☀':'☾';document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.textContent=i})}
+function setThemeIcons(t){var i=t==='dark'?${JSON.stringify(icon('sun', 17))}:${JSON.stringify(icon('moon', 16))};document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.innerHTML=i})}
 setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
 </script>`;
 
@@ -368,6 +419,7 @@ function nav(active, cta) {
     ? `<a class="btn btn-accent" href="${APP_STORE_URL}" style="padding:9px 15px;font-size:14px">Get the app</a>`
     : `<a class="btn btn-accent" href="/calculators" style="padding:9px 15px;font-size:14px">Calculate CRS</a>`;
   return `
+<a class="skip" href="#content">Skip to content</a>
 <header style="position:sticky;top:0;z-index:50;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);background:var(--navbg);border-bottom:1px solid var(--border)">
   <nav class="wrap" aria-label="Main" style="padding-top:11px;padding-bottom:11px;display:flex;align-items:center;gap:14px">
     <a href="/" style="display:flex;align-items:center;gap:8px;flex-shrink:0;color:var(--text)" aria-label="CRS Pulse home">
@@ -380,11 +432,12 @@ function nav(active, cta) {
       ${link('/features', 'Features', 'features')}
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
-      <button class="theme-btn" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s ease">☀</button>
+      <button class="theme-btn" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode" style="width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s ease">${icon('moon', 16)}</button>
       ${ctaBtn}
     </div>
   </nav>
-</header>`;
+</header>
+<div id="content" tabindex="-1"></div>`;
 }
 
 const LEGAL_NOTE = 'CRS Pulse is an independent app. It is not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. Scores, predictions and timelines are estimates for guidance only and are not immigration advice — verify with the official IRCC tools at canada.ca before you act on them.';
@@ -421,9 +474,9 @@ const footerFull = () => `
         <div class="klabel" style="color:var(--text);margin-bottom:12px">Calculators</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
           <a class="foot-link" href="/calculators">CRS (Express Entry)</a>
-          <a class="foot-link" href="/calculators">FSW 67-point grid</a>
-          <a class="foot-link" href="/calculators">BC PNP SIRS</a>
-          <a class="foot-link" href="/calculators">Saskatchewan SINP</a>
+          <a class="foot-link" href="/calculators#fsw">FSW 67-point grid</a>
+          <a class="foot-link" href="/calculators#bc">BC PNP SIRS</a>
+          <a class="foot-link" href="/calculators#sinp">Saskatchewan SINP</a>
         </div>
       </div>
       <div>
@@ -458,6 +511,8 @@ function shell({ title, description, path, jsonld, noindex, body }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow'}">
 <meta name="theme-color" content="#EEF3FB">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>${title}</title>
 <meta name="description" content="${description}">
 <meta property="og:title" content="${title}">
@@ -494,18 +549,18 @@ ${THEME_SCRIPT}
 
 // ------------------------------------------------------------------ shared content data
 const FEATURES_SMALL = [
-  ['📈', 'Trends and analytics', 'Cutoff averages, draw cadence, and where your score sits against recent rounds.'],
-  ['🔔', 'Draw alerts', 'A push notification when IRCC publishes a new round, usually within about 15 minutes.'],
-  ['🗂', 'Application tracker', 'Processing-time estimates for the program and category you applied under.'],
-  ['✅', 'Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
-  ['🕓', 'Application timeline', 'Log ITA, AOR, biometrics, medical, passport request and your own milestones.'],
-  ['🔒', 'On-device by default', 'No account. Your profile, timeline and checklists stay on your phone.'],
+  ['trend', 'Trends and analytics', 'Cutoff averages, draw cadence, and where your score sits against recent rounds.'],
+  ['bell', 'Draw alerts', 'A push notification when IRCC publishes a new round, usually within about 15 minutes.'],
+  ['folder', 'Application tracker', 'Processing-time estimates for the program and category you applied under.'],
+  ['checklist', 'Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
+  ['clock', 'Application timeline', 'Log ITA, AOR, biometrics, medical, passport request and your own milestones.'],
+  ['lock', 'On-device by default', 'No account. Your profile, timeline and checklists stay on your phone.'],
 ];
 const CALC_CARDS = [
-  ['⚡', '1,200', 'CRS score', 'Comprehensive Ranking System — the official Express Entry formula.'],
-  ['✔', '100 · 67', 'FSW 67-point', 'Federal Skilled Worker six selection factors grid.'],
-  ['🧭', '200', 'BC PNP SIRS', 'Skills Immigration Registration System, 200-point scale.'],
-  ['🧾', '110 · 60', 'Saskatchewan SINP', 'International Skilled Worker EOI points assessment.'],
+  ['calc', '1,200', 'CRS score', 'Comprehensive Ranking System — the official Express Entry formula.'],
+  ['checkCircle', '100 · 67', 'FSW 67-point', 'Federal Skilled Worker six selection factors grid.'],
+  ['compass', '200', 'BC PNP SIRS', 'Skills Immigration Registration System, 200-point scale.'],
+  ['pin', '110 · 60', 'Saskatchewan SINP', 'International Skilled Worker EOI points assessment.'],
 ];
 // IRCC publishes a free-text drawName; these give each one a short chip label and a
 // colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
@@ -628,11 +683,13 @@ const featureRow = ({ tag, title, body, points, shot, flip, extra }) => `
   <div class="fshot">${shot}</div>
 </div>`;
 
+// Live figures from the IRCC mirror, refreshed on every rebuild, rather than static
+// facts about the product. The alert latency is the one constant.
 const STATS = [
-  ['1,200', 'points in the CRS grid'],
-  ['4', 'official point grids'],
-  ['~15 min', 'from IRCC draw to alert'],
-  ['$0', 'free, and no account'],
+  [String(DRAWS[0].crs), `cutoff in draw #${DRAWS[0].no} (${DRAWS[0].cat})`],
+  [num(FEED.ytd.invitations), `invitations in ${FEED.ytd.year} across ${FEED.ytd.rounds} rounds`],
+  [num(FEED.poolTotal), `profiles in the pool${FEED.distributionAsOf ? ` (${FEED.distributionAsOf.replace(/, \d{4}$/, '')})` : ''}`],
+  ['~15 min', 'from an IRCC draw to your push alert'],
 ];
 const statBar = () => `
 <div class="statbar">
@@ -885,61 +942,65 @@ ${footerFull()}`;
 }
 
 // ------------------------------------------------------------------ FEATURES
+// The mock panels use the site's own tokens, so they follow light/dark like the page
+// around them instead of dropping navy boxes into a white page. The alert shows the
+// real latest draw.
+const PANEL = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text)';
 const FEATURE_BLOCKS = [
   {
-    tag: '🗂 Application tracker', title: 'Track your PR application against live IRCC times',
+    icon: 'folder', tag: 'Application tracker', title: 'Track your PR application against live IRCC times',
     body: 'Tell CRS Pulse which program you applied to and it estimates your progress using live processing-time data — so you always know roughly how long is left.',
     points: ['Live processing estimates by program & category', 'Days-since-applied and estimated decision month', 'Overdue flag when you pass the typical window'],
-    visual: `<div style="background:#0F1A2E;border:1px solid #1C2B45;border-radius:16px;padding:18px;color:#F0F5FF">
-      <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span style="font-size:13px;font-weight:700">CEC — Online</span><span style="font-size:12px;color:#6B85A8">62% typical</span></div>
-      <div style="display:flex;gap:20px;margin-bottom:12px"><div><div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700">112</div><div style="font-size:10px;color:#6B85A8">DAYS SINCE APPLIED</div></div><div><div style="font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:#5B9EFF">3</div><div style="font-size:10px;color:#6B85A8">MONTHS LEFT</div></div></div>
-      <div style="height:6px;background:#152035;border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:62%;background:#5B9EFF;border-radius:3px"></div></div>
-      <div style="font-size:12px;color:#7A94B8">Est. decision <b style="color:#5B9EFF">Oct 2026</b></div></div>`,
+    visual: `<div style="${PANEL}">
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px"><span style="font-size:13px;font-weight:700">CEC · online application</span><span style="font-size:12px;color:var(--muted)">62% of typical</span></div>
+      <div style="display:flex;gap:28px;margin-bottom:14px"><div><div class="num" style="font-size:28px;line-height:1">112</div><div class="klabel" style="font-size:10px;margin-top:4px">days since applied</div></div><div><div class="num" style="font-size:28px;line-height:1;color:var(--accentInk)">3</div><div class="klabel" style="font-size:10px;margin-top:4px">months left</div></div></div>
+      <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:62%;background:var(--accent);border-radius:3px"></div></div>
+      <div style="font-size:12.5px;color:var(--text2)">Estimated decision <b style="color:var(--text)">January 2027</b></div></div>`,
   },
   {
-    tag: '✅ Document checklists', title: 'Per-program checklists from IRCC requirements',
+    icon: 'checklist', tag: 'Document checklists', title: 'Per-program checklists from IRCC requirements',
     body: 'Every program has its own document set. CRS Pulse ships the right checklist and tracks each item as you gather it — nothing forgotten before your e-APR.',
     points: ['Checklists compiled from IRCC requirements', 'Per-item progress that persists on device', 'Tailored to the program you applied under'],
     reverse: true,
-    visual: `<div style="background:#0F1A2E;border:1px solid #1C2B45;border-radius:16px;padding:16px">${[['Passport / travel document', 1], ['Language test results', 1], ['ECA report', 1], ['Proof of funds', 0], ['Police certificates', 0]].map(([t, done], i, arr) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 2px;${i < arr.length - 1 ? 'border-bottom:1px solid #1C2B45' : ''}"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${done ? '#00E5A0' : '#2B3B55'};background:${done ? '#00E5A0' : 'transparent'};color:#060B14;font-size:12px;display:flex;align-items:center;justify-content:center;font-weight:800">${done ? '✓' : ''}</span><span style="font-size:13px;color:${done ? '#6B85A8' : '#F0F5FF'};text-decoration:${done ? 'line-through' : 'none'}">${t}</span></div>`).join('')}</div>`,
+    visual: `<div style="${PANEL};padding:8px 18px">${[['Passport / travel document', 1], ['Language test results', 1], ['ECA report', 1], ['Proof of funds', 0], ['Police certificates', 0]].map(([t, done], i, arr) => `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;${i < arr.length - 1 ? 'border-bottom:1px solid var(--hairline)' : ''}"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${done ? 'var(--success)' : 'var(--border)'};background:${done ? 'var(--success)' : 'transparent'};color:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">${done ? CHECK : ''}</span><span style="font-size:13.5px;color:${done ? 'var(--muted)' : 'var(--text)'};text-decoration:${done ? 'line-through' : 'none'}">${t}</span></div>`).join('')}</div>`,
   },
   {
-    tag: '🕓 Application timeline', title: 'Log every milestone from ITA to PPR',
+    icon: 'clock', tag: 'Application timeline', title: 'Log every milestone from ITA to PPR',
     body: 'Add ITA, AOR, biometrics, medicals, passport request and custom milestones with notes. Your whole journey on one clean timeline.',
     points: ['Add, edit and delete milestones with notes', 'Standard IRCC stages plus custom entries', 'A shareable view of where you are'],
-    visual: `<div style="background:#0F1A2E;border:1px solid #1C2B45;border-radius:16px;padding:18px">${[['ITA received', 'Feb 12', '#00E5A0'], ['e-APR submitted', 'Feb 28', '#5B9EFF'], ['AOR', 'Mar 4', '#5B9EFF'], ['Biometrics', 'Mar 19', '#A78BFA'], ['Medical passed', 'Apr 22', '#FFB547']].map(([t, d, c], i, arr) => `<div style="display:flex;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:11px;height:11px;border-radius:50%;background:${c};margin-top:3px"></span>${i < arr.length - 1 ? '<span style="width:2px;height:22px;background:#1C2B45"></span>' : ''}</div><div style="padding-bottom:${i < arr.length - 1 ? 10 : 0}px"><div style="font-size:13px;font-weight:700;color:#F0F5FF">${t}</div><div style="font-size:11px;color:#6B85A8">${d}</div></div></div>`).join('')}</div>`,
+    visual: `<div style="${PANEL}">${[['ITA received', 'Feb 12', 1], ['e-APR submitted', 'Feb 28', 1], ['AOR', 'Mar 4', 1], ['Biometrics', 'Mar 19', 1], ['Medical passed', 'Apr 22', 0]].map(([t, d, past], i, arr) => `<div style="display:flex;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:11px;height:11px;border-radius:50%;margin-top:3px;${past ? 'background:var(--accent)' : 'border:2px solid var(--accent);background:var(--bg2)'}"></span>${i < arr.length - 1 ? '<span style="width:1.5px;height:24px;background:var(--border)"></span>' : ''}</div><div style="padding-bottom:${i < arr.length - 1 ? 8 : 0}px"><div style="font-size:13.5px;font-weight:700">${t}</div><div style="font-size:11.5px;color:var(--muted)">${d}</div></div></div>`).join('')}</div>`,
   },
   {
-    tag: '🔔 Draw alerts', title: 'Know the moment IRCC draws',
+    icon: 'bell', tag: 'Draw alerts', title: 'Know the moment IRCC draws',
     body: 'A background service checks for new rounds every 15 minutes and pushes you an alert the moment one is published — with the category, cutoff and invitation count.',
     points: ['New-draw push within ~15 minutes', 'Anonymous token only — no personal data', 'Turn on or off any time'],
     reverse: true,
-    visual: `<div style="background:#0F1A2E;border:1px solid #1C2B45;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;gap:11px;align-items:flex-start;background:#0A1220;border-radius:12px;padding:12px 13px;border:1px solid #1C2B45"><span style="font-size:20px">🔔</span><div><div style="font-size:13px;font-weight:700;color:#F0F5FF">New Express Entry draw</div><div style="font-size:12px;color:#7A94B8;line-height:1.4">Round #422 · Healthcare · cutoff 475 · 4,000 invited</div><div style="font-size:11px;color:#6B85A8;margin-top:3px">now</div></div></div>
-      <div style="font-size:11.5px;color:#6B85A8;text-align:center">Delivered within ~15 min of publication</div></div>`,
+    visual: `<div style="${PANEL};display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--border);box-shadow:var(--shadow)"><span style="width:30px;height:30px;border-radius:8px;background:var(--accentSoft);color:var(--accentInk);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon('bell', 16)}</span><div><div style="font-size:13px;font-weight:700">New Express Entry draw</div><div style="font-size:12.5px;color:var(--text2);line-height:1.45">Round #${DRAWS[0].no} · ${DRAWS[0].cat} · cutoff ${DRAWS[0].cutoff} · ${DRAWS[0].invited} invited</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${DRAWS[0].date}</div></div></div>
+      <div style="font-size:11.5px;color:var(--muted);text-align:center">Delivered within ~15 min of publication</div></div>`,
   },
   {
-    tag: '📈 Analytics & your plan', title: 'See your real odds, not just a number',
+    icon: 'trend', tag: 'Analytics & your plan', title: 'See your real odds, not just a number',
     body: 'Draws, history, category trends and cadence are free. Your Plan turns them into your personal odds versus the trend cutoff, forecast bands, and your position in the pool.',
     points: ['Odds vs the current trend cutoff', 'CRS forecast bands & what-if scenarios', 'Your percentile and place in the pool'],
-    visual: `<div style="background:#0F1A2E;border:1px solid #1C2B45;border-radius:16px;padding:18px;text-align:center">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.6px;color:#6B85A8;margin-bottom:6px">YOUR ODDS THIS TREND</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:#00E5A0;letter-spacing:-2px;line-height:1">High</div>
-      <div style="height:8px;background:#152035;border-radius:5px;overflow:hidden;margin:14px 0 8px"><div style="height:100%;width:78%;background:linear-gradient(90deg,#2D78EF,#00E5A0)"></div></div>
-      <div style="font-size:12px;color:#7A94B8">Score 512 · 41 above trend cutoff · top 18% of pool</div></div>`,
+    visual: `<div style="${PANEL};text-align:center">
+      <div class="klabel" style="font-size:10.5px;margin-bottom:8px">Your odds this trend</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:var(--success);letter-spacing:-2px;line-height:1">High</div>
+      <div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden;margin:14px 0 8px"><div style="height:100%;width:78%;background:var(--success);border-radius:5px"></div></div>
+      <div style="font-size:12.5px;color:var(--text2)">Score 512 · 41 above the trend cutoff · top 18% of the pool</div></div>`,
   },
 ];
 
 function featuresPage() {
   const block = (b) => `
-<div class="fblock" data-reveal style="display:flex;gap:32px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:22px;padding:32px;${b.reverse ? 'flex-direction:row-reverse' : ''}">
+<div class="fblock" data-reveal style="display:flex;gap:56px;align-items:center;padding:44px 0;border-top:1px solid var(--hairline);${b.reverse ? 'flex-direction:row-reverse' : ''}">
   <div style="flex:1;min-width:0">
-    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--accentSoft);color:var(--accent);padding:6px 12px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:16px;white-space:nowrap">${b.tag}</div>
+    <div class="eyebrow" style="display:flex;align-items:center;gap:8px">${icon(b.icon, 16)}${b.tag}</div>
     <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1.12;letter-spacing:-.8px;font-weight:700;margin:0 0 12px">${b.title}</h2>
     <p style="font-size:15.5px;line-height:1.6;color:var(--text2);margin:0 0 18px">${b.body}</p>
-    <div style="display:flex;flex-direction:column;gap:9px">${b.points.map((p) => `<div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--success);font-size:15px;margin-top:1px">✓</span><span>${p}</span></div>`).join('')}</div>
+    <div style="display:flex;flex-direction:column;gap:9px">${b.points.map((p) => `<div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--success);margin-top:3px;flex-shrink:0">${CHECK}</span><span>${p}</span></div>`).join('')}</div>
   </div>
-  <div class="fvisual" style="flex:0 0 300px;max-width:300px;width:100%">${b.visual}</div>
+  <div class="fvisual" style="flex:0 0 320px;max-width:320px;width:100%">${b.visual}</div>
 </div>`;
   const body = `${nav('features', 'calc')}
 <div style="min-height:100vh;position:relative">
@@ -984,13 +1045,13 @@ const INSIGHTS = (() => {
   };
   const out = [];
   if (category.length && general.length) {
-    out.push(['📉', 'Category draws run lower', `Category-based rounds cut off at ${range(category)} over the last ${DRAWS.length} draws, while general and CEC rounds held at ${range(general)} — targeting a category can beat a raw CRS race.`]);
+    out.push(['trendDown', 'Category draws run lower', `Category-based rounds cut off at ${range(category)} over the last ${DRAWS.length} draws, while general and CEC rounds held at ${range(general)} — targeting a category can beat a raw CRS race.`]);
   }
   if (pnp.length) {
-    out.push(['🏆', 'A nomination changes everything', `Provincial Nominee rounds cut off at ${range(pnp)}, because a nomination adds 600 points on top of your base score.`]);
+    out.push(['award', 'A nomination changes everything', `Provincial Nominee rounds cut off at ${range(pnp)}, because a nomination adds 600 points on top of your base score.`]);
   }
-  out.push(['⏱', `${DRAWS.length} rounds in ${span} days`, `That is IRCC's recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.`]);
-  out.push(['🎯', 'Know your odds', 'The analytics tab places your score against the live trend cutoff and forecast bands, plus your percentile in the pool — free, like the rest of the app.']);
+  out.push(['timer', `${DRAWS.length} rounds in ${span} days`, `That is IRCC's recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.`]);
+  out.push(['target', 'Know your odds', 'The analytics tab places your score against the live trend cutoff and forecast bands, plus your percentile in the pool — free, like the rest of the app.']);
   return out;
 })();
 
@@ -1004,7 +1065,7 @@ function drawsPage() {
     const v = Number(d.cutoff);
     const h = 30 + Math.round(((v - minC) / Math.max(1, maxC - minC)) * 130);
     const isCat = !['CEC', 'General'].includes(d.cat);
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end"><span style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:var(--text)">${d.cutoff}</span><div style="width:100%;height:${h}px;border-radius:7px 7px 3px 3px;background:${isCat ? 'var(--warning)' : 'var(--accent)'}"></div><span style="font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2">${d.date.replace(/, 20\d\d/, '')}</span></div>`;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end"><span style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:var(--text)">${d.cutoff}</span><div style="width:100%;height:${h}px;border-radius:7px 7px 3px 3px;background:${isCat ? 'var(--catbar)' : 'var(--accent)'}"></div><span style="font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2">${d.date.replace(/, 20\d\d/, '')}</span></div>`;
   }).join('');
   const poolMax = Math.max(...POOL.map((p) => p[2]));
   const stat = (label, val, sub, big) => `<div style="background:${big ? 'linear-gradient(155deg,var(--grad1),var(--grad2))' : 'var(--card)'};border:1px solid var(--border);border-radius:16px;padding:20px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${label}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;letter-spacing:-1.5px;color:${big ? 'var(--accent)' : 'var(--text)'}">${val}</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${sub}</div></div>`;
@@ -1031,7 +1092,7 @@ function drawsPage() {
   <div data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:22px">
       <div><h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">CRS cutoff trend</h2><p style="font-size:13px;color:var(--text2);margin:0">Minimum score by round — most recent 10 draws (left → right)</p></div>
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--warning)"></span>Category &amp; provincial</span></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--catbar)"></span>Category &amp; provincial</span></div>
     </div>
     <div style="display:flex;align-items:flex-end;gap:12px;height:200px">${chart}</div>
   </div>
@@ -1044,7 +1105,7 @@ function drawsPage() {
   <div class="drawscroll" style="background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden">
     <div class="drawinner" id="drawtable">
       <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
-      ${ALL_DRAWS.map((d) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--accent)">${d.cutoff}</span></div></div>`).join('')}
+      ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
       <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
     </div>
   </div>
@@ -1060,7 +1121,7 @@ function drawsPage() {
     <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
       <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">What the trends tell you</h2>
       <p style="font-size:13px;color:var(--text2);margin:0 0 18px">Analytics in the app turn this into your personal odds</p>
-      <div style="display:flex;flex-direction:column;gap:14px">${INSIGHTS.map(([icon, title, bodyt]) => `<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:9px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${icon}</span><div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${title}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${bodyt}</div></div></div>`).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:14px">${INSIGHTS.map(([ico, title, bodyt]) => `<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:9px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon(ico, 17)}</span><div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${title}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${bodyt}</div></div></div>`).join('')}</div>
       <a class="link-accent" href="/features" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">See analytics features →</a>
     </div>
   </div>
@@ -1097,9 +1158,9 @@ const STATE0 = {
   sinp: { education: 'bachelors', age: '22_34', language: 'clb7', secondLanguage: 'below4', workRecentYears: 3, workEarlierYears: 0, hasSaskJobOffer: false, hasSaskFamily: false, hasSaskWorkExp: false, hasSaskStudy: false },
 };
 
-const SEL = 'padding:11px 34px 11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px;font-weight:500';
-const SEL_SM = 'padding:10px 30px 10px 11px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px';
-const INP = 'padding:11px 12px;border-radius:10px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:14px;font-weight:500';
+const SEL = 'padding:11px 34px 11px 12px;border-radius:10px;border:1px solid var(--border);background-color:var(--input);color:var(--text);font-size:14px;font-weight:500';
+const SEL_SM = 'padding:10px 30px 10px 11px;border-radius:10px;border:1px solid var(--border);background-color:var(--input);color:var(--text);font-size:14px';
+const INP = 'padding:11px 12px;border-radius:10px;border:1px solid var(--border);background-color:var(--input);color:var(--text);font-size:14px;font-weight:500';
 const LBL = 'display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2);font-weight:600';
 const LBL_SM = 'display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--text2);font-weight:600';
 const CARD = 'background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px';
@@ -1423,6 +1484,9 @@ ${CRS_CALC_SRC}
     badge(res.badgeText, res.badgeStyle);
     document.getElementById('r-total').textContent=res.total;
     document.getElementById('r-max').textContent='/ '+res.max;
+    document.getElementById('sb-total').textContent=res.total;
+    document.getElementById('sb-max').textContent='/ '+res.max;
+    document.getElementById('sb-label').textContent=res.label;
     document.getElementById('r-bar').style.cssText=bar(res.barPct,res.grad);
     document.getElementById('r-note').textContent=res.note;
     document.getElementById('r-rows').innerHTML=res.rows.map(function(x){
@@ -1436,7 +1500,8 @@ ${CRS_CALC_SRC}
   }
   function setTab(id){
     active=id;
-    document.querySelectorAll('.calctab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-tab')===id); });
+    document.querySelectorAll('.calctab').forEach(function(t){ var on=t.getAttribute('data-tab')===id; t.classList.toggle('on', on); t.setAttribute('aria-pressed', on); });
+    if(history.replaceState) history.replaceState(null, '', id==='crs' ? location.pathname : '#'+id);
     ['crs','fsw','bc','sinp'].forEach(function(k){ var el=document.getElementById('form-'+k); if(el) el.style.display=(k===id)?'flex':'none'; });
     document.getElementById('calc-title').textContent=TITLES[id];
     document.getElementById('calc-sub').textContent=SUBS[id];
@@ -1457,13 +1522,20 @@ ${CRS_CALC_SRC}
     });
   });
   document.querySelectorAll('.calctab').forEach(function(tb){ tb.addEventListener('click', function(){ setTab(tb.getAttribute('data-tab')); }); });
-  syncVis(); render();
+  // Phones: the score bar pins to the bottom while the result card is off-screen.
+  var sb=document.getElementById('scorebar'), rc=document.getElementById('calc-result');
+  if(sb && rc && 'IntersectionObserver' in window){
+    new IntersectionObserver(function(es){ sb.classList.toggle('hide', es[0].isIntersecting); }).observe(rc);
+  }
+  // /calculators#fsw (footer, other pages) opens that grid directly.
+  var fromHash=location.hash.slice(1);
+  if(TITLES[fromHash] && fromHash!=='crs') setTab(fromHash); else { syncVis(); render(); }
 })();
 </script>`;
 
 function calculatorsPage() {
-  const tabs = [['crs', '⚡', 'CRS'], ['fsw', '✔', 'FSW 67-point'], ['bc', '🧭', 'BC PNP SIRS'], ['sinp', '🧾', 'Saskatchewan SINP']]
-    .map(([id, icon, label], i) => `<button class="calctab${i === 0 ? ' on' : ''}" data-tab="${id}"><span style="font-size:16px">${icon}</span> ${label}</button>`).join('');
+  const tabs = [['crs', 'calc', 'CRS'], ['fsw', 'checkCircle', 'FSW 67-point'], ['bc', 'compass', 'BC PNP SIRS'], ['sinp', 'pin', 'Saskatchewan SINP']]
+    .map(([id, ico, label], i) => `<button class="calctab${i === 0 ? ' on' : ''}" data-tab="${id}" aria-pressed="${i === 0}">${icon(ico, 17)} ${label}</button>`).join('');
   const body = `${nav('calc', 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
@@ -1473,9 +1545,9 @@ function calculatorsPage() {
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:640px">Pick a program below. Everything computes live in your browser — nothing is sent anywhere. These are estimates for planning; always confirm with the official IRCC or provincial tool.</p>
 </section>
 <section style="max-width:1200px;margin:0 auto;padding:0 24px">
-  <div style="display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)">${tabs}</div>
+  <div class="calctabs" style="display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)">${tabs}</div>
 </section>
-<section id="calc" class="calcbody" style="max-width:1200px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:start">
+<section id="calc" class="calcbody" style="max-width:1200px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
     <div style="margin-bottom:18px">
       <h2 id="calc-title" style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.5px;margin:0 0 4px">CRS — Express Entry score</h2>
@@ -1483,7 +1555,7 @@ function calculatorsPage() {
     </div>
     ${calcForms()}
   </div>
-  <div class="calcresult" data-reveal style="position:sticky;top:88px">
+  <div class="calcresult" id="calc-result" data-reveal style="position:sticky;top:88px;scroll-margin-top:80px">
     <div style="background:linear-gradient(155deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:20px;padding:26px;box-shadow:var(--shadow)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span id="r-label" style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)">Comprehensive Ranking System</span>
@@ -1506,6 +1578,10 @@ function calculatorsPage() {
 </div>
 ${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
 </div>
+<a class="scorebar" id="scorebar" href="#calc-result" aria-label="See your score breakdown">
+  <span style="display:flex;flex-direction:column;min-width:0"><span id="sb-label" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Comprehensive Ranking System</span><span style="font-size:12.5px;color:var(--text2)">Tap for the breakdown</span></span>
+  <span style="display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex-shrink:0"><span id="sb-total" class="num" style="font-size:30px;line-height:1;color:var(--text)">0</span><span id="sb-max" style="font-size:13px;color:var(--muted);font-weight:600">/ 1,200</span></span>
+</a>
 ${CALC_SCRIPT}`;
   return shell({ ...page('calculators'), jsonld: calcJsonLd(), body });
 }
@@ -1758,7 +1834,7 @@ Sitemap: ${SITE}/sitemap.xml
 // recover without parsing the design.
 function notFoundPage() {
   const links = [
-    ...PAGES.map((p) => [p.path, p.title.replace(/ — CRS Pulse$/, ''), p.llm]),
+    ...PAGES.map((p) => [p.path, p.title.replace(/\s*[|\u2014]\s*CRS Pulse$/, ''), p.llm]),
     ['/llms.txt', 'llms.txt', 'What this site is for and when an agent should use it.'],
     ['/sitemap.xml', 'sitemap.xml', 'Every indexable URL with its last-modified date.'],
   ];
@@ -1767,7 +1843,7 @@ function notFoundPage() {
     '',
     'This path does not exist on crspulse.com. Start from one of these:',
     '',
-    ...PAGES.map((p) => `- [${p.title.replace(/ — CRS Pulse$/, '')}](${SITE}${mdPath(p)})`),
+    ...PAGES.map((p) => `- [${p.title.replace(/\s*[|\u2014]\s*CRS Pulse$/, '')}](${SITE}${mdPath(p)})`),
     `- [llms.txt](${SITE}/llms.txt) — when to use this site, and how to request Markdown`,
     `- [sitemap.xml](${SITE}/sitemap.xml) — every indexable URL`,
   ].join('\n');
@@ -1897,6 +1973,8 @@ copyAsset('logo.svg', 'img/logo.svg');
 // Social preview (1200x630). Regenerate from og-source.html with headless Chrome:
 // chrome --headless=new --window-size=1200,630 --screenshot=og.png og-source.html
 copyAsset('og.png', 'img/og.png');
+copyAsset('favicon.png', 'favicon.png');
+copyAsset('apple-touch-icon.png', 'apple-touch-icon.png');
 // Real captures of the shipping iOS build, shown in the app section. WebP because they
 // are the page's only raster payload; the PNG originals stay under assets/screenshots
 // for the store listings.
