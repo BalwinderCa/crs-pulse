@@ -58,7 +58,8 @@ const fr: TranslationKeys = {
     processingNote: 'Les délais de traitement peuvent augmenter si plus de personnes demandent que de places disponibles sous le Plan des niveaux d\'immigration. Ces estimations ne sont pas un maximum ni une garantie.',
     typicalPercent: '{{percent}}% du temps typique',
     // [REVIEW] décision finale
-    daysToDecision: 'Jours avant la décision',
+    daysToDecision: 'Jours de traitement',
+    decidedPercent: 'Décidé en {{percent}} % du temps typique',
     decisionDate: 'Date de la décision',
     decisionReceived: 'Décision finale reçue le {{date}}',
     coprReceived: 'CRP reçue le {{date}}',

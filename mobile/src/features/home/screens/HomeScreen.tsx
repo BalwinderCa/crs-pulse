@@ -211,7 +211,9 @@ export default function HomeScreen() {
                   {format(tracked.applied, 'MMM d, yyyy', { locale: dateLocale })}
                 </Text>
                 <Text style={[s.appProgressText, { color: c.textMuted }]}>
-                  {t('home.typicalPercent', { percent: Math.min(100, Math.round(tracked.progress * 100)) })}
+                  {tracked.decided
+                    ? t('home.decidedPercent', { percent: Math.round(((tracked.daysIn ?? 0) / tracked.totalDays) * 100) })
+                    : t('home.typicalPercent', { percent: Math.min(100, Math.round(tracked.progress * 100)) })}
                 </Text>
               </View>
 
