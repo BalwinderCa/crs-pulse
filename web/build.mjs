@@ -695,7 +695,7 @@ const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
 // site is the actual app — no stock device photography, no invented UI.
 const SHOTS = {
   home: ['/img/app-home.webp', 'The CRS Pulse home screen: a CRS score of 525 and a Canadian Experience Class application submitted May 5, 2026, with its final decision on August 25 and COPR on October 1'],
-  draws: ['/img/app-draws.webp', 'The draws screen, listing the latest Express Entry rounds with cutoff, invitations and category'],
+  draws: ['/img/app-draws.webp', 'The draws screen: rounds #446 (CEC, 518), #445 (PNP, 725) and #444 (Senior managers, 389) with cutoff and invitations'],
   analytics: ['/img/app-analytics.webp', 'The analytics screen: moderate odds for the Canadian Experience Class, a score of 525 against a trend cutoff near 519'],
   timeline: ['/img/app-timeline.webp', 'The application timeline, from biometrics in May to Portal 2 and eCOPR received on October 1, 2026'],
 }
