@@ -605,6 +605,7 @@ ${S5_HEAD}
 ${head2}
 ${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
+<script>addEventListener('DOMContentLoaded',function(){var b=document.body;function f(){b.classList.toggle('dg-scrolled',scrollY>30)}addEventListener('scroll',f,{passive:true});f()});</script>
 ${VERCEL_ANALYTICS}
 ${POSTHOG_WEB}
 
@@ -692,10 +693,11 @@ const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
 // Inner-page hero in the home page's language: one heavy headline with the accent
 // phrase in red, one short lede, words rising in on load.
 const pageHero = (lead, accent, lede) => `
-<section class="wrap s5-pagehero">
+<div class="dg-hero dg-sm">${MAPLE}<section class="wrap s5-pagehero">
   <h1 class="split">${lead} <em>${accent}</em></h1>
   <p data-r="420">${lede}</p>
-</section>`;
+</section></div>`;
+const MAPLE = `<svg class="dg-leaf" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M256 16l-38 72c-4 8-12 7-20 3l-28-14 18 96c4 18-8 18-14 10l-40-46-7 23c-1 4-6 7-10 6l-51-11 13 49c3 11 5 15-3 18l-19 8 88 71c4 3 6 8 4 13l-8 25c31-4 58-9 89-12 3 0 7 3 7 6l-4 99h18l-4-99c0-3 4-6 7-6 31 3 58 8 89 12l-8-25c-2-5 0-10 4-13l88-71-19-8c-8-3-6-7-3-18l13-49-51 11c-4 1-9-2-10-6l-7-23-40 46c-6 8-18 8-14-10l18-96-28 14c-8 4-16 5-20-3z"/></svg>`;
 const s5End = (title = 'Check your CRS score tonight.') => `
 <div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section></div>`;
 
@@ -893,6 +895,26 @@ const S5_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossor
 .s5-pagehero h1 em{ font-style:normal; color:var(--accentInk); }
 .s5-pagehero p{ font-size:19px; line-height:1.6; color:var(--text2); max-width:58ch; margin-top:22px; }
 .s5-end{ margin-top:60px; }
+/* dot grid: a field of dots behind the top of every page, the header clear over it
+   until you scroll, a maple leaf behind each hero, and the dots returning on the home
+   page's privacy band and FAQ and on every red card. Drawn in theme tokens. */
+html, body{ overflow-x:clip; }
+body::before{ content:""; position:absolute; z-index:-1; top:0; left:0; right:0; height:min(900px,110vh); pointer-events:none;
+  background:radial-gradient(var(--border) 1.2px, transparent 1.2px) 0 0/22px 22px;
+  -webkit-mask-image:radial-gradient(75% 70% at 70% 30%, #000 20%, transparent 75%); mask-image:radial-gradient(75% 70% at 70% 30%, #000 20%, transparent 75%); }
+html{ background:var(--bg); } body{ background:var(--heroTint) no-repeat; background-size:100% min(900px,110vh); position:relative; isolation:isolate; }
+.sitehead{ transition:background .25s ease, border-color .25s ease; }
+body:not(.dg-scrolled) .sitehead{ background:transparent; border-bottom-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; }
+.dg-hero{ position:relative; isolation:isolate; }
+.dg-leaf{ position:absolute; z-index:-1; right:-6%; top:50%; translate:0 -50%; width:min(820px,80vw); color:var(--accent); opacity:.07; pointer-events:none; }
+.dg-sm .dg-leaf{ width:min(460px,60vw); right:2%; top:55%; }
+.s5-priv, .s5-faq{ position:relative; isolation:isolate; }
+.s5-priv::before, .s5-faq::before{ content:""; position:absolute; z-index:-1; top:0; bottom:0; left:50%; width:100vw; translate:-50% 0; pointer-events:none; background:radial-gradient(var(--border) 1.2px, transparent 1.2px) 0 0/22px 22px; }
+.s5-priv::before{ -webkit-mask-image:radial-gradient(60% 55% at 30% 50%, #000 15%, transparent 75%); mask-image:radial-gradient(60% 55% at 30% 50%, #000 15%, transparent 75%); }
+.s5-faq::before{ -webkit-mask-image:radial-gradient(50% 50% at 85% 20%, #000, transparent 70%); mask-image:radial-gradient(50% 50% at 85% 20%, #000, transparent 70%); }
+.s5-end, .s5-snap a:first-child{ position:relative; isolation:isolate; overflow:hidden; }
+.s5-end::before, .s5-snap a:first-child::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(rgba(255,255,255,.35) 1.2px, transparent 1.2px) 0 0/22px 22px; -webkit-mask-image:linear-gradient(120deg, transparent 30%, #000); mask-image:linear-gradient(120deg, transparent 30%, #000); }
+@media (max-width:960px){ .dg-leaf{ width:120vw; right:-40%; top:68%; } .dg-sm .dg-leaf{ width:80vw; right:-25%; top:60%; } }
 /* motion runtime */
 .js [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
 .js [data-r].in{ opacity:1; transform:none; }
@@ -951,15 +973,21 @@ function home() {
   const privacy = 'Your immigration profile is yours. It never leaves your phone.';
   const ck = (s = 18) => `<span style="color:var(--success);flex-shrink:0;display:inline-flex;margin-top:3px">${icon('checkCircle', s)}</span>`;
 
+  const heroCopy = `<div><h1 class="split">Your Express Entry journey, <em>in one app.</em></h1>
+      <p data-r="500" class="s5-sub">Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.</p>
+      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/calculators">Calculate my CRS</a></div></div>`;
+  const hero = `<div class="dg-hero">${MAPLE}<div class="wrap">
+  <section class="s5-hero">
+    ${heroCopy}
+    <div class="s5-stage" data-r="0">${phone('home', 320)}</div>
+  </section></div></div>`;
+  const priv = `<section class="s5-priv"><p class="s5-big" id="privline">${privacy.split(' ').map((w) => `<span class="wd${/yours|never/.test(w) ? ' red' : ''}">${w}</span>`).join(' ')}</p>
+    <div class="s5-pts">${PRIVACY_POINTS.map((p, i) => `<p data-r="${i * 80}"><span style="color:var(--success);flex-shrink:0;margin-top:3px">${icon('lock', 19)}</span><span>${p}</span></p>`).join('')}</div></section>`;
+
   const body = `${nav('', 'app')}
 <main class="s5">
+${hero}
 <div class="wrap">
-  <section class="s5-hero">
-    <div><h1 class="split">Your Express Entry journey, <em>in one app.</em></h1>
-      <p data-r="500" class="s5-sub">Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.</p>
-      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/calculators">Calculate my CRS</a></div></div>
-    <div class="s5-stage" data-r="0">${phone('home', 320)}</div>
-  </section>
   <div class="s5-live">
     <div data-r="0"><b data-count="${latest.crs}">${latest.crs}</b><span>cutoff in round #${latest.no} (${latest.cat}, ${latest.date.replace(/, \d{4}$/, '')})</span></div>
     <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>invitations in ${FEED.ytd.year}, ${FEED.ytd.rounds} rounds</span></div>
@@ -976,8 +1004,7 @@ function home() {
 <div class="wrap">
   <section class="s5-calcs"><h2 data-r="0">Four point grids, right in your browser.</h2>
     <div class="s5-snap">${[['CRS', 'Express Entry', '1,200', 'The Comprehensive Ranking System IRCC uses to rank every profile in the pool.', ''], ['FSW', '67-point grid', '100', 'Federal Skilled Worker eligibility: six selection factors, 67 to qualify.', '#fsw'], ['BC PNP', 'SIRS', '200', 'British Columbia’s Skills Immigration Registration System score.', '#bc'], ['SINP', 'EOI', '110', 'Saskatchewan’s International Skilled Worker points assessment.', '#sinp']].map(([a, b, mx, d, h], i) => `<a href="/calculators${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
-  <section class="s5-priv"><p class="s5-big" id="privline">${privacy.split(' ').map((w) => `<span class="wd${/yours|never/.test(w) ? ' red' : ''}">${w}</span>`).join(' ')}</p>
-    <div class="s5-pts">${PRIVACY_POINTS.map((p, i) => `<p data-r="${i * 80}"><span style="color:var(--success);flex-shrink:0;margin-top:3px">${icon('lock', 19)}</span><span>${p}</span></p>`).join('')}</div></section>
+  ${priv}
   <section class="s5-faq" id="faq"><h2 data-r="0">Questions people ask.</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
   <section class="s5-end" data-r="0"><h2>Check your CRS score tonight.</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section>
 </div>
