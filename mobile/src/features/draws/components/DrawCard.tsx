@@ -19,6 +19,7 @@ type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
 const CATEGORY_BADGE: Record<string, BadgeVariant> = {
   CEC: 'success', General: 'neutral', Healthcare: 'info', STEM: 'info', Trades: 'warning', French: 'danger',
+  Managers: 'neutral', Transport: 'warning',
 };
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -28,6 +29,8 @@ const CATEGORY_COLOR: Record<string, string> = {
   STEM: palette.blueLight,
   Trades: palette.warning,
   French: palette.danger,
+  Managers: palette.purple,
+  Transport: palette.orange,
 };
 
 type Props = { draw: Draw; userScore?: number };

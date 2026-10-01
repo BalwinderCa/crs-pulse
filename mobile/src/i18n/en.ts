@@ -52,6 +52,10 @@ const en = {
     lastUpdated: 'Last updated {{label}} · updated monthly',
     processingNote: 'Processing times may increase if more people apply than spaces available under the Immigration Levels Plan. Estimates are not a maximum or a guarantee.',
     typicalPercent: '{{percent}}% of typical time',
+    daysToDecision: 'Days to decision',
+    decisionDate: 'Decision date',
+    decisionReceived: 'Final decision received {{date}}',
+    coprReceived: 'COPR received {{date}}',
     trackApplication: 'Track your application',
     appliedToIrcc: 'Applied to IRCC? See your estimated decision date',
     applicationTimeline: 'Application Timeline',
@@ -876,6 +880,8 @@ const en = {
     PNP: 'Provincial Nominee Program',
     Agriculture: 'Agriculture & Agri-food',
     Education: 'Education Occupations',
+    Managers: 'Senior Managers (Canadian Experience)',
+    Transport: 'Transport Occupations',
   },
 
   predictionLabels: {

@@ -25,6 +25,8 @@ const CAT_DOT_COLOR: Record<string, string> = {
   STEM: palette.blueLight,
   Trades: palette.warning,
   French: palette.danger,
+  Managers: palette.purple,
+  Transport: palette.orange,
 };
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -61,6 +63,16 @@ export default function HomeScreen() {
     ? (lastMilestone.type === 'Custom' ? (lastMilestone.customLabel ?? 'Custom') : lastMilestone.type)
     : null;
 
+  // A logged Final Decision (and a COPR custom milestone) end the estimate: once
+  // IRCC has decided, the card reports what happened instead of predicting it.
+  const decision = useMemo(() => {
+    const finals = milestones.filter((m) => m.type === 'Final Decision');
+    const final = finals.length ? finals[finals.length - 1] : null;
+    const coprs = milestones.filter((m) => m.type === 'Custom' && /copr/i.test(m.customLabel ?? ''));
+    const copr = coprs.length ? coprs[coprs.length - 1] : null;
+    return final ? { date: parseISO(final.date), copr: copr ? parseISO(copr.date) : null } : null;
+  }, [milestones]);
+
   // Tracked application → progress vs typical IRCC processing time
   const tracked = useMemo(() => {
     if (!application) return null;
@@ -68,9 +80,13 @@ export default function HomeScreen() {
     if (!found) return null;
     const totalDays = Math.round(found.type.months * 30.44);
     if (!application.appliedDate) {
-      return { ...found, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null };
+      return { ...found, applied: null, daysIn: null, totalDays, progress: 0, decisionDate: null, decided: false as const, copr: null };
     }
     const applied = parseISO(application.appliedDate);
+    if (decision && decision.date >= applied) {
+      const daysIn = daysBetween(applied, decision.date);
+      return { ...found, applied, daysIn, totalDays, progress: Math.min(1, daysIn / totalDays), decisionDate: decision.date, decided: true as const, copr: decision.copr };
+    }
     const daysIn = Math.max(0, daysBetween(applied, new Date()));
     const decisionDate = new Date(applied.getTime() + totalDays * DAY_MS);
     return {
@@ -80,8 +96,10 @@ export default function HomeScreen() {
       totalDays,
       progress: Math.min(1, daysIn / totalDays),
       decisionDate,
+      decided: false as const,
+      copr: null,
     };
-  }, [application, categories]);
+  }, [application, categories, decision]);
 
   const score = profile?.crs_score ?? 0;
   const scoreReady = score > 0;
@@ -157,23 +175,32 @@ export default function HomeScreen() {
               <View style={s.appStatsRow}>
                 <View style={s.appStat}>
                   <Text style={[s.appStatVal, { color: c.textPrimary }]}>{tracked.daysIn}</Text>
-                  <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t('home.daysSinceApplied')}</Text>
+                  <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t(tracked.decided ? 'home.daysToDecision' : 'home.daysSinceApplied')}</Text>
                 </View>
                 <View style={[s.drawDivider, { backgroundColor: c.border }]} />
-                <View style={s.appStat}>
-                  <Text style={[s.appStatVal, { color: tracked.progress >= 1 ? palette.warning : accent }]}>
-                    {Math.max(0, Math.ceil((tracked.totalDays - (tracked.daysIn ?? 0)) / 30.44))}
-                  </Text>
-                  <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t('home.monthsLeft')}</Text>
-                </View>
+                {tracked.decided ? (
+                  <View style={s.appStat}>
+                    <Text style={[s.appStatVal, { color: palette.success }]}>
+                      {format(tracked.decisionDate, 'MMM d', { locale: dateLocale })}
+                    </Text>
+                    <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t('home.decisionDate')}</Text>
+                  </View>
+                ) : (
+                  <View style={s.appStat}>
+                    <Text style={[s.appStatVal, { color: tracked.progress >= 1 ? palette.warning : accent }]}>
+                      {Math.max(0, Math.ceil((tracked.totalDays - (tracked.daysIn ?? 0)) / 30.44))}
+                    </Text>
+                    <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t('home.monthsLeft')}</Text>
+                  </View>
+                )}
               </View>
               <View style={[s.appTrack, { backgroundColor: c.surfaceTertiary }]}>
                 <View
                   style={[
                     s.appFill,
                     {
-                      backgroundColor: tracked.progress >= 1 ? palette.warning : accent,
-                      width: `${Math.min(100, Math.round(tracked.progress * 100))}%`,
+                      backgroundColor: tracked.decided ? palette.success : tracked.progress >= 1 ? palette.warning : accent,
+                      width: tracked.decided ? '100%' : `${Math.min(100, Math.round(tracked.progress * 100))}%`,
                     },
                   ]}
                 />
@@ -188,7 +215,15 @@ export default function HomeScreen() {
                 </Text>
               </View>
 
-              {tracked.progress >= 1 ? (
+              {tracked.decided ? (
+                <View style={[s.overdueRow, { backgroundColor: palette.success + '14' }]}>
+                  <Ionicons name="checkmark-circle" size={15} color={palette.success} />
+                  <Text style={[s.overdueText, { color: palette.success }]}>
+                    {t('home.decisionReceived', { date: format(tracked.decisionDate, 'MMM d, yyyy', { locale: dateLocale }) })}
+                    {tracked.copr ? `\n${t('home.coprReceived', { date: format(tracked.copr, 'MMM d, yyyy', { locale: dateLocale }) })}` : ''}
+                  </Text>
+                </View>
+              ) : tracked.progress >= 1 ? (
                 <View style={[s.overdueRow, { backgroundColor: palette.warning + '14' }]}>
                   <Ionicons name="alert-circle-outline" size={15} color={palette.warning} />
                   <Text style={[s.overdueText, { color: palette.warning }]}>

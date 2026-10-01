@@ -34,6 +34,8 @@ export const CATEGORY_LABELS: Record<string, string> = {
   PNP: 'Provincial Nominee Program',
   Agriculture: 'Agriculture & Agri-food',
   Education: 'Education Occupations',
+  Managers: 'Senior Managers (Canadian Experience)',
+  Transport: 'Transport Occupations',
 };
 
 export const CRS_MIN = 0;

@@ -18,6 +18,8 @@ export const DRAW_CATEGORIES = [
   'PNP',
   'Agriculture',
   'Education',
+  'Managers',
+  'Transport',
 ] as const;
 
 export type Category = (typeof DRAW_CATEGORIES)[number];

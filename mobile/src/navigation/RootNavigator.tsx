@@ -26,6 +26,7 @@ import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService
 import { trackScreen } from '@/services/analyticsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
+import { useTimelineStore } from '@/store/timelineStore';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useEePoolStore } from '@/store/eePoolStore';
@@ -51,6 +52,9 @@ export default function RootNavigator() {
   useEffect(() => {
     loadDraws().catch(() => {});
     useApplicationStore.getState().load().catch(() => {});
+    // Home reads milestones (last milestone, logged final decision) before the
+    // Timeline tab is ever opened, so they must be loaded at boot too.
+    useTimelineStore.getState().load().catch(() => {});
     useCalculatorsStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
     useProcessingTimesStore.getState().load().catch(() => {});

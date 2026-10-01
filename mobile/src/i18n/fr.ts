@@ -57,6 +57,11 @@ const fr: TranslationKeys = {
     lastUpdated: 'Dernière mise à jour {{label}} · actualisé mensuellement',
     processingNote: 'Les délais de traitement peuvent augmenter si plus de personnes demandent que de places disponibles sous le Plan des niveaux d\'immigration. Ces estimations ne sont pas un maximum ni une garantie.',
     typicalPercent: '{{percent}}% du temps typique',
+    // [REVIEW] décision finale
+    daysToDecision: 'Jours avant la décision',
+    decisionDate: 'Date de la décision',
+    decisionReceived: 'Décision finale reçue le {{date}}',
+    coprReceived: 'CRP reçue le {{date}}',
     trackApplication: 'Suivre votre demande',
     appliedToIrcc: 'Demande soumise à l\'IRCC? Consultez votre date de décision estimée',
     applicationTimeline: 'Chronologie de la demande',
@@ -877,6 +882,9 @@ const fr: TranslationKeys = {
     PNP: 'Programme des candidats des provinces',
     Agriculture: 'Agriculture et agroalimentaire',
     Education: 'Professions de l\'enseignement',
+    // [REVIEW] nouvelles catégories
+    Managers: 'Cadres supérieurs (expérience canadienne)',
+    Transport: 'Professions du transport',
   },
 
   predictionLabels: {

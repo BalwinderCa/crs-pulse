@@ -30,6 +30,12 @@ function mapCategory(name: string): string {
     if (name.toLowerCase().includes(key.toLowerCase().replace('targeted draw: ', ''))) return val;
     if (name.toLowerCase().includes(key.toLowerCase())) return val;
   }
+  // Category streams IRCC added after the map above was written. Without these the
+  // senior-manager and transport rounds fell through to 'General', and physician
+  // rounds ("…with Canadian work experience") never matched /health/.
+  if (/senior manager|executive/i.test(name)) return 'Managers';
+  if (/transport/i.test(name)) return 'Transport';
+  if (/physician|nurs|social service/i.test(name)) return 'Healthcare';
   if (/french/i.test(name)) return 'French';
   if (/stem/i.test(name)) return 'STEM';
   if (/health/i.test(name)) return 'Healthcare';

@@ -36,7 +36,7 @@ const label = (code: string) => CATEGORY_LABELS[code] ?? code;
 const PROC_KEY: Record<string, string> = {
   CEC: 'ee_cec', General: 'ee_fsw', FSW: 'ee_fsw', FST: 'ee_fsw', PNP: 'ee_pnp',
   Healthcare: 'ee_cec', STEM: 'ee_cec', Trades: 'ee_fsw', French: 'ee_cec',
-  Agriculture: 'ee_cec', Education: 'ee_cec',
+  Agriculture: 'ee_cec', Education: 'ee_cec', Managers: 'ee_cec', Transport: 'ee_cec',
 };
 
 // Sourced fallback for EE inventory/ETA (mirrors data/processing-times.json),

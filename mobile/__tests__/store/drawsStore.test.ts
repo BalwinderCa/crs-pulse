@@ -51,6 +51,27 @@ describe('drawsStore.refresh (H2) — empty-feed guard', () => {
   });
 });
 
+describe('drawsStore category mapping', () => {
+  it('labels the newer IRCC category streams instead of falling back to General', async () => {
+    const names = [
+      ['Senior managers with Canadian work experience (2026-1)', 'Managers'],
+      ['Transport occupations (2025-1)', 'Transport'],
+      ['Physicians with Canadian work experience (2026-1)', 'Healthcare'],
+      ['Healthcare and social services occupations (2026-1)', 'Healthcare'],
+      ['Canadian Experience Class', 'CEC'],
+      ['No Program Specified', 'General'],
+    ];
+    jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ rounds: names.map(([drawName], i) => ({ drawNumber: String(500 + i), drawCRS: '500', drawSize: '100', drawDate: '2026-02-01', drawName })) }),
+    );
+
+    await useDrawsStore.getState().refresh();
+
+    const byNumber = new Map(useDrawsStore.getState().draws.map((d) => [d.draw_number, d.category]));
+    names.forEach(([, expected], i) => expect(byNumber.get(500 + i)).toBe(expected));
+  });
+});
+
 describe('drawsStore & eePoolStore Unified Sync', () => {
   it('synchronizes pool store when draws are refreshed', async () => {
     const updateSpy = jest.spyOn(useEePoolStore.getState(), 'updateFromRounds').mockResolvedValue(undefined);
