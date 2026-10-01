@@ -1,8 +1,17 @@
 {
-  "updated": "2026-09-29",
-  "updatedFull": "September 29, 2026",
+  "updated": "2026-10-01",
+  "updatedFull": "October 1, 2026",
   "distributionAsOf": "September 27, 2026",
   "rounds": [
+    {
+      "number": "447",
+      "date": "2026-10-01",
+      "dateFull": "October 1, 2026",
+      "name": "Trades Occupations, 2026-Version 3",
+      "label": "Trades Occupations",
+      "size": 3500,
+      "crs": 476
+    },
     {
       "number": "446",
       "date": "2026-09-29",
@@ -173,15 +182,6 @@
       "label": "Canadian Experience Class",
       "size": 2000,
       "crs": 516
-    },
-    {
-      "number": "427",
-      "date": "2026-07-20",
-      "dateFull": "July 20, 2026",
-      "name": "Provincial Nominee Program",
-      "label": "Provincial Nominee Program",
-      "size": 511,
-      "crs": 744
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 229904,
   "ytd": {
     "year": 2026,
-    "rounds": 58,
-    "invitations": 131715,
+    "rounds": 59,
+    "invitations": 135215,
     "categories": 9
   }
 }
