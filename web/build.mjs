@@ -1033,6 +1033,9 @@ const S5_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossor
 @keyframes s5mq{ to{ transform:translateX(-50%); } }
 .s5-calcs{ padding:120px 0 40px; } .s5-calcs h2{ font-size:clamp(34px,4vw,56px); line-height:1; max-width:15ch; }
 .s5-snap{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px,1fr); gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; padding:34px 0 10px; scrollbar-width:none; }
+/* the four grids: one row on desktop, 2x2 on tablets, a swipeable row with a peek on phones */
+@media (min-width:1000px){ .s5-snap{ grid-auto-flow:row; grid-template-columns:repeat(4,minmax(0,1fr)); overflow:visible; } }
+@media (min-width:640px) and (max-width:999px){ .s5-snap{ grid-auto-flow:row; grid-template-columns:repeat(2,minmax(0,1fr)); overflow:visible; } }
 .s5-snap a{ scroll-snap-align:start; border-radius:24px; padding:28px; background:var(--bg2); border:1px solid var(--hairline); min-height:280px; display:flex; flex-direction:column; gap:10px; color:var(--text); transition:transform .35s cubic-bezier(.16,1,.3,1), border-color .2s ease; }
 .s5-snap a:hover{ transform:translateY(-6px); border-color:var(--accentInk); color:var(--text); }
 .s5-snap a:first-child{ background:var(--accentBtn); color:#fff; border:0; } .s5-snap a:first-child p{ color:rgba(255,255,255,.85); }
