@@ -495,6 +495,107 @@ document.addEventListener('click',function(e){document.querySelectorAll('details
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('details.menu[open]').forEach(function(m){m.removeAttribute('open');m.querySelector('summary').focus()})});
 </script>`;
 
+// Calendar for every date field. A page marks a hidden input with data-datepicker (optional
+// data-min / data-max as YYYY-MM-DD or "today"); this swaps in a button showing the date and
+// a month grid in the site's own style. The input keeps the ISO value and fires input/change
+// like a native one, and assigning input.value from page code repaints the button.
+const DATEPICKER_JS = `<script>
+(function(){
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var CAL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+  var ARROW=function(d){ return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(d<0?'M15 5l-7 7 7 7':'M9 5l7 7-7 7')+'"/></svg>'; };
+  var CARET='<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>';
+  var desc=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+  function pad(n){ return (n<10?'0':'')+n; }
+  function iso(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function parse(s){ var m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(s||''); return m?new Date(+m[1],m[2]-1,+m[3]):null; }
+  function today(){ var d=new Date(); return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
+  function same(a,b){ return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+  function long(d){ return MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); }
+  var current=null;
+  // On phones the calendar is a bottom sheet. An animated ancestor would pin a fixed
+  // element to itself, so the sheet moves to <body> while it is open.
+  var sheet=window.matchMedia('(max-width:520px)');
+  document.addEventListener('click',function(e){ var path=e.composedPath(); if(current&&path.indexOf(current.wrap)<0&&path.indexOf(current.pop)<0) current.close(false); });
+  document.querySelectorAll('input[data-datepicker]').forEach(function(input){
+    var bound=function(a){ var v=input.getAttribute(a); return v==='today'?today():parse(v); };
+    var min=bound('data-min'), max=bound('data-max');
+    var ok=function(d){ return (!min||d>=min)&&(!max||d<=max); };
+    var wrap=document.createElement('div'); wrap.className='dp';
+    input.parentNode.insertBefore(wrap,input); wrap.appendChild(input);
+    var field=document.createElement('button'); field.type='button'; field.className='dp-field';
+    field.setAttribute('style',input.getAttribute('style')||''); field.setAttribute('aria-haspopup','dialog'); field.setAttribute('aria-expanded','false');
+    var pop=document.createElement('div'); pop.className='dp-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Choose a date'); pop.hidden=true;
+    wrap.appendChild(field); wrap.appendChild(pop);
+    var view, focusDay, mode='days';
+    var self={ wrap:wrap, pop:pop, close:close };
+    function selected(){ return parse(desc.get.call(input)); }
+    function paint(){ var d=selected(); field.innerHTML='<span class="'+(d?'':'dp-ph')+'">'+(d?long(d).replace(/^(\\w{3})\\w*/,'$1'):'Select a date')+'</span>'+CAL; }
+    Object.defineProperty(input,'value',{ configurable:true, get:function(){ return desc.get.call(input); }, set:function(v){ desc.set.call(input,v); paint(); } });
+    if(input.form) input.form.addEventListener('reset',function(){ setTimeout(paint); });
+    function set(d){ desc.set.call(input,d?iso(d):''); paint(); input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true})); }
+    function clamp(d){ return min&&d<min?min:max&&d>max?max:d; }
+    function open(){ if(current&&current!==self) current.close(false); var v=selected()||clamp(today()); focusDay=v; view=new Date(v.getFullYear(),v.getMonth(),1); mode='days'; render(); if(sheet.matches) document.body.appendChild(pop); pop.hidden=false; field.setAttribute('aria-expanded','true'); current=self; focusGrid(); }
+    function close(back){ if(pop.hidden) return; pop.hidden=true; if(pop.parentNode!==wrap) wrap.appendChild(pop); field.setAttribute('aria-expanded','false'); if(current===self) current=null; if(back) field.focus(); }
+    function focusGrid(){ var b=pop.querySelector(mode==='days'?'.dp-day[tabindex="0"]':'.dp-mon[tabindex="0"]'); if(b) b.focus(); }
+    function render(){
+      var y=view.getFullYear(), m=view.getMonth(), sel=selected(), t=today(), h='';
+      if(mode==='days'){
+        h+='<div class="dp-head"><button type="button" class="dp-nav" data-go="-1" aria-label="Previous month">'+ARROW(-1)+'</button><button type="button" class="dp-title" data-mode aria-label="Choose month and year">'+MONTHS[m]+' '+y+CARET+'</button><button type="button" class="dp-nav" data-go="1" aria-label="Next month">'+ARROW(1)+'</button></div>';
+        h+='<div class="dp-dow" aria-hidden="true">'+DOW.map(function(d){ return '<span>'+d+'</span>'; }).join('')+'</div><div class="dp-grid">';
+        var first=new Date(y,m,1).getDay();
+        for(var i=0;i<42;i++){
+          var d=new Date(y,m,1-first+i);
+          h+='<button type="button" class="dp-day'+(d.getMonth()!==m?' out':'')+(same(d,t)?' today':'')+(same(d,sel)?' sel':'')+'" data-d="'+iso(d)+'" tabindex="'+(same(d,focusDay)?0:-1)+'" aria-label="'+long(d)+(same(d,t)?', today':'')+'"'+(same(d,sel)?' aria-pressed="true"':'')+(ok(d)?'':' disabled')+'>'+d.getDate()+'</button>';
+        }
+        h+='</div>';
+      } else {
+        h+='<div class="dp-head"><button type="button" class="dp-nav" data-year="-1" aria-label="Previous year">'+ARROW(-1)+'</button><button type="button" class="dp-title" data-mode aria-label="Back to days">'+y+CARET+'</button><button type="button" class="dp-nav" data-year="1" aria-label="Next year">'+ARROW(1)+'</button></div><div class="dp-months">';
+        for(var k=0;k<12;k++){
+          var inRange=(!min||new Date(y,k+1,0)>=min)&&(!max||new Date(y,k,1)<=max);
+          h+='<button type="button" class="dp-mon'+(sel&&sel.getFullYear()===y&&sel.getMonth()===k?' sel':'')+'" data-m="'+k+'" tabindex="'+(k===m?0:-1)+'"'+(inRange?'':' disabled')+'>'+MONTHS[k].slice(0,3)+'</button>';
+        }
+        h+='</div>';
+      }
+      h+='<div class="dp-foot"><button type="button" class="dp-link" data-today'+(ok(t)?'':' disabled')+'>Today</button><button type="button" class="dp-link" data-close>Done</button></div>';
+      pop.innerHTML=h;
+    }
+    field.addEventListener('click',function(){ pop.hidden?open():close(true); });
+    field.addEventListener('keydown',function(e){ if(e.key==='ArrowDown'&&pop.hidden){ e.preventDefault(); open(); } });
+    pop.addEventListener('click',function(e){
+      var b=e.target.closest('button'); if(!b){ e.preventDefault(); return; }
+      if(b.disabled) return;
+      if(b.hasAttribute('data-go')){ view=new Date(view.getFullYear(),view.getMonth()+(+b.getAttribute('data-go')),1); focusDay=new Date(view); render(); return; }
+      if(b.hasAttribute('data-year')){ view=new Date(view.getFullYear()+(+b.getAttribute('data-year')),view.getMonth(),1); render(); return; }
+      if(b.hasAttribute('data-mode')){ mode=mode==='days'?'months':'days'; render(); focusGrid(); return; }
+      if(b.hasAttribute('data-m')){ view=new Date(view.getFullYear(),+b.getAttribute('data-m'),1); focusDay=clamp(new Date(view)); mode='days'; render(); focusGrid(); return; }
+      if(b.hasAttribute('data-d')){ set(parse(b.getAttribute('data-d'))); close(true); return; }
+      if(b.hasAttribute('data-today')){ set(today()); close(true); return; }
+      if(b.hasAttribute('data-close')) close(true);
+    });
+    pop.addEventListener('keydown',function(e){
+      if(e.key==='Escape'){ e.preventDefault(); close(true); return; }
+      if(mode!=='days'||!e.target.classList.contains('dp-day')) return;
+      var d=parse(e.target.getAttribute('data-d')), n=null;
+      switch(e.key){
+        case 'ArrowLeft': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()-1); break;
+        case 'ArrowRight': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1); break;
+        case 'ArrowUp': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()-7); break;
+        case 'ArrowDown': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+7); break;
+        case 'Home': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()-d.getDay()); break;
+        case 'End': n=new Date(d.getFullYear(),d.getMonth(),d.getDate()+6-d.getDay()); break;
+        case 'PageUp': n=new Date(d.getFullYear()-(e.shiftKey?1:0),d.getMonth()-(e.shiftKey?0:1),d.getDate()); break;
+        case 'PageDown': n=new Date(d.getFullYear()+(e.shiftKey?1:0),d.getMonth()+(e.shiftKey?0:1),d.getDate()); break;
+      }
+      if(!n) return;
+      e.preventDefault(); focusDay=n; view=new Date(n.getFullYear(),n.getMonth(),1); render(); focusGrid();
+    });
+    paint();
+  });
+})();
+</script>`;
+
 // ------------------------------------------------------------------ chrome
 // No decorative layer: the old drifting colour blobs and the skyline photo backdrop are
 // gone. Hierarchy on this site comes from type, hairlines and alignment.
@@ -663,6 +764,7 @@ ${POSTHOG_WEB}
 </head>
 <body>
 ${body}
+${body.includes('data-datepicker') ? DATEPICKER_JS : ''}
 ${THEME_SCRIPT}
 ${S5_MOTION}
 ${scripts}
@@ -1017,6 +1119,35 @@ body:not(.dg-scrolled) .sitehead{ background:transparent; border-bottom-color:tr
 .tl-gloss{ margin:12px 0 0; display:flex; flex-direction:column; gap:12px; } .tl-gloss dt{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--text); font-size:14px; } .tl-gloss dd{ margin:2px 0 0 23px; color:var(--text2); font-size:13.5px; line-height:1.5; }
 @media (max-width:860px){ .tl-grid{ grid-template-columns:minmax(0,1fr); } }
 @media print{ .tl-act, #tl-form, .tl-grid > div:last-child{ display:none!important; } .tl-grid{ display:block; } }
+/* calendar (DATEPICKER_JS) */
+.dp{ position:relative; }
+.dp-field{ display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%; cursor:pointer; text-align:left; font-family:inherit; }
+.dp-field svg{ color:var(--text2); flex-shrink:0; }
+.dp-field:hover{ border-color:var(--text2)!important; }
+.dp-field[aria-expanded="true"]{ border-color:var(--accent)!important; box-shadow:0 0 0 3px var(--accentSoft); }
+.dp-ph{ color:var(--muted); }
+.dp-pop{ position:absolute; z-index:70; top:calc(100% + 8px); left:0; width:312px; padding:14px; border-radius:18px; background:var(--card); border:1px solid var(--border); box-shadow:var(--lift); color:var(--text); font-weight:500; letter-spacing:0; text-transform:none; }
+.dp-head{ display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px; }
+.dp-nav{ width:36px; height:36px; border-radius:10px; border:0; background:none; color:var(--text2); cursor:pointer; display:grid; place-items:center; }
+.dp-nav:hover{ background:var(--bg3); color:var(--text); }
+.dp-title{ border:0; background:none; font-family:inherit; font-weight:800; font-size:15.5px; color:var(--text); cursor:pointer; padding:7px 10px; border-radius:10px; display:flex; gap:6px; align-items:center; }
+.dp-title:hover{ background:var(--bg3); }
+.dp-dow, .dp-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+.dp-dow span{ text-align:center; font-size:11px; font-weight:700; color:var(--muted); padding:4px 0 6px; text-transform:uppercase; letter-spacing:.05em; }
+.dp-day{ aspect-ratio:1; border:0; background:none; border-radius:10px; font-family:inherit; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; font-variant-numeric:tabular-nums; transition:background .12s ease; }
+.dp-day:hover{ background:var(--bg3); }
+.dp-day.out{ color:var(--muted); opacity:.5; }
+.dp-day.today{ box-shadow:inset 0 0 0 1.5px var(--accent); color:var(--accentInk); }
+.dp-day.sel, .dp-day.sel:hover{ background:var(--accentBtn); color:#fff; box-shadow:none; opacity:1; }
+.dp-day:disabled, .dp-mon:disabled, .dp-link:disabled{ opacity:.25; cursor:not-allowed; background:none; }
+.dp-months{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:4px 0; }
+.dp-mon{ padding:14px 0; border:0; border-radius:12px; background:var(--bg2); font-family:inherit; font-size:14px; font-weight:600; color:var(--text); cursor:pointer; }
+.dp-mon:hover{ background:var(--bg3); } .dp-mon.sel{ background:var(--accentBtn); color:#fff; }
+.dp-foot{ display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid var(--hairline); }
+.dp-link{ border:0; background:none; font-family:inherit; font-size:13.5px; font-weight:700; color:var(--accentInk); cursor:pointer; padding:7px 10px; border-radius:8px; }
+.dp-link:hover{ background:var(--accentSoft); }
+.dp-pop button:focus-visible{ outline:2px solid var(--accentInk); outline-offset:1px; }
+@media (max-width:520px){ .dp-pop{ position:fixed; left:12px; right:12px; top:auto; bottom:calc(12px + env(safe-area-inset-bottom)); width:auto; padding:16px; box-shadow:0 -10px 40px -10px rgba(0,0,0,.35), var(--lift); } .dp-day{ font-size:15px; } }
 /* motion runtime */
 .js [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
 .js [data-r].in{ opacity:1; transform:none; }
@@ -1454,7 +1585,7 @@ function processingPage() {
     ${resH2('When should I hear back?', 'Pick your application and the date IRCC received it. The estimate uses IRCC’s current published time; nothing leaves your browser.')}
     <div class="fields" style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:22px">
       <label style="${LBL}">Application<select id="pt-type" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
-      <label style="${LBL}">Date received<input id="pt-date" type="date" style="${INP}"></label>
+      <label style="${LBL}">Date received<input id="pt-date" type="hidden" data-datepicker data-max="today" style="${INP}"></label>
     </div>
     <div id="pt-out"></div>
   </div>`;
@@ -1597,7 +1728,7 @@ ${pageHero('Your application,', 'step by step.', 'Log your ITA, AOR, biometrics,
         ${resH2('Add a milestone')}
         <form id="tl-form" class="fields" style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px">
           <label style="${LBL}">Milestone<select id="tl-type" style="${SEL}">${MILESTONES_WEB.map(([type, label]) => `<option value="${type}">${label}</option>`).join('')}</select></label>
-          <label style="${LBL}">Date<input id="tl-date" type="date" required style="${INP}"></label>
+          <label style="${LBL}">Date<input id="tl-date" type="hidden" data-datepicker style="${INP}"></label>
           <label id="tl-custom-wrap" style="${LBL};grid-column:1/-1" hidden>Label<input id="tl-custom" type="text" maxlength="60" placeholder="e.g. Background check started" style="${INP}"></label>
           <label style="${LBL};grid-column:1/-1">Note (optional)<input id="tl-note" type="text" maxlength="140" placeholder="Anything worth remembering" style="${INP}"></label>
           <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button type="submit" id="tl-save" class="btn btn-accent">Add milestone</button><button type="button" id="tl-cancel" class="btn btn-quiet" hidden>Cancel edit</button></div>
