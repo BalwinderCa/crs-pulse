@@ -289,11 +289,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .ib-voldn{ left:-.9%; top:32.8%; height:6.6%; }
 .ib-side{ right:-.9%; top:25.5%; height:10.2%; }
 
-/* a real card lifted out of the app and set beside the phone — the genre's one
-   permitted flourish, and here it carries live numbers rather than decoration */
 .phonewrap{ position:relative; display:inline-block; }
-.floatcard{ position:absolute; z-index:2; background:var(--card); border:1px solid var(--border);
-  border-radius:14px; box-shadow:var(--lift); padding:16px 18px; }
 .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; }
 .card-lift{ box-shadow:var(--lift); }
 .frow{ display:grid; grid-template-columns:1fr 300px; gap:56px; align-items:center; }
@@ -351,7 +347,6 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
   .ftext, .frow.flip .ftext{ max-width:none; margin-left:0; }
   .fshot{ justify-content:flex-start; }
   .phonewrap{ display:block; }
-  .floatcard{ position:static!important; margin:20px auto 0; width:auto!important; max-width:340px; }
   .hero .fshot, .hero > div:last-child{ justify-content:center; }
   .hero .iphone{ margin:0 auto; }
   .statbar{ grid-template-columns:repeat(2,1fr); gap:22px 18px; }
@@ -726,30 +721,6 @@ const cell = (label, value, caption, tone, size = 34) => `
   <div style="font-size:13px;line-height:1.45;color:var(--text2)">${caption}</div>
 </div>`;
 
-// The card that sits beside the hero phone. The profile is an example and says so, but
-// the score comes out of the real CRS grid and the cutoff is the real benchmark round,
-// so the comparison on screen is one the product would actually make.
-function scoreCard(sample, floating) {
-  const diff = sample.total - BENCHMARK.crs;
-  const above = diff >= 0;
-  const tone = above ? 'var(--success)' : 'var(--warningInk)';
-  const soft = above ? 'var(--successSoft)' : 'var(--warningSoft)';
-  return `
-<div class="${floating ? 'floatcard' : 'card card-lift'}" style="${floating ? 'left:-118px;bottom:26px;width:266px' : 'padding:16px 18px;max-width:320px'}">
-  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px">
-    <span class="klabel">Your score vs. latest draw</span>
-    <span class="klabel" style="border:1px solid var(--border);border-radius:999px;padding:2px 8px">Example</span>
-  </div>
-  <div style="display:flex;align-items:baseline;gap:10px">
-    <span class="num" style="font-size:40px;line-height:1">${sample.total}</span>
-    <span style="font-size:13px;color:var(--text2)">vs. cutoff <span class="num" style="font-size:15px">${BENCHMARK.cutoff}</span></span>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;margin-top:12px;background:${soft};border-radius:8px;padding:7px 10px">
-    ${catDot(tone, 7)}<span style="font-size:13px;font-weight:600;color:${tone}">${above ? `${diff} points above` : `${Math.abs(diff)} points below`} ${BENCHMARK.cat}</span>
-  </div>
-  <div style="margin-top:10px;font-size:12px;color:var(--muted)">Round #${BENCHMARK.no} · ${shortDate(BENCHMARK.iso)} · from IRCC</div>
-</div>`;
-}
 
 // An alternating text/screenshot row — the spine of the page.
 const featureRow = ({ tag, title, body, points, shot, flip, extra }) => `
@@ -868,7 +839,6 @@ function home() {
       <div style="display:flex;justify-content:center">
         <div class="phonewrap">
           ${phone('home', 286)}
-          ${scoreCard(sample, true)}
         </div>
       </div>
     </div>
