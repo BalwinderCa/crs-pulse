@@ -201,6 +201,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   .menu{ display:block; }
 }
 @media (max-width:360px){ .wordmark{ font-size:16.5px; } .headcta{ padding:0 11px; font-size:13px; } }
+.totop{ display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text2); }
+.totop:hover{ color:var(--accentInk); }
 /* skip link: off-screen until focused */
 .skip{ position:absolute; left:12px; top:-60px; z-index:100; background:var(--text); color:var(--bg); padding:10px 14px; border-radius:8px; font-weight:600; font-size:14px; }
 .skip:focus{ top:12px; color:var(--bg); }
@@ -448,6 +450,7 @@ const ICON_PATHS = {
   award: '<circle cx="12" cy="9" r="5.5"/><path d="M9 13.8L8 21l4-2 4 2-1-7.2"/>',
   timer: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5M10 2.5h4"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r=".9"/>',
+  arrowUp: '<path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
 };
@@ -514,6 +517,7 @@ const footerSlim = (note) => `
   <div class="wrap" style="padding:28px 24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center">
     <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--text)">CRS Pulse</span>
     <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:640px">${note}</p>
+    <a class="foot-link totop" href="#" style="font-size:12.5px">${icon('arrowUp', 15)}Back to top</a>
   </div>
 </footer>`;
 
@@ -558,12 +562,12 @@ const footerFull = () => `
     </div>
     <div style="border-top:1px solid var(--hairline);padding-top:20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:baseline">
       <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:720px">${LEGAL_NOTE}</p>
-      <span style="font-size:12.5px;color:var(--muted)">© ${new Date().getFullYear()} CRS Pulse</span>
+      <span style="display:flex;align-items:center;gap:18px;font-size:12.5px;color:var(--muted)"><a class="foot-link totop" href="#">${icon('arrowUp', 15)}Back to top</a>© ${new Date().getFullYear()} CRS Pulse</span>
     </div>
   </div>
 </footer>`;
 
-function shell({ title, description, path, jsonld, noindex, body }) {
+function shell({ title, description, path, jsonld, noindex, body, head2 = '', scripts = '' }) {
   // `path` is set for the six real pages: it drives the canonical URL and the
   // rel=alternate pointer at the markdown twin agents can ask for. The 404 page
   // has no canonical home, so it passes neither and goes out noindex.
@@ -597,6 +601,7 @@ ${path ? `<meta property="og:url" content="${SITE}${path}">` : ''}
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${SITE}/img/og.png">
 ${head}
+${head2}
 ${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
 ${VERCEL_ANALYTICS}
@@ -609,6 +614,7 @@ ${POSTHOG_WEB}
 <body>
 ${body}
 ${THEME_SCRIPT}
+${scripts}
 </body>
 </html>
 `;
@@ -688,11 +694,11 @@ const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
 // site is the actual app — no stock device photography, no invented UI.
 const SHOTS = {
-  home: ['/img/app-home.webp', 'The CRS Pulse home screen, showing a CRS score of 512 and the three most recent Express Entry draws'],
-  draws: ['/img/app-draws.webp', 'The draws screen, listing rounds #422 to #419 with cutoff, invitations and category filters'],
-  analytics: ['/img/app-analytics.webp', 'The analytics screen, showing moderate odds for the Canadian Experience Class with a forecast chart'],
-  timeline: ['/img/app-timeline.webp', 'The application timeline screen, prompting to log ITA, AOR and passport-request milestones'],
-};
+  home: ['/img/app-home.webp', 'The CRS Pulse home screen: a CRS score of 525 and a Canadian Experience Class application tracked since May 5, 2026, with its estimated decision month'],
+  draws: ['/img/app-draws.webp', 'The draws screen, listing the latest Express Entry rounds with cutoff, invitations and category'],
+  analytics: ['/img/app-analytics.webp', 'The analytics screen: moderate odds for the Canadian Experience Class, a score of 525 against a trend cutoff near 519'],
+  timeline: ['/img/app-timeline.webp', 'The application timeline, from biometrics in May to Portal 2 and eCOPR received on October 1, 2026'],
+}
 // An iPhone Pro drawn in CSS: titanium band, side buttons, black bezel, Dynamic Island
 // and a 9:41 status bar. The screenshots are cropped below the status bar, so the drawn
 // bar is what gives the screen a true iPhone aspect (~1:2.17). Everything inside is sized
@@ -810,186 +816,153 @@ const milestoneRail = () => `
 </ol>`;
 
 // ------------------------------------------------------------------ HOME
+// ------------------------------------------------------------------ HOME (template 5)
+// The home page copy follows the design skill's no-dash rule; shared copy (FAQ etc.)
+// keeps its dashes elsewhere, so they are softened only where the home renders it.
+const noDashes = (s) => s.replace(/\s—\s/g, ', ').replace(/—/g, ', ').replace(/(\d)\s?–\s?(\d)/g, '$1-$2');
+const HOME_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
+<script>document.documentElement.classList.add('js')</script>
+<style>
+.s5{ font-family:'Satoshi',-apple-system,system-ui,sans-serif; font-size:17px; line-height:1.6; }
+.s5 h1, .s5 h2, .s5 h3{ font-family:'Satoshi',sans-serif; font-weight:900; letter-spacing:-.035em; }
+.s5 .wrap{ max-width:1080px; padding:0 24px; }
+.s5-btn{ display:inline-flex; align-items:center; gap:10px; height:52px; padding:0 24px; border-radius:14px; font-weight:700; font-size:16px; transition:transform .25s cubic-bezier(.16,1,.3,1), background .2s ease; }
+.s5-btn:hover{ transform:translateY(-2px); } .s5-btn:active{ transform:translateY(1px) scale(.98); }
+.s5-red{ background:var(--accentBtn); color:#fff!important; box-shadow:0 14px 30px -14px rgba(201,42,34,.7); } .s5-red:hover{ background:var(--accent); }
+.s5-soft{ background:var(--bg3); color:var(--text)!important; } .s5-white{ background:#fff; color:#C92A22!important; }
+.s5-hero{ display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; min-height:calc(100dvh - 64px); padding:24px 0 40px; }
+.s5-hero h1{ font-size:clamp(46px,5.6vw,80px); line-height:1.02; } .s5-hero h1 em{ font-style:normal; color:var(--accentInk); }
+.s5-sub{ font-size:20px; color:var(--text2); margin:26px 0 36px; max-width:40ch; }
+.s5-stage{ position:relative; display:flex; justify-content:center; }
+.s5-stage::before{ content:""; position:absolute; width:min(520px,90vw); aspect-ratio:1; border-radius:50%; top:50%; left:50%; translate:-50% -50%; background:radial-gradient(closest-side, var(--accentSoft), transparent); }
+.js .s5-stage .iphone{ opacity:0; transform:translateY(60px) rotate(6deg); transition:opacity 1.2s cubic-bezier(.16,1,.3,1) .35s, transform 1.4s cubic-bezier(.16,1,.3,1) .35s; }
+.js .s5-stage.in .iphone{ opacity:1; transform:rotate(-3deg); }
+.s5-live{ display:grid; grid-template-columns:repeat(4,1fr); border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.s5-live > div{ padding:30px 26px; } .s5-live > div + div{ border-left:1px solid var(--border); }
+.s5-live b{ display:block; font-size:44px; font-weight:900; letter-spacing:-.04em; line-height:1.05; font-variant-numeric:tabular-nums; color:var(--text); }
+.s5-live span{ color:var(--text2); font-size:14.5px; }
+.s5-trust{ display:flex; justify-content:center; gap:34px; flex-wrap:wrap; padding:22px 0; color:var(--text2); font-size:15px; } .s5-trust span{ display:inline-flex; gap:7px; align-items:center; } .s5-trust span > span{ margin:0; }
+.s5-story{ display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:80px; padding:110px 0 40px; }
+.s5-chap{ min-height:78vh; display:flex; flex-direction:column; justify-content:center; max-width:520px; }
+.s5-ic{ width:52px; height:52px; border-radius:16px; background:var(--accentSoft); color:var(--accentInk); display:grid; place-items:center; margin-bottom:24px; }
+.s5-chap h2{ font-size:clamp(34px,3.6vw,52px); line-height:1.02; margin-bottom:16px; }
+.s5-chap p{ color:var(--text2); font-size:18px; }
+.s5-chap ul{ list-style:none; padding:0; margin:26px 0 0; display:grid; gap:12px; } .s5-chap li{ display:flex; gap:12px; color:var(--text); }
+.s5-pin{ position:sticky; top:calc(50vh - 330px); height:680px; display:flex; align-items:center; justify-content:center; }
+.s5-pin .iscreen img{ transition:opacity .6s ease; } .s5-pin .iscreen img + img{ position:absolute; left:0; right:0; bottom:0; top:16.3cqw; }
+.s5-pin .iscreen img:not(.on){ opacity:0; }
+.s5-mphone{ display:none; }
+.s5-marquee{ overflow:hidden; border-block:1px solid var(--border); padding:22px 0; margin-top:60px; }
+.s5-track{ display:flex; gap:56px; width:max-content; }
+@media (prefers-reduced-motion: no-preference){ .s5-track{ animation:s5mq 60s linear infinite; } .s5-marquee:hover .s5-track{ animation-play-state:paused; } }
+.s5-d{ display:flex; align-items:baseline; gap:12px; white-space:nowrap; } .s5-d b{ font-size:32px; font-weight:900; letter-spacing:-.03em; color:var(--text); } .s5-d span{ color:var(--text2); font-size:15px; }
+@keyframes s5mq{ to{ transform:translateX(-50%); } }
+.s5-calcs{ padding:120px 0 40px; } .s5-calcs h2{ font-size:clamp(34px,4vw,56px); line-height:1; max-width:15ch; }
+.s5-snap{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px,1fr); gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; padding:34px 0 10px; scrollbar-width:none; }
+.s5-snap a{ scroll-snap-align:start; border-radius:24px; padding:28px; background:var(--bg2); border:1px solid var(--hairline); min-height:280px; display:flex; flex-direction:column; gap:10px; color:var(--text); transition:transform .35s cubic-bezier(.16,1,.3,1), border-color .2s ease; }
+.s5-snap a:hover{ transform:translateY(-6px); border-color:var(--accentInk); color:var(--text); }
+.s5-snap a:first-child{ background:var(--accentBtn); color:#fff; border:0; } .s5-snap a:first-child p{ color:rgba(255,255,255,.85); }
+.s5-max{ font-size:72px; font-weight:900; letter-spacing:-.05em; line-height:1; margin-top:auto; }
+.s5-snap p{ color:var(--text2); font-size:15px; }
+.s5-priv{ padding:140px 0; }
+.s5-big{ font-family:'Satoshi',sans-serif; font-size:clamp(34px,4.6vw,66px); font-weight:900; letter-spacing:-.035em; line-height:1.06; max-width:20ch; }
+.s5-big .wd{ color:var(--border); transition:color .3s ease; } .s5-big .wd.lit{ color:var(--text); } .s5-big .wd.lit.red{ color:var(--accentInk); }
+.s5-pts{ display:grid; grid-template-columns:1fr 1fr; gap:18px 48px; margin-top:56px; max-width:900px; } .s5-pts p{ display:flex; gap:12px; color:var(--text2); }
+.s5-faq{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; padding:20px 0 120px; scroll-margin-top:80px; }
+.s5-faq h2{ grid-column:1/-1; font-size:clamp(34px,4vw,56px); margin-bottom:20px; }
+.s5-faq details{ border-radius:20px; background:var(--bg2); padding:20px 24px; align-self:start; } .s5-faq summary{ cursor:pointer; list-style:none; font-weight:700; font-size:17px; display:flex; justify-content:space-between; gap:16px; color:var(--text); }
+.s5-faq summary::-webkit-details-marker{ display:none; }
+.s5-faq summary::after{ content:"+"; color:var(--accentInk); font-size:22px; line-height:1; transition:transform .3s ease; } .s5-faq details[open] summary::after{ transform:rotate(45deg); }
+.s5-faq details p{ color:var(--text2); font-size:15.5px; margin-top:12px; }
+.s5-end{ border-radius:36px; background:var(--accentBtn); color:#fff; padding:80px 48px; display:grid; grid-template-columns:1fr auto; gap:40px; align-items:end; margin-bottom:90px; }
+.s5-end h2{ font-size:clamp(40px,5vw,72px); line-height:.98; max-width:12ch; color:#fff; }
+/* motion runtime */
+.js .s5 [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
+.js .s5 [data-r].in{ opacity:1; transform:none; }
+.js .s5 .split .w{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.08em; margin-bottom:-.08em; }
+.js .s5 .split .w > span{ display:inline-block; transform:translateY(105%); transition:transform 1s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
+.js .s5 .split.in .w > span{ transform:none; }
+@media (prefers-reduced-motion: reduce){ .js .s5 [data-r], .js .s5 .split .w > span{ opacity:1!important; transform:none!important; transition:none!important; } }
+@media (max-width:960px){
+  .s5-hero{ grid-template-columns:minmax(0,1fr); min-height:auto; padding-top:30px; } .s5-live{ grid-template-columns:repeat(2,minmax(0,1fr)); } .s5-live > div{ padding:22px 16px; } .s5-live b{ font-size:32px; }
+  .s5-live > div:nth-child(3){ border-left:0; } .s5-live > div:nth-child(n+3){ border-top:1px solid var(--border); }
+  .s5-story{ grid-template-columns:minmax(0,1fr); padding-top:60px; } .s5-pin{ display:none; } .s5-chap{ min-height:auto; padding:40px 0; } .s5-mphone{ display:flex; justify-content:center; margin-top:36px; }
+  .s5-pts{ grid-template-columns:1fr; } .s5-faq{ grid-template-columns:minmax(0,1fr); } .s5-end{ grid-template-columns:1fr; padding:52px 28px; } }
+</style>`;
+const HOME_SCRIPTS = `<script src="/js/gsap.min.js" defer></script><script src="/js/ScrollTrigger.min.js" defer></script>
+<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var R = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.s5 .split').forEach(function(el){ var i = 0;
+    el.innerHTML = el.innerHTML.trim().split(/(\\s+|<[^>]+>)/).filter(Boolean).map(function(t){ if(/^</.test(t)) return t; if(/^\\s+$/.test(t)) return ' '; return '<span class="w"><span style="--d:' + (i++ * 55) + 'ms">' + t + '</span></span>'; }).join(''); });
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .16, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('.s5 [data-r], .s5 .split').forEach(function(el){ if(el.dataset.r) el.style.setProperty('--d', el.dataset.r + 'ms'); R ? el.classList.add('in') : io.observe(el); });
+  var fmt = function(n){ return n.toLocaleString('en-CA'); };
+  document.querySelectorAll('.s5 [data-count]').forEach(function(el){ var end = +el.dataset.count; if(R) return; el.textContent = '0';
+    var o = new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; o.disconnect(); var t0 = performance.now();
+      (function step(t){ var p = Math.min(1, (t - t0) / 1500), k = 1 - Math.pow(1 - p, 4); el.textContent = fmt(Math.round(end * k)); if(p < 1) requestAnimationFrame(step); })(t0); }, { threshold: .6 });
+    o.observe(el); });
+  var words = document.querySelectorAll('#privline .wd');
+  if(R || !window.gsap){ words.forEach(function(w){ w.classList.add('lit'); }); return; }
+  gsap.registerPlugin(ScrollTrigger);
+  var imgs = document.querySelectorAll('.s5-pin img[data-k]');
+  document.querySelectorAll('.s5-chap').forEach(function(ch){
+    ScrollTrigger.create({ trigger: ch, start: 'top 55%', end: 'bottom 55%', onToggle: function(s){ if(!s.isActive) return; imgs.forEach(function(im){ im.classList.toggle('on', im.dataset.k === ch.dataset.screen); }); } }); });
+  gsap.fromTo('.s5-pin .iphone', { rotate: 4 }, { rotate: -4, ease: 'none', scrollTrigger: { trigger: '.s5-story', start: 'top bottom', end: 'bottom top', scrub: true } });
+  ScrollTrigger.create({ trigger: '#privline', start: 'top 80%', end: 'bottom 35%', scrub: true, onUpdate: function(s){ var n = Math.round(s.progress * words.length); words.forEach(function(w, i){ w.classList.toggle('lit', i < n); }); } });
+});
+</script>`;
+
 function home() {
-  // The example profile is run through the real CRS grid rather than written by hand, so
-  // the score on the hero card and the breakdown bars in the calculator preview are the
-  // ones the calculator would produce from these answers.
-  const sample = crsCalc({ ...STATE0.crs, education: 'masters', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, canadianWorkExp: 3 });
+  // Template 5 "Story": a scroll-told homepage. The phone pins while you read and shows
+  // the screen each chapter describes; live figures count up; one marquee of real rounds;
+  // the privacy line lights word by word. Everything settles to static under reduced
+  // motion, and nothing is hidden without JS (styles are gated on html.js).
   const latest = DRAWS[0];
-  const rest = DRAWS.slice(1, 6);
+  const SCREENS = ['draws', 'analytics', 'timeline'];
+  const chapters = [
+    ['draws', 'bell', 'Every IRCC draw, minutes after it happens.', 'CRS Pulse watches the Government of Canada feed and pushes you the category, cutoff and invitation count as soon as a round is published.', ['Alerts usually within about 15 minutes', 'Full history filtered by CEC, PNP, French, healthcare, trades', 'Every round links to its official IRCC page']],
+    ['analytics', 'trend', 'Your odds, not just your score.', 'Your score is placed against the live trend cutoff, the next round in your category is estimated from IRCC cadence, and every lever is priced.', ['Odds against the current trend cutoff, by program', 'Next draw predicted from recent cadence', 'What a nomination, French or Canadian work is worth']],
+    ['timeline', 'clock', 'Follow your file to the decision.', 'Log the dates that matter. The app keeps them in order, compares you with IRCC processing times, and tells you when you pass the typical window.', ['ITA, AOR, biometrics, medical, passport request and portal steps', 'The IRCC document checklist for your program', 'Processing estimates for your category']],
+  ];
+  const pinned = phone('draws', 330).replace(/<img [^>]+>/, SCREENS.map((k, i) => `<img src="${SHOTS[k][0]}" data-k="${k}" class="${i === 0 ? 'on' : ''}" alt="${SHOTS[k][1]}" width="520" height="1047"${i ? ' loading="lazy"' : ''} decoding="async">`).join(''));
+  const privacy = 'Your immigration profile is yours. It never leaves your phone.';
+  const ck = (s = 18) => `<span style="color:var(--success);flex-shrink:0;display:inline-flex;margin-top:3px">${icon('checkCircle', s)}</span>`;
 
   const body = `${nav('', 'app')}
-<main>
-
-<section class="hero-band">
-  <div class="wrap" style="padding-top:60px;padding-bottom:60px">
-    <div class="hero" style="display:grid;grid-template-columns:1.06fr .94fr;gap:56px;align-items:center">
-      <div>
-        <div style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);background:var(--bg);border-radius:999px;padding:5px 13px 5px 8px;margin-bottom:22px">
-          ${APPLE(15)}<span style="font-size:12.5px;font-weight:600;color:var(--text)">Free on the App Store · iPhone</span>
-        </div>
-        <h1 style="font-size:clamp(33px,4.7vw,50px);margin-bottom:18px">Your Express Entry journey, in one app.</h1>
-        <p class="lede" style="font-size:18px;margin-bottom:28px">Calculate your CRS score with the official IRCC formula, get alerted within minutes of every draw, and track your application from profile to final decision.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:20px">
-          ${appBtn()}
-          <a class="btn btn-quiet" href="/calculators">Calculate my CRS</a>
-        </div>
-        <div class="trustrow"><span>${CHECK}No account</span><span>${CHECK}English &amp; French</span><span>${CHECK}Data stays on your device</span></div>
-      </div>
-      <div style="display:flex;justify-content:center">
-        <div class="phonewrap">
-          ${phone('home', 286)}
-        </div>
-      </div>
-    </div>
+<main class="s5">
+<div class="wrap">
+  <section class="s5-hero">
+    <div><h1 class="split">Your Express Entry journey, <em>in one app.</em></h1>
+      <p data-r="500" class="s5-sub">Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.</p>
+      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/calculators">Calculate my CRS</a></div></div>
+    <div class="s5-stage" data-r="0">${phone('home', 320)}</div>
+  </section>
+  <div class="s5-live">
+    <div data-r="0"><b data-count="${latest.crs}">${latest.crs}</b><span>cutoff in round #${latest.no} (${latest.cat}, ${latest.date.replace(/, \d{4}$/, '')})</span></div>
+    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>invitations in ${FEED.ytd.year}, ${FEED.ytd.rounds} rounds</span></div>
+    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>profiles in the Express Entry pool</span></div>
+    <div data-r="240"><b>~15 min</b><span>from an IRCC draw to your alert</span></div>
   </div>
-</section>
-
-<section style="border-bottom:1px solid var(--hairline);background:var(--bg2)">
-  <div class="wrap" style="padding:28px 24px">${statBar()}</div>
-</section>
-
-<section class="sect" style="border-top:0">
-  <div class="wrap">
-    ${featureRow({
-      tag: 'Draws & alerts',
-      title: 'Every IRCC draw, minutes after it happens.',
-      body: 'CRS Pulse watches the Government of Canada’s public feed and pushes you the category, cutoff and invitation count as soon as a round is published.',
-      points: ['A push notification usually within about 15 minutes', 'Filter the full history by category — CEC, PNP, French, healthcare, trades', 'Every round links to its official IRCC page'],
-      shot: phone('draws'),
-    })}
-  </div>
-</section>
-
-<section class="sect sect-tint">
-  <div class="wrap">
-    ${featureRow({
-      tag: 'Analytics',
-      title: 'See your odds, not just your score.',
-      body: 'A score on its own says little. CRS Pulse places yours against the live trend cutoff, estimates when the next round in your category is due, and shows what would move you up.',
-      points: ['Your odds against the current trend cutoff, by program', 'Predicted next draw from IRCC’s recent cadence', 'What each change is worth — nomination +600, French, Canadian work'],
-      shot: phone('analytics'),
-      flip: true,
-    })}
-  </div>
-</section>
-
-<section class="sect">
-  <div class="wrap">
-    ${featureRow({
-      tag: 'Application tracking',
-      title: 'Follow your file from ITA to decision.',
-      body: 'Log the dates that matter and the app keeps them in order, estimates where you stand against IRCC’s published processing times, and flags when you pass the typical window.',
-      points: ['Milestones for ITA, AOR, biometrics, medical and passport request', 'The IRCC document checklist for your program, with per-item progress', 'Processing-time estimates for the category you applied under'],
-      shot: phone('timeline'),
-    })}
-    <div class="card" style="margin-top:44px;padding:20px 24px 24px">
-      <div class="klabel" style="margin-bottom:18px">Milestones you can log</div>
-      ${milestoneRail()}
-    </div>
-  </div>
-</section>
-
-<section class="sect sect-tint" id="latest-draw">
-  <div class="wrap">
-    <div style="display:flex;flex-wrap:wrap;gap:14px 24px;justify-content:space-between;align-items:baseline;margin-bottom:22px">
-      <div style="max-width:660px">
-        ${eyebrow('Live from IRCC')}
-        <h2 class="h2" style="margin-bottom:8px">Latest Express Entry draw</h2>
-        <p style="font-size:15px;color:var(--text2)">Round #${latest.no}, published on ${longDate(latest.iso)}. The app reads this feed live; the figures below are mirrored when the site rebuilds.</p>
-      </div>
-      <a class="arrowlink" href="/draws">View draw history →</a>
-    </div>
-
-    <div class="card" style="overflow:hidden">
-      <div style="display:flex;align-items:center;gap:9px;padding:13px 20px;border-bottom:1px solid var(--hairline);background:var(--bg2)">
-        ${catDot(latest.dot)}<span style="font-size:14.5px;font-weight:700;color:var(--text)">${latest.cat}</span>
-        <span style="font-size:13.5px;color:var(--text2)">${latest.label}</span>
-      </div>
-      <div class="cells">
-        ${cell('CRS cutoff', latest.cutoff, 'minimum score invited')}
-        ${cell('Invitations', latest.invited, 'candidates invited to apply')}
-        ${cell('Draw date', shortDate(latest.iso), `round #${latest.no}`, null, 22)}
-        ${cell(`Invitations in ${FEED.ytd.year}`, num(FEED.ytd.invitations), `across ${FEED.ytd.rounds} rounds so far`)}
-      </div>
-      <div class="dlist">
-        <div class="dhead" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px 9px;border-top:1px solid var(--hairline)">
-          ${['Round', 'Category', 'Invitations', 'Cutoff'].map((h, i) => `<span class="klabel"${i > 1 ? ' style="text-align:right"' : ''}>${h}</span>`).join('')}
-        </div>
-        ${rest.map((d) => `<div class="drawrow" style="display:grid;grid-template-columns:72px 1fr 118px 92px;gap:12px;padding:12px 20px;border-top:1px solid var(--hairline);align-items:center">
-          <div><div style="font-size:14px;font-weight:700">#${d.no}</div><div style="color:var(--muted);font-size:12px">${d.date.replace(/, \d{4}$/, '')}</div></div>
-          <div style="display:flex;align-items:center;gap:9px;min-width:0">${catDot(d.dot)}<span class="dcat" style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.label}</span></div>
-          <div style="text-align:right;font-size:14px;color:var(--text2)" class="num">${d.invited}</div>
-          <div style="text-align:right"><span class="num" style="font-size:17px">${d.cutoff}</span></div>
-        </div>`).join('')}
-      </div>
-    </div>
-    <p style="margin-top:11px;font-size:12.5px;color:var(--muted)">Mirrored from IRCC’s public feed on ${FEED.updatedFull ?? FEED.updated}. Always confirm current figures at canada.ca.</p>
-  </div>
-</section>
-
-<section class="sect">
-  <div class="wrap">
-    <div style="max-width:620px;margin-bottom:26px">
-      ${eyebrow('No download needed')}
-      <h2 class="h2">Four point grids, right here in your browser.</h2>
-      <p class="lede">The CRS formula plus the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. Change an answer and the score updates as you go — nothing you enter is uploaded.</p>
-    </div>
-    ${calculatorPreview(sample)}
-    <div style="margin-top:20px">
-      <a class="btn btn-accent" href="/calculators">Open the calculators</a>
-    </div>
-  </div>
-</section>
-
-<section class="sect sect-tint" id="privacy-note">
-  <div class="wrap">
-    <div class="split" style="display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start">
-      <div>
-        ${eyebrow('Privacy')}
-        <h2 class="h2">Your immigration information is personal.</h2>
-        <p class="lede">CRS Pulse is built to help you track your Express Entry journey without turning your immigration profile into a marketing product.</p>
-        <p style="margin-top:16px;font-size:14px;line-height:1.6;color:var(--text2);max-width:52ch">The app is free and carries Google AdMob banner ads, which use a device advertising identifier. On iPhone it asks your permission first, and declining leaves every feature working.</p>
-        <a class="arrowlink" href="/privacy" style="margin-top:16px">Read the privacy policy →</a>
-      </div>
-      <div style="border-top:1px solid var(--border)">
-        ${PRIVACY_POINTS.map((p) => `<p style="padding:14px 0;border-bottom:1px solid var(--hairline);font-size:14.5px;line-height:1.6;color:var(--text2)">${p}</p>`).join('')}
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="sect" id="faq">
-  <div class="wrap">
-    <div style="max-width:820px">
-      <h2 class="h2" style="margin-bottom:6px">Common questions</h2>
-      <p class="lede" style="margin-bottom:22px">What a CRS score is, where the draw data comes from, and how your information is handled.</p>
-      <div style="border-top:1px solid var(--border)">
-        ${FAQ.map(([q, a]) => `<details class="faq"><summary>${q}</summary><div class="a">${a}</div></details>`).join('')}
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="hero-band" style="border-top:1px solid var(--hairline);border-bottom:0">
-  <div class="wrap" style="padding:56px 24px">
-    <div class="hero" style="display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center">
-      <div>
-        <h2 style="font-size:clamp(26px,3.4vw,36px);margin-bottom:12px">Check your CRS score tonight.</h2>
-        <p class="lede" style="margin-bottom:26px">Download CRS Pulse for iPhone, or run the calculators here in your browser. Free either way, and there is no account to create.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:12px">
-          ${appBtn()}
-          <a class="btn btn-quiet" href="/calculators">Calculate my CRS</a>
-        </div>
-      </div>
-      <div class="fshot">${phone('home', 190)}</div>
-    </div>
-  </div>
-</section>
-
+  <div class="s5-trust"><span>${ck(16)}Free</span><span>${ck(16)}No account</span><span>${ck(16)}English and French</span><span>${ck(16)}Data stays on your device</span></div>
+  <section class="s5-story" id="how">
+    <div>${chapters.map(([key, ic, h, p, items]) => `<article class="s5-chap" data-screen="${key}"><div data-r="0"><div class="s5-ic">${icon(ic, 26)}</div><h2>${h}</h2><p>${p}</p><ul>${items.map((x) => `<li>${ck()}<span>${x}</span></li>`).join('')}</ul><div class="s5-mphone">${phone(key, 260)}</div></div></article>`).join('')}</div>
+    <div class="s5-pin">${pinned}</div>
+  </section>
+</div>
+<div class="s5-marquee" aria-label="Recent Express Entry rounds"><div class="s5-track">${[...DRAWS.slice(0, 12), ...DRAWS.slice(0, 12)].map((d, i) => `<div class="s5-d"${i >= 12 ? ' aria-hidden="true"' : ''}><b>${d.crs}</b><span>#${d.no} ${d.cat}, ${d.date.replace(/, \d{4}$/, '')}</span></div>`).join('')}</div></div>
+<div class="wrap">
+  <section class="s5-calcs"><h2 data-r="0">Four point grids, right in your browser.</h2>
+    <div class="s5-snap">${[['CRS', 'Express Entry', '1,200', 'The Comprehensive Ranking System IRCC uses to rank every profile in the pool.', ''], ['FSW', '67-point grid', '100', 'Federal Skilled Worker eligibility: six selection factors, 67 to qualify.', '#fsw'], ['BC PNP', 'SIRS', '200', 'British Columbia’s Skills Immigration Registration System score.', '#bc'], ['SINP', 'EOI', '110', 'Saskatchewan’s International Skilled Worker points assessment.', '#sinp']].map(([a, b, mx, d, h], i) => `<a href="/calculators${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
+  <section class="s5-priv"><p class="s5-big" id="privline">${privacy.split(' ').map((w) => `<span class="wd${/yours|never/.test(w) ? ' red' : ''}">${w}</span>`).join(' ')}</p>
+    <div class="s5-pts">${PRIVACY_POINTS.map((p, i) => `<p data-r="${i * 80}"><span style="color:var(--success);flex-shrink:0;margin-top:3px">${icon('lock', 19)}</span><span>${p}</span></p>`).join('')}</div></section>
+  <section class="s5-faq" id="faq"><h2 data-r="0">Questions people ask.</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
+  <section class="s5-end" data-r="0"><h2>Check your CRS score tonight.</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section>
+</div>
 </main>
 ${footerFull()}`;
-  return shell({ ...page('index'), jsonld: homeJsonLd(), body });
+  return shell({ ...page('index'), jsonld: homeJsonLd(), body: noDashes(body), head2: HOME_HEAD, scripts: HOME_SCRIPTS });
 }
 
 // ------------------------------------------------------------------ FEATURES
@@ -2025,6 +1998,10 @@ copyAsset('logo.svg', 'img/logo.svg');
 // chrome --headless=new --window-size=1200,630 --screenshot=og.png og-source.html
 copyAsset('og.png', 'img/og.png');
 copyAsset('logo-mark.png', 'img/logo-mark.png');
+// GSAP for the home page's scroll story, self-hosted from the npm package.
+mkdirSync(resolve(OUT, 'js'), { recursive: true });
+cpSync(resolve(here, 'node_modules/gsap/dist/gsap.min.js'), resolve(OUT, 'js/gsap.min.js'));
+cpSync(resolve(here, 'node_modules/gsap/dist/ScrollTrigger.min.js'), resolve(OUT, 'js/ScrollTrigger.min.js'));
 copyAsset('favicon.png', 'favicon.png');
 copyAsset('apple-touch-icon.png', 'apple-touch-icon.png');
 // Real captures of the shipping iOS build, shown in the app section. WebP because they
