@@ -23,6 +23,7 @@ const ROUTES = [
   ['/analytics', 'analytics'],
   ['/checklists', 'checklists'],
   ['/processing-times', 'processing-times'],
+  ['/timeline', 'timeline'],
   ['/features', 'features'],
   ['/privacy', 'privacy'],
   ['/terms', 'terms'],

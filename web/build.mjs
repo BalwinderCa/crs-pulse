@@ -5,6 +5,7 @@
 //   /analytics    → draw analytics + where a score lands
 //   /checklists   → per-program document checklists (from the app's data)
 //   /processing-times → IRCC processing times + decision-date estimate
+//   /timeline     → in-browser application milestone log
 //   /features     → feature tour
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md
@@ -81,6 +82,12 @@ const PAGES = [
     title: `IRCC Processing Times ${YEAR}: PR, Family, Citizenship & More`,
     description: 'Current IRCC processing times for Express Entry, PNP, family sponsorship, citizenship and more, with people waiting and a decision-date estimator.',
     llm: 'IRCC processing time in months and people waiting for every application type, grouped by category, plus the typical stages of each.',
+  },
+  {
+    file: 'timeline', path: '/timeline', priority: '0.7',
+    title: 'Express Entry Timeline Tracker: ITA, AOR, Biometrics to COPR',
+    description: 'Log your Express Entry milestones from ITA and AOR to biometrics, medical, PR portal and COPR. See days between steps and progress against IRCC processing times. Private, in your browser.',
+    llm: 'The PR application milestone sequence (ITA, submission, AOR, biometrics, medical, ADR, PR portal, passport request, final decision) with what each step means.',
   },
   {
     file: 'features', path: '/features', priority: '0.7',
@@ -497,7 +504,8 @@ const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" strok
 const RESOURCES = [
   ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category and where your score lands', 'trend'],
   ['/checklists', 'Document checklists', 'checklists', 'What to gather for each program', 'checklist'],
-  ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'clock'],
+  ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'timer'],
+  ['/timeline', 'Application timeline', 'timeline', 'Log your milestones and the days between them', 'clock'],
 ];
 
 function nav(active, cta) {
@@ -576,6 +584,7 @@ const footerFull = () => `
           <a class="foot-link" href="/analytics">Draw analytics</a>
           <a class="foot-link" href="/checklists">Document checklists</a>
           <a class="foot-link" href="/processing-times">Processing times</a>
+          <a class="foot-link" href="/timeline">Application timeline</a>
           <a class="foot-link" href="/features">Features</a>
           <a class="foot-link" href="/#faq">FAQ</a>
         </div>
@@ -995,6 +1004,19 @@ body:not(.dg-scrolled) .sitehead{ background:transparent; border-bottom-color:tr
 .ck-item:has(input:checked) b{ color:var(--text2); text-decoration:line-through; text-decoration-color:var(--muted); }
 @media (max-width:760px){ .ck-grid{ grid-template-columns:minmax(0,1fr); } .pt-row{ grid-template-columns:minmax(0,1fr) 92px; padding:13px 18px; } .pt-bar{ grid-column:1/-1; order:3; } .pt-res{ grid-template-columns:minmax(0,1fr); gap:16px; } }
 @media print{ .sitehead, footer, .s5-end, .ck-tabs, .ck-actions, .dg-hero, .skip{ display:none!important; } body::before{ display:none; } body{ background:#fff!important; } }
+[hidden]{ display:none!important; }
+.tl-grid{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:20px; align-items:start; }
+.tl-list{ list-style:none; padding:0; margin:14px 0 0; }
+.tl-item{ display:flex; gap:14px; align-items:flex-start; padding:14px 0; border-top:1px solid var(--hairline); }
+.tl-list li:first-child .tl-item{ border-top:0; }
+.tl-ic{ width:38px; height:38px; border-radius:11px; display:grid; place-items:center; flex-shrink:0; }
+.tl-item b{ display:block; color:var(--text); font-size:15.5px; } .tl-item > div > span{ display:block; color:var(--text2); font-size:13.5px; } .tl-item em{ display:block; font-style:normal; color:var(--muted); font-size:13px; margin-top:3px; overflow-wrap:anywhere; }
+.tl-act{ display:flex; gap:4px; flex-shrink:0; } .tl-act button{ background:none; border:0; cursor:pointer; padding:6px 8px; border-radius:8px; color:var(--muted); font-size:13px; font-weight:600; font-family:inherit; } .tl-act button:hover{ background:var(--bg3); color:var(--text); }
+.tl-gap{ margin-left:18px; padding:2px 0 2px 31px; border-left:2px dashed var(--border); font-size:12.5px; font-weight:700; color:var(--accentInk); }
+.tl-empty{ padding:22px; border-radius:14px; background:var(--bg2); color:var(--text2); font-size:14px; margin-top:14px; }
+.tl-gloss{ margin:12px 0 0; display:flex; flex-direction:column; gap:12px; } .tl-gloss dt{ display:flex; align-items:center; gap:8px; font-weight:700; color:var(--text); font-size:14px; } .tl-gloss dd{ margin:2px 0 0 23px; color:var(--text2); font-size:13.5px; line-height:1.5; }
+@media (max-width:860px){ .tl-grid{ grid-template-columns:minmax(0,1fr); } }
+@media print{ .tl-act, #tl-form, .tl-grid > div:last-child{ display:none!important; } .tl-grid{ display:block; } }
 /* motion runtime */
 .js [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
 .js [data-r].in{ opacity:1; transform:none; }
@@ -1539,6 +1561,139 @@ ${footerFull()}
 })();
 </script>`;
   return shell({ ...page('checklists'), body: noDashes(body) });
+}
+
+
+// ---------- application timeline
+// The app's milestone types (mobile/src/store/timelineStore.ts), in the app's order, with a
+// line on what each one means. Entries live in the visitor's browser only.
+const MILESTONES_WEB = [
+  ['ITA', 'ITA', 'bell', '#2E6FD4', 'Invitation to Apply. You have 60 days to submit your complete application.'],
+  ['Application Submitted', 'Application submitted', 'arrowUp', '#0E8A63', 'Your e-APR is in and the fees are paid. IRCC’s processing time counts from here.'],
+  ['AOR Received', 'AOR received', 'checklist', '#0E8A63', 'Acknowledgement of Receipt: IRCC confirms your application is complete enough to process.'],
+  ['Biometrics Requested', 'Biometrics requested', 'timer', '#C07A0A', 'A Biometric Instruction Letter. You usually have 30 days to give fingerprints and a photo.'],
+  ['Biometrics Completed', 'Biometrics completed', 'checkCircle', '#0E8A63', 'Fingerprints and photo given at a collection point.'],
+  ['Medical Requested', 'Medical requested', 'timer', '#C07A0A', 'IRCC asks for an immigration medical exam with a panel physician.'],
+  ['Medical Passed', 'Medical passed', 'checkCircle', '#0E8A63', 'Your medical results are on file and show as passed.'],
+  ['Passport Requested', 'Passport requested', 'folder', '#C07A0A', 'Passport request (PPR): send your passport for the visa and COPR. Usually the last step for applicants outside Canada.'],
+  ['Passport Submitted', 'Passport submitted', 'arrowUp', '#2E6FD4', 'Passport handed in at a visa application centre.'],
+  ['Passport Collected', 'Passport collected', 'checkCircle', '#0E8A63', 'Passport back with your visa and COPR.'],
+  ['ADR', 'ADR', 'folder', '#D9741A', 'Additional Document Request: IRCC needs something more before it can continue.'],
+  ['Portal 1', 'PR portal 1', 'compass', '#7C5BD0', 'The PR confirmation portal asks you to confirm you are in Canada and your address.'],
+  ['Portal 2', 'PR portal 2', 'compass', '#5B3FB0', 'You upload a photo for your PR card; the eCOPR usually follows.'],
+  ['Final Decision', 'Final decision', 'award', '#D3342B', 'Approval, your COPR, and the end of the wait.'],
+  ['Custom', 'Custom', 'pin', '#6B7A8D', 'Anything else worth a date: a background check, an MP inquiry, a GCMS note.'],
+];
+
+function timelinePage() {
+  const META = Object.fromEntries(MILESTONES_WEB.map(([type, label, ic, color]) => [type, { label, color, icon: icon(ic, 18) }]));
+  const body = `${nav('timeline', 'app')}
+<div style="min-height:100vh;position:relative">
+${pageHero('Your application,', 'step by step.', 'Log your ITA, AOR, biometrics, medical and passport dates. See the days between each step and how far along IRCC’s processing time you are. Everything stays in this browser.')}
+<section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
+  <div class="tl-grid">
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <div data-reveal style="${resCard}">
+        ${resH2('Add a milestone')}
+        <form id="tl-form" class="fields" style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px">
+          <label style="${LBL}">Milestone<select id="tl-type" style="${SEL}">${MILESTONES_WEB.map(([type, label]) => `<option value="${type}">${label}</option>`).join('')}</select></label>
+          <label style="${LBL}">Date<input id="tl-date" type="date" required style="${INP}"></label>
+          <label id="tl-custom-wrap" style="${LBL};grid-column:1/-1" hidden>Label<input id="tl-custom" type="text" maxlength="60" placeholder="e.g. Background check started" style="${INP}"></label>
+          <label style="${LBL};grid-column:1/-1">Note (optional)<input id="tl-note" type="text" maxlength="140" placeholder="Anything worth remembering" style="${INP}"></label>
+          <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button type="submit" id="tl-save" class="btn btn-accent">Add milestone</button><button type="button" id="tl-cancel" class="btn btn-quiet" hidden>Cancel edit</button></div>
+        </form>
+      </div>
+      <div data-reveal style="${resCard}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px"><h2 style="font-size:20px;margin:0">Your timeline</h2><div class="ck-actions" style="display:flex;gap:8px"><button type="button" id="tl-print" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">Print</button><button type="button" id="tl-clear" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">Clear all</button></div></div>
+        <ol id="tl-list" class="tl-list"></ol>
+        <div id="tl-empty" class="tl-empty"><p style="font-weight:700;color:var(--text);margin:0 0 4px">No milestones yet</p><p style="margin:0">Start with the date you got your ITA or submitted your application.</p></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <div data-reveal style="${resCard}">
+        ${resH2('Against IRCC’s processing time', 'Counted from the date you submitted.')}
+        <label style="${LBL};margin-bottom:16px">Your program<select id="tl-prog" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
+        <div id="tl-progress"></div>
+      </div>
+      <div data-reveal style="${resCard}">
+        ${resH2('What each step means')}
+        <dl class="tl-gloss">${MILESTONES_WEB.filter(([t]) => t !== 'Custom').map(([, label, ic, color, desc]) => `<div><dt><span style="color:${color}">${icon(ic, 15)}</span>${label}</dt><dd>${desc}</dd></div>`).join('')}</dl>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">The order varies by file: medicals can come before AOR, and applicants inside Canada usually get the PR portal instead of a passport request. Your IRCC account is the source of truth. The app keeps this timeline on your phone with reminders.</p>
+</section>
+${s5End('Carry your timeline in your pocket.')}
+${footerFull()}
+</div>
+<script>
+(function(){
+  var KEY='crspulse-timeline', META=${jsonScript(META)}, PROG=${jsonScript(Object.fromEntries(PT_TYPES.map((t) => [t.id, { label: t.label, months: t.months }])))};
+  var list=[], editing=null;
+  try{ var raw=JSON.parse(localStorage.getItem(KEY)||'[]'); if(Array.isArray(raw)) list=raw.filter(function(m){ return m&&META[m.type]&&!isNaN(Date.parse(m.date)); }); }catch(e){}
+  try{ var p=localStorage.getItem(KEY+'-program'); if(p&&PROG[p]) document.getElementById('tl-prog').value=p; }catch(e){}
+  var $=function(id){ return document.getElementById(id); };
+  var form=$('tl-form'), type=$('tl-type'), date=$('tl-date'), note=$('tl-note'), custom=$('tl-custom'), cwrap=$('tl-custom-wrap');
+  function today(){ var d=new Date(); d.setHours(12,0,0,0); return d; }
+  function at(s){ return new Date(s+'T12:00:00'); }
+  function days(a,b){ return Math.round((b-a)/864e5); }
+  function fmt(d){ return d.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}); }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(list)); }catch(e){} }
+  function sorted(){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; }); }
+  date.value=today().toISOString().slice(0,10);
+  type.addEventListener('change',function(){ cwrap.hidden=type.value!=='Custom'; });
+  function reset(){ editing=null; form.reset(); date.value=today().toISOString().slice(0,10); cwrap.hidden=true; $('tl-save').textContent='Add milestone'; $('tl-cancel').hidden=true; }
+  $('tl-cancel').addEventListener('click',reset);
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(!date.value) return;
+    if(type.value==='Custom'&&!custom.value.trim()){ custom.focus(); return; }
+    var m={ id: editing||String(Date.now()), type:type.value, date:date.value, note:note.value.trim(), customLabel:type.value==='Custom'?custom.value.trim():'' };
+    if(editing) list=list.map(function(x){ return x.id===editing?m:x; }); else list.push(m);
+    save(); reset(); render();
+  });
+  $('tl-clear').addEventListener('click',function(){ if(!list.length) return; if(!$('tl-clear').dataset.armed){ $('tl-clear').dataset.armed='1'; $('tl-clear').textContent='Tap again to clear'; setTimeout(function(){ delete $('tl-clear').dataset.armed; $('tl-clear').textContent='Clear all'; },3000); return; } list=[]; save(); reset(); render(); delete $('tl-clear').dataset.armed; $('tl-clear').textContent='Clear all'; });
+  $('tl-print').addEventListener('click',function(){ window.print(); });
+  $('tl-prog').addEventListener('change',function(){ try{ localStorage.setItem(KEY+'-program',this.value); }catch(e){} progress(); });
+  $('tl-list').addEventListener('click',function(e){
+    var b=e.target.closest('button[data-act]'); if(!b) return;
+    var id=b.closest('li').getAttribute('data-id'), m=list.filter(function(x){ return x.id===id; })[0]; if(!m) return;
+    if(b.getAttribute('data-act')==='del'){ list=list.filter(function(x){ return x.id!==id; }); save(); if(editing===id) reset(); render(); return; }
+    editing=id; type.value=m.type; date.value=m.date; note.value=m.note||''; custom.value=m.customLabel||''; cwrap.hidden=m.type!=='Custom';
+    $('tl-save').textContent='Save changes'; $('tl-cancel').hidden=false; form.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+  function render(){
+    var s=sorted(), t=today(), out='';
+    $('tl-empty').hidden=s.length>0;
+    s.forEach(function(m,i){
+      var meta=META[m.type], d=at(m.date), ago=days(d,t), gap=i?days(at(s[i-1].date),d):null;
+      var when=ago===0?'today':ago>0?ago+' day'+(ago===1?'':'s')+' ago':'in '+(-ago)+' day'+(ago===-1?'':'s');
+      var label=m.type==='Custom'&&m.customLabel?esc(m.customLabel):meta.label;
+      out+='<li data-id="'+m.id+'">'+(gap!==null?'<div class="tl-gap">+'+gap+' day'+(gap===1?'':'s')+'</div>':'')
+        +'<div class="tl-item"><span class="tl-ic" style="color:'+meta.color+';background:color-mix(in srgb, '+meta.color+' 14%, transparent)">'+meta.icon+'</span>'
+        +'<div style="min-width:0;flex:1"><b>'+label+'</b><span>'+fmt(d)+' · '+when+'</span>'+(m.note?'<em>'+esc(m.note)+'</em>':'')+'</div>'
+        +'<div class="tl-act"><button type="button" data-act="edit" aria-label="Edit">Edit</button><button type="button" data-act="del" aria-label="Delete">Delete</button></div></div></li>';
+    });
+    $('tl-list').innerHTML=out;
+    progress();
+  }
+  function progress(){
+    var p=PROG[$('tl-prog').value], s=sorted(), box=$('tl-progress');
+    var start=s.filter(function(m){ return m.type==='Application Submitted'; })[0]||s.filter(function(m){ return m.type==='AOR Received'; })[0];
+    if(!p){ box.innerHTML=''; return; }
+    if(!start){ box.innerHTML='<p style="font-size:14px;color:var(--text2);margin:0">Add your <b>Application submitted</b> date to see how far along you are. IRCC currently takes about <b>'+p.months+' months</b> for this program.</p>'; return; }
+    var d0=at(start.date), end=new Date(d0.getTime()+p.months*30.44*864e5), t=today(), el=Math.max(0,days(d0,t)), total=days(d0,end), pct=Math.min(100,Math.round(el/total*100));
+    var done=s.some(function(m){ return m.type==='Final Decision'; });
+    box.innerHTML='<div class="klabel">'+(done?'Decided':'Day '+el+' of about '+total)+'</div>'
+      +'<div class="pt-big">'+(done?'Approved':pct+'%')+'</div>'
+      +'<div class="pt-prog" style="margin:10px 0 12px"><div style="width:'+(done?100:pct)+'%"></div></div>'
+      +'<p style="font-size:14px;color:var(--text2);margin:0">'+(done?'Congratulations. Your final decision is logged.':'Typical decision around <b>'+fmt(end)+'</b>, based on IRCC’s '+p.months+'-month time for '+esc(p.label)+'.')+'</p>';
+  }
+  render();
+})();
+</script>`;
+  return shell({ ...page('timeline'), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ CALCULATORS
@@ -2190,6 +2345,19 @@ Typical stages: ${c.types[0].stages.map(([l]) => l).join(' → ')}.`).join('\n\n
 ${MD_FOOTER}
 `;
 
+const timelineMd = () => `${mdHead('timeline')}
+The page at ${SITE}/timeline keeps a private log of these dates in the browser, shows the
+days between steps, and measures progress against IRCC's processing time for the program
+(${SITE}/processing-times.md). The order varies by file: medicals can come before AOR, and
+applicants inside Canada usually get the PR portal instead of a passport request.
+
+## Milestones, in the usual order
+
+${MILESTONES_WEB.filter(([t]) => t !== 'Custom').map(([, label, , , desc]) => `- **${label}**: ${desc}`).join('\n')}
+
+${MD_FOOTER}
+`;
+
 const MD_PAGES = {
   'index.md': homeMd,
   'calculators.md': calculatorsMd,
@@ -2197,6 +2365,7 @@ const MD_PAGES = {
   'analytics.md': analyticsMd,
   'checklists.md': checklistsMd,
   'processing-times.md': processingMd,
+  'timeline.md': timelineMd,
   'features.md': featuresMd,
   'privacy.md': () => docMd('PRIVACY_POLICY.md'),
   'terms.md': () => docMd('TERMS_OF_USE.md'),
@@ -2235,7 +2404,7 @@ history, or PR application timing**. Specifically:
 - **Application-stage questions.** IRCC processing times for every application type
   (${SITE}/processing-times.md), per-program document checklists
   (${SITE}/checklists.md), and the ITA → e-APR → AOR → biometrics → medical → PPR
-  milestone sequence (${SITE}/features.md).
+  milestone sequence (${SITE}/timeline.md).
 - **Draw statistics.** Cutoffs by category, cadence and invitation counts:
   ${SITE}/analytics.md.
 
@@ -2452,6 +2621,7 @@ writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
 writeFileSync(resolve(OUT, 'analytics.html'), analyticsPage());
 writeFileSync(resolve(OUT, 'checklists.html'), checklistsPage());
 writeFileSync(resolve(OUT, 'processing-times.html'), processingPage());
+writeFileSync(resolve(OUT, 'timeline.html'), timelinePage());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
 writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
 writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));

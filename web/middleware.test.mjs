@@ -44,7 +44,7 @@ test('chooseVariant reports 406 when neither representation is acceptable', () =
 });
 
 test('the matcher covers every public page and nothing else', () => {
-  assert.deepEqual(config.matcher, ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/features', '/privacy', '/terms']);
+  assert.deepEqual(config.matcher, ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/privacy', '/terms']);
   // Matching a .md path would make the middleware fetch itself.
   assert.ok(!config.matcher.some((m) => m.endsWith('.md')));
 });

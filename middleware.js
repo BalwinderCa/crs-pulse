@@ -17,6 +17,7 @@ export const TWIN = {
   '/analytics': '/analytics.md',
   '/checklists': '/checklists.md',
   '/processing-times': '/processing-times.md',
+  '/timeline': '/timeline.md',
   '/features': '/features.md',
   '/privacy': '/privacy.md',
   '/terms': '/terms.md',
@@ -25,7 +26,7 @@ export const TWIN = {
 // Vercel statically parses this export, so the matcher has to be a literal — it cannot
 // be derived from TWIN. web/middleware.test.mjs asserts the two stay in step.
 export const config = {
-  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/features', '/privacy', '/terms'],
+  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/privacy', '/terms'],
 };
 
 /**
