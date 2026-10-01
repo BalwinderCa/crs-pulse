@@ -128,15 +128,15 @@ const CSS = `
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
 body{ margin:0; background:var(--bg); color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  font-family:'Satoshi',-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
   font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 a{ color:var(--accentInk); text-decoration:none; }
 a:hover{ color:var(--accent); }
 ::selection{ background:var(--accent); color:#fff; }
-h1,h2,h3,h4{ margin:0; font-family:'Space Grotesk',sans-serif; color:var(--text); letter-spacing:-.02em; line-height:1.15; }
+h1,h2,h3,h4{ margin:0; font-family:'Satoshi',sans-serif; font-weight:900; color:var(--text); letter-spacing:-.035em; line-height:1.1; }
 p{ margin:0; }
 /* numerals: one class for every figure on the site, so columns of numbers line up */
-.num{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+.num{ font-family:'Satoshi',sans-serif; font-weight:900; font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
 .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
 .sect{ padding:72px 0; border-top:1px solid var(--hairline); }
 .sect-tint{ background:var(--bg2); }
@@ -162,7 +162,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 .brand:hover{ color:var(--text); }
 .brandmark{ width:32px; height:32px; border-radius:9px; display:block; box-shadow:0 1px 2px rgba(201,42,34,.25), inset 0 0 0 1px rgba(255,255,255,.08); transition:transform .2s ease; }
 .brand:hover .brandmark{ transform:rotate(-6deg) scale(1.04); }
-.wordmark{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18.5px; letter-spacing:-.45px; line-height:1; }
+.wordmark{ font-family:'Satoshi',sans-serif; font-weight:700; font-size:18.5px; letter-spacing:-.45px; line-height:1; }
 .navlinks{ display:flex; align-items:stretch; gap:22px; height:100%; }
 .navlink{ position:relative; display:flex; align-items:center; font-size:14.5px; font-weight:500; color:var(--text2); transition:color .15s ease; }
 .navlink:hover{ color:var(--text); }
@@ -317,7 +317,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .faq summary{ list-style:none; cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:16px;
   padding:16px 0; color:var(--text); font-size:16px; font-weight:600; transition:color .15s ease; }
 .faq summary::-webkit-details-marker{ display:none; }
-.faq summary::after{ content:"+"; font-family:'Space Grotesk',sans-serif; font-size:20px; color:var(--accentInk); flex-shrink:0; transition:transform .2s ease; }
+.faq summary::after{ content:"+"; font-family:'Satoshi',sans-serif; font-size:20px; color:var(--accentInk); flex-shrink:0; transition:transform .2s ease; }
 .faq[open] summary::after{ transform:rotate(45deg); }
 .faq summary:hover{ color:var(--accentInk); }
 .faq .a{ padding:0 0 18px; font-size:15px; line-height:1.65; color:var(--text2); max-width:70ch; }
@@ -329,12 +329,12 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .filterchip{ cursor:pointer; padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:600; }
 .filterchip.on{ border-color:var(--accentBtn); background:var(--accentBtn); color:#fff; }
 /* doc pages */
-.doc{ max-width:760px; margin:0 auto; padding:40px 24px 72px; }
-.doc-card{ background:var(--card); }
-.doc-card h1{ font-size:2rem; margin:.1em 0 .8em; }
-.doc-card h2{ font-size:1.2rem; margin:2em 0 .6em; }
+.doc{ max-width:760px; margin:0 auto; padding:72px 24px 90px; }
+.doc-card{ background:transparent; }
+.doc-card h1{ font-size:clamp(40px,5vw,64px); line-height:1.02; margin:.1em 0 .7em; }
+.doc-card h2{ font-size:clamp(24px,2.4vw,30px); margin:1.8em 0 .5em; }
 .doc-card h3{ font-size:1.02rem; margin:1.5em 0 .5em; }
-.doc-card p,.doc-card li{ color:var(--text2); font-size:15.5px; line-height:1.7; }
+.doc-card p,.doc-card li{ color:var(--text2); font-size:17px; line-height:1.7; }
 .doc-card a{ font-weight:500; }
 .doc-card hr{ border:0; border-top:1px solid var(--hairline); margin:2em 0; }
 .doc-card code{ background:var(--bg3); padding:.1em .4em; border-radius:4px; font-size:.9em; }
@@ -515,7 +515,7 @@ const LEGAL_NOTE = 'CRS Pulse is an independent app. It is not affiliated with, 
 const footerSlim = (note) => `
 <footer style="border-top:1px solid var(--border);background:var(--bg2)">
   <div class="wrap" style="padding:28px 24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center">
-    <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--text)">CRS Pulse</span>
+    <span style="font-family:'Satoshi',sans-serif;font-weight:900;font-size:16px;color:var(--text)">CRS Pulse</span>
     <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:640px">${note}</p>
     <a class="foot-link totop" href="#" style="font-size:12.5px">${icon('arrowUp', 15)}Back to top</a>
   </div>
@@ -528,7 +528,7 @@ const footerFull = () => `
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <img src="/img/logo-mark.png" width="22" height="22" alt="" style="border-radius:6px;display:block">
-          <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:var(--text)">CRS Pulse</span>
+          <span style="font-family:'Satoshi',sans-serif;font-weight:900;font-size:17px;color:var(--text)">CRS Pulse</span>
         </div>
         <p style="font-size:13.5px;line-height:1.6;color:var(--text2);max-width:260px">An Express Entry score calculator, IRCC draw tracker and application timeline for people applying for Canadian permanent residence.</p>
       </div>
@@ -601,19 +601,19 @@ ${path ? `<meta property="og:url" content="${SITE}${path}">` : ''}
 <meta name="twitter:description" content="${description}">
 <meta name="twitter:image" content="${SITE}/img/og.png">
 ${head}
+${S5_HEAD}
 ${head2}
 ${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
 ${VERCEL_ANALYTICS}
 ${POSTHOG_WEB}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
 <style>${CSS}</style>
 </head>
 <body>
 ${body}
 ${THEME_SCRIPT}
+${S5_MOTION}
 ${scripts}
 </body>
 </html>
@@ -689,6 +689,15 @@ const FAQ = [
 ];
 
 const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
+// Inner-page hero in the home page's language: one heavy headline with the accent
+// phrase in red, one short lede, words rising in on load.
+const pageHero = (lead, accent, lede) => `
+<section class="wrap s5-pagehero">
+  <h1 class="split">${lead} <em>${accent}</em></h1>
+  <p data-r="420">${lede}</p>
+</section>`;
+const s5End = (title = 'Check your CRS score tonight.') => `
+<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section></div>`;
 
 // ------------------------------------------------------------------ home components
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
@@ -820,7 +829,7 @@ const milestoneRail = () => `
 // The home page copy follows the design skill's no-dash rule; shared copy (FAQ etc.)
 // keeps its dashes elsewhere, so they are softened only where the home renders it.
 const noDashes = (s) => s.replace(/\s—\s/g, ', ').replace(/—/g, ', ').replace(/(\d)\s?–\s?(\d)/g, '$1-$2');
-const HOME_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+const S5_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
 <link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
 <script>document.documentElement.classList.add('js')</script>
 <style>
@@ -877,32 +886,44 @@ const HOME_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" cross
 .s5-faq details p{ color:var(--text2); font-size:15.5px; margin-top:12px; }
 .s5-end{ border-radius:36px; background:var(--accentBtn); color:#fff; padding:80px 48px; display:grid; grid-template-columns:1fr auto; gap:40px; align-items:end; margin-bottom:90px; }
 .s5-end h2{ font-size:clamp(40px,5vw,72px); line-height:.98; max-width:12ch; color:#fff; }
+/* inner pages */
+.wrap.s5-pagehero{ padding-top:72px; padding-bottom:40px; }
+@media (max-width:640px){ .wrap.s5-pagehero{ padding-top:44px; padding-bottom:28px; } }
+.s5-pagehero h1{ font-size:clamp(42px,5.6vw,78px); line-height:1.02; max-width:16ch; }
+.s5-pagehero h1 em{ font-style:normal; color:var(--accentInk); }
+.s5-pagehero p{ font-size:19px; line-height:1.6; color:var(--text2); max-width:58ch; margin-top:22px; }
+.s5-end{ margin-top:60px; }
 /* motion runtime */
-.js .s5 [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
-.js .s5 [data-r].in{ opacity:1; transform:none; }
-.js .s5 .split .w{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.08em; margin-bottom:-.08em; }
-.js .s5 .split .w > span{ display:inline-block; transform:translateY(105%); transition:transform 1s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
-.js .s5 .split.in .w > span{ transform:none; }
-@media (prefers-reduced-motion: reduce){ .js .s5 [data-r], .js .s5 .split .w > span{ opacity:1!important; transform:none!important; transition:none!important; } }
+.js [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
+.js [data-r].in{ opacity:1; transform:none; }
+.js .split .w{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.08em; margin-bottom:-.08em; }
+.js .split .w > span{ display:inline-block; transform:translateY(105%); transition:transform 1s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
+.js .split.in .w > span{ transform:none; }
+@media (prefers-reduced-motion: reduce){ .js [data-r], .js .split .w > span{ opacity:1!important; transform:none!important; transition:none!important; } }
 @media (max-width:960px){
   .s5-hero{ grid-template-columns:minmax(0,1fr); min-height:auto; padding-top:30px; } .s5-live{ grid-template-columns:repeat(2,minmax(0,1fr)); } .s5-live > div{ padding:22px 16px; } .s5-live b{ font-size:32px; }
   .s5-live > div:nth-child(3){ border-left:0; } .s5-live > div:nth-child(n+3){ border-top:1px solid var(--border); }
   .s5-story{ grid-template-columns:minmax(0,1fr); padding-top:60px; } .s5-pin{ display:none; } .s5-chap{ min-height:auto; padding:40px 0; } .s5-mphone{ display:flex; justify-content:center; margin-top:36px; }
   .s5-pts{ grid-template-columns:1fr; } .s5-faq{ grid-template-columns:minmax(0,1fr); } .s5-end{ grid-template-columns:1fr; padding:52px 28px; } }
 </style>`;
+const S5_MOTION = `<script>
+window.addEventListener('DOMContentLoaded', function(){
+  var R = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('.split').forEach(function(el){ var i = 0;
+    el.innerHTML = el.innerHTML.trim().split(/(\\s+|<[^>]+>)/).filter(Boolean).map(function(t){ if(/^</.test(t)) return t; if(/^\\s+$/.test(t)) return ' '; return '<span class="w"><span style="--d:' + (i++ * 55) + 'ms">' + t + '</span></span>'; }).join(''); });
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .16, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('[data-r], .split').forEach(function(el){ if(el.dataset.r) el.style.setProperty('--d', el.dataset.r + 'ms'); R ? el.classList.add('in') : io.observe(el); });
+  var fmt = function(n){ return n.toLocaleString('en-CA'); };
+  document.querySelectorAll('[data-count]').forEach(function(el){ var end = +el.dataset.count; if(R) return; el.textContent = '0';
+    var o = new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; o.disconnect(); var t0 = performance.now();
+      (function step(t){ var p = Math.min(1, (t - t0) / 1500), k = 1 - Math.pow(1 - p, 4); el.textContent = fmt(Math.round(end * k)); if(p < 1) requestAnimationFrame(step); })(t0); }, { threshold: .6 });
+    o.observe(el); });
+});
+</script>`;
 const HOME_SCRIPTS = `<script src="/js/gsap.min.js" defer></script><script src="/js/ScrollTrigger.min.js" defer></script>
 <script>
 window.addEventListener('DOMContentLoaded', function(){
   var R = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.querySelectorAll('.s5 .split').forEach(function(el){ var i = 0;
-    el.innerHTML = el.innerHTML.trim().split(/(\\s+|<[^>]+>)/).filter(Boolean).map(function(t){ if(/^</.test(t)) return t; if(/^\\s+$/.test(t)) return ' '; return '<span class="w"><span style="--d:' + (i++ * 55) + 'ms">' + t + '</span></span>'; }).join(''); });
-  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .16, rootMargin: '0px 0px -6% 0px' });
-  document.querySelectorAll('.s5 [data-r], .s5 .split').forEach(function(el){ if(el.dataset.r) el.style.setProperty('--d', el.dataset.r + 'ms'); R ? el.classList.add('in') : io.observe(el); });
-  var fmt = function(n){ return n.toLocaleString('en-CA'); };
-  document.querySelectorAll('.s5 [data-count]').forEach(function(el){ var end = +el.dataset.count; if(R) return; el.textContent = '0';
-    var o = new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; o.disconnect(); var t0 = performance.now();
-      (function step(t){ var p = Math.min(1, (t - t0) / 1500), k = 1 - Math.pow(1 - p, 4); el.textContent = fmt(Math.round(end * k)); if(p < 1) requestAnimationFrame(step); })(t0); }, { threshold: .6 });
-    o.observe(el); });
   var words = document.querySelectorAll('#privline .wd');
   if(R || !window.gsap){ words.forEach(function(w){ w.classList.add('lit'); }); return; }
   gsap.registerPlugin(ScrollTrigger);
@@ -962,7 +983,7 @@ function home() {
 </div>
 </main>
 ${footerFull()}`;
-  return shell({ ...page('index'), jsonld: homeJsonLd(), body: noDashes(body), head2: HOME_HEAD, scripts: HOME_SCRIPTS });
+  return shell({ ...page('index'), jsonld: homeJsonLd(), body: noDashes(body), scripts: HOME_SCRIPTS });
 }
 
 // ------------------------------------------------------------------ FEATURES
@@ -1009,7 +1030,7 @@ const FEATURE_BLOCKS = [
     points: ['Odds vs the current trend cutoff', 'CRS forecast bands & what-if scenarios', 'Your percentile and place in the pool'],
     visual: `<div style="${PANEL};text-align:center">
       <div class="klabel" style="font-size:10.5px;margin-bottom:8px">Your odds this trend</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:48px;font-weight:700;color:var(--success);letter-spacing:-2px;line-height:1">High</div>
+      <div style="font-family:'Satoshi',sans-serif;font-size:48px;font-weight:900;color:var(--success);letter-spacing:-2px;line-height:1">High</div>
       <div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden;margin:14px 0 8px"><div style="height:100%;width:78%;background:var(--success);border-radius:5px"></div></div>
       <div style="font-size:12.5px;color:var(--text2)">Score 512 · 41 above the trend cutoff · top 18% of the pool</div></div>`,
   },
@@ -1020,7 +1041,7 @@ function featuresPage() {
 <div class="fblock" data-reveal style="display:flex;gap:56px;align-items:center;padding:44px 0;border-top:1px solid var(--hairline);${b.reverse ? 'flex-direction:row-reverse' : ''}">
   <div style="flex:1;min-width:0">
     <div class="eyebrow" style="display:flex;align-items:center;gap:8px">${icon(b.icon, 16)}${b.tag}</div>
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:28px;line-height:1.12;letter-spacing:-.8px;font-weight:700;margin:0 0 12px">${b.title}</h2>
+    <h2 style="font-size:clamp(30px,3.2vw,42px);line-height:1.04;margin:0 0 14px">${b.title}</h2>
     <p style="font-size:15.5px;line-height:1.6;color:var(--text2);margin:0 0 18px">${b.body}</p>
     <div style="display:flex;flex-direction:column;gap:9px">${b.points.map((p) => `<div style="display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--text2)"><span style="color:var(--success);margin-top:3px;flex-shrink:0">${CHECK}</span><span>${p}</span></div>`).join('')}</div>
   </div>
@@ -1029,25 +1050,15 @@ function featuresPage() {
   const body = `${nav('features', 'calc')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-<section style="max-width:1200px;margin:0 auto;padding:52px 24px 24px">
-  ${eyebrow('Features')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">From your first estimate to <span style="color:var(--accentInk)">landing day</span></h1>
-  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">CRS Pulse mirrors the real IRCC process at every step. Here's everything the app does — the same information you get on your iPhone, laid out in one place.</p>
-</section>
-<section style="max-width:1200px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
+${pageHero('From your first estimate to', 'landing day.', 'CRS Pulse mirrors the real IRCC process at every step. Here is everything the app does, the same information you get on your iPhone, in one place.')}
+<section style="max-width:1080px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
   ${FEATURE_BLOCKS.map(block).join('')}
 </section>
-<section style="max-width:1200px;margin:0 auto;padding:60px 24px 80px">
-  <div style="background:linear-gradient(150deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:24px;padding:52px 40px;text-align:center">
-    <h2 style="font-family:'Space Grotesk',sans-serif;font-size:34px;letter-spacing:-1px;font-weight:700;margin:0 0 14px">Have it all in your pocket</h2>
-    <p style="font-size:16px;color:var(--text2);margin:0 auto 26px;max-width:460px">Free on iPhone. No account, and your profile stays on your device.</p>
-    <div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center">${appBtn()}${accentBtn('/calculators', 'Try the calculators →')}</div>
-  </div>
-</section>
+${s5End('Have it all in your pocket.')}
 </div>
-${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+${footerFull()}
 </div>`;
-  return shell({ ...page('features'), body });
+  return shell({ ...page('features'), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ DRAWS
@@ -1089,61 +1100,57 @@ function drawsPage() {
     const v = Number(d.cutoff);
     const h = 30 + Math.round(((v - minC) / Math.max(1, maxC - minC)) * 130);
     const isCat = !['CEC', 'General'].includes(d.cat);
-    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end"><span style="font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:var(--text)">${d.cutoff}</span><div style="width:100%;height:${h}px;border-radius:7px 7px 3px 3px;background:${isCat ? 'var(--catbar)' : 'var(--accent)'}"></div><span style="font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2">${d.date.replace(/, 20\d\d/, '')}</span></div>`;
+    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;height:100%;justify-content:flex-end"><span style="font-family:'Satoshi',sans-serif;font-size:12px;font-weight:900;color:var(--text)">${d.cutoff}</span><div style="width:100%;height:${h}px;border-radius:7px 7px 3px 3px;background:${isCat ? 'var(--catbar)' : 'var(--accent)'}"></div><span style="font-size:10.5px;color:var(--muted);text-align:center;line-height:1.2">${d.date.replace(/, 20\d\d/, '')}</span></div>`;
   }).join('');
   const poolMax = Math.max(...POOL.map((p) => p[2]));
-  const stat = (label, val, sub, big) => `<div style="background:${big ? 'linear-gradient(155deg,var(--grad1),var(--grad2))' : 'var(--card)'};border:1px solid var(--border);border-radius:16px;padding:20px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${label}</div><div style="font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;letter-spacing:-1.5px;color:${big ? 'var(--accent)' : 'var(--text)'}">${val}</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${sub}</div></div>`;
+  const stat = (label, val, sub, big) => `<div style="background:${big ? 'linear-gradient(155deg,var(--grad1),var(--grad2))' : 'var(--card)'};border:1px solid var(--border);border-radius:16px;padding:20px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${label}</div><div style="font-family:'Satoshi',sans-serif;font-size:34px;font-weight:900;letter-spacing:-1.5px;color:${big ? 'var(--accent)' : 'var(--text)'}">${val}</div><div style="font-size:12.5px;color:var(--text2);margin-top:2px">${sub}</div></div>`;
 
   const body = `${nav('draws', 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-<section style="max-width:1200px;margin:0 auto;padding:52px 24px 20px">
-  ${eyebrow('Draws &amp; Trends')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Rounds of invitations, <span style="color:var(--accentInk)">live from IRCC</span></h1>
-  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:660px">The app pulls every round directly from the official IRCC public feed. Filter by category, watch cutoff trends and draw cadence, and see where you sit in the pool. The figures below mirror IRCC's feed as of ${FEED.updatedFull ?? FEED.updated}; the app refreshes live.</p>
-</section>
+${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the official IRCC feed, with category filters, cutoff trends and the pool. Figures mirror IRCC as of ${FEED.updatedFull ?? FEED.updated}; the app refreshes live.`)}
 
-<section style="max-width:1200px;margin:0 auto;padding:14px 24px 8px">
-  <div class="statgrid" data-reveal style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
-    ${stat(`Latest draw · ${latest.date.replace(/, \d{4}$/, '')}`, latest.cutoff, `${latest.label} · ${latest.invited} invited`, true)}
-    ${stat(`ITAs in ${FEED.ytd.year}`, num(FEED.ytd.invitations), `across ${FEED.ytd.rounds} rounds YTD`)}
-    ${stat('Candidate pool', num(FEED.poolTotal), `profiles competing${FEED.distributionAsOf ? ` · ${FEED.distributionAsOf}` : ''}`)}
-    ${stat('Active categories', String(FEED.ytd.categories), `for ${FEED.ytd.year} selection`)}
+<section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
+  <div class="s5-live">
+    <div data-r="0"><b data-count="${latest.cutoff}" style="color:var(--accentInk)">${latest.cutoff}</b><span>latest cutoff, round #${latest.no} (${latest.cat}, ${latest.date.replace(/, \d{4}$/, '')})</span></div>
+    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>invitations in ${FEED.ytd.year}, ${FEED.ytd.rounds} rounds</span></div>
+    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>profiles in the pool${FEED.distributionAsOf ? ` (${FEED.distributionAsOf})` : ''}</span></div>
+    <div data-r="240"><b>${FEED.ytd.categories}</b><span>active categories in ${FEED.ytd.year}</span></div>
   </div>
 </section>
 
-<section style="max-width:1200px;margin:0 auto;padding:32px 24px 8px">
-  <div data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">
+  <div data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:22px">
-      <div><h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">CRS cutoff trend</h2><p style="font-size:13px;color:var(--text2);margin:0">Minimum score by round — most recent 10 draws (left → right)</p></div>
+      <div><h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">CRS cutoff trend</h2><p style="font-size:13px;color:var(--text2);margin:0">Minimum score by round — most recent 10 draws (left → right)</p></div>
       <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--catbar)"></span>Category &amp; provincial</span></div>
     </div>
     <div style="display:flex;align-items:flex-end;gap:12px;height:200px">${chart}</div>
   </div>
 </section>
 
-<section style="max-width:1200px;margin:0 auto;padding:32px 24px">
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px">
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
     ${DRAW_FILTERS.map((c, i) => `<button class="filterchip${i === 0 ? ' on' : ''}" onclick="filterDraws('${c}',this)">${c}</button>`).join('')}
   </div>
-  <div class="drawscroll" style="background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden">
+  <div class="drawscroll" style="background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden">
     <div class="drawinner" id="drawtable">
       <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
-      ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
+      ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Satoshi',sans-serif;font-size:19px;font-weight:900;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
       <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
     </div>
   </div>
 </section>
 
-<section style="max-width:1200px;margin:0 auto;padding:8px 24px 40px">
+<section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
   <div class="poolgrid" data-reveal style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">Pool composition</h2>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
+      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">Pool composition</h2>
       <p style="font-size:13px;color:var(--text2);margin:0 0 20px">Candidates by CRS range — a recent IRCC snapshot</p>
-      <div style="display:flex;flex-direction:column;gap:16px">${POOL.map(([range, count, n]) => `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text2);font-weight:600">${range}</span><span style="color:var(--text);font-weight:700;font-family:'Space Grotesk',sans-serif">${count}</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:${Math.round((n / poolMax) * 100)}%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div></div>`).join('')}</div>
+      <div style="display:flex;flex-direction:column;gap:16px">${POOL.map(([range, count, n]) => `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text2);font-weight:600">${range}</span><span style="color:var(--text);font-weight:900;font-family:'Satoshi',sans-serif">${count}</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:${Math.round((n / poolMax) * 100)}%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div></div>`).join('')}</div>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px">
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin:0 0 4px">What the trends tell you</h2>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
+      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">What the trends tell you</h2>
       <p style="font-size:13px;color:var(--text2);margin:0 0 18px">Analytics in the app turn this into your personal odds</p>
       <div style="display:flex;flex-direction:column;gap:14px">${INSIGHTS.map(([ico, title, bodyt]) => `<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:9px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon(ico, 17)}</span><div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${title}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${bodyt}</div></div></div>`).join('')}</div>
       <a class="link-accent" href="/features" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">See analytics features →</a>
@@ -1151,12 +1158,13 @@ function drawsPage() {
   </div>
 </section>
 </div>
-${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Draw figures are for guidance only — verify at canada.ca. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+${s5End()}
+${footerFull()}
 </div>
 <script>
 function filterDraws(cat,btn){document.querySelectorAll('#drawtable .drawrow').forEach(function(r){r.style.display=(cat==='All'||r.getAttribute('data-cat')===cat)?'':'none'});document.querySelectorAll('.filterchip').forEach(function(c){c.classList.remove('on')});btn.classList.add('on')}
 </script>`;
-  return shell({ ...page('draws'), body });
+  return shell({ ...page('draws'), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ CALCULATORS
@@ -1515,7 +1523,7 @@ ${CRS_CALC_SRC}
     document.getElementById('r-note').textContent=res.note;
     document.getElementById('r-rows').innerHTML=res.rows.map(function(x){
       var pct=x.max?Math.round(x.val/x.max*100):0;
-      return '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--text2)">'+x.label+'</span><span style="color:var(--text);font-weight:700"><span style="font-family:\\'Space Grotesk\\',sans-serif">'+x.val+'</span> <span style="color:var(--muted);font-weight:500">/ '+x.max+'</span></span></div><div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="'+bar(pct,'var(--accent)')+'"></div></div></div>';
+      return '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--text2)">'+x.label+'</span><span style="color:var(--text);font-weight:700"><span style="font-family:\\'Satoshi\\',sans-serif">'+x.val+'</span> <span style="color:var(--muted);font-weight:500">/ '+x.max+'</span></span></div><div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="'+bar(pct,'var(--accent)')+'"></div></div></div>';
     }).join('');
   }
   function syncVis(){
@@ -1563,18 +1571,14 @@ function calculatorsPage() {
   const body = `${nav('calc', 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-<section style="max-width:1200px;margin:0 auto;padding:52px 24px 24px">
-  ${eyebrow('Calculators')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">Score yourself against <span style="color:var(--accentInk)">every grid</span></h1>
-  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0;max-width:640px">Pick a program below. Everything computes live in your browser — nothing is sent anywhere. These are estimates for planning; always confirm with the official IRCC or provincial tool.</p>
-</section>
-<section style="max-width:1200px;margin:0 auto;padding:0 24px">
+${pageHero('Score yourself against', 'every grid.', 'Pick a program below. Everything computes live in your browser and nothing is sent anywhere. These are estimates for planning; confirm with the official IRCC or provincial tool.')}
+<section style="max-width:1080px;margin:0 auto;padding:0 24px">
   <div class="calctabs" style="display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)">${tabs}</div>
 </section>
-<section id="calc" class="calcbody" style="max-width:1200px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
+<section id="calc" class="calcbody" style="max-width:1080px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
     <div style="margin-bottom:18px">
-      <h2 id="calc-title" style="font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;letter-spacing:-.5px;margin:0 0 4px">CRS — Express Entry score</h2>
+      <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">CRS — Express Entry score</h2>
       <p id="calc-sub" style="font-size:14px;color:var(--text2);margin:0">Official IRCC Comprehensive Ranking System, out of 1,200.</p>
     </div>
     ${calcForms()}
@@ -1586,13 +1590,13 @@ function calculatorsPage() {
         <span id="r-badge"></span>
       </div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
-        <span id="r-total" style="font-family:'Space Grotesk',sans-serif;font-size:64px;font-weight:700;letter-spacing:-3px;color:var(--text);line-height:1">0</span>
+        <span id="r-total" style="font-family:'Satoshi',sans-serif;font-size:64px;font-weight:900;letter-spacing:-3px;color:var(--text);line-height:1">0</span>
         <span id="r-max" style="font-size:17px;color:var(--muted);font-weight:600">/ 1,200</span>
       </div>
       <div style="height:8px;background:var(--bg3);border-radius:6px;overflow:hidden;margin:14px 0 6px"><div id="r-bar" style="height:100%;width:0"></div></div>
       <p id="r-note" style="font-size:12.5px;line-height:1.5;color:var(--text2);margin:8px 0 0"></p>
     </div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:16px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:20px;margin-top:16px">
       <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">Points breakdown</div>
       <div id="r-rows" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>
@@ -1600,14 +1604,14 @@ function calculatorsPage() {
   </div>
 </section>
 </div>
-${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+${footerFull()}
 </div>
 <a class="scorebar" id="scorebar" href="#calc-result" aria-label="See your score breakdown">
   <span style="display:flex;flex-direction:column;min-width:0"><span id="sb-label" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Comprehensive Ranking System</span><span style="font-size:12.5px;color:var(--text2)">Tap for the breakdown</span></span>
   <span style="display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex-shrink:0"><span id="sb-total" class="num" style="font-size:30px;line-height:1;color:var(--text)">0</span><span id="sb-max" style="font-size:13px;color:var(--muted);font-weight:600">/ 1,200</span></span>
 </a>
 ${CALC_SCRIPT}`;
-  return shell({ ...page('calculators'), jsonld: calcJsonLd(), body });
+  return shell({ ...page('calculators'), jsonld: calcJsonLd(), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ DOCS
@@ -1616,7 +1620,7 @@ function doc(file, mdFile) {
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
 <main class="doc"><article class="doc-card">${addHeadingIds(marked.parse(md))}</article></main>
-${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+${footerFull()}
 </div>`;
   return shell({ ...page(file), body });
 }
@@ -1874,8 +1878,7 @@ function notFoundPage() {
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
 <main style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:80px 24px 72px">
-  ${eyebrow('Error 404')}
-  <h1 style="font-family:'Space Grotesk',sans-serif;font-size:44px;line-height:1.04;letter-spacing:-1.8px;font-weight:700;margin:0 0 14px">This page doesn't <span style="color:var(--accentInk)">exist</span></h1>
+  <h1 class="split" style="font-size:clamp(42px,5.6vw,72px);line-height:1.02;margin:0 0 18px">This page doesn't <em style="font-style:normal;color:var(--accentInk)">exist.</em></h1>
   <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:620px">The link may be old or mistyped. Everything on crspulse.com lives at one of these pages:</p>
   <div style="display:flex;flex-direction:column;gap:10px">
     ${links.map(([href, label, desc]) => `<a class="lift" href="${href}" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;color:var(--text)"><div style="font-size:15px;font-weight:700;margin-bottom:3px">${label}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${desc}</div></a>`).join('')}
@@ -1885,7 +1888,7 @@ function notFoundPage() {
     <pre style="margin:0;overflow-x:auto;font-size:12.5px;line-height:1.6;color:var(--text2);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap">${agentMd.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>
   </div>
 </main>
-${footerSlim('Unofficial and not affiliated with IRCC or the Government of Canada. Estimates only — not immigration advice. © ' + new Date().getFullYear() + ' CRS Pulse.')}
+${footerFull()}
 </div>`;
   return shell({ title: 'Page not found — CRS Pulse', description: 'That page does not exist on crspulse.com. Jump to the calculators, live IRCC draws, features or legal pages.', noindex: true, body });
 }
