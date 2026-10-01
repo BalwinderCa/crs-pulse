@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { spacing, typography, borderRadius } from '@/theme';
@@ -10,6 +10,7 @@ import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useApplicationStore } from '@/store/applicationStore';
+import type { RootStackParamList } from '@/types';
 import { type ApplicationCategory } from '../data/processingTimes';
 import { useProcessingTimes } from '../hooks/useProcessingTimes';
 
@@ -22,7 +23,12 @@ export default function ApplicationSetupScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const navigation = useNavigation();
-  const { application, save } = useApplicationStore();
+  const params = useRoute<RouteProp<RootStackParamList, 'ApplicationSetup'>>().params;
+  const nextMode = !!params?.next;
+  const { save, startNext } = useApplicationStore();
+  // In "next application" mode the flow starts blank; the current application is
+  // only filed into history when the new one is saved.
+  const application = useApplicationStore((s) => (nextMode ? null : s.application));
   const { categories: APPLICATION_CATEGORIES } =
     useProcessingTimes();
 
@@ -42,7 +48,11 @@ export default function ApplicationSetupScreen() {
 
   const finish = (appliedDate: string | null) => {
     if (!categoryId || !typeId) return;
-    save({ categoryId, typeId, appliedDate });
+    if (nextMode) {
+      startNext({ categoryId, typeId, appliedDate }, { decidedDate: params?.decidedDate ?? null, coprDate: params?.coprDate ?? null });
+    } else {
+      save({ categoryId, typeId, appliedDate });
+    }
     navigation.goBack();
   };
 
@@ -107,7 +117,7 @@ export default function ApplicationSetupScreen() {
 
   return (
     <View style={[s.wrap, { backgroundColor: c.surfacePrimary }]}>
-      <AppHeader title={t('tracker.title')} variant="stack" onBackPress={back} />
+      <AppHeader title={t(nextMode ? 'tracker.titleNext' : 'tracker.title')} variant="stack" onBackPress={back} />
 
       {/* Progress */}
       <View style={s.progressWrap}>

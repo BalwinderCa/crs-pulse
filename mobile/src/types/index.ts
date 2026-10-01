@@ -97,7 +97,8 @@ export type RootStackParamList = {
   SinpCalculator: undefined;
   CrsCalculator: undefined;
   Calculators: undefined;
-  ApplicationSetup: undefined;
+  /** `next`: start tracking a new application and file the decided one into history. */
+  ApplicationSetup: { next: true; decidedDate: string | null; coprDate: string | null } | undefined;
   DocumentChecklist: undefined;
   DocumentChecklistDetail: { programId: string };
   FswCalculator: undefined;

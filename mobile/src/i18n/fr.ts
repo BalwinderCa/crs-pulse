@@ -63,6 +63,11 @@ const fr: TranslationKeys = {
     decisionDate: 'Date de la décision',
     decisionReceived: 'Décision finale reçue le {{date}}',
     coprReceived: 'CRP reçue le {{date}}',
+    trackNext: 'Suivre votre prochaine demande',
+    trackNextHint: 'Carte RP, citoyenneté et plus',
+    previousApplications: 'Demandes précédentes',
+    pastDecided: 'Décision le {{date}}',
+    pastCopr: 'CRP le {{date}}',
     trackApplication: 'Suivre votre demande',
     appliedToIrcc: 'Demande soumise à l\'IRCC? Consultez votre date de décision estimée',
     applicationTimeline: 'Chronologie de la demande',
@@ -331,6 +336,8 @@ const fr: TranslationKeys = {
 
   tracker: {
     title: 'Suivi de demande',
+    // [REVIEW] suivi d'une nouvelle demande
+    titleNext: 'Suivre une nouvelle demande',
     step: 'Étape {{current}} sur {{total}}',
     categoryQuestion: 'Quel type de demande avez-vous soumis?',
     programQuestion: 'Quel programme {{category}}?',

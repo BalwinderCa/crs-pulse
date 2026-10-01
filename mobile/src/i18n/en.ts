@@ -57,6 +57,11 @@ const en = {
     decisionDate: 'Decision date',
     decisionReceived: 'Final decision received {{date}}',
     coprReceived: 'COPR received {{date}}',
+    trackNext: 'Track your next application',
+    trackNextHint: 'PR card, citizenship and more',
+    previousApplications: 'Previous applications',
+    pastDecided: 'Decided {{date}}',
+    pastCopr: 'COPR {{date}}',
     trackApplication: 'Track your application',
     appliedToIrcc: 'Applied to IRCC? See your estimated decision date',
     applicationTimeline: 'Application Timeline',
@@ -325,6 +330,7 @@ const en = {
 
   tracker: {
     title: 'Track Application',
+    titleNext: 'Track Next Application',
     step: 'Step {{current}} of {{total}}',
     categoryQuestion: 'What kind of application did you submit?',
     programQuestion: 'Which {{category}} program?',

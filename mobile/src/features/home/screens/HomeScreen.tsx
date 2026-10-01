@@ -48,6 +48,7 @@ export default function HomeScreen() {
   const profile = useProfileStore((s) => s.profile);
   const { draws, isRefreshing, refresh } = useDrawsStore();
   const application = useApplicationStore((s) => s.application);
+  const history = useApplicationStore((s) => s.history);
   const { categories, updatedLabel } = useProcessingTimes();
   const milestones = useTimelineStore((s) => s.milestones);
   const lastMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
@@ -188,7 +189,8 @@ export default function HomeScreen() {
                 ) : (
                   <View style={s.appStat}>
                     <Text style={[s.appStatVal, { color: tracked.progress >= 1 ? palette.warning : accent }]}>
-                      {Math.max(0, Math.ceil((tracked.totalDays - (tracked.daysIn ?? 0)) / 30.44))}
+                      {/* from the published months, not the day-rounded total (2 months → 61 days → 2.004 → 3) */}
+                      {Math.max(0, Math.ceil(tracked.type.months - (tracked.daysIn ?? 0) / 30.44 - 1e-9))}
                     </Text>
                     <Text style={[s.appStatLabel, { color: c.textMuted }]}>{t('home.monthsLeft')}</Text>
                   </View>
@@ -221,10 +223,31 @@ export default function HomeScreen() {
                 <View style={[s.overdueRow, { backgroundColor: palette.success + '14' }]}>
                   <Ionicons name="checkmark-circle" size={15} color={palette.success} />
                   <Text style={[s.overdueText, { color: palette.success }]}>
-                    {t('home.decisionReceived', { date: format(tracked.decisionDate, 'MMM d, yyyy', { locale: dateLocale }) })}
-                    {tracked.copr ? `\n${t('home.coprReceived', { date: format(tracked.copr, 'MMM d, yyyy', { locale: dateLocale }) })}` : ''}
+                    {tracked.copr
+                      ? t('home.coprReceived', { date: format(tracked.copr, 'MMM d, yyyy', { locale: dateLocale }) })
+                      : t('home.decisionReceived', { date: format(tracked.decisionDate, 'MMM d, yyyy', { locale: dateLocale }) })}
                   </Text>
                 </View>
+              ) : null}
+              {tracked.decided ? (
+                <TouchableOpacity ph-label="home-track-next"
+                  style={[s.nextBtn, { borderColor: accent + '55', backgroundColor: accent + '0D' }]}
+                  onPress={() => stackNav.navigate('ApplicationSetup', {
+                    next: true,
+                    decidedDate: format(tracked.decisionDate, 'yyyy-MM-dd'),
+                    coprDate: tracked.copr ? format(tracked.copr, 'yyyy-MM-dd') : null,
+                  })}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.trackNext')}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="add-circle-outline" size={20} color={accent} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[s.nextTitle, { color: accent }]}>{t('home.trackNext')}</Text>
+                    <Text style={[s.nextHint, { color: c.textMuted }]}>{t('home.trackNextHint')}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color={accent} />
+                </TouchableOpacity>
               ) : tracked.progress >= 1 ? (
                 <View style={[s.overdueRow, { backgroundColor: palette.warning + '14' }]}>
                   <Ionicons name="alert-circle-outline" size={15} color={palette.warning} />
@@ -301,6 +324,30 @@ export default function HomeScreen() {
             </View>
             <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
           </TouchableOpacity>
+        </Card>
+      )}
+
+      {/* Decided applications filed away when the user moved on to the next one */}
+      {history.length > 0 && (
+        <Card style={s.appCard}>
+          <Text style={[s.sectionTitle, { color: c.textPrimary }]}>{t('home.previousApplications')}</Text>
+          {history.map((h, i) => {
+            const found = findApplicationType(h.categoryId, h.typeId, categories);
+            const outcome = h.coprDate
+              ? t('home.pastCopr', { date: format(parseISO(h.coprDate), 'MMM d, yyyy', { locale: dateLocale }) })
+              : h.decidedDate
+                ? t('home.pastDecided', { date: format(parseISO(h.decidedDate), 'MMM d, yyyy', { locale: dateLocale }) })
+                : null;
+            return (
+              <View key={`${h.typeId}-${h.appliedDate ?? i}`} style={[s.pastRow, i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border }]}>
+                <Ionicons name="checkmark-circle" size={18} color={palette.success} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[s.pastTitle, { color: c.textPrimary }]}>{found?.type.label ?? h.typeId}</Text>
+                  {outcome && <Text style={[s.pastSub, { color: c.textMuted }]}>{outcome}</Text>}
+                </View>
+              </View>
+            );
+          })}
         </Card>
       )}
 
@@ -417,6 +464,13 @@ const s = StyleSheet.create({
   overdueRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
                  borderRadius: borderRadius.md, padding: spacing.sm, marginTop: spacing.xs },
   overdueText: { flex: 1, fontSize: typography.xs, lineHeight: 17, fontWeight: typography.semibold },
+  nextBtn:     { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm,
+                 paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: borderRadius.md, borderWidth: 1 },
+  nextTitle:   { fontSize: typography.sm, fontWeight: typography.bold },
+  nextHint:    { fontSize: typography.xs, marginTop: 1 },
+  pastRow:     { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: spacing.sm },
+  pastTitle:   { fontSize: typography.sm, fontWeight: typography.semibold },
+  pastSub:     { fontSize: typography.xs, marginTop: 1 },
   appInfoBox:   { borderTopWidth: StyleSheet.hairlineWidth, marginTop: spacing.sm,
                   paddingTop: spacing.sm, gap: spacing.xs },
   appInfoRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
