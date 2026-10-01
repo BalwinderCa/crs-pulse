@@ -473,7 +473,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')document.que
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
 function nav(active, cta) {
-  const links = [['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/features', 'Features', 'features']];
+  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/features', 'Features', 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
@@ -984,7 +984,7 @@ function home() {
   const priv = `<section class="s5-priv"><p class="s5-big" id="privline">${privacy.split(' ').map((w) => `<span class="wd${/yours|never/.test(w) ? ' red' : ''}">${w}</span>`).join(' ')}</p>
     <div class="s5-pts">${PRIVACY_POINTS.map((p, i) => `<p data-r="${i * 80}"><span style="color:var(--success);flex-shrink:0;margin-top:3px">${icon('lock', 19)}</span><span>${p}</span></p>`).join('')}</div></section>`;
 
-  const body = `${nav('', 'app')}
+  const body = `${nav('home', 'app')}
 <main class="s5">
 ${hero}
 <div class="wrap">
