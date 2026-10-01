@@ -33,6 +33,15 @@ describe('applicationStore next application', () => {
     expect(useApplicationStore.getState().history.map((h) => h.typeId)).toEqual(['pr_card_first', 'ee_cec']);
   });
 
+  it('removes one previous application and persists it', async () => {
+    await useApplicationStore.getState().save(cec);
+    await useApplicationStore.getState().startNext(prCard, { decidedDate: '2026-08-25', coprDate: null });
+    await useApplicationStore.getState().removePast(0);
+    expect(useApplicationStore.getState().history).toEqual([]);
+    expect(useApplicationStore.getState().application).toEqual(prCard);
+    expect(JSON.parse((await AsyncStorage.getItem(STORAGE_KEYS.APPLICATION_HISTORY)) ?? 'null')).toEqual([]);
+  });
+
   it('reset wipes the current application and its history', async () => {
     await useApplicationStore.getState().save(cec);
     await useApplicationStore.getState().startNext(prCard, { decidedDate: '2026-08-25', coprDate: null });

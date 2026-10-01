@@ -30,6 +30,8 @@ type ApplicationStore = {
    * flow leaves the current application untouched.
    */
   startNext: (next: TrackedApplication, outcome: { decidedDate: string | null; coprDate: string | null }) => Promise<void>;
+  /** Hides one previous application (index into `history`). */
+  removePast: (index: number) => Promise<void>;
   /** Wipes the current application and its history (used by "Reset All Data"). */
   clear: () => Promise<void>;
 };
@@ -77,6 +79,14 @@ export const useApplicationStore = create<ApplicationStore>((set, get) => ({
         [STORAGE_KEYS.TRACKED_APPLICATION, JSON.stringify(next)],
         [STORAGE_KEYS.APPLICATION_HISTORY, JSON.stringify(history)],
       ]);
+    } catch {}
+  },
+
+  removePast: async (index) => {
+    const history = get().history.filter((_, i) => i !== index);
+    set({ history });
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.APPLICATION_HISTORY, JSON.stringify(history));
     } catch {}
   },
 

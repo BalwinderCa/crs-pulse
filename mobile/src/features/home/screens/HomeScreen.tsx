@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';
@@ -49,6 +49,12 @@ export default function HomeScreen() {
   const { draws, isRefreshing, refresh } = useDrawsStore();
   const application = useApplicationStore((s) => s.application);
   const history = useApplicationStore((s) => s.history);
+  const removePast = useApplicationStore((s) => s.removePast);
+  const confirmRemovePast = (index: number) =>
+    Alert.alert(t('home.removePastTitle'), t('home.removePastMsg'), [
+      { text: t('home.removePastCancel'), style: 'cancel' },
+      { text: t('home.removePastConfirm'), style: 'destructive', onPress: () => { removePast(index); } },
+    ]);
   const { categories, updatedLabel } = useProcessingTimes();
   const milestones = useTimelineStore((s) => s.milestones);
   const lastMilestone = milestones.length > 0 ? milestones[milestones.length - 1] : null;
@@ -345,6 +351,14 @@ export default function HomeScreen() {
                   <Text style={[s.pastTitle, { color: c.textPrimary }]}>{found?.type.label ?? h.typeId}</Text>
                   {outcome && <Text style={[s.pastSub, { color: c.textMuted }]}>{outcome}</Text>}
                 </View>
+                <TouchableOpacity ph-label="home-remove-previous"
+                  onPress={() => confirmRemovePast(i)}
+                  hitSlop={12}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('home.removePastLabel', { name: found?.type.label ?? h.typeId })}
+                >
+                  <Ionicons name="close" size={18} color={c.textMuted} />
+                </TouchableOpacity>
               </View>
             );
           })}
