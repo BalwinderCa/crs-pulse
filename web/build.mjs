@@ -514,9 +514,19 @@ const DATEPICKER_JS = `<script>
   function same(a,b){ return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
   function long(d){ return MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); }
   var current=null;
-  // On phones the calendar is a bottom sheet. An animated ancestor would pin a fixed
-  // element to itself, so the sheet moves to <body> while it is open.
+  // While open the calendar lives in <body>: the cards around a field animate in, and an
+  // animated ancestor traps its children in its own stacking layer (so the next card paints
+  // over the calendar) and pins position:fixed to itself. On phones it is a bottom sheet;
+  // elsewhere it is placed under the field, or above it when there is no room below.
   var sheet=window.matchMedia('(max-width:520px)');
+  function place(c){
+    if(!c||sheet.matches){ if(c){ c.pop.style.top=''; c.pop.style.left=''; } return; }
+    var r=c.field.getBoundingClientRect(), b=document.body.getBoundingClientRect(), h=c.pop.offsetHeight, w=c.pop.offsetWidth;
+    var below=r.bottom+8, top=(below+h>innerHeight-8&&r.top-8-h>8)?r.top-8-h:below;
+    var left=Math.max(12,Math.min(r.left,document.documentElement.clientWidth-w-12));
+    c.pop.style.top=(top-b.top)+'px'; c.pop.style.left=(left-b.left)+'px';
+  }
+  addEventListener('resize',function(){ place(current); });
   document.addEventListener('click',function(e){ var path=e.composedPath(); if(current&&path.indexOf(current.wrap)<0&&path.indexOf(current.pop)<0) current.close(false); });
   document.querySelectorAll('input[data-datepicker]').forEach(function(input){
     var bound=function(a){ var v=input.getAttribute(a); return v==='today'?today():parse(v); };
@@ -529,16 +539,16 @@ const DATEPICKER_JS = `<script>
     var pop=document.createElement('div'); pop.className='dp-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Choose a date'); pop.hidden=true;
     wrap.appendChild(field); wrap.appendChild(pop);
     var view, focusDay, mode='days';
-    var self={ wrap:wrap, pop:pop, close:close };
+    var self={ wrap:wrap, pop:pop, field:field, close:close };
     function selected(){ return parse(desc.get.call(input)); }
     function paint(){ var d=selected(); field.innerHTML='<span class="'+(d?'':'dp-ph')+'">'+(d?long(d).replace(/^(\\w{3})\\w*/,'$1'):'Select a date')+'</span>'+CAL; }
     Object.defineProperty(input,'value',{ configurable:true, get:function(){ return desc.get.call(input); }, set:function(v){ desc.set.call(input,v); paint(); } });
     if(input.form) input.form.addEventListener('reset',function(){ setTimeout(paint); });
     function set(d){ desc.set.call(input,d?iso(d):''); paint(); input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true})); }
     function clamp(d){ return min&&d<min?min:max&&d>max?max:d; }
-    function open(){ if(current&&current!==self) current.close(false); var v=selected()||clamp(today()); focusDay=v; view=new Date(v.getFullYear(),v.getMonth(),1); mode='days'; render(); if(sheet.matches) document.body.appendChild(pop); pop.hidden=false; field.setAttribute('aria-expanded','true'); current=self; focusGrid(); }
+    function open(){ if(current&&current!==self) current.close(false); var v=selected()||clamp(today()); focusDay=v; view=new Date(v.getFullYear(),v.getMonth(),1); mode='days'; render(); document.body.appendChild(pop); pop.hidden=false; field.setAttribute('aria-expanded','true'); current=self; place(self); focusGrid(); }
     function close(back){ if(pop.hidden) return; pop.hidden=true; if(pop.parentNode!==wrap) wrap.appendChild(pop); field.setAttribute('aria-expanded','false'); if(current===self) current=null; if(back) field.focus(); }
-    function focusGrid(){ var b=pop.querySelector(mode==='days'?'.dp-day[tabindex="0"]':'.dp-mon[tabindex="0"]'); if(b) b.focus(); }
+    function focusGrid(){ if(!pop.hidden) place(self); var b=pop.querySelector(mode==='days'?'.dp-day[tabindex="0"]':'.dp-mon[tabindex="0"]'); if(b) b.focus(); }
     function render(){
       var y=view.getFullYear(), m=view.getMonth(), sel=selected(), t=today(), h='';
       if(mode==='days'){
