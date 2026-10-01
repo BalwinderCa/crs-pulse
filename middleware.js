@@ -1,4 +1,4 @@
-// Content negotiation for agents (acceptmarkdown.com). The six public pages serve
+// Content negotiation for agents (acceptmarkdown.com). The public pages serve
 // Markdown from the *same* URL when the request asks for it, HTML otherwise, and 406
 // when the client will accept neither.
 //
@@ -6,7 +6,7 @@
 // (index.html has already answered), and `redirects` can only match a header against a
 // regex — they can't read q-values or answer 406. Routing Middleware runs before both.
 //
-// Only the six page paths are matched, so every other request — assets, the .md twins,
+// Only the page paths are matched, so every other request — assets, the .md twins,
 // llms.txt, sitemap.xml, the 404 — never invokes this.
 
 /** URL path -> the markdown twin the build emits for it. */
@@ -14,6 +14,9 @@ export const TWIN = {
   '/': '/index.md',
   '/calculators': '/calculators.md',
   '/draws': '/draws.md',
+  '/analytics': '/analytics.md',
+  '/checklists': '/checklists.md',
+  '/processing-times': '/processing-times.md',
   '/features': '/features.md',
   '/privacy': '/privacy.md',
   '/terms': '/terms.md',
@@ -22,7 +25,7 @@ export const TWIN = {
 // Vercel statically parses this export, so the matcher has to be a literal — it cannot
 // be derived from TWIN. web/middleware.test.mjs asserts the two stay in step.
 export const config = {
-  matcher: ['/', '/calculators', '/draws', '/features', '/privacy', '/terms'],
+  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/features', '/privacy', '/terms'],
 };
 
 /**

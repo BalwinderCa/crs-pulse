@@ -2,6 +2,9 @@
 //   /             → home (hero + features + calculators + draws preview + FAQ)
 //   /calculators  → live in-browser CRS / FSW / BC PNP SIRS / SINP EOI calculators
 //   /draws        → live IRCC draw tracking, cutoff trend + pool composition
+//   /analytics    → draw analytics + where a score lands
+//   /checklists   → per-program document checklists (from the app's data)
+//   /processing-times → IRCC processing times + decision-date estimate
 //   /features     → feature tour
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md
@@ -60,6 +63,24 @@ const PAGES = [
     title: `Express Entry Draws ${YEAR}: Latest CRS Cutoffs | CRS Pulse`,
     description: `Latest Express Entry draw #${LATEST.number} (${SHORT_DATE}): ${LATEST.label}, CRS ${LATEST.crs}, ${fmtN(LATEST.size)} ITAs. Every round from IRCC with cutoff trends and pool data.`,
     llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
+  },
+  {
+    file: 'analytics', path: '/analytics', priority: '0.8',
+    title: `Express Entry Draw Analytics ${YEAR}: Cutoffs by Category`,
+    description: 'Express Entry cutoffs, cadence and invitations by category from recent IRCC rounds, plus a tool that shows which rounds your CRS score would have cleared.',
+    llm: 'Per-category cutoff summary (rounds, low/average/high), invitations by category, draw cadence, and how a CRS score compares with recent rounds and the pool.',
+  },
+  {
+    file: 'checklists', path: '/checklists', priority: '0.8',
+    title: 'Document Checklists: Express Entry, PNP, Family, Study, Work & Citizenship',
+    description: 'Free document checklists for Express Entry PR, provincial nominee, family sponsorship, study permit, work permit and citizenship applications. Track progress privately in your browser.',
+    llm: 'Document lists by program (Express Entry, PNP paper, family sponsorship, study permit, work permit, citizenship), grouped by section with hints.',
+  },
+  {
+    file: 'processing-times', path: '/processing-times', priority: '0.8',
+    title: `IRCC Processing Times ${YEAR}: PR, Family, Citizenship & More`,
+    description: 'Current IRCC processing times for Express Entry, PNP, family sponsorship, citizenship and more, with people waiting and a decision-date estimator.',
+    llm: 'IRCC processing time in months and people waiting for every application type, grouped by category, plus the typical stages of each.',
   },
   {
     file: 'features', path: '/features', priority: '0.7',
@@ -472,10 +493,21 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')document.que
 // gone. Hierarchy on this site comes from type, hairlines and alignment.
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
+// The header's Resources menu: [href, label, key, one-line description, icon].
+const RESOURCES = [
+  ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category and where your score lands', 'trend'],
+  ['/checklists', 'Document checklists', 'checklists', 'What to gather for each program', 'checklist'],
+  ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'clock'],
+];
+
 function nav(active, cta) {
-  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/features', 'Features', 'features']];
+  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws']];
+  const after = [['/features', 'Features', 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
+  const inRes = RESOURCES.some(([, , key]) => key === active);
+  const drop = `<div class="navdrop"><button type="button" class="navlink navdrop-btn" aria-expanded="false" aria-controls="res-menu"${inRes ? ' data-current' : ''}>Resources<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
+      <div class="droppanel" id="res-menu">${RESOURCES.map(([href, label, key, desc, ic]) => `<a class="dropitem" href="${href}"${active === key ? ' aria-current="page"' : ''}><span class="dropic">${icon(ic, 18)}</span><span><b>${label}</b><small>${desc}</small></span></a>`).join('')}</div></div>`;
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
     ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>Get the app</span></a>`
@@ -491,7 +523,7 @@ function nav(active, cta) {
       <img src="/img/logo-mark.png" width="32" height="32" alt="" class="brandmark">
       <span class="wordmark">CRS Pulse</span>
     </a>
-    <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}</div>
+    <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}${drop}${after.map((l) => link(l, 'navlink')).join('')}</div>
     <div class="headright">
       ${live}
       ${themeBtn('head-theme')}
@@ -500,6 +532,10 @@ function nav(active, cta) {
         <summary aria-label="Open menu"><span class="burger" aria-hidden="true"><i></i><i></i></span></summary>
         <div class="menupanel">
           ${links.map((l) => link(l, 'menulink')).join('')}
+          <div class="menuhead">Resources</div>
+          ${RESOURCES.map((l) => link(l, 'menulink')).join('')}
+          <div class="menuhead"></div>
+          ${after.map((l) => link(l, 'menulink')).join('')}
           <a class="menulink" href="/#faq">FAQ</a>
           <div class="menufoot">${live}${themeBtn('menu-theme')}</div>
         </div>
@@ -537,6 +573,9 @@ const footerFull = () => `
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
           <a class="foot-link" href="/calculators">Calculators</a>
           <a class="foot-link" href="/draws">Draws &amp; trends</a>
+          <a class="foot-link" href="/analytics">Draw analytics</a>
+          <a class="foot-link" href="/checklists">Document checklists</a>
+          <a class="foot-link" href="/processing-times">Processing times</a>
           <a class="foot-link" href="/features">Features</a>
           <a class="foot-link" href="/#faq">FAQ</a>
         </div>
@@ -605,7 +644,9 @@ ${S5_HEAD}
 ${head2}
 ${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
-<script>addEventListener('DOMContentLoaded',function(){var b=document.body;function f(){b.classList.toggle('dg-scrolled',scrollY>30)}addEventListener('scroll',f,{passive:true});f()});</script>
+<script>addEventListener('DOMContentLoaded',function(){var b=document.body;function f(){b.classList.toggle('dg-scrolled',scrollY>30)}addEventListener('scroll',f,{passive:true});f();
+var d=document.querySelector('.navdrop'),k=d&&d.querySelector('button');if(!k)return;function set(o){d.classList.toggle('open',o);k.setAttribute('aria-expanded',o?'true':'false')}
+k.addEventListener('click',function(e){e.stopPropagation();set(!d.classList.contains('open'))});document.addEventListener('click',function(e){if(!d.contains(e.target))set(false)});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&d.classList.contains('open')){set(false);k.focus()}})});</script>
 ${VERCEL_ANALYTICS}
 ${POSTHOG_WEB}
 
@@ -915,6 +956,45 @@ body:not(.dg-scrolled) .sitehead{ background:transparent; border-bottom-color:tr
 .s5-end, .s5-snap a:first-child{ position:relative; isolation:isolate; overflow:hidden; }
 .s5-end::before, .s5-snap a:first-child::before{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; background:radial-gradient(rgba(255,255,255,.35) 1.2px, transparent 1.2px) 0 0/22px 22px; -webkit-mask-image:linear-gradient(120deg, transparent 30%, #000); mask-image:linear-gradient(120deg, transparent 30%, #000); }
 @media (max-width:960px){ .dg-leaf{ width:120vw; right:-40%; top:68%; } .dg-sm .dg-leaf{ width:80vw; right:-25%; top:60%; } }
+/* header Resources menu */
+.navdrop{ position:relative; display:flex; align-items:stretch; }
+.navdrop-btn{ gap:5px; background:none; border:0; cursor:pointer; font-family:inherit; }
+.navdrop-btn svg{ transition:transform .2s ease; }
+.navdrop-btn[data-current]{ color:var(--text); font-weight:600; }
+.navdrop-btn[data-current]::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:var(--accent); }
+.droppanel{ position:absolute; top:100%; left:-10px; width:340px; padding:8px; border-radius:14px; border:1px solid var(--border); background:var(--card); box-shadow:var(--lift); display:flex; flex-direction:column; opacity:0; visibility:hidden; translate:0 6px; transition:opacity .15s ease, translate .15s ease, visibility .15s; z-index:60; }
+.navdrop:hover .droppanel, .navdrop:has(:focus-visible) .droppanel, .navdrop.open .droppanel{ opacity:1; visibility:visible; translate:0 0; }
+.navdrop:hover .navdrop-btn svg, .navdrop.open .navdrop-btn svg{ transform:rotate(180deg); }
+.dropitem{ display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:10px; color:var(--text); }
+.dropitem:hover, .dropitem[aria-current]{ background:var(--bg2); color:var(--text); }
+.dropic{ width:34px; height:34px; border-radius:10px; background:var(--accentSoft); color:var(--accentInk); display:grid; place-items:center; flex-shrink:0; }
+.dropitem b{ display:block; font-size:14.5px; font-weight:700; } .dropitem small{ display:block; font-size:12.5px; color:var(--text2); line-height:1.4; margin-top:2px; }
+.menuhead{ padding:12px 12px 4px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.menuhead:empty{ padding:4px 0 0; margin:4px 0; border-top:1px solid var(--hairline); }
+/* resources pages */
+.res-table{ width:100%; border-collapse:collapse; font-size:14px; min-width:520px; }
+.res-table th{ text-align:left; padding:12px 16px; color:var(--muted); font-size:11.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid var(--border); }
+.res-table td{ padding:13px 16px; border-bottom:1px solid var(--hairline); color:var(--text2); font-variant-numeric:tabular-nums; }
+.res-table tr:last-child td{ border-bottom:0; } .res-table td b{ color:var(--text); }
+.res-table th:first-child, .res-table td:first-child{ padding-left:24px; }
+.pt-row{ display:grid; grid-template-columns:minmax(0,1.4fr) minmax(80px,1fr) 110px; gap:18px; align-items:center; padding:13px 24px; border-top:1px solid var(--hairline); }
+.pt-bar{ height:8px; background:var(--bg3); border-radius:5px; overflow:hidden; } .pt-bar > div{ height:100%; border-radius:5px; background:linear-gradient(90deg,var(--accent2),var(--accent)); }
+.pt-m{ text-align:right; font-weight:900; color:var(--text); font-variant-numeric:tabular-nums; }
+.pt-prog{ height:10px; background:var(--bg3); border-radius:6px; overflow:hidden; } .pt-prog > div{ height:100%; background:var(--accent); border-radius:6px; transition:width .4s ease; }
+.pt-res{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:28px; align-items:end; padding:20px; border-radius:16px; background:var(--bg2); }
+.pt-big{ font-size:clamp(26px,3vw,34px); font-weight:900; letter-spacing:-.03em; color:var(--text); margin:4px 0; }
+.pt-stages{ list-style:none; padding:0; margin:16px 0 0; display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+.pt-stages li{ padding:14px; border-radius:12px; border:1px solid var(--border); display:flex; flex-direction:column; gap:3px; font-size:13px; color:var(--text2); }
+.pt-stages li b{ color:var(--text); font-size:14px; } .pt-stages li.done{ border-color:var(--success); background:var(--successSoft); }
+.ck-tabs .filterchip{ white-space:nowrap; flex-shrink:0; }
+.ck-grid{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.ck-item{ display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-top:1px solid var(--hairline); cursor:pointer; }
+.ck-item:first-of-type{ border-top:0; }
+.ck-item input{ width:20px; height:20px; margin:2px 0 0; accent-color:var(--accentBtn); flex-shrink:0; cursor:pointer; }
+.ck-item b{ display:block; font-weight:600; color:var(--text); font-size:15px; } .ck-item small{ display:block; color:var(--muted); font-size:13px; margin-top:2px; }
+.ck-item:has(input:checked) b{ color:var(--text2); text-decoration:line-through; text-decoration-color:var(--muted); }
+@media (max-width:760px){ .ck-grid{ grid-template-columns:minmax(0,1fr); } .pt-row{ grid-template-columns:minmax(0,1fr) 92px; padding:13px 18px; } .pt-bar{ grid-column:1/-1; order:3; } .pt-res{ grid-template-columns:minmax(0,1fr); gap:16px; } }
+@media print{ .sitehead, footer, .s5-end, .ck-tabs, .ck-actions, .dg-hero, .skip{ display:none!important; } body::before{ display:none; } body{ background:#fff!important; } }
 /* motion runtime */
 .js [data-r]{ opacity:0; transform:translateY(26px); transition:opacity .9s cubic-bezier(.16,1,.3,1) var(--d,0ms), transform .9s cubic-bezier(.16,1,.3,1) var(--d,0ms); }
 .js [data-r].in{ opacity:1; transform:none; }
@@ -1180,7 +1260,7 @@ ${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the of
       <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">What the trends tell you</h2>
       <p style="font-size:13px;color:var(--text2);margin:0 0 18px">Analytics in the app turn this into your personal odds</p>
       <div style="display:flex;flex-direction:column;gap:14px">${INSIGHTS.map(([ico, title, bodyt]) => `<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:9px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon(ico, 17)}</span><div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${title}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${bodyt}</div></div></div>`).join('')}</div>
-      <a class="link-accent" href="/features" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">See analytics features →</a>
+      <a class="link-accent" href="/analytics" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">Open draw analytics →</a>
     </div>
   </div>
 </section>
@@ -1192,6 +1272,273 @@ ${footerFull()}
 function filterDraws(cat,btn){document.querySelectorAll('#drawtable .drawrow').forEach(function(r){r.style.display=(cat==='All'||r.getAttribute('data-cat')===cat)?'':'none'});document.querySelectorAll('.filterchip').forEach(function(c){c.classList.remove('on')});btn.classList.add('on')}
 </script>`;
   return shell({ ...page('draws'), body: noDashes(body) });
+}
+
+// ------------------------------------------------------------------ RESOURCES
+// The three pages under the header's Resources menu. Document checklists and the IRCC
+// application categories are imported from the app's own data files, so the site and the
+// app list the same documents and programs. Wait times come from the processing-times
+// mirror and every draw figure from the rounds mirror, the same feeds the app reads.
+const { CHECKLIST_PROGRAMS } = await import('../mobile/src/features/checklist/data/checklists.ts');
+const { APPLICATION_CATEGORIES, getApplicationStages } = await import('../mobile/src/features/tracker/data/processingTimes.ts');
+const PT_FEED = JSON.parse(readFileSync(resolve(here, '../data/processing-times.json'), 'utf8'));
+if (!Object.keys(PT_FEED.times ?? {}).length) throw new Error('data/processing-times.json has no usable times');
+const jsonScript = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
+const resCard = 'background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px';
+const resH2 = (t, sub) => `<h2 style="font-size:20px;margin:0 0 4px">${t}</h2>${sub ? `<p style="font-size:13.5px;color:var(--text2);margin:0 0 20px">${sub}</p>` : ''}`;
+
+// ---------- analytics
+const ANALYTICS = (() => {
+  const groups = new Map();
+  for (const d of DRAWS) {
+    if (!groups.has(d.cat)) groups.set(d.cat, []);
+    groups.get(d.cat).push(d);
+  }
+  const cats = [...groups].map(([cat, list]) => {
+    const scores = list.map((d) => d.crs);
+    return {
+      cat, dot: list[0].dot, rounds: list.length, invited: list.reduce((n, d) => n + d.size, 0),
+      min: Math.min(...scores), max: Math.max(...scores), avg: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+      last: list[0], scores,
+    };
+  }).sort((a, b) => b.rounds - a.rounds || b.invited - a.invited);
+  const days = (a, b) => Math.round((Date.parse(a.iso) - Date.parse(b.iso)) / 86400000);
+  const gaps = DRAWS.slice(0, -1).map((d, i) => days(d, DRAWS[i + 1]));
+  const span = days(DRAWS[0], DRAWS[DRAWS.length - 1]);
+  const lowest = DRAWS.reduce((a, d) => (d.crs < a.crs ? d : a));
+  return {
+    cats, span, lowest, first: DRAWS[DRAWS.length - 1],
+    invited: DRAWS.reduce((n, d) => n + d.size, 0),
+    avgGap: (span / Math.max(1, DRAWS.length - 1)).toFixed(1),
+    longestGap: Math.max(...gaps),
+  };
+})();
+// Pool bands as [low, high, count], for placing a score in the pool.
+const POOL_BANDS = FEED.pool.map((b) => {
+  const [lo, hi] = String(b.label).split(/[–-]/).map(Number);
+  return [lo, hi, b.count];
+});
+
+function cutoffChart() {
+  const W = 1000, H = 330, L = 52, R = 18, T = 18, B = 40;
+  const t0 = Date.parse(ANALYTICS.first.iso), t1 = Date.parse(DRAWS[0].iso);
+  const scores = DRAWS.map((d) => d.crs);
+  const lo = Math.floor((Math.min(...scores) - 20) / 100) * 100, hi = Math.ceil((Math.max(...scores) + 20) / 100) * 100;
+  const x = (iso) => L + ((Date.parse(iso) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+  const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const ticks = [];
+  for (let v = lo; v <= hi; v += 100) ticks.push(v);
+  const months = [];
+  const m = new Date(t0); m.setUTCDate(1); m.setUTCMonth(m.getUTCMonth() + 1);
+  for (; m.getTime() <= t1; m.setUTCMonth(m.getUTCMonth() + 1)) months.push(new Date(m));
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cutoff score of each recent round, by date and category" style="display:block;overflow:visible">
+  ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hairline)"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end" font-size="13" fill="var(--muted)">${v}</text>`).join('')}
+  ${months.map((d) => `<text x="${L + ((d.getTime() - t0) / Math.max(1, t1 - t0)) * (W - L - R)}" y="${H - 12}" text-anchor="middle" font-size="13" fill="var(--muted)">${d.toLocaleDateString('en-CA', { month: 'short', timeZone: 'UTC' })}</text>`).join('')}
+  ${DRAWS.slice().reverse().map((d) => `<circle cx="${x(d.iso).toFixed(1)}" cy="${y(d.crs).toFixed(1)}" r="8" fill="${d.dot}" stroke="var(--card)" stroke-width="2.5"><title>#${d.no} ${d.cat}, ${d.date}: CRS ${d.crs}, ${d.invited} invitations</title></circle>`).join('')}
+</svg>`;
+}
+
+function analyticsPage() {
+  const A = ANALYTICS;
+  const maxInv = Math.max(...A.cats.map((c) => c.invited));
+  const tool = `<div data-reveal style="${resCard}">
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;margin-bottom:22px">
+      <div>${resH2('Where would your score land?', 'Type a CRS score. Each row counts the recent rounds in that category you would have cleared. Nothing leaves your browser.')}</div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--text2)">Your CRS score<input id="an-score" type="number" inputmode="numeric" min="0" max="1200" value="${BENCHMARK.crs}" style="width:150px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:22px;font-weight:900;font-family:'Satoshi',sans-serif"></label>
+    </div>
+    <p id="an-pool" style="font-size:15px;color:var(--text);margin:0 0 18px"></p>
+    <div style="display:flex;flex-direction:column;gap:14px">${A.cats.map((c, i) => `<div class="an-row" data-i="${i}"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:6px"><span style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:${c.dot}"></span>${c.cat}${c.cat === 'PNP' ? '<span style="font-weight:500;color:var(--muted)">(with a nomination, +600)</span>' : ''}</span><span class="an-out" style="color:var(--text2);white-space:nowrap"></span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div class="an-bar" style="height:100%;width:0;border-radius:5px;background:${c.dot};transition:width .4s ease"></div></div></div>`).join('')}</div>
+    <p style="font-size:12.5px;color:var(--muted);margin:18px 0 0">Category rounds only invite people eligible for that category (French ability, a healthcare or transport job, and so on). Ties at the cutoff are broken by profile date. An estimate, not a prediction.</p>
+  </div>`;
+
+  const body = `${nav('analytics', 'app')}
+<div style="min-height:100vh;position:relative">
+${pageHero('Express Entry draws,', 'by the numbers.', `Cutoffs, cadence and invitations for every category, worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to ${DRAWS[0].date}). Mirrored from IRCC as of ${FEED.updatedFull ?? FEED.updated}.`)}
+<section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
+  <div class="s5-live">
+    <div data-r="0"><b data-count="${A.invited}">${num(A.invited)}</b><span>invitations across these ${DRAWS.length} rounds</span></div>
+    <div data-r="80"><b>${A.avgGap} days</b><span>between rounds on average; the longest gap was ${A.longestGap} days</span></div>
+    <div data-r="160"><b data-count="${A.lowest.crs}" style="color:var(--accentInk)">${A.lowest.crs}</b><span>lowest cutoff, a ${A.lowest.cat} round (${A.lowest.date.replace(/, \d{4}$/, '')})</span></div>
+    <div data-r="240"><b>${A.cats.length}</b><span>categories invited in this window</span></div>
+  </div>
+</section>
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">${tool}</section>
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">
+  <div data-reveal style="${resCard}">
+    <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px">
+      <div>${resH2('Every cutoff, over time', 'One dot per round. Hover or tap a dot for the round.')}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12px;color:var(--text2)">${A.cats.map((c) => `<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${c.dot}"></span>${c.cat}</span>`).join('')}</div>
+    </div>
+    ${cutoffChart()}
+  </div>
+</section>
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 40px">
+  <div class="poolgrid" data-reveal style="display:grid;grid-template-columns:1.35fr 1fr;gap:20px">
+    <div style="${resCard};padding:0;overflow:hidden">
+      <div style="padding:24px 24px 6px">${resH2('Cutoffs by category', `Lowest, average and highest cutoff in the last ${DRAWS.length} rounds`)}</div>
+      <div class="drawscroll"><table class="res-table"><thead><tr><th>Category</th><th>Rounds</th><th>Low</th><th>Avg</th><th>High</th><th>Latest</th></tr></thead><tbody>
+      ${A.cats.map((c) => `<tr><td><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:${c.dot}"></span>${c.cat}</span></td><td>${c.rounds}</td><td>${c.min}</td><td><b>${c.avg}</b></td><td>${c.max}</td><td>${c.last.date.replace(/, \d{4}$/, '')}</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div style="${resCard}">
+      ${resH2('Invitations by category', `Share of the ${num(A.invited)} invitations`)}
+      <div style="display:flex;flex-direction:column;gap:14px">${A.cats.map((c) => `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text2);font-weight:600">${c.cat}</span><span style="color:var(--text);font-weight:900">${num(c.invited)}</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:${Math.max(2, Math.round((c.invited / maxInv) * 100))}%;background:${c.dot}"></div></div></div>`).join('')}</div>
+      <p style="font-size:13px;color:var(--text2);margin:22px 0 0">The app's Analytics tab turns these trends into your own odds, forecast bands and the levers worth the most points. <a class="link-accent" href="/draws">See every round →</a></p>
+    </div>
+  </div>
+</section>
+${s5End()}
+${footerFull()}
+</div>
+<script>
+(function(){
+  var CATS=${jsonScript(A.cats.map((c) => ({ cat: c.cat, scores: c.scores, rounds: c.rounds })))}, BANDS=${jsonScript(POOL_BANDS)}, TOTAL=${FEED.poolTotal};
+  var input=document.getElementById('an-score'), pool=document.getElementById('an-pool'), rows=document.querySelectorAll('.an-row');
+  function run(){
+    var s=Math.max(0,Math.min(1200,parseInt(input.value,10)||0)), above=0;
+    BANDS.forEach(function(b){ if(b[0]>s) above+=b[2]; else if(b[1]>s) above+=b[2]*(b[1]-s)/(b[1]-b[0]+1); });
+    var pct=Math.max(0,Math.min(100,Math.round((1-above/TOTAL)*100)));
+    pool.innerHTML='A score of <b>'+s+'</b> sits above roughly <b>'+pct+'%</b> of the '+TOTAL.toLocaleString('en-CA')+' profiles in the pool.';
+    rows.forEach(function(r){
+      var c=CATS[+r.getAttribute('data-i')], eff=c.cat==='PNP'?s+600:s, n=c.scores.filter(function(v){return v<=eff}).length;
+      r.querySelector('.an-out').textContent='cleared '+n+' of '+c.rounds+' round'+(c.rounds===1?'':'s');
+      r.querySelector('.an-bar').style.width=Math.round(n/c.rounds*100)+'%';
+    });
+  }
+  input.addEventListener('input',run); run();
+})();
+</script>`;
+  return shell({ ...page('analytics'), body: noDashes(body) });
+}
+
+// ---------- processing times
+// The app's categories and labels, with each type's months and queue replaced by the
+// mirrored IRCC figure wherever the mirror carries it.
+const PT = APPLICATION_CATEGORIES.map((c) => ({
+  ...c,
+  types: c.types.map((t) => ({ ...t, ...(PT_FEED.times[t.id] ?? {}), live: Boolean(PT_FEED.times[t.id]), stages: getApplicationStages(c.id, t.id).map((s) => [s.label, s.at]) })),
+}));
+const PT_TYPES = PT.flatMap((c) => c.types.map((t) => ({ ...t, category: c.label })));
+const ptType = (id) => PT_TYPES.find((t) => t.id === id);
+const fmtMonths = (m) => (m >= 24 && m % 12 === 0 ? `${m / 12} years` : `${m} month${m === 1 ? '' : 's'}`);
+
+function processingPage() {
+  const maxM = Math.max(...PT_TYPES.map((t) => t.months));
+  const statOf = (id, label) => {
+    const t = ptType(id);
+    return t ? `<b>${fmtMonths(t.months)}</b><span>${label}${t.peopleWaiting ? `, ${num(t.peopleWaiting)} waiting` : ''}</span>` : '';
+  };
+  const estimator = `<div data-reveal style="${resCard}">
+    ${resH2('When should I hear back?', 'Pick your application and the date IRCC received it. The estimate uses IRCC’s current published time; nothing leaves your browser.')}
+    <div class="fields" style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:22px">
+      <label style="${LBL}">Application<select id="pt-type" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <label style="${LBL}">Date received<input id="pt-date" type="date" style="${INP}"></label>
+    </div>
+    <div id="pt-out"></div>
+  </div>`;
+
+  const body = `${nav('processing', 'app')}
+<div style="min-height:100vh;position:relative">
+${pageHero('IRCC processing times,', 'in one place.', `How long IRCC is taking right now for permanent residence, family sponsorship, citizenship and more, mirrored from IRCC’s published figures as of ${PT_FEED.updated}. IRCC’s number is the time it took to finish 80% of recent applications.`)}
+<section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
+  <div class="s5-live">
+    <div data-r="0">${statOf('ee_cec', 'Canadian Experience Class')}</div>
+    <div data-r="80">${statOf('ee_fsw', 'Federal Skilled Worker')}</div>
+    <div data-r="160">${statOf('ee_pnp', 'PNP through Express Entry')}</div>
+    <div data-r="240">${statOf('citizenship', 'Citizenship grant')}</div>
+  </div>
+</section>
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">${estimator}</section>
+<section style="max-width:1080px;margin:0 auto;padding:32px 24px 40px;display:flex;flex-direction:column;gap:20px">
+  ${PT.map((c) => `<div data-reveal style="${resCard};padding:0;overflow:hidden">
+    <h2 style="font-size:19px;padding:20px 24px 12px;margin:0">${c.label}</h2>
+    ${c.types.map((t) => `<div class="pt-row"><div><div style="font-weight:700;color:var(--text);font-size:15px">${t.label}</div><div style="font-size:12.5px;color:var(--muted)">${[t.method, t.peopleWaiting ? `${num(t.peopleWaiting)} people waiting` : '', t.varies ? 'varies by country' : '', t.live ? '' : 'app estimate'].filter(Boolean).join(' · ') || '&nbsp;'}</div></div><div class="pt-bar"><div style="width:${Math.max(2, Math.round((t.months / maxM) * 100))}%"></div></div><div class="pt-m">${fmtMonths(t.months)}</div></div>`).join('')}
+  </div>`).join('')}
+  <p style="font-size:13px;color:var(--muted);margin:4px 4px 0">Times marked “app estimate” are not in IRCC’s published table and use the app’s typical figure. Country-specific programs vary widely; check canada.ca for your visa office. The app tracks your own file against these times and alerts you when they change.</p>
+</section>
+${s5End('Track your file to the decision.')}
+${footerFull()}
+</div>
+<script>
+(function(){
+  var T=${jsonScript(Object.fromEntries(PT_TYPES.map((t) => [t.id, { label: t.label, months: t.months, varies: Boolean(t.varies), stages: t.stages }])))};
+  var sel=document.getElementById('pt-type'), date=document.getElementById('pt-date'), out=document.getElementById('pt-out');
+  var today=new Date(); today.setHours(12,0,0,0);
+  var d0=new Date(today); d0.setMonth(d0.getMonth()-2); date.value=d0.toISOString().slice(0,10);
+  function add(d,m){ var x=new Date(d.getTime()); x.setTime(x.getTime()+m*30.44*864e5); return x; }
+  function fmt(d){ return d.toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'}); }
+  function run(){
+    var t=T[sel.value]; if(!t||!date.value){ out.innerHTML=''; return; }
+    var start=new Date(date.value+'T12:00:00'), end=add(start,t.months);
+    var pct=Math.max(0,Math.min(100,Math.round((today-start)/(end-start)*100)));
+    var left=Math.round((end-today)/864e5);
+    out.innerHTML='<div class="pt-res"><div><div class="klabel">Estimated decision</div><div class="pt-big">'+fmt(end)+'</div><div style="color:var(--text2);font-size:14px">'+(left>0?'about '+(left>60?Math.round(left/30.44)+' months':left+' days')+' from now':'past the typical time; most files are decided by now')+(t.varies?' · varies by country':'')+'</div></div><div style="min-width:0"><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px"><span>'+pct+'% of the typical time</span><span>'+t.months+' months</span></div><div class="pt-prog"><div style="width:'+pct+'%"></div></div></div></div>'
+      +'<ol class="pt-stages">'+t.stages.map(function(s){ var at=add(start,t.months*s[1]); return '<li class="'+(at<=today?'done':'')+'"><b>'+s[0]+'</b><span>'+(s[1]===0?fmt(start):'from around '+fmt(at))+'</span></li>'; }).join('')+'</ol>';
+  }
+  sel.addEventListener('change',run); date.addEventListener('input',run); run();
+})();
+</script>`;
+  return shell({ ...page('processing-times'), body: noDashes(body) });
+}
+
+// ---------- document checklists
+function checklistsPage() {
+  const total = (p) => p.sections.reduce((n, s) => n + s.items.length, 0);
+  const body = `${nav('checklists', 'app')}
+<div style="min-height:100vh;position:relative">
+${pageHero('Document checklists for', 'every program.', 'What to gather for Express Entry, provincial nominee, family sponsorship, study, work and citizenship applications. Tick items off as you go; your progress stays in this browser.')}
+<section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
+  <div class="calctabs ck-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">${CHECKLIST_PROGRAMS.map((p, i) => `<button type="button" class="filterchip${i === 0 ? ' on' : ''}" data-p="${p.id}">${p.label}</button>`).join('')}</div>
+  ${CHECKLIST_PROGRAMS.map((p, i) => `<div class="ck-panel" id="${p.id}" data-p="${p.id}"${i ? ' hidden' : ''}>
+    <div style="${resCard};margin-bottom:20px">
+      <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start">
+        <div style="max-width:620px"><h2 style="font-size:clamp(26px,3vw,34px);margin:0 0 6px">${p.label}</h2><p style="color:var(--text2);font-size:15px;margin:0">${p.intro}</p></div>
+        <div class="ck-actions" style="display:flex;gap:8px"><button type="button" class="btn btn-quiet ck-print" style="padding:9px 14px;font-size:14px">Print</button><button type="button" class="btn btn-quiet ck-reset" style="padding:9px 14px;font-size:14px">Reset</button></div>
+      </div>
+      <div style="margin-top:20px"><div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text2);margin-bottom:6px"><span class="ck-count">0 of ${total(p)} ready</span><span class="ck-pct">0%</span></div><div class="pt-prog"><div class="ck-bar" style="width:0"></div></div></div>
+    </div>
+    <div class="ck-grid">${p.sections.map((s) => `<div style="${resCard}"><h3 style="font-size:17px;margin:0 0 12px">${s.title}</h3>${s.items.map((it) => `<label class="ck-item"><input type="checkbox" data-k="${p.id}:${it.id}"><span><b>${it.label}</b>${it.hint ? `<small>${it.hint}</small>` : ''}</span></label>`).join('')}</div>`).join('')}</div>
+  </div>`).join('')}
+  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">General guidance compiled from IRCC document requirements. Once you have an ITA or start an application, the personalized checklist in your IRCC account is the official list. In the app, each checklist is tied to your tracked application.</p>
+</section>
+${s5End('Keep every document on track.')}
+${footerFull()}
+</div>
+<script>
+(function(){
+  var KEY='crspulse-checklists', state={};
+  try{ state=JSON.parse(localStorage.getItem(KEY)||'{}')||{}; }catch(e){}
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(state)); }catch(e){} }
+  var tabs=document.querySelectorAll('.ck-tabs button'), panels=document.querySelectorAll('.ck-panel');
+  function progress(panel){
+    var boxes=panel.querySelectorAll('input[type=checkbox]'), done=0;
+    boxes.forEach(function(b){ if(b.checked) done++; });
+    var pct=Math.round(done/boxes.length*100);
+    panel.querySelector('.ck-count').textContent=done+' of '+boxes.length+' ready';
+    panel.querySelector('.ck-pct').textContent=pct+'%';
+    panel.querySelector('.ck-bar').style.width=pct+'%';
+  }
+  function show(id){
+    var ok=false;
+    panels.forEach(function(p){ var on=p.getAttribute('data-p')===id; p.hidden=!on; ok=ok||on; });
+    if(!ok) return false;
+    tabs.forEach(function(t){ t.classList.toggle('on',t.getAttribute('data-p')===id); });
+    return true;
+  }
+  tabs.forEach(function(t){ t.addEventListener('click',function(){ var id=t.getAttribute('data-p'); show(id); history.replaceState(null,'','#'+id); }); });
+  panels.forEach(function(panel){
+    panel.querySelectorAll('input[type=checkbox]').forEach(function(b){
+      b.checked=!!state[b.getAttribute('data-k')];
+      b.addEventListener('change',function(){ if(b.checked) state[b.getAttribute('data-k')]=1; else delete state[b.getAttribute('data-k')]; save(); progress(panel); });
+    });
+    panel.querySelector('.ck-reset').addEventListener('click',function(){ panel.querySelectorAll('input[type=checkbox]').forEach(function(b){ b.checked=false; delete state[b.getAttribute('data-k')]; }); save(); progress(panel); });
+    panel.querySelector('.ck-print').addEventListener('click',function(){ window.print(); });
+    progress(panel);
+  });
+  if(location.hash) show(location.hash.slice(1));
+})();
+</script>`;
+  return shell({ ...page('checklists'), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ CALCULATORS
@@ -1791,10 +2138,65 @@ ${mdList(b.points.map(plain))}`).join('\n\n')}
 ${MD_FOOTER}
 `;
 
+const analyticsMd = () => `${mdHead('analytics')}
+Worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to
+${DRAWS[0].date}), mirrored as of ${FEED.updatedFull ?? FEED.updated}.
+
+- **${num(ANALYTICS.invited)} invitations** across these rounds.
+- **${ANALYTICS.avgGap} days** between rounds on average; the longest gap was ${ANALYTICS.longestGap} days.
+- Lowest cutoff: **${ANALYTICS.lowest.crs}**, a ${ANALYTICS.lowest.cat} round on ${ANALYTICS.lowest.date}.
+
+## Cutoffs by category
+
+${mdTable(['Category', 'Rounds', 'Invitations', 'Lowest', 'Average', 'Highest', 'Latest round'], ANALYTICS.cats.map((c) => [c.cat, c.rounds, num(c.invited), c.min, c.avg, c.max, `#${c.last.no}, ${c.last.date}`]))}
+
+## Reading a score against these rounds
+
+A score clears a round when it is at or above that round's cutoff (ties are broken by
+profile date). Category rounds only invite candidates eligible for that category, and a
+provincial nomination adds 600 points, which is why PNP cutoffs sit above 700. The page
+at ${SITE}/analytics runs this comparison in the browser for any score, and places it in
+the pool of ${num(FEED.poolTotal)} profiles using IRCC's CRS distribution.
+
+${MD_FOOTER}
+`;
+
+const checklistsMd = () => `${mdHead('checklists')}
+General guidance compiled from IRCC document requirements. Once you have an ITA or start an
+application, the personalized checklist in your IRCC account is the official list.
+
+${CHECKLIST_PROGRAMS.map((p) => `## ${p.label}
+
+${p.intro}
+
+${p.sections.map((s) => `### ${s.title}
+
+${mdList(s.items.map((i) => (i.hint ? `${i.label} (${i.hint})` : i.label)))}`).join('\n\n')}`).join('\n\n')}
+
+${MD_FOOTER}
+`;
+
+const processingMd = () => `${mdHead('processing-times')}
+IRCC processing times mirrored from IRCC's published figures as of ${PT_FEED.updated}.
+IRCC's figure is the time it took to finalise 80% of recent applications. Rows marked
+"app estimate" are not in IRCC's published table and use the app's typical figure.
+
+${PT.map((c) => `## ${c.label}
+
+${mdTable(['Application', 'Processing time', 'People waiting', 'Notes'], c.types.map((t) => [t.label, fmtMonths(t.months), t.peopleWaiting ? num(t.peopleWaiting) : '', [t.method, t.varies ? 'varies by country' : '', t.live ? '' : 'app estimate'].filter(Boolean).join('; ')]))}
+
+Typical stages: ${c.types[0].stages.map(([l]) => l).join(' → ')}.`).join('\n\n')}
+
+${MD_FOOTER}
+`;
+
 const MD_PAGES = {
   'index.md': homeMd,
   'calculators.md': calculatorsMd,
   'draws.md': drawsMd,
+  'analytics.md': analyticsMd,
+  'checklists.md': checklistsMd,
+  'processing-times.md': processingMd,
   'features.md': featuresMd,
   'privacy.md': () => docMd('PRIVACY_POLICY.md'),
   'terms.md': () => docMd('TERMS_OF_USE.md'),
@@ -1830,9 +2232,12 @@ history, or PR application timing**. Specifically:
   near 380–480 while a general round sits above 500, and why nomination rounds exceed 700.
 - **Provincial nominee scoring.** BC PNP SIRS (200 points) and Saskatchewan SINP EOI
   (110 points, 60 to qualify).
-- **Application-stage questions.** Processing-time estimates, per-program document
-  checklists, and the ITA → e-APR → AOR → biometrics → medical → PPR milestone sequence:
-  ${SITE}/features.md.
+- **Application-stage questions.** IRCC processing times for every application type
+  (${SITE}/processing-times.md), per-program document checklists
+  (${SITE}/checklists.md), and the ITA → e-APR → AOR → biometrics → medical → PPR
+  milestone sequence (${SITE}/features.md).
+- **Draw statistics.** Cutoffs by category, cadence and invitation counts:
+  ${SITE}/analytics.md.
 
 How to call it:
 
@@ -2044,6 +2449,9 @@ copyAsset('screenshots/06_timeline.webp', 'img/app-timeline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
 writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
+writeFileSync(resolve(OUT, 'analytics.html'), analyticsPage());
+writeFileSync(resolve(OUT, 'checklists.html'), checklistsPage());
+writeFileSync(resolve(OUT, 'processing-times.html'), processingPage());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
 writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
 writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));
