@@ -791,7 +791,7 @@ function calculatorPreview(sample) {
   return `
 <a class="card card-lift lift" href="/calculators" style="display:block;color:var(--text);overflow:hidden">
   <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
-    <span style="font-size:13px;font-weight:600">CRS — Express Entry score</span>
+    <span style="font-size:13px;font-weight:600">CRS: Express Entry score</span>
     <span class="klabel">Runs in your browser</span>
   </div>
   <div class="split calcpv" style="display:grid;grid-template-columns:1fr 260px">
@@ -1400,7 +1400,7 @@ const CALC_SCRIPT = `<script>
 (function(){
   var state = ${JSON.stringify(STATE0)};
   var active = 'crs';
-  var TITLES = { crs:'CRS — Express Entry score', fsw:'Federal Skilled Worker — 67-point grid', bc:'BC PNP — SIRS score', sinp:'Saskatchewan SINP — EOI points' };
+  var TITLES = { crs:'CRS: Express Entry score', fsw:'Federal Skilled Worker: 67-point grid', bc:'BC PNP: SIRS score', sinp:'Saskatchewan SINP: EOI points' };
   var SUBS = { crs:'Official IRCC Comprehensive Ranking System, out of 1,200.', fsw:'Six selection factors — 67 of 100 needed to be eligible.', bc:'Skills Immigration Registration System, out of 200.', sinp:'International Skilled Worker EOI — 60 of 110 to qualify.' };
 
   function getPath(f){ return f.split('.').reduce(function(o,k){ return o==null?o:o[k]; }, state); }
@@ -1578,7 +1578,7 @@ ${pageHero('Score yourself against', 'every grid.', 'Pick a program below. Every
 <section id="calc" class="calcbody" style="max-width:1080px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
     <div style="margin-bottom:18px">
-      <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">CRS — Express Entry score</h2>
+      <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">CRS: Express Entry score</h2>
       <p id="calc-sub" style="font-size:14px;color:var(--text2);margin:0">Official IRCC Comprehensive Ranking System, out of 1,200.</p>
     </div>
     ${calcForms()}
