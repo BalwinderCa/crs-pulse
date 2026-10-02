@@ -439,9 +439,12 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .doc-card{ padding:0; }
 `;
 
-// Google publisher ID shared by AdMob (app) and AdSense (site). Only the ownership
-// meta tag uses it until the site is approved; no ad script loads yet.
-const ADSENSE_CLIENT = 'ca-pub-4874088724567128';
+// Two different Google publisher accounts. AdSense on this site belongs to the
+// developer.yxe@gmail.com login. The app's AdMob ads belong to another account, and
+// app-ads.txt must keep naming that one. Only the ownership meta tag uses
+// ADSENSE_CLIENT until the site is approved; no ad script loads yet.
+const ADSENSE_CLIENT = 'ca-pub-5258670698032581';
+const ADMOB_PUB = 'pub-4874088724567128';
 // Vercel Web Analytics: cookieless page views, served first-party from /_vercel/insights.
 // Does nothing until Web Analytics is enabled on the Vercel project (the script 404s).
 const VERCEL_ANALYTICS = `<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
@@ -2789,10 +2792,10 @@ for (const [name, render] of Object.entries(MD_PAGES)) writeFileSync(resolve(OUT
 writeFileSync(resolve(OUT, 'llms.txt'), llmsTxt());
 writeFileSync(resolve(OUT, 'sitemap.xml'), sitemapXml());
 writeFileSync(resolve(OUT, 'robots.txt'), robotsTxt());
-// Authorized-seller declarations for the one Google publisher account behind both
-// AdMob (app-ads.txt; crspulse.com must be the developer website on the store
-// listings for AdMob to crawl it) and AdSense on this site (ads.txt).
-const SELLER_LINE = `google.com, ${ADSENSE_CLIENT.replace('ca-', '')}, DIRECT, f08c47fec0942fa0\n`;
-writeFileSync(resolve(OUT, 'app-ads.txt'), SELLER_LINE);
-writeFileSync(resolve(OUT, 'ads.txt'), SELLER_LINE);
+// Authorized-seller declarations. app-ads.txt is for the app's AdMob account
+// (crspulse.com must be the developer website on the store listings for AdMob to
+// crawl it); ads.txt is for AdSense on this site.
+const sellerLine = (pub) => `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`;
+writeFileSync(resolve(OUT, 'app-ads.txt'), sellerLine(ADMOB_PUB));
+writeFileSync(resolve(OUT, 'ads.txt'), sellerLine(ADSENSE_CLIENT.replace('ca-', '')));
 console.log(`Built ${PAGES.length} pages (html + md), 404, llms.txt, sitemap.xml, robots.txt → web/public/`);
