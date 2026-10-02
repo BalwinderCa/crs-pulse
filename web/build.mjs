@@ -439,11 +439,11 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .doc-card{ padding:0; }
 `;
 
-// Two different Google publisher accounts. AdSense on this site belongs to the
-// developer.yxe@gmail.com login. The app's AdMob ads belong to another account, and
-// app-ads.txt must keep naming that one. Only the ownership meta tag uses
+// One Google publisher account serves the app's AdMob ads and AdSense on this site.
+// (developer.yxe@gmail.com has a separate AdMob-only account, pub-5258670698032581,
+// which cannot take AdSense; don't use it here.) Only the ownership meta tag uses
 // ADSENSE_CLIENT until the site is approved; no ad script loads yet.
-const ADSENSE_CLIENT = 'ca-pub-5258670698032581';
+const ADSENSE_CLIENT = 'ca-pub-4874088724567128';
 const ADMOB_PUB = 'pub-4874088724567128';
 // Vercel Web Analytics: cookieless page views, served first-party from /_vercel/insights.
 // Does nothing until Web Analytics is enabled on the Vercel project (the script 404s).

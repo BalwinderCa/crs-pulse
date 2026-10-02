@@ -275,10 +275,10 @@ with `mask_all_text`, so calculator results never land in click events. It also 
 Analytics. Both are disclosed in the privacy policy's Website section.
 
 **AdSense on the website (pending review as of 2026-10-02).** The site carries a
-`google-adsense-account` meta tag and an `ads.txt` for `ca-pub-5258670698032581`. That is the
-AdSense login on developer.yxe@gmail.com (`ADSENSE_CLIENT` in `web/build.mjs`), and it is **not**
-the app's AdMob publisher. `app-ads.txt` must keep naming the app's AdMob account,
-`pub-4874088724567128` (`ADMOB_PUB`), so don't merge the two files. **No ad script loads
+`google-adsense-account` meta tag and an `ads.txt` for `ca-pub-4874088724567128`, the same
+publisher account as the app's AdMob (`ADSENSE_CLIENT`/`ADMOB_PUB` in `web/build.mjs`).
+developer.yxe@gmail.com has a separate AdMob-only AdSense login (`pub-5258670698032581`). Signing
+it up for AdSense on 2026-10-02 did not enable websites, so don't point the site at it. **No ad script loads
 yet.** Add `adsbygoogle.js` and the ad units only after approval, and reserve each slot's height
 so CLS stays near 0. Before ads serve, turn on Google's EEA/UK/CH consent message under AdSense →
 Privacy & messaging, because the privacy policy's "Google AdSense (website ads)" section already
