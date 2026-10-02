@@ -73,8 +73,8 @@ const PAGES = [
   },
   {
     file: 'checklists', path: '/checklists', priority: '0.8',
-    title: 'Document Checklists: Express Entry, PNP, Family, Study, Work & Citizenship',
-    description: 'Free document checklists for Express Entry PR, provincial nominee, family sponsorship, study permit, work permit and citizenship applications. Track progress privately in your browser.',
+    title: 'Immigration Document Checklists: PR, PNP, Study & Work',
+    description: 'Free document checklists for Express Entry, PNP, family sponsorship, study and work permits, and citizenship. Track your progress privately in your browser.',
     llm: 'Document lists by program (Express Entry, PNP paper, family sponsorship, study permit, work permit, citizenship), grouped by section with hints.',
   },
   {
@@ -86,7 +86,7 @@ const PAGES = [
   {
     file: 'timeline', path: '/timeline', priority: '0.7',
     title: 'Express Entry Timeline Tracker: ITA, AOR, Biometrics to COPR',
-    description: 'Log your Express Entry milestones from ITA and AOR to biometrics, medical, PR portal and COPR. See days between steps and progress against IRCC processing times. Private, in your browser.',
+    description: 'Log Express Entry milestones from ITA and AOR to biometrics, medical and COPR. See days between steps against IRCC processing times. Private, in your browser.',
     llm: 'The PR application milestone sequence (ITA, submission, AOR, biometrics, medical, ADR, PR portal, passport request, final decision) with what each step means.',
   },
   {
@@ -993,10 +993,16 @@ const milestoneRail = () => `
 // The home page copy follows the design skill's no-dash rule; shared copy (FAQ etc.)
 // keeps its dashes elsewhere, so they are softened only where the home renders it.
 const noDashes = (s) => s.replace(/\s—\s/g, ', ').replace(/—/g, ', ').replace(/(\d)\s?–\s?(\d)/g, '$1-$2');
-const S5_HEAD = `<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
-<link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700,900&display=swap" rel="stylesheet">
+// Satoshi (ITF Free Font License) is self-hosted from assets/fonts. Fontshare's
+// stylesheet was render-blocking and cost two extra origins before first paint
+// (~0.8–2 s on mobile Lighthouse). The two text weights are preloaded; 900 is
+// headline-only and can swap in.
+const S5_HEAD = `<link rel="preload" href="/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://t.crspulse.com" crossorigin>
 <script>document.documentElement.classList.add('js')</script>
 <style>
+${[500, 700, 900].map((w) => `@font-face{font-family:'Satoshi';src:url('/fonts/satoshi-${w}.woff2') format('woff2');font-weight:${w};font-style:normal;font-display:swap}`).join('\n')}
 .s5{ font-family:'Satoshi',-apple-system,system-ui,sans-serif; font-size:17px; line-height:1.6; }
 .s5 h1, .s5 h2, .s5 h3{ font-family:'Satoshi',sans-serif; font-weight:900; letter-spacing:-.035em; }
 .s5 .wrap{ max-width:1080px; padding:0 24px; }
@@ -2745,7 +2751,10 @@ copyAsset('logo.svg', 'img/logo.svg');
 // Social preview (1200x630). Regenerate from og-source.html with headless Chrome:
 // chrome --headless=new --window-size=1200,630 --screenshot=og.png og-source.html
 copyAsset('og.png', 'img/og.png');
-copyAsset('logo-mark.png', 'img/logo-mark.png');
+// 64px: the mark never renders above 32 CSS px. The 128px original stays for og-source.
+copyAsset('logo-mark-64.png', 'img/logo-mark.png');
+mkdirSync(resolve(OUT, 'fonts'), { recursive: true });
+for (const w of [500, 700, 900]) copyAsset(`fonts/satoshi-${w}.woff2`, `fonts/satoshi-${w}.woff2`);
 // GSAP for the home page's scroll story, self-hosted from the npm package.
 mkdirSync(resolve(OUT, 'js'), { recursive: true });
 cpSync(resolve(here, 'node_modules/gsap/dist/gsap.min.js'), resolve(OUT, 'js/gsap.min.js'));
