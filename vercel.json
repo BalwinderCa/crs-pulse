@@ -8,7 +8,7 @@
   "trailingSlash": false,
   "headers": [
     {
-      "source": "/:page(|calculators|draws|analytics|checklists|processing-times|timeline|features|privacy|terms)",
+      "source": "/:page(|calculators|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms)",
       "headers": [
         {
           "key": "Vary",
@@ -17,7 +17,7 @@
       ]
     },
     {
-      "source": "/:page(index|calculators|draws|analytics|checklists|processing-times|timeline|features|privacy|terms).md",
+      "source": "/:page(index|calculators|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms).md",
       "headers": [
         {
           "key": "Content-Type",

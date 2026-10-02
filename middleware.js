@@ -19,6 +19,14 @@ export const TWIN = {
   '/processing-times': '/processing-times.md',
   '/timeline': '/timeline.md',
   '/features': '/features.md',
+  '/guides': '/guides.md',
+  '/crs-points': '/crs-points.md',
+  '/improve-crs-score': '/improve-crs-score.md',
+  '/language-tests-clb': '/language-tests-clb.md',
+  '/fsw-67-points': '/fsw-67-points.md',
+  '/express-entry-draws': '/express-entry-draws.md',
+  '/express-entry-process': '/express-entry-process.md',
+  '/about': '/about.md',
   '/privacy': '/privacy.md',
   '/terms': '/terms.md',
 };
@@ -26,7 +34,7 @@ export const TWIN = {
 // Vercel statically parses this export, so the matcher has to be a literal — it cannot
 // be derived from TWIN. web/middleware.test.mjs asserts the two stay in step.
 export const config = {
-  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/privacy', '/terms'],
+  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/about', '/privacy', '/terms'],
 };
 
 /**

@@ -7,6 +7,9 @@
 //   /processing-times → IRCC processing times + decision-date estimate
 //   /timeline     → in-browser application milestone log
 //   /features     → feature tour
+//   /guides + /crs-points, /improve-crs-score, /language-tests-clb, /fsw-67-points,
+//     /express-entry-draws, /express-entry-process → long-form guides (guides.mjs)
+//   /about        → who publishes the site, data sources, contact
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md
 //
@@ -19,6 +22,7 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
+import { buildGuides, GUIDES_REVIEWED } from './guides.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(here, '../docs');
@@ -207,7 +211,7 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 }
 @keyframes livering{ 0%{ transform:scale(.4); opacity:.7 } 80%,100%{ transform:scale(1.25); opacity:0 } }
 .theme-btn{ width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s ease, border-color .15s ease; flex-shrink:0; }
-.headcta{ padding:0 15px; height:34px; font-size:14px; border-radius:9px; gap:7px; }
+.headcta{ padding:0 15px; height:34px; font-size:14px; border-radius:9px; gap:7px; white-space:nowrap; flex-shrink:0; }
 .menu{ display:none; position:relative; }
 .menu summary{ list-style:none; width:36px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .menu summary::-webkit-details-marker{ display:none; }
@@ -222,8 +226,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 .menulink[aria-current="page"]{ background:var(--bg2); font-weight:600; }
 .menulink[aria-current="page"]::before{ content:""; position:absolute; left:0; top:11px; bottom:11px; width:2.5px; border-radius:2px; background:var(--accent); }
 .menufoot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; padding:10px 4px 2px; border-top:1px solid var(--hairline); }
-@media (max-width:980px){ .headright > .livechip{ display:none; } }
-@media (max-width:760px){
+@media (max-width:1180px){ .headright > .livechip{ display:none; } .navlinks{ gap:10px; } }
+@media (max-width:900px){
   .headbar{ gap:16px; height:58px; }
   .navlinks, .head-theme{ display:none!important; }
   .menu{ display:block; }
@@ -363,6 +367,7 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .doc-card h2{ font-size:clamp(24px,2.4vw,30px); margin:1.8em 0 .5em; }
 .doc-card h3{ font-size:1.02rem; margin:1.5em 0 .5em; }
 .doc-card p,.doc-card li{ color:var(--text2); font-size:17px; line-height:1.7; }
+.doc-card p{ margin:0 0 1em; }
 .doc-card a{ font-weight:500; }
 .doc-card hr{ border:0; border-top:1px solid var(--hairline); margin:2em 0; }
 .doc-card code{ background:var(--bg3); padding:.1em .4em; border-radius:4px; font-size:.9em; }
@@ -437,6 +442,21 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 @media (max-width:430px){ .fields{ grid-template-columns:minmax(0,1fr)!important; } }
 
 .doc-card{ padding:0; }
+.doc-card table{ width:100%; border-collapse:collapse; margin:1.2em 0 1.6em; font-size:15px; display:block; overflow-x:auto; }
+.doc-card th,.doc-card td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--hairline); color:var(--text2); vertical-align:top; }
+.doc-card th{ color:var(--text); font-weight:700; border-bottom:1.5px solid var(--border); white-space:nowrap; }
+.doc-card td{ font-variant-numeric:tabular-nums; }
+.doc-card td strong{ color:var(--text); }
+.doc-card .guide-meta{ font-size:14px; line-height:1.5; color:var(--muted); margin:-1.4em 0 2em; }
+.guide-crumbs{ font-size:13.5px; color:var(--muted); margin-bottom:18px; }
+.guide-crumbs a{ color:var(--text2); }
+.guide-related{ margin-top:3em; padding-top:1.6em; border-top:1px solid var(--hairline); }
+.guide-related h2{ margin-top:0!important; }
+.guide-cards{ display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:14px; }
+.guide-cards a{ display:block; border:1px solid var(--border); border-radius:14px; padding:14px 16px; color:var(--text); background:var(--card); font-weight:700; font-size:15px; line-height:1.35; }
+.guide-cards a small{ display:block; font-weight:500; color:var(--text2); font-size:13px; margin-top:4px; }
+.guide-cta{ margin-top:2.4em; display:flex; flex-wrap:wrap; gap:12px; align-items:center; background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:18px 20px; }
+.guide-cta p{ margin:0; flex:1 1 260px; font-size:15.5px!important; }
 `;
 
 // One Google publisher account serves the app's AdMob ads and AdSense on this site.
@@ -626,7 +646,7 @@ const RESOURCES = [
 ];
 
 function nav(active, cta) {
-  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws']];
+  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/guides', 'Guides', 'guides']];
   const after = [['/features', 'Features', 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
@@ -685,7 +705,7 @@ const footerSlim = (note) => `
 const footerFull = () => `
 <footer style="border-top:1px solid var(--border);background:var(--bg2)">
   <div class="wrap" style="padding:44px 24px 26px">
-    <div class="footgrid" style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:28px;margin-bottom:32px">
+    <div class="footgrid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:28px;margin-bottom:32px">
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <img src="/img/logo-mark.png" width="22" height="22" alt="" style="border-radius:6px;display:block">
@@ -716,8 +736,15 @@ const footerFull = () => `
         </div>
       </div>
       <div>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">Guides</div>
+        <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+          ${GUIDE_LINKS.map(([href, label]) => `<a class="foot-link" href="${href}">${label}</a>`).join('')}
+        </div>
+      </div>
+      <div>
         <div class="klabel" style="color:var(--text);margin-bottom:12px">App &amp; legal</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
+          <a class="foot-link" href="/about">About</a>
           <a class="foot-link" href="${APP_STORE_URL}">iPhone app</a>
           <a class="foot-link" href="/privacy">Privacy policy</a>
           <a class="foot-link" href="/terms">Terms of use</a>
@@ -2081,6 +2108,55 @@ function crsCalc(i){
 `;
 const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
 
+// ------------------------------------------------------------------ GUIDES
+// Long-form pages from guides.mjs. They join PAGES (sitemap, llms.txt, 404, twins)
+// after the feature tour and before the legal pages.
+const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL });
+const GUIDE_PAGES = [GUIDES.hub, ...GUIDES.guides, GUIDES.about];
+PAGES.splice(PAGES.findIndex((p) => p.file === 'privacy'), 0, ...GUIDE_PAGES);
+const GUIDE_LINKS = [['/guides', 'All guides'], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/:.*$/, '').replace(/^How the CRS Score Is Calculated$/, 'How CRS is calculated')])];
+const absLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
+
+const guideJsonLd = (g) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: g.title,
+  description: g.description,
+  url: `${SITE}${g.path}`,
+  mainEntityOfPage: `${SITE}${g.path}`,
+  datePublished: GUIDES_REVIEWED,
+  dateModified: GUIDES_REVIEWED,
+  inLanguage: 'en-CA',
+  image: `${SITE}/img/og.png`,
+  author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` },
+  publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } },
+});
+
+function guidePage(g) {
+  const byFile = Object.fromEntries(GUIDES.guides.map((x) => [x.file, x]));
+  const html = addHeadingIds(marked.parse(g.md));
+  // The H1 stays first; the reviewed line and the breadcrumb sit around it.
+  const [h1, ...rest] = html.split(/(?<=<\/h1>)/);
+  const crumbs = g.hub || g.about
+    ? ''
+    : `<nav class="guide-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides">Guides</a></nav>`;
+  const meta = g.hub || g.about ? '' : `<p class="guide-meta">Last reviewed ${new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} against IRCC's published rules. Estimates only, not immigration advice.</p>`;
+  const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
+  const relatedBlock = related.length
+    ? `<section class="guide-related"><h2>Related guides</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
+    : '';
+  const cta = g.about
+    ? ''
+    : `<div class="guide-cta"><p>Run your own numbers: the CRS, FSW, BC PNP and SINP calculators work in your browser and keep everything you enter on your device.</p>${accentBtn('/calculators', 'Open the calculators')}</div>`;
+  const body = `${nav(g.hub ? 'guides' : g.about ? '' : 'guides', 'calc')}
+<div style="min-height:100vh;position:relative">
+<main class="doc"><article class="doc-card">${crumbs}${h1}${meta}${rest.join('')}${cta}${relatedBlock}</article></main>
+${footerFull()}
+</div>`;
+  return shell({ ...page(g.file), jsonld: g.hub || g.about ? null : guideJsonLd(g), body });
+}
+const guideMd = (g) => `${absLinks(g.md)}${g.hub || g.about ? '' : `\nLast reviewed ${GUIDES_REVIEWED} against IRCC's published rules.\n`}\n${MD_FOOTER}\n`;
+
 // Client engine: calc functions verbatim from the design component.
 const CALC_SCRIPT = `<script>
 (function(){
@@ -2524,6 +2600,7 @@ const MD_PAGES = {
   'processing-times.md': processingMd,
   'timeline.md': timelineMd,
   'features.md': featuresMd,
+  ...Object.fromEntries(GUIDE_PAGES.map((g) => [`${g.file}.md`, () => guideMd(g)])),
   'privacy.md': () => docMd('PRIVACY_POLICY.md'),
   'terms.md': () => docMd('TERMS_OF_USE.md'),
 };
@@ -2783,6 +2860,7 @@ writeFileSync(resolve(OUT, 'checklists.html'), checklistsPage());
 writeFileSync(resolve(OUT, 'processing-times.html'), processingPage());
 writeFileSync(resolve(OUT, 'timeline.html'), timelinePage());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
+for (const g of GUIDE_PAGES) writeFileSync(resolve(OUT, `${g.file}.html`), guidePage(g));
 writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
 writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));
 writeFileSync(resolve(OUT, '404.html'), notFoundPage());
