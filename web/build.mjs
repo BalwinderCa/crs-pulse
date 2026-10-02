@@ -638,23 +638,35 @@ const DATEPICKER_JS = `<script>
 // gone. Hierarchy on this site comes from type, hairlines and alignment.
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
+// The header's Calculators menu: [href, label, key, one-line description, tag].
+const CALC_MENU = [
+  ['/calculators#crs', 'CRS calculator', 'calc-crs', 'Express Entry ranking score', '/1,200'],
+  ['/calculators#fsw', 'FSW 67-point grid', 'calc-fsw', 'Federal Skilled Worker eligibility', '/100'],
+  ['/calculators#bc', 'BC PNP SIRS', 'calc-bc', 'British Columbia skills registration', '/200'],
+  ['/calculators#sinp', 'Saskatchewan SINP', 'calc-sinp', 'Saskatchewan EOI points', '/110'],
+];
+
 // The header's Resources menu: [href, label, key, one-line description, icon].
 const RESOURCES = [
-  ['/guides', 'Guides', 'guides', 'CRS points, language scores, draws and the process', 'book'],
-  ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category and where your score lands', 'trend'],
+  ['/guides', 'Guides', 'guides', 'How CRS works, CLB tables, draw types', 'book'],
+  ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category, and your score', 'trend'],
   ['/checklists', 'Document checklists', 'checklists', 'What to gather for each program', 'checklist'],
   ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'timer'],
-  ['/timeline', 'Application timeline', 'timeline', 'Log your milestones and the days between them', 'clock'],
+  ['/timeline', 'Application timeline', 'timeline', 'Log milestones and the days between', 'clock'],
 ];
 
 function nav(active, cta) {
-  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws']];
+  const links = [['/', 'Home', 'home']];
+  const mid = [['/draws', 'Draws', 'draws']];
   const after = [['/features', 'Features', 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
-  const inRes = RESOURCES.some(([, , key]) => key === active);
-  const drop = `<div class="navdrop"><button type="button" class="navlink navdrop-btn" aria-expanded="false" aria-controls="res-menu"${inRes ? ' data-current' : ''}>Resources<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg></button>
-      <div class="droppanel" id="res-menu">${RESOURCES.map(([href, label, key, desc, ic]) => `<a class="dropitem" href="${href}"${active === key ? ' aria-current="page"' : ''}><span class="dropic">${icon(ic, 18)}</span><span><b>${label}</b><small>${desc}</small></span></a>`).join('')}</div></div>`;
+  const chevron = `<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>`;
+  // A plain list: name, muted one-liner, optional right-hand tag. No icon tiles.
+  const dropdown = (id, label, current, items, tagged) => `<div class="navdrop"><button type="button" class="navlink navdrop-btn" aria-expanded="false" aria-controls="${id}"${current ? ' data-current' : ''}>${label}${chevron}</button>
+      <div class="droppanel" id="${id}">${items.map(([href, name, key, desc, tag]) => `<a class="dropitem" href="${href}"${active === key ? ' aria-current="page"' : ''}><span class="dropname">${name}${tagged ? `<span class="droptag">${tag}</span>` : ''}</span><small>${desc}</small></a>`).join('')}</div></div>`;
+  const calcDrop = dropdown('calc-menu', 'Calculators', active === 'calc', CALC_MENU, true);
+  const resDrop = dropdown('res-menu', 'Resources', RESOURCES.some(([, , key]) => key === active), RESOURCES, false);
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
     ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>Get the app</span></a>`
@@ -670,7 +682,7 @@ function nav(active, cta) {
       <img src="/img/logo-mark.png" width="32" height="32" alt="" class="brandmark">
       <span class="wordmark">CRS Pulse</span>
     </a>
-    <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}${drop}${after.map((l) => link(l, 'navlink')).join('')}</div>
+    <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}${calcDrop}${mid.map((l) => link(l, 'navlink')).join('')}${resDrop}${after.map((l) => link(l, 'navlink')).join('')}</div>
     <div class="headright">
       ${live}
       ${themeBtn('head-theme')}
@@ -679,6 +691,10 @@ function nav(active, cta) {
         <summary aria-label="Open menu"><span class="burger" aria-hidden="true"><i></i><i></i></span></summary>
         <div class="menupanel">
           ${links.map((l) => link(l, 'menulink')).join('')}
+          <div class="menuhead">Calculators</div>
+          ${CALC_MENU.map(([href, label]) => link([href, label, ''], 'menulink')).join('')}
+          <div class="menuhead"></div>
+          ${mid.map((l) => link(l, 'menulink')).join('')}
           <div class="menuhead">Resources</div>
           ${RESOURCES.map((l) => link(l, 'menulink')).join('')}
           <div class="menuhead"></div>
@@ -801,8 +817,9 @@ ${head2}
 ${[jsonld, path && path !== '/' ? crumbsJsonLd(path, title) : null].filter(Boolean).map((j) => `<script type="application/ld+json">${JSON.stringify(j).replace(/</g, '\\u003c')}</script>`).join('\n')}
 ${THEME_INIT}
 <script>addEventListener('DOMContentLoaded',function(){var b=document.body;function f(){b.classList.toggle('dg-scrolled',scrollY>30)}addEventListener('scroll',f,{passive:true});f();
-var d=document.querySelector('.navdrop'),k=d&&d.querySelector('button');if(!k)return;function set(o){d.classList.toggle('open',o);k.setAttribute('aria-expanded',o?'true':'false')}
-k.addEventListener('click',function(e){e.stopPropagation();set(!d.classList.contains('open'))});document.addEventListener('click',function(e){if(!d.contains(e.target))set(false)});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&d.classList.contains('open')){set(false);k.focus()}})});</script>
+var ds=[].slice.call(document.querySelectorAll('.navdrop'));function set(d,o){d.classList.toggle('open',o);d.querySelector('button').setAttribute('aria-expanded',o?'true':'false')}
+ds.forEach(function(d){var k=d.querySelector('button');k.addEventListener('click',function(e){e.stopPropagation();var o=!d.classList.contains('open');ds.forEach(function(x){set(x,false)});set(d,o)})});
+document.addEventListener('click',function(e){ds.forEach(function(d){if(!d.contains(e.target))set(d,false)})});document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;ds.forEach(function(d){if(d.classList.contains('open')){set(d,false);d.querySelector('button').focus()}})})});</script>
 ${VERCEL_ANALYTICS}
 ${POSTHOG_WEB}
 
@@ -1128,13 +1145,17 @@ body:not(.dg-scrolled) .sitehead{ background:transparent; border-bottom-color:tr
 .navdrop-btn svg{ transition:transform .2s ease; }
 .navdrop-btn[data-current]{ color:var(--text); font-weight:600; }
 .navdrop-btn[data-current]::after{ content:""; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:var(--accent); }
-.droppanel{ position:absolute; top:100%; left:-10px; width:340px; padding:8px; border-radius:14px; border:1px solid var(--border); background:var(--card); box-shadow:var(--lift); display:flex; flex-direction:column; opacity:0; visibility:hidden; translate:0 6px; transition:opacity .15s ease, translate .15s ease, visibility .15s; z-index:60; }
+.droppanel{ position:absolute; top:100%; left:-6px; width:300px; padding:6px; border-radius:12px; border:1px solid var(--border); background:var(--card); box-shadow:0 12px 32px -12px rgba(13,23,38,.28); display:flex; flex-direction:column; opacity:0; visibility:hidden; translate:0 4px; transition:opacity .12s ease, translate .12s ease, visibility .12s; z-index:60; }
 .navdrop:hover .droppanel, .navdrop:has(:focus-visible) .droppanel, .navdrop.open .droppanel{ opacity:1; visibility:visible; translate:0 0; }
 .navdrop:hover .navdrop-btn svg, .navdrop.open .navdrop-btn svg{ transform:rotate(180deg); }
-.dropitem{ display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:10px; color:var(--text); }
-.dropitem:hover, .dropitem[aria-current]{ background:var(--bg2); color:var(--text); }
-.dropic{ width:34px; height:34px; border-radius:10px; background:var(--accentSoft); color:var(--accentInk); display:grid; place-items:center; flex-shrink:0; }
-.dropitem b{ display:block; font-size:14.5px; font-weight:700; } .dropitem small{ display:block; font-size:12.5px; color:var(--text2); line-height:1.4; margin-top:2px; }
+.dropitem{ display:block; padding:10px 12px; border-radius:8px; color:var(--text); position:relative; }
+.dropitem + .dropitem::before{ content:""; position:absolute; left:12px; right:12px; top:0; border-top:1px solid var(--hairline); }
+.dropitem:hover, .dropitem:focus-visible{ background:var(--bg2); color:var(--text); }
+.dropitem:hover::before, .dropitem:hover + .dropitem::before{ border-color:transparent; }
+.dropitem[aria-current] .dropname{ color:var(--accentInk); }
+.dropname{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:14.5px; font-weight:600; }
+.droptag{ font-size:12px; font-weight:600; color:var(--muted); font-variant-numeric:tabular-nums; }
+.dropitem small{ display:block; font-size:12.5px; color:var(--text2); line-height:1.4; margin-top:1px; }
 .menuhead{ padding:12px 12px 4px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
 .menuhead:empty{ padding:4px 0 0; margin:4px 0; border-top:1px solid var(--hairline); }
 /* resources pages */
@@ -2326,6 +2347,8 @@ ${CRS_CALC_SRC}
   // /calculators#fsw (footer, other pages) opens that grid directly.
   var fromHash=location.hash.slice(1);
   if(TITLES[fromHash] && fromHash!=='crs') setTab(fromHash); else { syncVis(); render(); }
+  // The header's Calculators menu links here with a hash; switch tabs without a reload.
+  addEventListener('hashchange', function(){ var h=location.hash.slice(1); if(TITLES[h]){ setTab(h); scrollTo({top:0}); } });
 })();
 </script>`;
 
