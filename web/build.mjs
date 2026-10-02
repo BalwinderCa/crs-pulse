@@ -995,10 +995,10 @@ const milestoneRail = () => `
 const noDashes = (s) => s.replace(/\s—\s/g, ', ').replace(/—/g, ', ').replace(/(\d)\s?–\s?(\d)/g, '$1-$2');
 // Satoshi (ITF Free Font License) is self-hosted from assets/fonts. Fontshare's
 // stylesheet was render-blocking and cost two extra origins before first paint
-// (~0.8–2 s on mobile Lighthouse). The two text weights are preloaded; 900 is
-// headline-only and can swap in.
-const S5_HEAD = `<link rel="preload" href="/fonts/satoshi-500.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/fonts/satoshi-700.woff2" as="font" type="font/woff2" crossorigin>
+// (~0.8–2 s on mobile Lighthouse). All three weights are preloaded: 900 sets the
+// above-the-fold headlines, and swapping it in late reflowed the section under them
+// (desktop CLS 0.21–0.27 on /draws, /analytics, /checklists, /features).
+const S5_HEAD = `${[500, 700, 900].map((w) => `<link rel="preload" href="/fonts/satoshi-${w}.woff2" as="font" type="font/woff2" crossorigin>`).join('\n')}
 <link rel="preconnect" href="https://t.crspulse.com" crossorigin>
 <script>document.documentElement.classList.add('js')</script>
 <style>
