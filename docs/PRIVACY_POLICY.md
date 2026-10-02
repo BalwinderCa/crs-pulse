@@ -1,12 +1,12 @@
 # CRS Pulse Privacy Policy
 
-**Effective date:** September 30, 2026  
+**Effective date:** October 2, 2026  
 **App:** CRS Pulse – Express Entry Calculator  
 **Contact:** contact@crspulse.com
 
 ## Summary
 
-CRS Pulse is a **free**, local-first mobile app supported by banner ads (served by Google AdMob). There are no in-app purchases and no subscriptions. Your CRS profile data stays on your device, and we do not operate user accounts. The only personal data we send to **our own** servers is an anonymous push token, and only if you enable draw alerts. The app also sends anonymous usage analytics (which screens and features are used) to PostHog, which you can turn off in Settings. We never collect your CRS profile or immigration data off-device.
+CRS Pulse is a **free**, local-first mobile app supported by banner ads (served by Google AdMob). There are no in-app purchases and no subscriptions. Your CRS profile data stays on your device, and we do not operate user accounts. The only personal data we send to **our own** servers is an anonymous push token, and only if you enable draw alerts. The app also sends anonymous usage analytics (which screens and features are used) to PostHog, which you can turn off in Settings. We never collect your CRS profile or immigration data off-device. The website, crspulse.com, may show ads served by Google AdSense.
 
 ## Data stored on your device
 
@@ -55,6 +55,14 @@ The website uses Vercel Web Analytics to count page views. It sets no cookies an
 
 The calculators on the website run entirely in your browser; nothing you enter is sent anywhere.
 
+The analytics above set no cookies. Ads on the website (below) are the exception.
+
+### Google AdSense (website ads)
+
+The website may show ads served by Google AdSense. Google and its partners use cookies and similar technologies to serve ads and measure them, which can include ads based on your previous visits to this and other websites. Google's use of advertising cookies lets it and its partners serve those ads. Ad requests never include anything you type into the calculators.
+
+You can turn off personalised advertising in [Google's Ads Settings](https://adssettings.google.com), or opt out of many third-party vendors at [aboutads.info](https://www.aboutads.info/choices). Visitors in the European Economic Area, the United Kingdom and Switzerland are asked for consent through Google's consent message before ads are personalised. [How Google uses information from sites that use its services](https://policies.google.com/technologies/partner-sites) explains this in more detail.
+
 ### Google AdMob (ads)
 
 The app shows banner ads served by Google AdMob. AdMob may collect device identifiers and ad-interaction data to serve and measure ads, as described in [Google's privacy policy](https://policies.google.com/privacy). On iOS, the app first asks for App Tracking Transparency permission; if you decline, ads are still shown but are not personalised using your device identifier.
@@ -63,7 +71,7 @@ The app shows banner ads served by Google AdMob. AdMob may collect device identi
 
 - No user accounts or login
 - No in-app purchases or payment information
-- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK in the app, and cookieless page-view analytics on the website (Vercel and PostHog), all described above
+- No third-party analytics or trackers other than the anonymous PostHog usage analytics and the AdMob ads SDK in the app, and on the website cookieless page-view analytics (Vercel and PostHog) and Google AdSense ads, all described above
 - No session recordings
 - No sale of personal data
 - No immigration profile data on our servers

@@ -439,6 +439,9 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .doc-card{ padding:0; }
 `;
 
+// Google publisher ID shared by AdMob (app) and AdSense (site). Only the ownership
+// meta tag uses it until the site is approved; no ad script loads yet.
+const ADSENSE_CLIENT = 'ca-pub-4874088724567128';
 // Vercel Web Analytics: cookieless page views, served first-party from /_vercel/insights.
 // Does nothing until Web Analytics is enabled on the Vercel project (the script 404s).
 const VERCEL_ANALYTICS = `<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
@@ -741,6 +744,7 @@ function shell({ title, description, path, jsonld, noindex, body, head2 = '', sc
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow'}">
 <meta name="theme-color" content="#EEF3FB">
+<meta name="google-adsense-account" content="${ADSENSE_CLIENT}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>${title}</title>
@@ -2785,7 +2789,10 @@ for (const [name, render] of Object.entries(MD_PAGES)) writeFileSync(resolve(OUT
 writeFileSync(resolve(OUT, 'llms.txt'), llmsTxt());
 writeFileSync(resolve(OUT, 'sitemap.xml'), sitemapXml());
 writeFileSync(resolve(OUT, 'robots.txt'), robotsTxt());
-// AdMob authorized-seller declaration; crspulse.com must be the developer website
-// on the App Store / Play listings for AdMob to crawl it.
-writeFileSync(resolve(OUT, 'app-ads.txt'), 'google.com, pub-4874088724567128, DIRECT, f08c47fec0942fa0\n');
+// Authorized-seller declarations for the one Google publisher account behind both
+// AdMob (app-ads.txt; crspulse.com must be the developer website on the store
+// listings for AdMob to crawl it) and AdSense on this site (ads.txt).
+const SELLER_LINE = `google.com, ${ADSENSE_CLIENT.replace('ca-', '')}, DIRECT, f08c47fec0942fa0\n`;
+writeFileSync(resolve(OUT, 'app-ads.txt'), SELLER_LINE);
+writeFileSync(resolve(OUT, 'ads.txt'), SELLER_LINE);
 console.log(`Built ${PAGES.length} pages (html + md), 404, llms.txt, sitemap.xml, robots.txt → web/public/`);
