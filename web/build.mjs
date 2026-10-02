@@ -226,8 +226,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 .menulink[aria-current="page"]{ background:var(--bg2); font-weight:600; }
 .menulink[aria-current="page"]::before{ content:""; position:absolute; left:0; top:11px; bottom:11px; width:2.5px; border-radius:2px; background:var(--accent); }
 .menufoot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:6px; padding:10px 4px 2px; border-top:1px solid var(--hairline); }
-@media (max-width:1180px){ .headright > .livechip{ display:none; } .navlinks{ gap:10px; } }
-@media (max-width:900px){
+@media (max-width:980px){ .headright > .livechip{ display:none; } }
+@media (max-width:760px){
   .headbar{ gap:16px; height:58px; }
   .navlinks, .head-theme{ display:none!important; }
   .menu{ display:block; }
@@ -506,6 +506,7 @@ const ICON_PATHS = {
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r=".9"/>',
   arrowUp: '<path d="M12 19V5M5.5 11.5L12 5l6.5 6.5"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8.5 7.5h7M8.5 11h5"/>',
   moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
 };
 const icon = (name, size = 18) =>
@@ -639,6 +640,7 @@ const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" strok
 
 // The header's Resources menu: [href, label, key, one-line description, icon].
 const RESOURCES = [
+  ['/guides', 'Guides', 'guides', 'CRS points, language scores, draws and the process', 'book'],
   ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category and where your score lands', 'trend'],
   ['/checklists', 'Document checklists', 'checklists', 'What to gather for each program', 'checklist'],
   ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'timer'],
@@ -646,7 +648,7 @@ const RESOURCES = [
 ];
 
 function nav(active, cta) {
-  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws'], ['/guides', 'Guides', 'guides']];
+  const links = [['/', 'Home', 'home'], ['/calculators', 'Calculators', 'calc'], ['/draws', 'Draws', 'draws']];
   const after = [['/features', 'Features', 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
