@@ -58,16 +58,25 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-09-29).** iOS: **v1.0.9 (build 54)** is live. It was submitted
-2026-09-27 and released automatically on approval; PostHog shows Apple's review devices on
-2026-09-28/29 and the first real users from 2026-09-29 ~07:20 UTC.
+**Store status (as of 2026-10-02).** iOS: **v1.0.9 (build 54)** is live. **v1.0.10 (build 56)**
+was submitted for App Review on 2026-10-02, set to release automatically on approval to all users
+(no phased release). Build 56 was built from `bed6f09`, which already bumps `app.config.js` to
+1.0.11. The binary still reports 1.0.10, so make the next iOS version 1.0.11. Its "What's New"
+covers the work since 1.0.9: tracking the next application after a decision, removing a previous
+application, clearer decided-application labels, and the maple-leaf header mark. 1.0.9 itself was
+submitted 2026-09-27 and released automatically on approval; PostHog shows Apple's review devices
+on 2026-09-28/29 and the first real users from 2026-09-29 ~07:20 UTC.
 1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
 onboarding/privacy copy that goes with it. The App Store privacy label was updated the same day:
 Product Interaction, Device ID and Coarse Location each gained the Analytics purpose. Android is
-**not live**. The newest Play upload is **v1.0.9 / versionCode 23**, in the **closed testing**
-track, with the Production track Inactive. versionCode 23 was built from `3b850fd`, one commit
-before iOS build 54, so it still bundles `expo-localization` and PostHog reads the locale from
-it. The two platforms are otherwise feature-identical: every `Platform.OS` branch is a platform
+**not live**, and the Production track is Inactive. The newest Play upload is **v1.0.11 /
+versionCode 25**, built from `bed6f09` (the same mobile code as iOS build 56). Play Console shows it in
+**Closed testing - Alpha**, fully rolled out and available to testers since 2026-10-01 11:41.
+A manual re-upload on 2026-10-02 was rejected with "Version code 25 has already been used".
+**Android shows 1.0.11 for the code iOS ships as 1.0.10.** The next upload needs versionCode ≥ 26,
+which EAS assigns automatically (`autoIncrement`, remote version source). versionCode 23 was built from
+`3b850fd`, one commit before iOS build 54, so it still bundles `expo-localization` and PostHog
+reads the locale from it. The two platforms are otherwise feature-identical: every `Platform.OS` branch is a platform
 idiom (keyboard avoidance, date picker, store URL, share payload, ad-unit choice, iOS-only ATT
 prompt, where the side menu's review item links) rather than a gated feature. Keep it that way:
 when a feature can't work the same on one platform, adapt it rather than hiding it there. (The
