@@ -61,7 +61,7 @@ eas submit                                      # Submit to app stores
 **Store status (as of 2026-10-03).** iOS: **v1.0.10 (build 56)** was approved and released
 automatically on 2026-10-03, and it **crashes about 0.4 s after every launch**. **v1.0.11 (build
 57)**, built by `.github/workflows/ios-build.yml` from `351d2f4`, carries the fix and is in App
-Review. Until it ships, every user who updated to 1.0.10 is stuck. Its "What's New" covers the
+Review, with an expedited review granted on 2026-10-03. Until it ships, every user who updated to 1.0.10 is stuck. Its "What's New" covers the
 work since 1.0.9: tracking the next application after a decision, removing a previous application,
 clearer decided-application labels, and the maple-leaf header mark.
 
