@@ -5,11 +5,13 @@ name: iOS build → TestFlight
 # every launch), then submits the build to App Store Connect for TestFlight.
 # It never sends anything for App Review.
 #
-# Trigger: push a tag named ios-build-*, or run it from the Actions tab.
+# Trigger: run it from the Actions tab (once this file is on main), push a tag
+# named ios-build-*, or push a commit whose message contains [ios-build].
 # Needs the EXPO_TOKEN repository secret (expo.dev → Account settings → Access tokens).
 on:
   push:
     tags: ['ios-build-*']
+    branches: ['**']
   workflow_dispatch:
 
 concurrency:
@@ -19,6 +21,9 @@ concurrency:
 jobs:
   build:
     name: EAS build, verify, submit
+    if: >-
+      github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') ||
+      contains(github.event.head_commit.message, '[ios-build]')
     runs-on: ubuntu-latest
     timeout-minutes: 120
     defaults:
