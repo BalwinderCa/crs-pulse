@@ -552,7 +552,8 @@ const icon = (name, size = 18) =>
   `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
 
 // Follows the OS setting until the visitor picks a theme with the toggle.
-const THEME_INIT = `<script>(function(){var t;try{t=localStorage.getItem('crspulse-theme')}catch(e){}if(!t){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}document.documentElement.setAttribute('data-theme',t)})();</script>`;
+// Dark by default. A visitor who switches to light with the toggle keeps it (localStorage).
+const THEME_INIT = `<script>(function(){var t;try{t=localStorage.getItem('crspulse-theme')}catch(e){}document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')})();</script>`;
 const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
 function setThemeIcons(t){var i=t==='dark'?${JSON.stringify(icon('sun', 17))}:${JSON.stringify(icon('moon', 16))};document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.innerHTML=i})}
@@ -827,12 +828,12 @@ function shell({ title, description, path, jsonld, noindex, body, head2 = '', sc
 <link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">`
     : '';
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="${noindex ? 'noindex, follow' : 'index, follow'}">
-<meta name="theme-color" content="#EEF3FB">
+<meta name="theme-color" content="#0B0F16">
 <meta name="google-adsense-account" content="${ADSENSE_CLIENT}">
 <link rel="icon" type="image/png" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
