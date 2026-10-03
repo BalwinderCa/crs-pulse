@@ -651,5 +651,6 @@
  "{n} points higher": "{n} points de plus",
  "{n} points lower": "{n} points de moins",
  "{n} rounds in {days} days": "{n} rondes en {days} jours",
- "{n} years": "{n} ans"
+ "{n} years": "{n} ans",
+ "The last Canadian Experience Class round (#{no}, {date}) cut off at {crs}.": "La dernière ronde de la Catégorie de l’expérience canadienne (n° {no}, {date}) avait un score minimal de {crs}."
 }

@@ -940,14 +940,15 @@ const num = (n) => Number(n).toLocaleString(LOCALE);
 const shortDate = (iso) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const longDate = (iso) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+    .replace(/^1 /, LANG === 'fr' ? '1er ' : '1 ');
 // IRCC's drawDateFull/updatedFull are English text; the French build formats the ISO date.
 const fullDate = (r) => (LANG === 'fr' ? longDate(r.date) : r.dateFull || longDate(r.date));
 const feedDate = () => (LANG === 'fr' ? longDate(FEED.updated) : FEED.updatedFull ?? FEED.updated);
 
 const DRAWS = FEED.rounds.map((r) => {
   const [cat, dot] = categorise(r.label || r.name);
-  return { no: r.number, date: shortDate(r.date), iso: r.date, label: r.label || r.name, cat, dot, invited: num(r.size), cutoff: String(r.crs), crs: r.crs, size: r.size };
+  return { no: r.number, date: shortDate(r.date), iso: r.date, label: T(r.label || r.name), cat, dot, invited: num(r.size), cutoff: String(r.crs), crs: r.crs, size: r.size };
 });
 const HOME_DRAWS = DRAWS.slice(0, 6).map((d) => [d.no, d.date, d.label, d.invited, d.cutoff, d.dot]);
 // The general-stream benchmark a raw CRS score is actually comparable against. PNP rounds
@@ -1629,7 +1630,7 @@ function drawPageMd(r) {
     const gap = daysBetween(r.date, prevSame.date);
     lines.push(T('The previous {name} round, [#{prev}]({link}) on {date}, cut off at {crs} with {n} invitations. This round was {signed}, {gap} {days} later.', { name, prev: prevSame.number, link: drawLink(prevSame), date: fullDate(prevSame), crs: prevSame.crs, n: num(prevSame.size), signed: signed(r.crs - prevSame.crs), gap, days: gap === 1 ? T('day') : T('days') }));
   } else lines.push(T("This was the first {name} round in IRCC's published history.", { name }));
-  if (prevAny && prevAny !== prevSame) lines.push(T('The round before it overall was [#{prev}]({link}) ({label}, {date}), with a cutoff of {crs}.', { prev: prevAny.number, link: drawLink(prevAny), label: prevAny.label || prevAny.name, date: shortDate(prevAny.date), crs: prevAny.crs }));
+  if (prevAny && prevAny !== prevSame) lines.push(T('The round before it overall was [#{prev}]({link}) ({label}, {date}), with a cutoff of {crs}.', { prev: prevAny.number, link: drawLink(prevAny), label: T(prevAny.label || prevAny.name), date: shortDate(prevAny.date), crs: prevAny.crs }));
   if (sameSince.length >= 3) lines.push(lower === 0 ? T('It was the lowest {name} cutoff of the {n} such rounds since 2023 up to that date.', { name, n: sameSince.length }) : T('Of the {n} {name} rounds since 2023 up to that date, {lower} had a lower cutoff.', { n: sameSince.length, name, lower }));
   lines.push(T('It was round {n} of {year}. By then IRCC had issued {total} invitations that year.', { n: ordinal(ytd.length), year, total: num(ytd.reduce((n, x) => n + x.size, 0)) }));
   const pool = r.pool && r.pool.length
@@ -1640,16 +1641,16 @@ ${T("IRCC's snapshot of the pool{asOf}{total}.", { asOf: r.poolAsOf ? ` on ${r.p
 ${mdTable([T('CRS score'), T('Profiles')], r.pool.map((b) => [b.label, num(b.count)]))}
 `
     : '';
-  return `# ${T('Express Entry draw #{n}: {label}', { n: r.number, label: r.label || r.name })}
+  return `# ${T('Express Entry draw #{n}: {label}', { n: r.number, label: T(r.label || r.name) })}
 
-${T('On {date}, IRCC invited **{n}** candidates in a {label} round. The lowest score invited, the cutoff, was **{crs}**.', { date: fullDate(r), n: num(r.size), label: r.label || r.name, crs: r.crs })}
+${T('On {date}, IRCC invited **{n}** candidates in a {label} round. The lowest score invited, the cutoff, was **{crs}**.', { date: fullDate(r), n: num(r.size), label: T(r.label || r.name), crs: r.crs })}
 
 ## ${T('Key facts')}
 
 ${mdTable([T('Detail'), T('Value')], [
     [T('Round'), `#${r.number}`],
     [T('Date'), fullDate(r)],
-    [T('Round type'), r.label || r.name],
+    [T('Round type'), T(r.label || r.name)],
     [T('Invitations'), num(r.size)],
     [T('CRS cutoff'), String(r.crs)],
     ...(r.tieBreak ? [[T('Tie-break'), T('Profiles at {crs} submitted before {date}', { crs: r.crs, date: r.tieBreak })]] : []),
@@ -1754,7 +1755,7 @@ function drawPage(r) {
   const i = HISTORY.indexOf(r);
   const newer = HISTORY.slice(0, i).reverse().find((x) => DRAW_PAGE_NOS.has(x.number));
   const older = HISTORY.slice(i + 1).find((x) => DRAW_PAGE_NOS.has(x.number));
-  let description = T('Round #{n} on {date} invited {size} candidates ({label}) with a CRS cutoff of {crs}. Tie-break, pool and how it compares.', { n: r.number, date: fullDate(r), size: num(r.size), label: r.label || r.name, crs: r.crs });
+  let description = T('Round #{n} on {date} invited {size} candidates ({label}) with a CRS cutoff of {crs}. Tie-break, pool and how it compares.', { n: r.number, date: fullDate(r), size: num(r.size), label: T(r.label || r.name), crs: r.crs });
   if (description.length > 160) description = T('Round #{n} on {date}: {size} {cat} invitations, CRS cutoff {crs}. Tie-break, pool and how it compares.', { n: r.number, date: fullDate(r), size: num(r.size), cat: r.cat, crs: r.crs });
   const pager = `<nav class="drawpager" aria-label="${T('Other draws')}">${older ? `<a href="/draws/${older.number}">← ${T('Draw #{n}', { n: older.number })}</a>` : '<span></span>'}${newer ? `<a href="/draws/${newer.number}">${T('Draw #{n}', { n: newer.number })} →</a>` : '<span></span>'}</nav>`;
   return drawDocPage({
@@ -1766,7 +1767,7 @@ function drawPage(r) {
     jsonld: {
       '@context': 'https://schema.org',
       '@graph': [
-        { '@type': 'Article', headline: `Express Entry draw #${r.number}: ${r.label || r.name}`, description, datePublished: r.date, dateModified: r.date, url: `${SITE}/draws/${r.number}`, image: `${SITE}/img/og.png`, author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` }, publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } } },
+        { '@type': 'Article', headline: T('Express Entry draw #{n}: {label}', { n: r.number, label: T(r.label || r.name) }), description, datePublished: r.date, dateModified: r.date, url: `${SITE}/draws/${r.number}`, image: `${SITE}/img/og.png`, author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` }, publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } } },
         { ...draw3Crumbs(`/draws/${r.number}`, `Draw #${r.number}`), '@context': undefined },
       ],
     },
@@ -2007,16 +2008,16 @@ function checklistsPage() {
 <div style="min-height:100vh;position:relative">
 ${pageHero(T('Document checklists for'), T('every program.'), T('What to gather for Express Entry, provincial nominee, family sponsorship, study, work and citizenship applications. Tick items off as you go; your progress stays in this browser.'))}
 <section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
-  <div class="calctabs ck-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">${CHECKLIST_PROGRAMS.map((p, i) => `<button type="button" class="filterchip${i === 0 ? ' on' : ''}" data-p="${p.id}">${p.label}</button>`).join('')}</div>
+  <div class="calctabs ck-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">${CHECKLIST_PROGRAMS.map((p, i) => `<button type="button" class="filterchip${i === 0 ? ' on' : ''}" data-p="${p.id}">${T(p.label)}</button>`).join('')}</div>
   ${CHECKLIST_PROGRAMS.map((p, i) => `<div class="ck-panel" id="${p.id}" data-p="${p.id}"${i ? ' hidden' : ''}>
     <div style="${resCard};margin-bottom:20px">
       <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start">
-        <div style="max-width:620px"><h2 style="font-size:clamp(26px,3vw,34px);margin:0 0 6px">${p.label}</h2><p style="color:var(--text2);font-size:15px;margin:0">${p.intro}</p></div>
+        <div style="max-width:620px"><h2 style="font-size:clamp(26px,3vw,34px);margin:0 0 6px">${T(p.label)}</h2><p style="color:var(--text2);font-size:15px;margin:0">${T(p.intro)}</p></div>
         <div class="ck-actions" style="display:flex;gap:8px"><button type="button" class="btn btn-quiet ck-print" style="padding:9px 14px;font-size:14px">${T('Print')}</button><button type="button" class="btn btn-quiet ck-reset" style="padding:9px 14px;font-size:14px">${T('Reset')}</button></div>
       </div>
       <div style="margin-top:20px"><div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text2);margin-bottom:6px"><span class="ck-count">${T('0 of {n} ready', { n: total(p) })}</span><span class="ck-pct">0%</span></div><div class="pt-prog"><div class="ck-bar" style="width:0"></div></div></div>
     </div>
-    <div class="ck-grid">${p.sections.map((s) => `<div style="${resCard}"><h3 style="font-size:17px;margin:0 0 12px">${s.title}</h3>${s.items.map((it) => `<label class="ck-item"><input type="checkbox" data-k="${p.id}:${it.id}"><span><b>${it.label}</b>${it.hint ? `<small>${it.hint}</small>` : ''}</span></label>`).join('')}</div>`).join('')}</div>
+    <div class="ck-grid">${p.sections.map((s) => `<div style="${resCard}"><h3 style="font-size:17px;margin:0 0 12px">${T(s.title)}</h3>${s.items.map((it) => `<label class="ck-item"><input type="checkbox" data-k="${p.id}:${it.id}"><span><b>${T(it.label)}</b>${it.hint ? `<small>${T(it.hint)}</small>` : ''}</span></label>`).join('')}</div>`).join('')}</div>
   </div>`).join('')}
   <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">${T('General guidance compiled from IRCC document requirements. Once you have an ITA or start an application, the personalized checklist in your IRCC account is the official list. In the app, each checklist is tied to your tracked application.')}</p>
 </section>
@@ -2462,7 +2463,7 @@ const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
 const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL });
 const GUIDE_PAGES = [GUIDES.hub, ...GUIDES.guides, GUIDES.about];
 PAGES.splice(PAGES.findIndex((p) => p.file === 'privacy'), 0, ...GUIDE_PAGES);
-const GUIDE_LINKS = [['/guides', T('All guides')], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/:.*$/, '').replace(/^How the CRS Score Is Calculated$/, T('How CRS is calculated'))])];
+const GUIDE_LINKS = [['/guides', T('All guides')], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/\s*:.*$/, '').replace(/^How the CRS Score Is Calculated$/, T('How CRS is calculated'))])];
 const absLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
 
 const guideJsonLd = (g) => ({
@@ -2491,7 +2492,7 @@ function guidePage(g) {
   const meta = g.hub || g.about ? '' : `<p class="guide-meta">${T('Last reviewed {date} against IRCC\'s published rules. Estimates only, not immigration advice.', { date: new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) })}</p>`;
   const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
   const relatedBlock = related.length
-    ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
+    ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/\s*:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
     : '';
   const cta = g.about
     ? ''
@@ -2774,7 +2775,7 @@ Immigration, Refugees and Citizenship Canada ranks every Express Entry profile w
 
 Language counts per ability, and transferability uses your lowest one, so one weak band can cost more than it looks. The full tables are in [how the CRS score is calculated](/crs-points), and [how to improve your CRS score](/improve-crs-score) shows what each change is worth.`),
     faq: [
-      [T('What is a good CRS score?'), T('There is no pass mark. Each round of invitations sets its own cutoff.{cec} Category rounds can go much lower: the lowest recent cutoff was {low} ({label}, #{no}). See every round on the draws page.', { cec: LAST_CEC ? ` The last Canadian Experience Class round (#${LAST_CEC.no}, ${LAST_CEC.date}) cut off at ${LAST_CEC.crs}.` : '', low: LOWEST_CATEGORY.crs, label: LOWEST_CATEGORY.label, no: LOWEST_CATEGORY.number })],
+      [T('What is a good CRS score?'), T('There is no pass mark. Each round of invitations sets its own cutoff.{cec} Category rounds can go much lower: the lowest recent cutoff was {low} ({label}, #{no}). See every round on the draws page.', { cec: LAST_CEC ? ` ${T('The last Canadian Experience Class round (#{no}, {date}) cut off at {crs}.', LAST_CEC)}` : '', low: LOWEST_CATEGORY.crs, label: T(LOWEST_CATEGORY.label), no: LOWEST_CATEGORY.number })],
       [T('Which language tests can I enter?'), T('IELTS General Training, CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French. The calculator converts each score to a CLB or NCLC level with IRCC’s tables, or you can enter CLB levels directly.')],
       [T('Does a job offer add CRS points?'), T('No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025, so a job offer no longer changes your CRS score.')],
       [T('How is the French bonus calculated?'), T('French at NCLC 7 or higher in all four abilities adds 50 points if your English is at least CLB 5, or 25 points otherwise. The calculator works this out from the French test you enter.')],

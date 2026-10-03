@@ -57,3 +57,17 @@ test('nothing in the French build fell back to English', () => {
   const missing = JSON.parse(read('fr/_i18n-missing.json'));
   assert.deepEqual(missing.slice(0, 20), [], `${missing.length} untranslated strings, e.g. the ones listed`);
 });
+
+// T() only catches strings that go through it. Prose that bypasses it (a guide's
+// markdown, data from the app) would render in English on /fr without tripping the test
+// above, so also scan each French page's visible text for English sentences. The privacy
+// policy and terms are deliberately English-only legal text.
+const ENGLISH_ONLY = new Set(['/privacy', '/terms']);
+const ENGLISH_WORDS = /\b(the|and|your|with|which|you|this|for)\b/gi;
+test('French pages have no English sentences', () => {
+  for (const path of ALL.filter((p) => !ENGLISH_ONLY.has(p))) {
+    const text = read(frFile(path)).replace(/<(script|style)[\s\S]*?<\/\1>/g, '').replace(/<[^>]+>/g, '\n');
+    const english = text.split('\n').filter((line) => (line.match(ENGLISH_WORDS) ?? []).length >= 2);
+    assert.deepEqual(english.slice(0, 3), [], `${toFr(path)} has English text`);
+  }
+});
