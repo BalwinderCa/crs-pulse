@@ -68,9 +68,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 22: build.mjs imports the app's checklist and processing-time data
+      # straight from mobile/src/*.ts, which needs Node's built-in type stripping
+      # (22.18+). Node 20 fails with ERR_UNKNOWN_FILE_EXTENSION.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           cache-dependency-path: web/package-lock.json
 

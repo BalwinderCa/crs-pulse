@@ -1,0 +1,89 @@
+name: iOS build → TestFlight
+
+# Builds the iOS app on EAS with the production profile, checks the IPA's
+# Info.plist for the ATT purpose string (its absence crashed 1.0.10 build 56 on
+# every launch), then submits the build to App Store Connect for TestFlight.
+# It never sends anything for App Review.
+#
+# Trigger: run it from the Actions tab (once this file is on main), push a tag
+# named ios-build-*, or push a commit whose message contains [ios-build].
+# Needs the EXPO_TOKEN repository secret (expo.dev → Account settings → Access tokens).
+on:
+  push:
+    tags: ['ios-build-*']
+    branches: ['**']
+  workflow_dispatch:
+
+concurrency:
+  group: ios-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: EAS build, verify, submit
+    if: >-
+      github.event_name != 'push' || startsWith(github.ref, 'refs/tags/') ||
+      contains(github.event.head_commit.message, '[ios-build]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: mobile
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Check EXPO_TOKEN
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::Add the EXPO_TOKEN repository secret first."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Config test
+        run: npx jest __tests__/utils/appConfig.test.ts
+
+      - name: Build on EAS
+        id: build
+        run: |
+          npx --yes eas-cli@latest build --platform ios --profile production \
+            --non-interactive --wait --json > build.json
+          cat build.json
+          echo "id=$(jq -r '.[0].id' build.json)" >> "$GITHUB_OUTPUT"
+          echo "url=$(jq -r '.[0].artifacts.buildUrl' build.json)" >> "$GITHUB_OUTPUT"
+          echo "version=$(jq -r '.[0].appVersion + " (" + .[0].appBuildVersion + ")"' build.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify Info.plist has NSUserTrackingUsageDescription
+        run: |
+          curl -fsSL -o app.ipa "${{ steps.build.outputs.url }}"
+          unzip -q -o app.ipa 'Payload/*.app/Info.plist' -d ipa
+          python3 - ipa/Payload/*.app/Info.plist <<'PY'
+          import plistlib, sys
+          d = plistlib.load(open(sys.argv[1], 'rb'))
+          v = d.get('NSUserTrackingUsageDescription')
+          print('NSUserTrackingUsageDescription =', v)
+          sys.exit(0 if v else 1)
+          PY
+
+      - name: Submit to TestFlight
+        run: |
+          npx --yes eas-cli@latest submit --platform ios --profile production \
+            --id "${{ steps.build.outputs.id }}" --non-interactive --wait
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### iOS ${{ steps.build.outputs.version }}"
+            echo "EAS build id: ${{ steps.build.outputs.id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
