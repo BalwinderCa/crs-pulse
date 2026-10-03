@@ -51,11 +51,15 @@ const privacyPolicyUrl =
   process.env.EXPO_PUBLIC_PRIVACY_POLICY_URL ||
   'https://www.crspulse.com/privacy';
 
-// When false the app ships fully free and the ATT tracking purpose string is
-// omitted from Info.plist, so the binary matches the "Data Not Collected"
-// privacy label. Set EXPO_PUBLIC_MONETIZATION_ENABLED=true in your build env
-// (eas.json or EAS secret) to enable ads + the ATT prompt.
-const MONETIZATION_ENABLED = process.env.EXPO_PUBLIC_MONETIZATION_ENABLED === 'true';
+// ATT purpose string, always present on iOS. It used to be added only when
+// EXPO_PUBLIC_MONETIZATION_ENABLED was 'true' at config time, but the JS bundle
+// reads that variable separately. When the two disagreed, the bundle called
+// expo-tracking-transparency while Info.plist had no purpose string, and that
+// module aborts the app (EXFatal) about 0.4s after launch: iOS 1.0.10 build 56,
+// and once before in July (7094c75). An unused purpose string is harmless, and
+// the App Store privacy label already declares the ads' tracking.
+const TRACKING_USAGE_DESCRIPTION =
+  'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.';
 
 // Inline config plugin: adds -Xskip-metadata-version-check to all subproject
 // Kotlin compile tasks. Required because play-services-ads 25.0.0 (pulled in
@@ -183,17 +187,7 @@ module.exports = () => ({
       UIBackgroundModes: ['remote-notification'],
       CFBundleDisplayName: 'CRS Pulse',
       ITSAppUsesNonExemptEncryption: false,
-      // ATT purpose string, ONLY when ads are enabled. adsService calls
-      // requestTrackingPermissionsAsync() on iOS — but that path is gated by
-      // MONETIZATION_ENABLED, so in free mode tracking is never requested and the
-      // string must be absent to match the "Data Not Collected" privacy label
-      // (Apple rejects a present NSUserTrackingUsageDescription the label contradicts).
-      ...(MONETIZATION_ENABLED
-        ? {
-            NSUserTrackingUsageDescription:
-              'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
-          }
-        : {}),
+      NSUserTrackingUsageDescription: TRACKING_USAGE_DESCRIPTION,
     },
   },
   android: {
@@ -237,14 +231,8 @@ module.exports = () => ({
           process.env.GOOGLE_ADMOB_ANDROID_APP_ID || 'ca-app-pub-3940256099942544~3347511713',
         iosAppId:
           process.env.GOOGLE_ADMOB_IOS_APP_ID || 'ca-app-pub-3940256099942544~1458002511',
-        // Mirrors the infoPlist NSUserTrackingUsageDescription above — only when
-        // monetization (and thus tracking) is enabled.
-        ...(MONETIZATION_ENABLED
-          ? {
-              userTrackingUsageDescription:
-                'This identifier will be used to deliver and measure more relevant ads in the free version of CRS Pulse.',
-            }
-          : {}),
+        // Same string as infoPlist above, so the plugin can't drop it either.
+        userTrackingUsageDescription: TRACKING_USAGE_DESCRIPTION,
         // Injected into Info.plist as SKAdNetworkItems for iOS ad attribution
         // under ATT. The plugin only adds these when the option is provided.
         skAdNetworkItems: SKADNETWORK_ITEMS,
