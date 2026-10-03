@@ -94,7 +94,7 @@ export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL }) {
     maritalStatus: 'married', age: 33, education: 'masters', firstLang: CLB(10), foreignWorkExp: 1, canadianWorkExp: 1,
     spouseEducation: 'bachelors', spouseLang: CLB(7), spouseCanadianWorkExp: 0,
   };
-  const exAskill = breakdown(exA).find((r) => r.label === 'Skill transferability').val;
+  const exAskill = breakdown(exA).find((r) => /skill transferability|transférabilité/i.test(r.label)).val;
   // The prose under example 1 explains this exact split; fail the build if it drifts.
   if (exAskill !== 75) throw new Error(`guides: example 1 skill transferability is ${exAskill}, prose says 75`);
   const exTable = (over) => table(['Factor', 'Points', 'Maximum'], [

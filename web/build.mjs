@@ -581,8 +581,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')document.que
 // like a native one, and assigning input.value from page code repaints the button.
 const DATEPICKER_JS = `<script>
 (function(){
-  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var MONTHS=${JSON.stringify(LANG === 'fr' ? ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'] : ['January','February','March','April','May','June','July','August','September','October','November','December'])};
+  var DOW=${JSON.stringify(LANG === 'fr' ? ['di','lu','ma','me','je','ve','sa'] : ['Su','Mo','Tu','We','Th','Fr','Sa'])};
   var CAL='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
   var ARROW=function(d){ return '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(d<0?'M15 5l-7 7 7 7':'M9 5l7 7-7 7')+'"/></svg>'; };
   var CARET='<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>';
@@ -592,7 +592,7 @@ const DATEPICKER_JS = `<script>
   function parse(s){ var m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(s||''); return m?new Date(+m[1],m[2]-1,+m[3]):null; }
   function today(){ var d=new Date(); return new Date(d.getFullYear(),d.getMonth(),d.getDate()); }
   function same(a,b){ return a&&b&&a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
-  function long(d){ return MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear(); }
+  function long(d){ return ${LANG === 'fr' ? "d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear()" : "MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()"}; }
   var current=null;
   // While open the calendar lives in <body>: the cards around a field animate in, and an
   // animated ancestor traps its children in its own stacking layer (so the next card paints
@@ -616,12 +616,12 @@ const DATEPICKER_JS = `<script>
     input.parentNode.insertBefore(wrap,input); wrap.appendChild(input);
     var field=document.createElement('button'); field.type='button'; field.className='dp-field';
     field.setAttribute('style',input.getAttribute('style')||''); field.setAttribute('aria-haspopup','dialog'); field.setAttribute('aria-expanded','false');
-    var pop=document.createElement('div'); pop.className='dp-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','Choose a date'); pop.hidden=true;
+    var pop=document.createElement('div'); pop.className='dp-pop'; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label','${jsStr(T('Choose a date'))}'); pop.hidden=true;
     wrap.appendChild(field); wrap.appendChild(pop);
     var view, focusDay, mode='days';
     var self={ wrap:wrap, pop:pop, field:field, close:close };
     function selected(){ return parse(desc.get.call(input)); }
-    function paint(){ var d=selected(); field.innerHTML='<span class="'+(d?'':'dp-ph')+'">'+(d?long(d).replace(/^(\\w{3})\\w*/,'$1'):'Select a date')+'</span>'+CAL; }
+    function paint(){ var d=selected(); field.innerHTML='<span class="'+(d?'':'dp-ph')+'">'+(d?long(d).replace(/^(\\w{3})\\w*/,'$1'):'${jsStr(T('Select a date'))}')+'</span>'+CAL; }
     Object.defineProperty(input,'value',{ configurable:true, get:function(){ return desc.get.call(input); }, set:function(v){ desc.set.call(input,v); paint(); } });
     if(input.form) input.form.addEventListener('reset',function(){ setTimeout(paint); });
     function set(d){ desc.set.call(input,d?iso(d):''); paint(); input.dispatchEvent(new Event('input',{bubbles:true})); input.dispatchEvent(new Event('change',{bubbles:true})); }
@@ -695,45 +695,45 @@ const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" strok
 const CALC_ROUTES = { crs: '/crs-calculator', fsw: '/fsw-calculator', bc: '/bc-pnp-calculator', sinp: '/sinp-calculator' };
 // The header's Calculators menu: [href, label, key, one-line description, tag].
 const CALC_MENU = [
-  [CALC_ROUTES.crs, 'CRS calculator', 'calc-crs', 'Express Entry ranking score', '/1,200'],
-  [CALC_ROUTES.fsw, 'FSW 67-point grid', 'calc-fsw', 'Federal Skilled Worker eligibility', '/100'],
-  [CALC_ROUTES.bc, 'BC PNP SIRS', 'calc-bc', 'British Columbia skills registration', '/200'],
-  [CALC_ROUTES.sinp, 'Saskatchewan SINP', 'calc-sinp', 'Saskatchewan EOI points', '/110'],
+  [CALC_ROUTES.crs, T('CRS calculator'), 'calc-crs', T('Express Entry ranking score'), '/1,200'],
+  [CALC_ROUTES.fsw, T('FSW 67-point grid'), 'calc-fsw', T('Federal Skilled Worker eligibility'), '/100'],
+  [CALC_ROUTES.bc, T('BC PNP SIRS'), 'calc-bc', T('British Columbia skills registration'), '/200'],
+  [CALC_ROUTES.sinp, T('Saskatchewan SINP'), 'calc-sinp', T('Saskatchewan EOI points'), '/110'],
 ];
 
 // The header's Resources menu: [href, label, key, one-line description, icon].
 const RESOURCES = [
-  ['/guides', 'Guides', 'guides', 'How CRS works, CLB tables, draw types', 'book'],
-  ['/analytics', 'Analytics', 'analytics', 'Cutoffs by category, and your score', 'trend'],
-  ['/checklists', 'Document checklists', 'checklists', 'What to gather for each program', 'checklist'],
-  ['/processing-times', 'Processing times', 'processing', 'IRCC wait times and your decision date', 'timer'],
-  ['/timeline', 'Application timeline', 'timeline', 'Log milestones and the days between', 'clock'],
+  ['/guides', T('Guides'), 'guides', T('How CRS works, CLB tables, draw types'), 'book'],
+  ['/analytics', T('Analytics'), 'analytics', T('Cutoffs by category, and your score'), 'trend'],
+  ['/checklists', T('Document checklists'), 'checklists', T('What to gather for each program'), 'checklist'],
+  ['/processing-times', T('Processing times'), 'processing', T('IRCC wait times and your decision date'), 'timer'],
+  ['/timeline', T('Application timeline'), 'timeline', T('Log milestones and the days between'), 'clock'],
 ];
 
 function nav(active, cta) {
-  const links = [['/', 'Home', 'home']];
-  const mid = [['/draws', 'Draws', 'draws']];
-  const after = [['/features', 'Features', 'features']];
+  const links = [['/', T('Home'), 'home']];
+  const mid = [['/draws', T('Draws'), 'draws']];
+  const after = [['/features', T('Features'), 'features']];
   const link = ([href, label, key], cls) =>
     `<a class="${cls}" href="${href}"${active === key ? ' aria-current="page"' : ''}>${label}</a>`;
   const chevron = `<svg viewBox="0 0 12 12" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>`;
   // A plain list: name, muted one-liner, optional right-hand tag. No icon tiles.
   const dropdown = (id, label, current, items, tagged) => `<div class="navdrop"><button type="button" class="navlink navdrop-btn" aria-expanded="false" aria-controls="${id}"${current ? ' data-current' : ''}>${label}${chevron}</button>
       <div class="droppanel" id="${id}">${items.map(([href, name, key, desc, tag]) => `<a class="dropitem" href="${href}"${active === key ? ' aria-current="page"' : ''}><span class="dropname">${name}${tagged ? `<span class="droptag">${tag}</span>` : ''}</span><small>${desc}</small></a>`).join('')}</div></div>`;
-  const calcDrop = dropdown('calc-menu', 'Calculators', String(active).startsWith('calc'), CALC_MENU, true);
-  const resDrop = dropdown('res-menu', 'Resources', RESOURCES.some(([, , key]) => key === active), RESOURCES, false);
+  const calcDrop = dropdown('calc-menu', T('Calculators'), String(active).startsWith('calc'), CALC_MENU, true);
+  const resDrop = dropdown('res-menu', T('Resources'), RESOURCES.some(([, , key]) => key === active), RESOURCES, false);
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
-    ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>Get the app</span></a>`
-    : `<a class="btn btn-accent headcta" href="/crs-calculator">Calculate CRS</a>`;
+    ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>${T('Get the app')}</span></a>`
+    : `<a class="btn btn-accent headcta" href="/crs-calculator">${T('Calculate CRS')}</a>`;
   const latest = DRAWS[0];
-  const live = `<a class="livechip" href="/draws" title="Latest Express Entry draw: round #${latest.no}, ${latest.label}, ${latest.date}"><span class="livedot" aria-hidden="true"></span><span>#${latest.no}</span><span class="livesep" aria-hidden="true"></span><span>CRS <b>${latest.cutoff}</b></span></a>`;
-  const themeBtn = (cls) => `<button class="theme-btn ${cls}" type="button" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode">${icon('moon', 16)}</button>`;
+  const live = `<a class="livechip" href="/draws" title="${T('Latest Express Entry draw: round #{no}, {label}, {date}', { no: latest.no, label: latest.label, date: latest.date })}"><span class="livedot" aria-hidden="true"></span><span>#${latest.no}</span><span class="livesep" aria-hidden="true"></span><span>CRS <b>${latest.cutoff}</b></span></a>`;
+  const themeBtn = (cls) => `<button class="theme-btn ${cls}" type="button" onclick="toggleTheme()" data-theme-icon aria-label="${T('Toggle dark mode')}">${icon('moon', 16)}</button>`;
   return `
-<a class="skip" href="#content">Skip to content</a>
+<a class="skip" href="#content">${T('Skip to content')}</a>
 <header class="sitehead">
-  <nav class="wrap headbar" aria-label="Main">
-    <a class="brand" href="/" aria-label="CRS Pulse home">
+  <nav class="wrap headbar" aria-label="${T('Main')}">
+    <a class="brand" href="/" aria-label="${T('CRS Pulse home')}">
       <img src="/img/logo-mark.png" width="32" height="32" alt="" class="brandmark">
       <span class="wordmark">CRS Pulse</span>
     </a>
@@ -744,14 +744,14 @@ function nav(active, cta) {
       ${themeBtn('head-theme')}
       ${ctaBtn}
       <details class="menu">
-        <summary aria-label="Open menu"><span class="burger" aria-hidden="true"><i></i><i></i></span></summary>
+        <summary aria-label="${T('Open menu')}"><span class="burger" aria-hidden="true"><i></i><i></i></span></summary>
         <div class="menupanel">
           ${links.map((l) => link(l, 'menulink')).join('')}
-          <div class="menuhead">Calculators</div>
+          <div class="menuhead">${T('Calculators')}</div>
           ${CALC_MENU.map(([href, label]) => link([href, label, ''], 'menulink')).join('')}
           <div class="menuhead"></div>
           ${mid.map((l) => link(l, 'menulink')).join('')}
-          <div class="menuhead">Resources</div>
+          <div class="menuhead">${T('Resources')}</div>
           ${RESOURCES.map((l) => link(l, 'menulink')).join('')}
           <div class="menuhead"></div>
           ${after.map((l) => link(l, 'menulink')).join('')}
@@ -765,14 +765,14 @@ function nav(active, cta) {
 <div id="content" tabindex="-1"></div>`;
 }
 
-const LEGAL_NOTE = 'CRS Pulse is an independent app. It is not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. Scores, predictions and timelines are estimates for guidance only and are not immigration advice — verify with the official IRCC tools at canada.ca before you act on them.';
+const LEGAL_NOTE = T('CRS Pulse is an independent app. It is not affiliated with, endorsed by, or connected to IRCC or the Government of Canada. Scores, predictions and timelines are estimates for guidance only and are not immigration advice — verify with the official IRCC tools at canada.ca before you act on them.');
 
 const footerSlim = (note) => `
 <footer style="border-top:1px solid var(--border);background:var(--bg2)">
   <div class="wrap" style="padding:28px 24px;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center">
     <span style="font-family:'Satoshi',sans-serif;font-weight:900;font-size:16px;color:var(--text)">CRS Pulse</span>
     <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:640px">${note}</p>
-    <a class="foot-link totop" href="#" style="font-size:12.5px">${icon('arrowUp', 15)}Back to top</a>
+    <a class="foot-link totop" href="#" style="font-size:12.5px">${icon('arrowUp', 15)}${T('Back to top')}</a>
   </div>
 </footer>`;
 
@@ -785,50 +785,50 @@ const footerFull = () => `
           <img src="/img/logo-mark.png" width="22" height="22" alt="" style="border-radius:6px;display:block">
           <span style="font-family:'Satoshi',sans-serif;font-weight:900;font-size:17px;color:var(--text)">CRS Pulse</span>
         </div>
-        <p style="font-size:13.5px;line-height:1.6;color:var(--text2);max-width:260px">An Express Entry score calculator, IRCC draw tracker and application timeline for people applying for Canadian permanent residence.</p>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--text2);max-width:260px">${T('An Express Entry score calculator, IRCC draw tracker and application timeline for people applying for Canadian permanent residence.')}</p>
       </div>
       <div>
-        <div class="klabel" style="color:var(--text);margin-bottom:12px">Product</div>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">${T('Product')}</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
-          <a class="foot-link" href="/crs-calculator">Calculators</a>
-          <a class="foot-link" href="/draws">Draws &amp; trends</a>
-          <a class="foot-link" href="/analytics">Draw analytics</a>
-          <a class="foot-link" href="/checklists">Document checklists</a>
-          <a class="foot-link" href="/processing-times">Processing times</a>
-          <a class="foot-link" href="/timeline">Application timeline</a>
-          <a class="foot-link" href="/features">Features</a>
-          <a class="foot-link" href="/#faq">FAQ</a>
+          <a class="foot-link" href="/crs-calculator">${T('Calculators')}</a>
+          <a class="foot-link" href="/draws">${T('Draws & trends')}</a>
+          <a class="foot-link" href="/analytics">${T('Draw analytics')}</a>
+          <a class="foot-link" href="/checklists">${T('Document checklists')}</a>
+          <a class="foot-link" href="/processing-times">${T('Processing times')}</a>
+          <a class="foot-link" href="/timeline">${T('Application timeline')}</a>
+          <a class="foot-link" href="/features">${T('Features')}</a>
+          <a class="foot-link" href="/#faq">${T('FAQ')}</a>
         </div>
       </div>
       <div>
-        <div class="klabel" style="color:var(--text);margin-bottom:12px">Calculators</div>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">${T('Calculators')}</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
-          <a class="foot-link" href="/crs-calculator">CRS (Express Entry)</a>
-          <a class="foot-link" href="/fsw-calculator">FSW 67-point grid</a>
-          <a class="foot-link" href="/bc-pnp-calculator">BC PNP SIRS</a>
-          <a class="foot-link" href="/sinp-calculator">Saskatchewan SINP</a>
+          <a class="foot-link" href="/crs-calculator">${T('CRS (Express Entry)')}</a>
+          <a class="foot-link" href="/fsw-calculator">${T('FSW 67-point grid')}</a>
+          <a class="foot-link" href="/bc-pnp-calculator">${T('BC PNP SIRS')}</a>
+          <a class="foot-link" href="/sinp-calculator">${T('Saskatchewan SINP')}</a>
         </div>
       </div>
       <div>
-        <div class="klabel" style="color:var(--text);margin-bottom:12px">Guides</div>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">${T('Guides')}</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
           ${GUIDE_LINKS.map(([href, label]) => `<a class="foot-link" href="${href}">${label}</a>`).join('')}
         </div>
       </div>
       <div>
-        <div class="klabel" style="color:var(--text);margin-bottom:12px">App &amp; legal</div>
+        <div class="klabel" style="color:var(--text);margin-bottom:12px">${T('App & legal')}</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
-          <a class="foot-link" href="/about">About</a>
-          <a class="foot-link" href="${APP_STORE_URL}">iPhone app</a>
-          <a class="foot-link" href="/privacy">Privacy policy</a>
-          <a class="foot-link" href="/terms">Terms of use</a>
-          <a class="foot-link" href="mailto:${CONTACT}">Contact</a>
+          <a class="foot-link" href="/about">${T('About')}</a>
+          <a class="foot-link" href="${APP_STORE_URL}">${T('iPhone app')}</a>
+          <a class="foot-link" href="/privacy">${T('Privacy policy')}</a>
+          <a class="foot-link" href="/terms">${T('Terms of use')}</a>
+          <a class="foot-link" href="mailto:${CONTACT}">${T('Contact')}</a>
         </div>
       </div>
     </div>
     <div style="border-top:1px solid var(--hairline);padding-top:20px;display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:baseline">
       <p style="font-size:12.5px;line-height:1.6;color:var(--muted);max-width:720px">${LEGAL_NOTE}</p>
-      <span style="display:flex;align-items:center;gap:18px;font-size:12.5px;color:var(--muted)"><a class="foot-link totop" href="#">${icon('arrowUp', 15)}Back to top</a>© ${new Date().getFullYear()} CRS Pulse</span>
+      <span style="display:flex;align-items:center;gap:18px;font-size:12.5px;color:var(--muted)"><a class="foot-link totop" href="#">${icon('arrowUp', 15)}${T('Back to top')}</a>© ${new Date().getFullYear()} CRS Pulse</span>
     </div>
   </div>
 </footer>`;
@@ -903,18 +903,18 @@ ${scripts}
 
 // ------------------------------------------------------------------ shared content data
 const FEATURES_SMALL = [
-  ['trend', 'Trends and analytics', 'Cutoff averages, draw cadence, and where your score sits against recent rounds.'],
-  ['bell', 'Draw alerts', 'A push notification when IRCC publishes a new round, usually within about 15 minutes.'],
-  ['folder', 'Application tracker', 'Processing-time estimates for the program and category you applied under.'],
-  ['checklist', 'Document checklists', 'The IRCC checklist for your program, with per-item progress.'],
-  ['clock', 'Application timeline', 'Log ITA, AOR, biometrics, medical, passport request and your own milestones.'],
-  ['lock', 'On-device by default', 'No account. Your profile, timeline and checklists stay on your phone.'],
+  ['trend', T('Trends and analytics'), T('Cutoff averages, draw cadence, and where your score sits against recent rounds.')],
+  ['bell', T('Draw alerts'), T('A push notification when IRCC publishes a new round, usually within about 15 minutes.')],
+  ['folder', T('Application tracker'), T('Processing-time estimates for the program and category you applied under.')],
+  ['checklist', T('Document checklists'), T('The IRCC checklist for your program, with per-item progress.')],
+  ['clock', T('Application timeline'), T('Log ITA, AOR, biometrics, medical, passport request and your own milestones.')],
+  ['lock', T('On-device by default'), T('No account. Your profile, timeline and checklists stay on your phone.')],
 ];
 const CALC_CARDS = [
-  ['calc', '1,200', 'CRS score', 'Comprehensive Ranking System — the official Express Entry formula.'],
-  ['checkCircle', '100 · 67', 'FSW 67-point', 'Federal Skilled Worker six selection factors grid.'],
-  ['compass', '200', 'BC PNP SIRS', 'Skills Immigration Registration System, 200-point scale.'],
-  ['pin', '110 · 60', 'Saskatchewan SINP', 'International Skilled Worker EOI points assessment.'],
+  ['calc', '1,200', T('CRS score'), T('Comprehensive Ranking System — the official Express Entry formula.')],
+  ['checkCircle', '100 · 67', T('FSW 67-point'), T('Federal Skilled Worker six selection factors grid.')],
+  ['compass', '200', T('BC PNP SIRS'), T('Skills Immigration Registration System, 200-point scale.')],
+  ['pin', '110 · 60', T('Saskatchewan SINP'), T('International Skilled Worker EOI points assessment.')],
 ];
 // IRCC publishes a free-text drawName; these give each one a short chip label and a
 // colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
@@ -955,21 +955,21 @@ const HOME_DRAWS = DRAWS.slice(0, 6).map((d) => [d.no, d.date, d.label, d.invite
 // to an occupation — neither is a fair yardstick, so neither is used as one.
 const BENCHMARK = DRAWS.find((d) => ['CEC', 'General'].includes(d.cat)) ?? DRAWS[0];
 const PRIVACY_POINTS = [
-  'Your CRS inputs, timeline and checklists are stored on your device, not on our servers.',
-  'There is no account and no sign-up — there is nothing to log in to.',
-  'The calculators on this website run entirely in your browser; nothing you enter is uploaded.',
-  'Draw alerts register an anonymous push token only, never your immigration details.',
+  T('Your CRS inputs, timeline and checklists are stored on your device, not on our servers.'),
+  T('There is no account and no sign-up — there is nothing to log in to.'),
+  T('The calculators on this website run entirely in your browser; nothing you enter is uploaded.'),
+  T('Draw alerts register an anonymous push token only, never your immigration details.'),
 ];
 const FAQ = [
-  ['What is a CRS score?', 'The Comprehensive Ranking System score is the number IRCC uses to rank candidates in the Express Entry pool, out of 1,200. Every round of invitations has a cutoff; candidates at or above it are invited to apply for permanent residence.'],
-  ['How is my CRS score calculated?', 'From core human capital (age, education, official-language ability and Canadian work experience), spouse factors, skill transferability, and additional points such as a provincial nomination (+600), Canadian study, French ability or a sibling in Canada. CRS Pulse implements that published grid, along with the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. IRCC’s own tool is authoritative, so confirm your final score there before you act on it.'],
-  ['Does CRS Pulse use official IRCC draw data?', 'Yes. The app reads rounds of invitations from IRCC’s public JSON feed, and each draw links to its official IRCC round page. This website mirrors the same feed and refreshes when the site is rebuilt; the app is always live.'],
-  ['Can I track my Express Entry application?', 'Yes, in the iPhone app. Log milestones such as ITA, AOR, biometrics, medical and passport request on a timeline, work through the document checklist for your program, and see an estimated decision window based on IRCC’s published processing times. The tracker is in the app, not on this website.'],
-  ['Is CRS Pulse free?', 'Yes. Every calculator, live draws, draw history, analytics and the application tracker are free, with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.'],
-  ['What happens to my personal data?', 'Your age, education, language scores and work history are stored only on your device. There is no account to create. The app sends anonymous usage analytics (which screens are used, never your scores or profile). If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data. The app does show Google AdMob banner ads, which use a device advertising identifier; on iPhone it asks permission first, and declining still leaves the app fully usable.'],
-  ['How do draw alerts work?', 'A background service checks for new rounds every 15 minutes. When IRCC publishes a draw, you get a push notification — usually within about 15 minutes — with the category, cutoff score and number of invitations. You can turn alerts on or off any time.'],
-  ['What is a category-based draw?', 'Instead of inviting the highest overall CRS scores, IRCC can invite candidates who meet a specific priority — such as French-language ability or work in healthcare, trades or STEM. These rounds often cut off well below a general round, so targeting a category can matter more than raising a raw score.'],
-  ['Do I need a job offer for Express Entry?', 'No. A valid job offer is not required for any of the three Express Entry programs. Since March 25, 2025, job offers no longer add CRS points, though they can still support certain category-based draws. Most invited candidates have no Canadian job offer.'],
+  [T('What is a CRS score?'), T('The Comprehensive Ranking System score is the number IRCC uses to rank candidates in the Express Entry pool, out of 1,200. Every round of invitations has a cutoff; candidates at or above it are invited to apply for permanent residence.')],
+  [T('How is my CRS score calculated?'), T('From core human capital (age, education, official-language ability and Canadian work experience), spouse factors, skill transferability, and additional points such as a provincial nomination (+600), Canadian study, French ability or a sibling in Canada. CRS Pulse implements that published grid, along with the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. IRCC’s own tool is authoritative, so confirm your final score there before you act on it.')],
+  [T('Does CRS Pulse use official IRCC draw data?'), T('Yes. The app reads rounds of invitations from IRCC’s public JSON feed, and each draw links to its official IRCC round page. This website mirrors the same feed and refreshes when the site is rebuilt; the app is always live.')],
+  [T('Can I track my Express Entry application?'), T('Yes, in the iPhone app. Log milestones such as ITA, AOR, biometrics, medical and passport request on a timeline, work through the document checklist for your program, and see an estimated decision window based on IRCC’s published processing times. The tracker is in the app, not on this website.')],
+  [T('Is CRS Pulse free?'), T('Yes. Every calculator, live draws, draw history, analytics and the application tracker are free, with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.')],
+  [T('What happens to my personal data?'), T('Your age, education, language scores and work history are stored only on your device. There is no account to create. The app sends anonymous usage analytics (which screens are used, never your scores or profile). If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data. The app does show Google AdMob banner ads, which use a device advertising identifier; on iPhone it asks permission first, and declining still leaves the app fully usable.')],
+  [T('How do draw alerts work?'), T('A background service checks for new rounds every 15 minutes. When IRCC publishes a draw, you get a push notification — usually within about 15 minutes — with the category, cutoff score and number of invitations. You can turn alerts on or off any time.')],
+  [T('What is a category-based draw?'), T('Instead of inviting the highest overall CRS scores, IRCC can invite candidates who meet a specific priority — such as French-language ability or work in healthcare, trades or STEM. These rounds often cut off well below a general round, so targeting a category can matter more than raising a raw score.')],
+  [T('Do I need a job offer for Express Entry?'), T('No. A valid job offer is not required for any of the three Express Entry programs. Since March 25, 2025, job offers no longer add CRS points, though they can still support certain category-based draws. Most invited candidates have no Canadian job offer.')],
 ];
 
 const eyebrow = (t) => `<div class="eyebrow">${t}</div>`;
@@ -981,8 +981,8 @@ const pageHero = (lead, accent, lede) => `
   <p data-r="420">${lede}</p>
 </section></div>`;
 const MAPLE = `<svg class="dg-leaf" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M256 16l-38 72c-4 8-12 7-20 3l-28-14 18 96c4 18-8 18-14 10l-40-46-7 23c-1 4-6 7-10 6l-51-11 13 49c3 11 5 15-3 18l-19 8 88 71c4 3 6 8 4 13l-8 25c31-4 58-9 89-12 3 0 7 3 7 6l-4 99h18l-4-99c0-3 4-6 7-6 31 3 58 8 89 12l-8-25c-2-5 0-10 4-13l88-71-19-8c-8-3-6-7-3-18l13-49-51 11c-4 1-9-2-10-6l-7-23-40 46c-6 8-18 8-14-10l18-96-28 14c-8 4-16 5-20-3z"/></svg>`;
-const s5End = (title = 'Check your CRS score tonight.') => `
-<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">Calculators</a></div></section></div>`;
+const s5End = (title = T('Check your CRS score tonight.')) => `
+<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('Calculators')}</a></div></section></div>`;
 
 // ------------------------------------------------------------------ home components
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
@@ -1038,10 +1038,10 @@ const featureRow = ({ tag, title, body, points, shot, flip, extra }) => `
 // Live figures from the IRCC mirror, refreshed on every rebuild, rather than static
 // facts about the product. The alert latency is the one constant.
 const STATS = [
-  [String(DRAWS[0].crs), `cutoff in draw #${DRAWS[0].no} (${DRAWS[0].cat})`],
-  [num(FEED.ytd.invitations), `invitations in ${FEED.ytd.year} across ${FEED.ytd.rounds} rounds`],
-  [num(FEED.poolTotal), `profiles in the pool${FEED.distributionAsOf ? ` (${FEED.distributionAsOf.replace(/, \d{4}$/, '')})` : ''}`],
-  ['~15 min', 'from an IRCC draw to your push alert'],
+  [String(DRAWS[0].crs), T('cutoff in draw #{no} ({cat})', { no: DRAWS[0].no, cat: DRAWS[0].cat })],
+  [num(FEED.ytd.invitations), T('invitations in {year} across {rounds} rounds', { year: FEED.ytd.year, rounds: FEED.ytd.rounds })],
+  [num(FEED.poolTotal), T('profiles in the pool{asOf}', { asOf: FEED.distributionAsOf ? ` (${FEED.distributionAsOf.replace(/, \d{4}$/, '')})` : '' })],
+  ['~15 min', T('from an IRCC draw to your push alert')],
 ];
 const statBar = () => `
 <div class="statbar">
@@ -1070,27 +1070,27 @@ const pvRow = ({ label, val, max }) => `
 function calculatorPreview(sample) {
   const strong = sample.total >= 520;
   const near = sample.total >= 470;
-  const badge = strong ? 'Competitive' : near ? 'In range' : 'Build it up';
+  const badge = strong ? T('Competitive') : near ? T('In range') : T('Build it up');
   const tone = strong ? 'var(--success)' : near ? 'var(--warningInk)' : 'var(--text2)';
   const soft = strong ? 'var(--successSoft)' : near ? 'var(--warningSoft)' : 'var(--bg3)';
   return `
 <a class="card card-lift lift" href="/crs-calculator" style="display:block;color:var(--text);overflow:hidden">
   <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
-    <span style="font-size:13px;font-weight:600">CRS: Express Entry score</span>
-    <span class="klabel">Runs in your browser</span>
+    <span style="font-size:13px;font-weight:600">${T('CRS: Express Entry score')}</span>
+    <span class="klabel">${T('Runs in your browser')}</span>
   </div>
   <div class="split calcpv" style="display:grid;grid-template-columns:1fr 260px">
     <div class="pvfields" style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:13px;align-content:start">
-      ${pvField('Marital status', 'Single / not married')}
-      ${pvField('Age', '29')}
-      ${pvField('Education level', 'Master’s / professional')}
-      ${pvField('Canadian work experience', '3 years')}
-      ${pvField('First language (CLB, all four)', 'CLB 9')}
-      ${pvField('Foreign work experience', '1–2 years')}
+      ${pvField(T('Marital status'), T('Single / not married'))}
+      ${pvField(T('Age'), '29')}
+      ${pvField(T('Education level'), T('Master’s / professional'))}
+      ${pvField(T('Canadian work experience'), T('3 years'))}
+      ${pvField(T('First language (CLB, all four)'), 'CLB 9')}
+      ${pvField(T('Foreign work experience'), T('1–2 years'))}
     </div>
     <div class="pvscore" style="padding:18px;border-left:1px solid var(--hairline);background:var(--bg2)">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px">
-        <span class="klabel">Your score</span>
+        <span class="klabel">${T('Your score')}</span>
         <span style="background:${soft};color:${tone};border-radius:6px;padding:3px 9px;font-size:11.5px;font-weight:700">${badge}</span>
       </div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:14px">
@@ -1103,7 +1103,7 @@ function calculatorPreview(sample) {
 </a>`;
 }
 
-const MILESTONES = ['Profile', 'ITA', 'AOR', 'Biometrics', 'Medical', 'Background', 'Final decision'];
+const MILESTONES = [T('Profile'), T('ITA'), T('AOR'), T('Biometrics'), T('Medical'), T('Background'), T('Final decision')];
 const milestoneRail = () => `
 <ol class="rail" style="margin:0;padding:0">
   ${MILESTONES.map((m, i) => `<li${i === MILESTONES.length - 1 ? ' data-end' : ''}><span style="font-size:13.5px;font-weight:600;color:var(--text)">${m}</span></li>`).join('')}
@@ -1342,17 +1342,17 @@ function home() {
   const latest = DRAWS[0];
   const SCREENS = ['draws', 'analytics', 'timeline'];
   const chapters = [
-    ['draws', 'bell', 'Every IRCC draw, minutes after it happens.', 'CRS Pulse watches the Government of Canada feed and pushes you the category, cutoff and invitation count as soon as a round is published.', ['Alerts usually within about 15 minutes', 'Full history filtered by CEC, PNP, French, healthcare, trades', 'Every round links to its official IRCC page']],
-    ['analytics', 'trend', 'Your odds, not just your score.', 'Your score is placed against the live trend cutoff, the next round in your category is estimated from IRCC cadence, and every lever is priced.', ['Odds against the current trend cutoff, by program', 'Next draw predicted from recent cadence', 'What a nomination, French or Canadian work is worth']],
-    ['timeline', 'clock', 'Follow your file to the decision.', 'Log the dates that matter. The app keeps them in order, compares you with IRCC processing times, and tells you when you pass the typical window.', ['ITA, AOR, biometrics, medical, passport request and portal steps', 'The IRCC document checklist for your program', 'Processing estimates for your category']],
+    ['draws', 'bell', T('Every IRCC draw, minutes after it happens.'), T('CRS Pulse watches the Government of Canada feed and pushes you the category, cutoff and invitation count as soon as a round is published.'), [T('Alerts usually within about 15 minutes'), T('Full history filtered by CEC, PNP, French, healthcare, trades'), T('Every round links to its official IRCC page')]],
+    ['analytics', 'trend', T('Your odds, not just your score.'), T('Your score is placed against the live trend cutoff, the next round in your category is estimated from IRCC cadence, and every lever is priced.'), [T('Odds against the current trend cutoff, by program'), T('Next draw predicted from recent cadence'), T('What a nomination, French or Canadian work is worth')]],
+    ['timeline', 'clock', T('Follow your file to the decision.'), T('Log the dates that matter. The app keeps them in order, compares you with IRCC processing times, and tells you when you pass the typical window.'), [T('ITA, AOR, biometrics, medical, passport request and portal steps'), T('The IRCC document checklist for your program'), T('Processing estimates for your category')]],
   ];
   const pinned = phone('draws', 330).replace(/<img [^>]+>/, SCREENS.map((k, i) => `<img src="${SHOTS[k][0]}" data-k="${k}" class="${i === 0 ? 'on' : ''}" alt="${SHOTS[k][1]}" width="520" height="1047"${i ? ' loading="lazy"' : ''} decoding="async">`).join(''));
-  const privacy = 'Your immigration profile is yours. It never leaves your phone.';
+  const privacy = T('Your immigration profile is yours. It never leaves your phone.');
   const ck = (s = 18) => `<span style="color:var(--success);flex-shrink:0;display:inline-flex;margin-top:3px">${icon('checkCircle', s)}</span>`;
 
-  const heroCopy = `<div><h1 class="split">Your Express Entry journey, <em>in one app.</em></h1>
-      <p data-r="500" class="s5-sub">Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.</p>
-      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/crs-calculator">Calculate my CRS</a></div></div>`;
+  const heroCopy = `<div><h1 class="split">${T('Your Express Entry journey, <em>in one app.</em>')}</h1>
+      <p data-r="500" class="s5-sub">${T('Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.')}</p>
+      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} ${T('Download for iPhone')}</a><a class="s5-btn s5-soft" href="/crs-calculator">${T('Calculate my CRS')}</a></div></div>`;
   const hero = `<div class="dg-hero">${MAPLE}<div class="wrap">
   <section class="s5-hero">
     ${heroCopy}
@@ -1366,24 +1366,24 @@ function home() {
 ${hero}
 <div class="wrap">
   <div class="s5-live">
-    <div data-r="0"><b data-count="${latest.crs}">${latest.crs}</b><span>cutoff in round #${latest.no} (${latest.cat}, ${latest.date.replace(/, \d{4}$/, '')})</span></div>
-    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>invitations in ${FEED.ytd.year}, ${FEED.ytd.rounds} rounds</span></div>
-    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>profiles in the Express Entry pool</span></div>
-    <div data-r="240"><b>~15 min</b><span>from an IRCC draw to your alert</span></div>
+    <div data-r="0"><b data-count="${latest.crs}">${latest.crs}</b><span>${T('cutoff in round #{no} ({cat}, {date})', { no: latest.no, cat: latest.cat, date: latest.date.replace(/, \d{4}$/, '') })}</span></div>
+    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>${T('invitations in {year}, {rounds} rounds', { year: FEED.ytd.year, rounds: FEED.ytd.rounds })}</span></div>
+    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>${T('profiles in the Express Entry pool')}</span></div>
+    <div data-r="240"><b>~15 min</b><span>${T('from an IRCC draw to your alert')}</span></div>
   </div>
-  <div class="s5-trust"><span>${ck(16)}Free</span><span>${ck(16)}No account</span><span>${ck(16)}English and French</span><span>${ck(16)}Data stays on your device</span></div>
+  <div class="s5-trust"><span>${ck(16)}${T('Free')}</span><span>${ck(16)}${T('No account')}</span><span>${ck(16)}${T('English and French')}</span><span>${ck(16)}${T('Data stays on your device')}</span></div>
   <section class="s5-story" id="how">
     <div>${chapters.map(([key, ic, h, p, items]) => `<article class="s5-chap" data-screen="${key}"><div data-r="0"><div class="s5-ic">${icon(ic, 26)}</div><h2>${h}</h2><p>${p}</p><ul>${items.map((x) => `<li>${ck()}<span>${x}</span></li>`).join('')}</ul><div class="s5-mphone">${phone(key, 260)}</div></div></article>`).join('')}</div>
     <div class="s5-pin">${pinned}</div>
   </section>
 </div>
-<div class="s5-marquee" aria-label="Recent Express Entry rounds"><div class="s5-track">${[...DRAWS.slice(0, 12), ...DRAWS.slice(0, 12)].map((d, i) => `<div class="s5-d"${i >= 12 ? ' aria-hidden="true"' : ''}><b>${d.crs}</b><span>#${d.no} ${d.cat}, ${d.date.replace(/, \d{4}$/, '')}</span></div>`).join('')}</div></div>
+<div class="s5-marquee" aria-label="${T('Recent Express Entry rounds')}"><div class="s5-track">${[...DRAWS.slice(0, 12), ...DRAWS.slice(0, 12)].map((d, i) => `<div class="s5-d"${i >= 12 ? ' aria-hidden="true"' : ''}><b>${d.crs}</b><span>#${d.no} ${d.cat}, ${d.date.replace(/, \d{4}$/, '')}</span></div>`).join('')}</div></div>
 <div class="wrap">
-  <section class="s5-calcs"><h2 data-r="0">Four point grids, right in your browser.</h2>
-    <div class="s5-snap">${[['CRS', 'Express Entry', '1,200', 'The Comprehensive Ranking System IRCC uses to rank every profile in the pool.', CALC_ROUTES.crs], ['FSW', '67-point grid', '100', 'Federal Skilled Worker eligibility: six selection factors, 67 to qualify.', CALC_ROUTES.fsw], ['BC PNP', 'SIRS', '200', 'British Columbia’s Skills Immigration Registration System score.', CALC_ROUTES.bc], ['SINP', 'EOI', '110', 'Saskatchewan’s International Skilled Worker points assessment.', CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
+  <section class="s5-calcs"><h2 data-r="0">${T('Four point grids, right in your browser.')}</h2>
+    <div class="s5-snap">${[['CRS', T('Express Entry'), '1,200', T('The Comprehensive Ranking System IRCC uses to rank every profile in the pool.'), CALC_ROUTES.crs], ['FSW', T('67-point grid'), '100', T('Federal Skilled Worker eligibility: six selection factors, 67 to qualify.'), CALC_ROUTES.fsw], ['BC PNP', T('SIRS'), '200', T('British Columbia’s Skills Immigration Registration System score.'), CALC_ROUTES.bc], ['SINP', T('EOI'), '110', T('Saskatchewan’s International Skilled Worker points assessment.'), CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
   ${priv}
-  <section class="s5-faq" id="faq"><h2 data-r="0">Questions people ask.</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
-  <section class="s5-end" data-r="0"><h2>Check your CRS score tonight.</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">Calculators</a></div></section>
+  <section class="s5-faq" id="faq"><h2 data-r="0">${T('Questions people ask.')}</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
+  <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('Calculators')}</a></div></section>
 </div>
 </main>
 ${footerFull()}`;
@@ -1397,46 +1397,46 @@ ${footerFull()}`;
 const PANEL = 'background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;color:var(--text)';
 const FEATURE_BLOCKS = [
   {
-    icon: 'folder', tag: 'Application tracker', title: 'Track your PR application against live IRCC times',
-    body: 'Tell CRS Pulse which program you applied to and it estimates your progress using live processing-time data — so you always know roughly how long is left.',
-    points: ['Live processing estimates by program & category', 'Days-since-applied and estimated decision month', 'Overdue flag when you pass the typical window'],
+    icon: 'folder', tag: T('Application tracker'), title: T('Track your PR application against live IRCC times'),
+    body: T('Tell CRS Pulse which program you applied to and it estimates your progress using live processing-time data — so you always know roughly how long is left.'),
+    points: [T('Live processing estimates by program & category'), T('Days-since-applied and estimated decision month'), T('Overdue flag when you pass the typical window')],
     visual: `<div style="${PANEL}">
-      <div style="display:flex;justify-content:space-between;margin-bottom:14px"><span style="font-size:13px;font-weight:700">CEC · online application</span><span style="font-size:12px;color:var(--muted)">62% of typical</span></div>
-      <div style="display:flex;gap:28px;margin-bottom:14px"><div><div class="num" style="font-size:28px;line-height:1">112</div><div class="klabel" style="font-size:10px;margin-top:4px">days since applied</div></div><div><div class="num" style="font-size:28px;line-height:1;color:var(--accentInk)">3</div><div class="klabel" style="font-size:10px;margin-top:4px">months left</div></div></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:14px"><span style="font-size:13px;font-weight:700">${T('CEC · online application')}</span><span style="font-size:12px;color:var(--muted)">${T('62% of typical')}</span></div>
+      <div style="display:flex;gap:28px;margin-bottom:14px"><div><div class="num" style="font-size:28px;line-height:1">112</div><div class="klabel" style="font-size:10px;margin-top:4px">${T('days since applied')}</div></div><div><div class="num" style="font-size:28px;line-height:1;color:var(--accentInk)">3</div><div class="klabel" style="font-size:10px;margin-top:4px">${T('months left')}</div></div></div>
       <div style="height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-bottom:10px"><div style="height:100%;width:62%;background:var(--accent);border-radius:3px"></div></div>
-      <div style="font-size:12.5px;color:var(--text2)">Estimated decision <b style="color:var(--text)">January 2027</b></div></div>`,
+      <div style="font-size:12.5px;color:var(--text2)">${T('Estimated decision')} <b style="color:var(--text)">${T('January 2027')}</b></div></div>`,
   },
   {
-    icon: 'checklist', tag: 'Document checklists', title: 'Per-program checklists from IRCC requirements',
-    body: 'Every program has its own document set. CRS Pulse ships the right checklist and tracks each item as you gather it — nothing forgotten before your e-APR.',
-    points: ['Checklists compiled from IRCC requirements', 'Per-item progress that persists on device', 'Tailored to the program you applied under'],
+    icon: 'checklist', tag: T('Document checklists'), title: T('Per-program checklists from IRCC requirements'),
+    body: T('Every program has its own document set. CRS Pulse ships the right checklist and tracks each item as you gather it — nothing forgotten before your e-APR.'),
+    points: [T('Checklists compiled from IRCC requirements'), T('Per-item progress that persists on device'), T('Tailored to the program you applied under')],
     reverse: true,
-    visual: `<div style="${PANEL};padding:8px 18px">${[['Passport / travel document', 1], ['Language test results', 1], ['ECA report', 1], ['Proof of funds', 0], ['Police certificates', 0]].map(([t, done], i, arr) => `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;${i < arr.length - 1 ? 'border-bottom:1px solid var(--hairline)' : ''}"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${done ? 'var(--success)' : 'var(--border)'};background:${done ? 'var(--success)' : 'transparent'};color:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">${done ? CHECK : ''}</span><span style="font-size:13.5px;color:${done ? 'var(--muted)' : 'var(--text)'};text-decoration:${done ? 'line-through' : 'none'}">${t}</span></div>`).join('')}</div>`,
+    visual: `<div style="${PANEL};padding:8px 18px">${[[T('Passport / travel document'), 1], [T('Language test results'), 1], [T('ECA report'), 1], [T('Proof of funds'), 0], [T('Police certificates'), 0]].map(([t, done], i, arr) => `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;${i < arr.length - 1 ? 'border-bottom:1px solid var(--hairline)' : ''}"><span style="width:18px;height:18px;border-radius:5px;border:1.5px solid ${done ? 'var(--success)' : 'var(--border)'};background:${done ? 'var(--success)' : 'transparent'};color:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0">${done ? CHECK : ''}</span><span style="font-size:13.5px;color:${done ? 'var(--muted)' : 'var(--text)'};text-decoration:${done ? 'line-through' : 'none'}">${t}</span></div>`).join('')}</div>`,
   },
   {
-    icon: 'clock', tag: 'Application timeline', title: 'Log every milestone from ITA to PPR',
-    body: 'Add ITA, AOR, biometrics, medicals, passport request and custom milestones with notes. Your whole journey on one clean timeline.',
-    points: ['Add, edit and delete milestones with notes', 'Standard IRCC stages plus custom entries', 'A shareable view of where you are'],
-    visual: `<div style="${PANEL}">${[['ITA received', 'Feb 12', 1], ['e-APR submitted', 'Feb 28', 1], ['AOR', 'Mar 4', 1], ['Biometrics', 'Mar 19', 1], ['Medical passed', 'Apr 22', 0]].map(([t, d, past], i, arr) => `<div style="display:flex;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:11px;height:11px;border-radius:50%;margin-top:3px;${past ? 'background:var(--accent)' : 'border:2px solid var(--accent);background:var(--bg2)'}"></span>${i < arr.length - 1 ? '<span style="width:1.5px;height:24px;background:var(--border)"></span>' : ''}</div><div style="padding-bottom:${i < arr.length - 1 ? 8 : 0}px"><div style="font-size:13.5px;font-weight:700">${t}</div><div style="font-size:11.5px;color:var(--muted)">${d}</div></div></div>`).join('')}</div>`,
+    icon: 'clock', tag: T('Application timeline'), title: T('Log every milestone from ITA to PPR'),
+    body: T('Add ITA, AOR, biometrics, medicals, passport request and custom milestones with notes. Your whole journey on one clean timeline.'),
+    points: [T('Add, edit and delete milestones with notes'), T('Standard IRCC stages plus custom entries'), T('A shareable view of where you are')],
+    visual: `<div style="${PANEL}">${[[T('ITA received'), 'Feb 12', 1], [T('e-APR submitted'), 'Feb 28', 1], [T('AOR'), 'Mar 4', 1], [T('Biometrics'), 'Mar 19', 1], [T('Medical passed'), 'Apr 22', 0]].map(([t, d, past], i, arr) => `<div style="display:flex;gap:12px;align-items:flex-start"><div style="display:flex;flex-direction:column;align-items:center"><span style="width:11px;height:11px;border-radius:50%;margin-top:3px;${past ? 'background:var(--accent)' : 'border:2px solid var(--accent);background:var(--bg2)'}"></span>${i < arr.length - 1 ? '<span style="width:1.5px;height:24px;background:var(--border)"></span>' : ''}</div><div style="padding-bottom:${i < arr.length - 1 ? 8 : 0}px"><div style="font-size:13.5px;font-weight:700">${t}</div><div style="font-size:11.5px;color:var(--muted)">${d}</div></div></div>`).join('')}</div>`,
   },
   {
-    icon: 'bell', tag: 'Draw alerts', title: 'Know the moment IRCC draws',
-    body: 'A background service checks for new rounds every 15 minutes and pushes you an alert the moment one is published — with the category, cutoff and invitation count.',
-    points: ['New-draw push within ~15 minutes', 'Anonymous token only — no personal data', 'Turn on or off any time'],
+    icon: 'bell', tag: T('Draw alerts'), title: T('Know the moment IRCC draws'),
+    body: T('A background service checks for new rounds every 15 minutes and pushes you an alert the moment one is published — with the category, cutoff and invitation count.'),
+    points: [T('New-draw push within ~15 minutes'), T('Anonymous token only — no personal data'), T('Turn on or off any time')],
     reverse: true,
     visual: `<div style="${PANEL};display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--border);box-shadow:var(--shadow)"><span style="width:30px;height:30px;border-radius:8px;background:var(--accentSoft);color:var(--accentInk);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon('bell', 16)}</span><div><div style="font-size:13px;font-weight:700">New Express Entry draw</div><div style="font-size:12.5px;color:var(--text2);line-height:1.45">Round #${DRAWS[0].no} · ${DRAWS[0].cat} · cutoff ${DRAWS[0].cutoff} · ${DRAWS[0].invited} invited</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${DRAWS[0].date}</div></div></div>
-      <div style="font-size:11.5px;color:var(--muted);text-align:center">Delivered within ~15 min of publication</div></div>`,
+      <div style="display:flex;gap:12px;align-items:flex-start;background:var(--card);border-radius:12px;padding:12px 14px;border:1px solid var(--border);box-shadow:var(--shadow)"><span style="width:30px;height:30px;border-radius:8px;background:var(--accentSoft);color:var(--accentInk);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon('bell', 16)}</span><div><div style="font-size:13px;font-weight:700">${T('New Express Entry draw')}</div><div style="font-size:12.5px;color:var(--text2);line-height:1.45">Round #${DRAWS[0].no} · ${DRAWS[0].cat} · cutoff ${DRAWS[0].cutoff} · ${T('{n} invited', { n: DRAWS[0].invited })}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${DRAWS[0].date}</div></div></div>
+      <div style="font-size:11.5px;color:var(--muted);text-align:center">${T('Delivered within ~15 min of publication')}</div></div>`,
   },
   {
-    icon: 'trend', tag: 'Analytics & your plan', title: 'See your real odds, not just a number',
-    body: 'Draws, history, category trends and cadence are free. Your Plan turns them into your personal odds versus the trend cutoff, forecast bands, and your position in the pool.',
-    points: ['Odds vs the current trend cutoff', 'CRS forecast bands & what-if scenarios', 'Your percentile and place in the pool'],
+    icon: 'trend', tag: T('Analytics & your plan'), title: T('See your real odds, not just a number'),
+    body: T('Draws, history, category trends and cadence are free. Your Plan turns them into your personal odds versus the trend cutoff, forecast bands, and your position in the pool.'),
+    points: [T('Odds vs the current trend cutoff'), T('CRS forecast bands & what-if scenarios'), T('Your percentile and place in the pool')],
     visual: `<div style="${PANEL};text-align:center">
-      <div class="klabel" style="font-size:10.5px;margin-bottom:8px">Your odds this trend</div>
-      <div style="font-family:'Satoshi',sans-serif;font-size:48px;font-weight:900;color:var(--success);letter-spacing:-2px;line-height:1">High</div>
+      <div class="klabel" style="font-size:10.5px;margin-bottom:8px">${T('Your odds this trend')}</div>
+      <div style="font-family:'Satoshi',sans-serif;font-size:48px;font-weight:900;color:var(--success);letter-spacing:-2px;line-height:1">${T('High')}</div>
       <div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden;margin:14px 0 8px"><div style="height:100%;width:78%;background:var(--success);border-radius:5px"></div></div>
-      <div style="font-size:12.5px;color:var(--text2)">Score 512 · 41 above the trend cutoff · top 18% of the pool</div></div>`,
+      <div style="font-size:12.5px;color:var(--text2)">${T('Score 512 · 41 above the trend cutoff · top 18% of the pool')}</div></div>`,
   },
 ];
 
@@ -1454,11 +1454,11 @@ function featuresPage() {
   const body = `${nav('features', 'calc')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-${pageHero('From your first estimate to', 'landing day.', 'CRS Pulse mirrors the real IRCC process at every step. Here is everything the app does, the same information you get on your iPhone, in one place.')}
+${pageHero(T('From your first estimate to'), T('landing day.'), T('CRS Pulse mirrors the real IRCC process at every step. Here is everything the app does, the same information you get on your iPhone, in one place.'))}
 <section style="max-width:1080px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:20px">
   ${FEATURE_BLOCKS.map(block).join('')}
 </section>
-${s5End('Have it all in your pocket.')}
+${s5End(T('Have it all in your pocket.'))}
 </div>
 ${footerFull()}
 </div>`;
@@ -1484,13 +1484,13 @@ const INSIGHTS = (() => {
   };
   const out = [];
   if (category.length && general.length) {
-    out.push(['trendDown', 'Category draws run lower', `Category-based rounds cut off at ${range(category)} over the last ${DRAWS.length} draws, while general and CEC rounds held at ${range(general)} — targeting a category can beat a raw CRS race.`]);
+    out.push(['trendDown', T('Category draws run lower'), T('Category-based rounds cut off at {catRange} over the last {n} draws, while general and CEC rounds held at {genRange} — targeting a category can beat a raw CRS race.', { catRange: range(category), n: DRAWS.length, genRange: range(general) })]);
   }
   if (pnp.length) {
-    out.push(['award', 'A nomination changes everything', `Provincial Nominee rounds cut off at ${range(pnp)}, because a nomination adds 600 points on top of your base score.`]);
+    out.push(['award', T('A nomination changes everything'), T('Provincial Nominee rounds cut off at {range}, because a nomination adds 600 points on top of your base score.', { range: range(pnp) })]);
   }
-  out.push(['timer', `${DRAWS.length} rounds in ${span} days`, `That is IRCC's recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.`]);
-  out.push(['target', 'Know your odds', 'The analytics tab places your score against the live trend cutoff and forecast bands, plus your percentile in the pool — free, like the rest of the app.']);
+  out.push(['timer', T('{n} rounds in {days} days', { n: DRAWS.length, days: span }), T('That is IRCC\'s recent cadence, and rounds often land in bursts over consecutive days. Push alerts reach you within ~15 minutes of each one.')]);
+  out.push(['target', T('Know your odds'), T('The analytics tab places your score against the live trend cutoff and forecast bands, plus your percentile in the pool — free, like the rest of the app.')]);
   return out;
 })();
 
@@ -1512,22 +1512,22 @@ function drawsPage() {
   const body = `${nav('draws', 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the official IRCC feed, with category filters, cutoff trends and the pool. Figures mirror IRCC as of ${feedDate()}; the app refreshes live.`)}
+${pageHero(T('Rounds of invitations,'), T('live from IRCC.'), T('Every round from the official IRCC feed, with category filters, cutoff trends and the pool. Figures mirror IRCC as of {date}; the app refreshes live.', { date: feedDate() }))}
 
 <section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
   <div class="s5-live">
-    <div data-r="0"><b data-count="${latest.cutoff}" style="color:var(--accentInk)">${latest.cutoff}</b><span>latest cutoff, round #${latest.no} (${latest.cat}, ${latest.date.replace(/, \d{4}$/, '')})</span></div>
-    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>invitations in ${FEED.ytd.year}, ${FEED.ytd.rounds} rounds</span></div>
-    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>profiles in the pool${FEED.distributionAsOf ? ` (${FEED.distributionAsOf})` : ''}</span></div>
-    <div data-r="240"><b>${FEED.ytd.categories}</b><span>active categories in ${FEED.ytd.year}</span></div>
+    <div data-r="0"><b data-count="${latest.cutoff}" style="color:var(--accentInk)">${latest.cutoff}</b><span>${T('latest cutoff, round #{no} ({cat}, {date})', { no: latest.no, cat: latest.cat, date: latest.date.replace(/, \d{4}$/, '') })}</span></div>
+    <div data-r="80"><b data-count="${FEED.ytd.invitations}">${num(FEED.ytd.invitations)}</b><span>${T('invitations in {year}, {rounds} rounds', { year: FEED.ytd.year, rounds: FEED.ytd.rounds })}</span></div>
+    <div data-r="160"><b data-count="${FEED.poolTotal}">${num(FEED.poolTotal)}</b><span>${T('profiles in the pool{asOf}', { asOf: FEED.distributionAsOf ? ` (${FEED.distributionAsOf})` : '' })}</span></div>
+    <div data-r="240"><b>${FEED.ytd.categories}</b><span>${T('active categories in {year}', { year: FEED.ytd.year })}</span></div>
   </div>
 </section>
 
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">
   <div data-reveal style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:22px">
-      <div><h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">CRS cutoff trend</h2><p style="font-size:13px;color:var(--text2);margin:0">Minimum score by round — most recent 10 draws (left → right)</p></div>
-      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>General / CEC</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--catbar)"></span>Category &amp; provincial</span></div>
+      <div><h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">${T('CRS cutoff trend')}</h2><p style="font-size:13px;color:var(--text2);margin:0">${T('Minimum score by round — most recent 10 draws (left → right)')}</p></div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text2)"><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent)"></span>${T('General / CEC')}</span><span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:var(--catbar)"></span>${T('Category & provincial')}</span></div>
     </div>
     <div style="display:flex;align-items:flex-end;gap:12px;height:200px">${chart}</div>
   </div>
@@ -1535,30 +1535,30 @@ ${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the of
 
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px">
   <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px">
-    ${DRAW_FILTERS.map((c, i) => `<button class="filterchip${i === 0 ? ' on' : ''}" onclick="filterDraws('${c}',this)">${c}</button>`).join('')}
+    ${DRAW_FILTERS.map((c, i) => `<button class="filterchip${i === 0 ? ' on' : ''}" onclick="filterDraws('${c}',this)">${c === 'All' ? T('All') : c}</button>`).join('')}
   </div>
   <div class="drawscroll" style="background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden">
     <div class="drawinner" id="drawtable">
-      <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
+      <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>${T('Round')}</span><span>${T('Date')}</span><span>${T('Category')}</span><span style="text-align:right">${T('Invitations')}</span><span style="text-align:right">${T('Cutoff')}</span></div>
       ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">${DRAW_PAGE_NOS.has(d.no) ? `<a href="/draws/${d.no}" style="color:inherit">#${d.no}</a>` : `#${d.no}`}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Satoshi',sans-serif;font-size:19px;font-weight:900;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
-      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${feedDate()} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
+      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">${T('Last {n} rounds, mirrored from IRCC on {date} · in the app this table syncs the live IRCC feed with pull-to-refresh.', { n: ALL_DRAWS.length, date: feedDate() })}</div>
     </div>
   </div>
-  <div class="drawtypes"><span>Full history by round type:</span>${DRAW_CATS.map((c) => `<a href="/draws/${c.slug}">${c.name[0].toUpperCase()}${c.name.slice(1)}</a>`).join('')}</div>
+  <div class="drawtypes"><span>${T('Full history by round type:')}</span>${DRAW_CATS.map((c) => `<a href="/draws/${c.slug}">${c.name[0].toUpperCase()}${c.name.slice(1)}</a>`).join('')}</div>
 </section>
 
 <section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
   <div class="poolgrid" data-reveal style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
     <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
-      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">Pool composition</h2>
-      <p style="font-size:13px;color:var(--text2);margin:0 0 20px">Candidates by CRS range — a recent IRCC snapshot</p>
+      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">${T('Pool composition')}</h2>
+      <p style="font-size:13px;color:var(--text2);margin:0 0 20px">${T('Candidates by CRS range — a recent IRCC snapshot')}</p>
       <div style="display:flex;flex-direction:column;gap:16px">${POOL.map(([range, count, n]) => `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text2);font-weight:600">${range}</span><span style="color:var(--text);font-weight:900;font-family:'Satoshi',sans-serif">${count}</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:${Math.round((n / poolMax) * 100)}%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div></div>`).join('')}</div>
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:24px">
-      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">What the trends tell you</h2>
-      <p style="font-size:13px;color:var(--text2);margin:0 0 18px">Analytics in the app turn this into your personal odds</p>
+      <h2 style="font-family:'Satoshi',sans-serif;font-size:20px;font-weight:900;margin:0 0 4px">${T('What the trends tell you')}</h2>
+      <p style="font-size:13px;color:var(--text2);margin:0 0 18px">${T('Analytics in the app turn this into your personal odds')}</p>
       <div style="display:flex;flex-direction:column;gap:14px">${INSIGHTS.map(([ico, title, bodyt]) => `<div style="display:flex;gap:12px;align-items:flex-start"><span style="width:32px;height:32px;border-radius:9px;background:var(--accentSoft);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">${icon(ico, 17)}</span><div><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:2px">${title}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${bodyt}</div></div></div>`).join('')}</div>
-      <a class="link-accent" href="/analytics" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">Open draw analytics →</a>
+      <a class="link-accent" href="/analytics" style="display:inline-flex;align-items:center;gap:6px;margin-top:20px;font-size:14px;font-weight:600">${T('Open draw analytics →')}</a>
     </div>
   </div>
 </section>
@@ -1585,27 +1585,33 @@ const DRAW_PAGE_ROUNDS = HISTORY.filter((r) => r.date >= DRAW_PAGES_FROM);
 const DRAW_PAGE_NOS = new Set(DRAW_PAGE_ROUNDS.map((r) => r.number));
 // short category -> [slug, name in prose, what the round selects for]
 const DRAW_CAT_INFO = {
-  General: ['general', 'general', 'General rounds consider every candidate in the pool, whatever their program. Apart from nominee rounds, they usually have the highest cutoffs.'],
-  CEC: ['cec', 'Canadian Experience Class', 'Canadian Experience Class rounds invite only candidates eligible for the CEC: at least one year of skilled work in Canada in the last three years.'],
-  PNP: ['pnp', 'Provincial Nominee Program', 'Provincial Nominee Program rounds invite candidates who already hold a provincial or territorial nomination. Their scores include the 600 nomination points, so these cutoffs look high; without the nomination they are usually low.'],
-  French: ['french', 'French-language proficiency', 'French-language rounds invite candidates with French at NCLC 7 or higher in all four abilities, whatever their occupation. They have run regularly, with cutoffs well below general rounds.'],
-  Healthcare: ['healthcare', 'healthcare', 'Healthcare rounds invite candidates with recent work experience in an eligible healthcare or social services occupation (including the physician rounds). IRCC lists the occupations on its category-based selection page.'],
-  STEM: ['stem', 'STEM', 'STEM rounds invited candidates with recent work experience in an eligible science, technology, engineering or mathematics occupation.'],
-  Transport: ['transport', 'transport', 'Transport rounds invite candidates with recent work experience in an eligible transport occupation.'],
-  Trades: ['trades', 'trades', 'Trades rounds invite candidates with recent work experience in an eligible trade occupation, such as electricians, plumbers and carpenters.'],
-  Education: ['education', 'education', 'Education rounds invite candidates with recent work experience in an eligible education occupation, such as teachers and early childhood educators.'],
-  Agriculture: ['agriculture', 'agriculture and agri-food', 'Agriculture rounds invite candidates with recent work experience in an eligible agriculture or agri-food occupation.'],
-  Managers: ['senior-managers', 'senior manager', 'Senior manager rounds invite candidates with recent Canadian work experience as a senior manager.'],
-  Military: ['military', 'skilled military recruit', 'Skilled military recruit rounds invite candidates referred through Canadian Armed Forces recruitment.'],
+  General: ['general', 'general', T('General rounds consider every candidate in the pool, whatever their program. Apart from nominee rounds, they usually have the highest cutoffs.')],
+  CEC: ['cec', 'Canadian Experience Class', T('Canadian Experience Class rounds invite only candidates eligible for the CEC: at least one year of skilled work in Canada in the last three years.')],
+  PNP: ['pnp', 'Provincial Nominee Program', T('Provincial Nominee Program rounds invite candidates who already hold a provincial or territorial nomination. Their scores include the 600 nomination points, so these cutoffs look high; without the nomination they are usually low.')],
+  French: ['french', 'French-language proficiency', T('French-language rounds invite candidates with French at NCLC 7 or higher in all four abilities, whatever their occupation. They have run regularly, with cutoffs well below general rounds.')],
+  Healthcare: ['healthcare', 'healthcare', T('Healthcare rounds invite candidates with recent work experience in an eligible healthcare or social services occupation (including the physician rounds). IRCC lists the occupations on its category-based selection page.')],
+  STEM: ['stem', 'STEM', T('STEM rounds invited candidates with recent work experience in an eligible science, technology, engineering or mathematics occupation.')],
+  Transport: ['transport', 'transport', T('Transport rounds invite candidates with recent work experience in an eligible transport occupation.')],
+  Trades: ['trades', 'trades', T('Trades rounds invite candidates with recent work experience in an eligible trade occupation, such as electricians, plumbers and carpenters.')],
+  Education: ['education', 'education', T('Education rounds invite candidates with recent work experience in an eligible education occupation, such as teachers and early childhood educators.')],
+  Agriculture: ['agriculture', 'agriculture and agri-food', T('Agriculture rounds invite candidates with recent work experience in an eligible agriculture or agri-food occupation.')],
+  Managers: ['senior-managers', 'senior manager', T('Senior manager rounds invite candidates with recent Canadian work experience as a senior manager.')],
+  Military: ['military', 'skilled military recruit', T('Skilled military recruit rounds invite candidates referred through Canadian Armed Forces recruitment.')],
 };
 const DRAW_CATS = Object.entries(DRAW_CAT_INFO)
   .map(([cat, [slug, name, blurb]]) => ({ cat, slug, name, blurb, rounds: HISTORY.filter((r) => r.cat === cat) }))
   .filter((c) => c.rounds.length >= 2);
 const catOf = (cat) => DRAW_CATS.find((c) => c.cat === cat);
 const catName = (cat) => (catOf(cat) ? catOf(cat).name : DRAW_CAT_INFO[cat]?.[1] ?? cat);
-const signed = (v) => (v === 0 ? 'the same' : `${Math.abs(v)} point${Math.abs(v) === 1 ? '' : 's'} ${v > 0 ? 'higher' : 'lower'}`);
+const signed = (v) => {
+  if (v === 0) return T('the same');
+  const n = Math.abs(v);
+  const up = v > 0;
+  if (n === 1) return up ? T('1 point higher') : T('1 point lower');
+  return up ? T('{n} points higher', { n }) : T('{n} points lower', { n });
+};
 const daysBetween = (a, b) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 86400000);
-const ordinal = (n) => { const t = n % 100; if (t >= 11 && t <= 13) return `${n}th`; return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' })[n % 10] || 'th'}`; };
+const ordinal = (n) => { if (LANG === 'fr') return String(n); const t = n % 100; if (t >= 11 && t <= 13) return `${n}th`; return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' })[n % 10] || 'th'}`; };
 const drawLink = (r) => (DRAW_PAGE_NOS.has(r.number) ? `/draws/${r.number}` : '/draws');
 
 function drawPageMd(r) {
@@ -1621,69 +1627,69 @@ function drawPageMd(r) {
   const lines = [];
   if (prevSame) {
     const gap = daysBetween(r.date, prevSame.date);
-    lines.push(`The previous ${name} round, [#${prevSame.number}](${drawLink(prevSame)}) on ${fullDate(prevSame)}, cut off at ${prevSame.crs} with ${num(prevSame.size)} invitations. This round was ${signed(r.crs - prevSame.crs)}, ${gap} day${gap === 1 ? '' : 's'} later.`);
-  } else lines.push(`This was the first ${name} round in IRCC's published history.`);
-  if (prevAny && prevAny !== prevSame) lines.push(`The round before it overall was [#${prevAny.number}](${drawLink(prevAny)}) (${prevAny.label || prevAny.name}, ${shortDate(prevAny.date)}), with a cutoff of ${prevAny.crs}.`);
-  if (sameSince.length >= 3) lines.push(lower === 0 ? `It was the lowest ${name} cutoff of the ${sameSince.length} such rounds since 2023 up to that date.` : `Of the ${sameSince.length} ${name} rounds since 2023 up to that date, ${lower} had a lower cutoff.`);
-  lines.push(`It was the ${ordinal(ytd.length)} round of ${year}. By then IRCC had issued ${num(ytd.reduce((n, x) => n + x.size, 0))} invitations that year.`);
+    lines.push(T('The previous {name} round, [#{prev}]({link}) on {date}, cut off at {crs} with {n} invitations. This round was {signed}, {gap} {days} later.', { name, prev: prevSame.number, link: drawLink(prevSame), date: fullDate(prevSame), crs: prevSame.crs, n: num(prevSame.size), signed: signed(r.crs - prevSame.crs), gap, days: gap === 1 ? T('day') : T('days') }));
+  } else lines.push(T("This was the first {name} round in IRCC's published history.", { name }));
+  if (prevAny && prevAny !== prevSame) lines.push(T('The round before it overall was [#{prev}]({link}) ({label}, {date}), with a cutoff of {crs}.', { prev: prevAny.number, link: drawLink(prevAny), label: prevAny.label || prevAny.name, date: shortDate(prevAny.date), crs: prevAny.crs }));
+  if (sameSince.length >= 3) lines.push(lower === 0 ? T('It was the lowest {name} cutoff of the {n} such rounds since 2023 up to that date.', { name, n: sameSince.length }) : T('Of the {n} {name} rounds since 2023 up to that date, {lower} had a lower cutoff.', { n: sameSince.length, name, lower }));
+  lines.push(T('It was round {n} of {year}. By then IRCC had issued {total} invitations that year.', { n: ordinal(ytd.length), year, total: num(ytd.reduce((n, x) => n + x.size, 0)) }));
   const pool = r.pool && r.pool.length
-    ? `## The pool at the time
+    ? `## ${T('The pool at the time')}
 
-IRCC's snapshot of the pool${r.poolAsOf ? ` on ${r.poolAsOf}` : ''}${r.poolTotal ? `: ${num(r.poolTotal)} profiles in total` : ''}.
+${T("IRCC's snapshot of the pool{asOf}{total}.", { asOf: r.poolAsOf ? ` on ${r.poolAsOf}` : '', total: r.poolTotal ? `: ${num(r.poolTotal)} profiles in total` : '' })}
 
-${mdTable(['CRS score', 'Profiles'], r.pool.map((b) => [b.label, num(b.count)]))}
+${mdTable([T('CRS score'), T('Profiles')], r.pool.map((b) => [b.label, num(b.count)]))}
 `
     : '';
-  return `# Express Entry draw #${r.number}: ${r.label || r.name}
+  return `# ${T('Express Entry draw #{n}: {label}', { n: r.number, label: r.label || r.name })}
 
-On ${fullDate(r)}, IRCC invited **${num(r.size)}** candidates in a ${r.label || r.name} round. The lowest score invited, the cutoff, was **${r.crs}**.
+${T('On {date}, IRCC invited **{n}** candidates in a {label} round. The lowest score invited, the cutoff, was **{crs}**.', { date: fullDate(r), n: num(r.size), label: r.label || r.name, crs: r.crs })}
 
-## Key facts
+## ${T('Key facts')}
 
-${mdTable(['Detail', 'Value'], [
-    ['Round', `#${r.number}`],
-    ['Date', fullDate(r)],
-    ['Round type', r.label || r.name],
-    ['Invitations', num(r.size)],
-    ['CRS cutoff', String(r.crs)],
-    ...(r.tieBreak ? [['Tie-break', `Profiles at ${r.crs} submitted before ${r.tieBreak}`]] : []),
-    ...(r.programs ? [['Programs', r.programs]] : []),
+${mdTable([T('Detail'), T('Value')], [
+    [T('Round'), `#${r.number}`],
+    [T('Date'), fullDate(r)],
+    [T('Round type'), r.label || r.name],
+    [T('Invitations'), num(r.size)],
+    [T('CRS cutoff'), String(r.crs)],
+    ...(r.tieBreak ? [[T('Tie-break'), T('Profiles at {crs} submitted before {date}', { crs: r.crs, date: r.tieBreak })]] : []),
+    ...(r.programs ? [[T('Programs'), r.programs]] : []),
   ])}
 
-## How it compares
+## ${T('How it compares')}
 
 ${lines.join('\n\n')}
 
 ${pool}
-## What ${/^[aeiou]/i.test(name) ? 'an' : 'a'} ${name} round means
+## ${T('What {a} {name} round means', { a: /^[aeiou]/i.test(name) ? T('an') : T('a'), name })}
 
-${c ? c.blurb : (DRAW_CAT_INFO[r.cat]?.[2] ?? DRAW_CAT_INFO.General[2])} See [Express Entry draw types](/express-entry-draws) for how the round types differ.
+${c ? c.blurb : (DRAW_CAT_INFO[r.cat]?.[2] ?? DRAW_CAT_INFO.General[2])} ${T('See [Express Entry draw types](/express-entry-draws) for how the round types differ.')}
 
-## Where does your score stand?
+## ${T('Where does your score stand?')}
 
-The [CRS calculator](/crs-calculator) works out your score from your test results and profile, and shows how far it is from the last Canadian Experience Class cutoff.
+${T('The [CRS calculator](/crs-calculator) works out your score from your test results and profile, and shows how far it is from the last Canadian Experience Class cutoff.')}
 
-${c ? `[Every ${name} round](/draws/${c.slug}) · ` : ''}[All recent draws](/draws)
+${c ? `[${T('Every {name} round', { name })}](/draws/${c.slug}) · ` : ''}[${T('All recent draws')}](/draws)
 `;
 }
 
 function catChart(rows) {
   const pts = rows.filter((r) => r.date >= DRAW_PAGES_FROM).slice().reverse();
   if (pts.length < 2) return '';
-  const W = 1000, H = 260, L = 48, R = 16, T = 16, B = 34;
+  const W = 1000, H = 260, L = 48, R = 16, TB = 16, B = 34;
   const t0 = Date.parse(pts[0].date), t1 = Date.parse(pts[pts.length - 1].date);
   const lo = Math.floor((Math.min(...pts.map((p) => p.crs)) - 20) / 50) * 50, hi = Math.ceil((Math.max(...pts.map((p) => p.crs)) + 20) / 50) * 50;
   const x = (d) => L + ((Date.parse(d) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
-  const y = (v) => T + (1 - (v - lo) / Math.max(1, hi - lo)) * (H - T - B);
+  const y = (v) => TB + (1 - (v - lo) / Math.max(1, hi - lo)) * (H - TB - B);
   const step = hi - lo > 300 ? 100 : 50;
   const ticks = []; for (let v = lo; v <= hi; v += step) ticks.push(v);
   const years = [...new Set(pts.map((p) => p.date.slice(0, 4)))];
-  return `<figure class="catchart"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cutoff of each round since 2023" style="display:block;overflow:visible">
+  return `<figure class="catchart"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${T('Cutoff of each round since 2023')}" style="display:block;overflow:visible">
 ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hairline)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="13" fill="var(--muted)">${v}</text>`).join('')}
 ${years.map((yr) => { const d = `${yr}-01-01` < pts[0].date ? pts[0].date : `${yr}-01-01`; return `<text x="${x(d)}" y="${H - 8}" font-size="13" fill="var(--muted)">${yr}</text>`; }).join('')}
 <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map((p) => `${x(p.date).toFixed(1)},${y(p.crs).toFixed(1)}`).join(' ')}"/>
 ${pts.map((p) => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.crs).toFixed(1)}" r="4" fill="var(--accent)"><title>#${p.number}, ${shortDate(p.date)}: ${p.crs}</title></circle>`).join('')}
-</svg><figcaption>Cutoff of each round since 2023</figcaption></figure>`;
+</svg><figcaption>${T('Cutoff of each round since 2023')}</figcaption></figure>`;
 }
 
 function catPageMd(c) {
@@ -1696,30 +1702,30 @@ function catPageMd(c) {
   const lowest = rows.reduce((a, b) => (b.crs < a.crs ? b : a));
   const others = DRAW_CATS.filter((x) => x !== c);
   const Name = `${c.name[0].toUpperCase()}${c.name.slice(1)}`;
-  return `# ${Name} Express Entry draws
+  return `# ${T('{name} Express Entry draws', { name: Name })}
 
-IRCC has held **${rows.length}** ${c.name} rounds since ${fullDate(first)}, inviting **${num(rows.reduce((n, r) => n + r.size, 0))}** candidates. The latest, [#${latest.number}](${drawLink(latest)}) on ${fullDate(latest)}, cut off at **${latest.crs}** with ${num(latest.size)} invitations.
+${T('IRCC has held **{n}** {name} rounds since {date}, inviting **{total}** candidates. The latest, [#{no}]({link}) on {latest}, cut off at **{crs}** with {size} invitations.', { n: rows.length, name: c.name, date: fullDate(first), total: num(rows.reduce((n, r) => n + r.size, 0)), no: latest.number, link: drawLink(latest), latest: fullDate(latest), crs: latest.crs, size: num(latest.size) })}
 
-${mdTable(['Measure', 'Value'], [
-    [`Rounds in ${YEAR}`, String(thisYear.length)],
-    [`Invitations in ${YEAR}`, num(thisYear.reduce((n, r) => n + r.size, 0))],
-    ...(last12.length ? [['Average cutoff, last 12 months', `${avg(last12)} (${last12.length} round${last12.length === 1 ? '' : 's'})`], ['Range, last 12 months', `${Math.min(...last12.map((r) => r.crs))} to ${Math.max(...last12.map((r) => r.crs))}`]] : []),
-    ['Lowest cutoff on record', `${lowest.crs} (#${lowest.number}, ${shortDate(lowest.date)})`],
+${mdTable([T('Measure'), T('Value')], [
+    [T('Rounds in {year}', { year: YEAR }), String(thisYear.length)],
+    [T('Invitations in {year}', { year: YEAR }), num(thisYear.reduce((n, r) => n + r.size, 0))],
+    ...(last12.length ? [[T('Average cutoff, last 12 months'), `${avg(last12)} (${last12.length} round${last12.length === 1 ? '' : 's'})`], [T('Range, last 12 months'), `${Math.min(...last12.map((r) => r.crs))} to ${Math.max(...last12.map((r) => r.crs))}`]] : []),
+    [T('Lowest cutoff on record'), `${lowest.crs} (#${lowest.number}, ${shortDate(lowest.date)})`],
   ])}
 
 ${catChart(rows)}
 
-## What these rounds are
+## ${T('What these rounds are')}
 
-${c.blurb}${c.cat === 'Trades' ? ' This history also includes the earlier Federal Skilled Trades Program rounds.' : ''} See [Express Entry draw types](/express-entry-draws) for how the round types differ, and the [CRS calculator](/crs-calculator) to see where your score stands.
+${c.blurb}${c.cat === 'Trades' ? T(' This history also includes the earlier Federal Skilled Trades Program rounds.') : ''} ${T('See [Express Entry draw types](/express-entry-draws) for how the round types differ, and the [CRS calculator](/crs-calculator) to see where your score stands.')}
 
-## Every ${c.name} round
+## ${T('Every {name} round', { name: c.name })}
 
-${mdTable(['Round', 'Date', 'Invitations', 'Cutoff'], rows.map((r) => [DRAW_PAGE_NOS.has(r.number) ? `[#${r.number}](/draws/${r.number})` : `#${r.number}`, shortDate(r.date), num(r.size), String(r.crs)]))}
+${mdTable([T('Round'), T('Date'), T('Invitations'), T('Cutoff')], rows.map((r) => [DRAW_PAGE_NOS.has(r.number) ? `[#${r.number}](/draws/${r.number})` : `#${r.number}`, shortDate(r.date), num(r.size), String(r.crs)]))}
 
-## Other round types
+## ${T('Other round types')}
 
-${others.map((x) => `- [${x.name[0].toUpperCase()}${x.name.slice(1)} rounds](/draws/${x.slug}) (${x.rounds.length})`).join('\n')}
+${others.map((x) => `- [${T('{name} rounds', { name: `${x.name[0].toUpperCase()}${x.name.slice(1)}` })}](/draws/${x.slug}) (${x.rounds.length})`).join('\n')}
 `;
 }
 
@@ -1738,7 +1744,7 @@ function drawDocPage({ path, title, description, md, meta, jsonld, extra = '' })
   const [h1, ...rest] = html.split(/(?<=<\/h1>)/);
   const body = `${nav('draws', 'calc')}
 <div style="min-height:100vh;position:relative">
-<main class="doc"><article class="doc-card"><nav class="guide-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/draws">Draws</a></nav>${h1}<p class="guide-meta">${meta}</p>${rest.join('')}${extra}</article></main>
+<main class="doc"><article class="doc-card"><nav class="guide-crumbs" aria-label="${T('Breadcrumb')}"><a href="/">${T('Home')}</a> / <a href="/draws">${T('Draws')}</a></nav>${h1}<p class="guide-meta">${meta}</p>${rest.join('')}${extra}</article></main>
 ${footerFull()}
 </div>`;
   return shell({ title, description, path, jsonld, body, twin: false });
@@ -1748,15 +1754,15 @@ function drawPage(r) {
   const i = HISTORY.indexOf(r);
   const newer = HISTORY.slice(0, i).reverse().find((x) => DRAW_PAGE_NOS.has(x.number));
   const older = HISTORY.slice(i + 1).find((x) => DRAW_PAGE_NOS.has(x.number));
-  let description = `Round #${r.number} on ${fullDate(r)} invited ${num(r.size)} candidates (${r.label || r.name}) with a CRS cutoff of ${r.crs}. Tie-break, pool and how it compares.`;
-  if (description.length > 160) description = `Round #${r.number} on ${fullDate(r)}: ${num(r.size)} ${r.cat} invitations, CRS cutoff ${r.crs}. Tie-break, pool and how it compares.`;
-  const pager = `<nav class="drawpager" aria-label="Other draws">${older ? `<a href="/draws/${older.number}">← Draw #${older.number}</a>` : '<span></span>'}${newer ? `<a href="/draws/${newer.number}">Draw #${newer.number} →</a>` : '<span></span>'}</nav>`;
+  let description = T('Round #{n} on {date} invited {size} candidates ({label}) with a CRS cutoff of {crs}. Tie-break, pool and how it compares.', { n: r.number, date: fullDate(r), size: num(r.size), label: r.label || r.name, crs: r.crs });
+  if (description.length > 160) description = T('Round #{n} on {date}: {size} {cat} invitations, CRS cutoff {crs}. Tie-break, pool and how it compares.', { n: r.number, date: fullDate(r), size: num(r.size), cat: r.cat, crs: r.crs });
+  const pager = `<nav class="drawpager" aria-label="${T('Other draws')}">${older ? `<a href="/draws/${older.number}">← ${T('Draw #{n}', { n: older.number })}</a>` : '<span></span>'}${newer ? `<a href="/draws/${newer.number}">${T('Draw #{n}', { n: newer.number })} →</a>` : '<span></span>'}</nav>`;
   return drawDocPage({
     path: `/draws/${r.number}`,
-    title: `Express Entry Draw #${r.number} (${shortDate(r.date)}): ${r.cat}, CRS ${r.crs}`,
+    title: T('Express Entry Draw #{n} ({date}): {cat}, CRS {crs}', { n: r.number, date: shortDate(r.date), cat: r.cat, crs: r.crs }),
     description,
     md: drawPageMd(r),
-    meta: `${fullDate(r)} · from IRCC's published results`,
+    meta: T('{date} · from IRCC\'s published results', { date: fullDate(r) }),
     jsonld: {
       '@context': 'https://schema.org',
       '@graph': [
@@ -1773,10 +1779,10 @@ function catPage(c) {
   const label = { cec: 'CEC', pnp: 'PNP', general: 'General', french: 'French', 'senior-managers': 'Senior Manager', agriculture: 'Agriculture' }[c.slug] || Name;
   return drawDocPage({
     path: `/draws/${c.slug}`,
-    title: `${label} Express Entry Draws ${YEAR}: Every Round & Cutoff`,
-    description: `Every ${c.name} Express Entry round from IRCC: ${c.rounds.length} rounds with cutoffs, invitations and the trend. Latest: #${c.rounds[0].number}, CRS ${c.rounds[0].crs}.`,
+    title: T('{label} Express Entry Draws {year}: Every Round & Cutoff', { label: T(label), year: YEAR }),
+    description: T('Every {name} Express Entry round from IRCC: {n} rounds with cutoffs, invitations and the trend. Latest: #{no}, CRS {crs}.', { name: c.name, n: c.rounds.length, no: c.rounds[0].number, crs: c.rounds[0].crs }),
     md: catPageMd(c),
-    meta: `Updated ${fullDate(c.rounds[0])} from IRCC's published results`,
+    meta: T('Updated {date} from IRCC\'s published results', { date: fullDate(c.rounds[0]) }),
     jsonld: draw3Crumbs(`/draws/${c.slug}`, `${Name} draws`),
   });
 }
@@ -1831,12 +1837,12 @@ const POOL_BANDS = FEED.pool.map((b) => {
 });
 
 function cutoffChart() {
-  const W = 1000, H = 330, L = 52, R = 18, T = 18, B = 40;
+  const W = 1000, H = 330, L = 52, R = 18, TB = 18, B = 40;
   const t0 = Date.parse(ANALYTICS.first.iso), t1 = Date.parse(DRAWS[0].iso);
   const scores = DRAWS.map((d) => d.crs);
   const lo = Math.floor((Math.min(...scores) - 20) / 100) * 100, hi = Math.ceil((Math.max(...scores) + 20) / 100) * 100;
   const x = (iso) => L + ((Date.parse(iso) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
-  const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const y = (v) => TB + (1 - (v - lo) / (hi - lo)) * (H - TB - B);
   const ticks = [];
   for (let v = lo; v <= hi; v += 100) ticks.push(v);
   const months = [];
@@ -1854,30 +1860,30 @@ function analyticsPage() {
   const maxInv = Math.max(...A.cats.map((c) => c.invited));
   const tool = `<div data-reveal style="${resCard}">
     <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end;justify-content:space-between;margin-bottom:22px">
-      <div>${resH2('Where would your score land?', 'Type a CRS score. Each row counts the recent rounds in that category you would have cleared. Nothing leaves your browser.')}</div>
-      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--text2)">Your CRS score<input id="an-score" type="number" inputmode="numeric" min="0" max="1200" value="${BENCHMARK.crs}" style="width:150px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:22px;font-weight:900;font-family:'Satoshi',sans-serif"></label>
+      <div>${resH2(T('Where would your score land?'), T('Type a CRS score. Each row counts the recent rounds in that category you would have cleared. Nothing leaves your browser.'))}</div>
+      <label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--text2)">${T('Your CRS score')}<input id="an-score" type="number" inputmode="numeric" min="0" max="1200" value="${BENCHMARK.crs}" style="width:150px;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--input);color:var(--text);font-size:22px;font-weight:900;font-family:'Satoshi',sans-serif"></label>
     </div>
     <p id="an-pool" style="font-size:15px;color:var(--text);margin:0 0 18px"></p>
-    <div style="display:flex;flex-direction:column;gap:14px">${A.cats.map((c, i) => `<div class="an-row" data-i="${i}"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:6px"><span style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:${c.dot}"></span>${c.cat}${c.cat === 'PNP' ? '<span style="font-weight:500;color:var(--muted)">(with a nomination, +600)</span>' : ''}</span><span class="an-out" style="color:var(--text2);white-space:nowrap"></span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div class="an-bar" style="height:100%;width:0;border-radius:5px;background:${c.dot};transition:width .4s ease"></div></div></div>`).join('')}</div>
-    <p style="font-size:12.5px;color:var(--muted);margin:18px 0 0">Category rounds only invite people eligible for that category (French ability, a healthcare or transport job, and so on). Ties at the cutoff are broken by profile date. An estimate, not a prediction.</p>
+    <div style="display:flex;flex-direction:column;gap:14px">${A.cats.map((c, i) => `<div class="an-row" data-i="${i}"><div style="display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:6px"><span style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:${c.dot}"></span>${c.cat}${c.cat === 'PNP' ? '<span style="font-weight:500;color:var(--muted)">' + T('(with a nomination, +600)') + '</span>' : ''}</span><span class="an-out" style="color:var(--text2);white-space:nowrap"></span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div class="an-bar" style="height:100%;width:0;border-radius:5px;background:${c.dot};transition:width .4s ease"></div></div></div>`).join('')}</div>
+    <p style="font-size:12.5px;color:var(--muted);margin:18px 0 0">${T('Category rounds only invite people eligible for that category (French ability, a healthcare or transport job, and so on). Ties at the cutoff are broken by profile date. An estimate, not a prediction.')}</p>
   </div>`;
 
   const body = `${nav('analytics', 'app')}
 <div style="min-height:100vh;position:relative">
-${pageHero('Express Entry draws,', 'by the numbers.', `Cutoffs, cadence and invitations for every category, worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to ${DRAWS[0].date}). Mirrored from IRCC as of ${feedDate()}.`)}
+${pageHero(T('Express Entry draws,'), T('by the numbers.'), T('Cutoffs, cadence and invitations for every category, worked out from the last {n} rounds IRCC published ({from} to {to}). Mirrored from IRCC as of {date}.', { n: DRAWS.length, from: ANALYTICS.first.date, to: DRAWS[0].date, date: feedDate() }))}
 <section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
   <div class="s5-live">
-    <div data-r="0"><b data-count="${A.invited}">${num(A.invited)}</b><span>invitations across these ${DRAWS.length} rounds</span></div>
-    <div data-r="80"><b>${A.avgGap} days</b><span>between rounds on average; the longest gap was ${A.longestGap} days</span></div>
-    <div data-r="160"><b data-count="${A.lowest.crs}" style="color:var(--accentInk)">${A.lowest.crs}</b><span>lowest cutoff, a ${A.lowest.cat} round (${A.lowest.date.replace(/, \d{4}$/, '')})</span></div>
-    <div data-r="240"><b>${A.cats.length}</b><span>categories invited in this window</span></div>
+    <div data-r="0"><b data-count="${A.invited}">${num(A.invited)}</b><span>${T('invitations across these {n} rounds', { n: DRAWS.length })}</span></div>
+    <div data-r="80"><b>${A.avgGap} ${T('days')}</b><span>${T('between rounds on average; the longest gap was {n} days', { n: A.longestGap })}</span></div>
+    <div data-r="160"><b data-count="${A.lowest.crs}" style="color:var(--accentInk)">${A.lowest.crs}</b><span>${T('lowest cutoff, a {cat} round ({date})', { cat: A.lowest.cat, date: A.lowest.date.replace(/, \d{4}$/, '') })}</span></div>
+    <div data-r="240"><b>${A.cats.length}</b><span>${T('categories invited in this window')}</span></div>
   </div>
 </section>
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">${tool}</section>
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">
   <div data-reveal style="${resCard}">
     <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px">
-      <div>${resH2('Every cutoff, over time', 'One dot per round. Hover or tap a dot for the round.')}</div>
+      <div>${resH2(T('Every cutoff, over time'), T('One dot per round. Hover or tap a dot for the round.'))}</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px 14px;font-size:12px;color:var(--text2)">${A.cats.map((c) => `<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:${c.dot}"></span>${c.cat}</span>`).join('')}</div>
     </div>
     ${cutoffChart()}
@@ -1886,15 +1892,15 @@ ${pageHero('Express Entry draws,', 'by the numbers.', `Cutoffs, cadence and invi
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 40px">
   <div class="poolgrid" data-reveal style="display:grid;grid-template-columns:1.35fr 1fr;gap:20px">
     <div style="${resCard};padding:0;overflow:hidden">
-      <div style="padding:24px 24px 6px">${resH2('Cutoffs by category', `Lowest, average and highest cutoff in the last ${DRAWS.length} rounds`)}</div>
-      <div class="drawscroll"><table class="res-table"><thead><tr><th>Category</th><th>Rounds</th><th>Low</th><th>Avg</th><th>High</th><th>Latest</th></tr></thead><tbody>
+      <div style="padding:24px 24px 6px">${resH2(T('Cutoffs by category'), T('Lowest, average and highest cutoff in the last {n} rounds', { n: DRAWS.length }))}</div>
+      <div class="drawscroll"><table class="res-table"><thead><tr><th>${T('Category')}</th><th>${T('Rounds')}</th><th>${T('Low')}</th><th>${T('Avg')}</th><th>${T('High')}</th><th>${T('Latest')}</th></tr></thead><tbody>
       ${A.cats.map((c) => `<tr><td><span style="display:inline-flex;align-items:center;gap:8px;font-weight:700;color:var(--text)"><span style="width:9px;height:9px;border-radius:50%;background:${c.dot}"></span>${c.cat}</span></td><td>${c.rounds}</td><td>${c.min}</td><td><b>${c.avg}</b></td><td>${c.max}</td><td>${c.last.date.replace(/, \d{4}$/, '')}</td></tr>`).join('')}
       </tbody></table></div>
     </div>
     <div style="${resCard}">
-      ${resH2('Invitations by category', `Share of the ${num(A.invited)} invitations`)}
+      ${resH2(T('Invitations by category'), T('Share of the {n} invitations', { n: num(A.invited) }))}
       <div style="display:flex;flex-direction:column;gap:14px">${A.cats.map((c) => `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--text2);font-weight:600">${c.cat}</span><span style="color:var(--text);font-weight:900">${num(c.invited)}</span></div><div style="height:8px;background:var(--bg3);border-radius:5px;overflow:hidden"><div style="height:100%;border-radius:5px;width:${Math.max(2, Math.round((c.invited / maxInv) * 100))}%;background:${c.dot}"></div></div></div>`).join('')}</div>
-      <p style="font-size:13px;color:var(--text2);margin:22px 0 0">The app's Analytics tab turns these trends into your own odds, forecast bands and the levers worth the most points. <a class="link-accent" href="/draws">See every round →</a></p>
+      <p style="font-size:13px;color:var(--text2);margin:22px 0 0">${T("The app's Analytics tab turns these trends into your own odds, forecast bands and the levers worth the most points.")} <a class="link-accent" href="/draws">${T('See every round →')}</a></p>
     </div>
   </div>
 </section>
@@ -1909,10 +1915,10 @@ ${footerFull()}
     var s=Math.max(0,Math.min(1200,parseInt(input.value,10)||0)), above=0;
     BANDS.forEach(function(b){ if(b[0]>s) above+=b[2]; else if(b[1]>s) above+=b[2]*(b[1]-s)/(b[1]-b[0]+1); });
     var pct=Math.max(0,Math.min(100,Math.round((1-above/TOTAL)*100)));
-    pool.innerHTML='A score of <b>'+s+'</b> sits above roughly <b>'+pct+'%</b> of the '+TOTAL.toLocaleString('${LOCALE}')+' profiles in the pool.';
+    pool.innerHTML='${T('A score of <b>{s}</b> sits above roughly <b>{pct}%</b> of the {total} profiles in the pool.', { s: "'+s+'", pct: "'+pct+'", total: "'+TOTAL.toLocaleString('${LOCALE}')+'" })}';
     rows.forEach(function(r){
       var c=CATS[+r.getAttribute('data-i')], eff=c.cat==='PNP'?s+600:s, n=c.scores.filter(function(v){return v<=eff}).length;
-      r.querySelector('.an-out').textContent='cleared '+n+' of '+c.rounds+' round'+(c.rounds===1?'':'s');
+      r.querySelector('.an-out').textContent='${jsStr(T('cleared {n} of {rounds}', { n: "'+n+'", rounds: "'+c.rounds+'" }))}${LANG === 'en' ? "'+(c.rounds===1?' round':' rounds')+'" : ''}';
       r.querySelector('.an-bar').style.width=Math.round(n/c.rounds*100)+'%';
     });
   }
@@ -1931,43 +1937,43 @@ const PT = APPLICATION_CATEGORIES.map((c) => ({
 }));
 const PT_TYPES = PT.flatMap((c) => c.types.map((t) => ({ ...t, category: c.label })));
 const ptType = (id) => PT_TYPES.find((t) => t.id === id);
-const fmtMonths = (m) => (m >= 24 && m % 12 === 0 ? `${m / 12} years` : `${m} month${m === 1 ? '' : 's'}`);
+const fmtMonths = (m) => (m >= 24 && m % 12 === 0 ? T('{n} years', { n: m / 12 }) : T(m === 1 ? '1 month' : '{n} months', { n: m }));
 
 function processingPage() {
   const maxM = Math.max(...PT_TYPES.map((t) => t.months));
   const statOf = (id, label) => {
     const t = ptType(id);
-    return t ? `<b>${fmtMonths(t.months)}</b><span>${label}${t.peopleWaiting ? `, ${num(t.peopleWaiting)} waiting` : ''}</span>` : '';
+    return t ? `<b>${fmtMonths(t.months)}</b><span>${label}${t.peopleWaiting ? `, ${num(t.peopleWaiting)} ${T('waiting')}` : ''}</span>` : '';
   };
   const estimator = `<div data-reveal style="${resCard}">
-    ${resH2('When should I hear back?', 'Pick your application and the date IRCC received it. The estimate uses IRCC’s current published time; nothing leaves your browser.')}
+    ${resH2(T('When should I hear back?'), T('Pick your application and the date IRCC received it. The estimate uses IRCC’s current published time; nothing leaves your browser.'))}
     <div class="fields" style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:22px">
-      <label style="${LBL}">Application<select id="pt-type" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
-      <label style="${LBL}">Date received<input id="pt-date" type="hidden" data-datepicker data-max="today" style="${INP}"></label>
+      <label style="${LBL}">${T('Application')}<select id="pt-type" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
+      <label style="${LBL}">${T('Date received')}<input id="pt-date" type="hidden" data-datepicker data-max="today" style="${INP}"></label>
     </div>
     <div id="pt-out"></div>
   </div>`;
 
   const body = `${nav('processing', 'app')}
 <div style="min-height:100vh;position:relative">
-${pageHero('IRCC processing times,', 'in one place.', `How long IRCC is taking right now for permanent residence, family sponsorship, citizenship and more, mirrored from IRCC’s published figures as of ${PT_FEED.updated}. IRCC’s number is the time it took to finish 80% of recent applications.`)}
+${pageHero(T('IRCC processing times,'), T('in one place.'), T('How long IRCC is taking right now for permanent residence, family sponsorship, citizenship and more, mirrored from IRCC’s published figures as of {date}. IRCC’s number is the time it took to finish 80% of recent applications.', { date: PT_FEED.updated }))}
 <section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
   <div class="s5-live">
-    <div data-r="0">${statOf('ee_cec', 'Canadian Experience Class')}</div>
-    <div data-r="80">${statOf('ee_fsw', 'Federal Skilled Worker')}</div>
-    <div data-r="160">${statOf('ee_pnp', 'PNP through Express Entry')}</div>
-    <div data-r="240">${statOf('citizenship', 'Citizenship grant')}</div>
+    <div data-r="0">${statOf('ee_cec', T('Canadian Experience Class'))}</div>
+    <div data-r="80">${statOf('ee_fsw', T('Federal Skilled Worker'))}</div>
+    <div data-r="160">${statOf('ee_pnp', T('PNP through Express Entry'))}</div>
+    <div data-r="240">${statOf('citizenship', T('Citizenship grant'))}</div>
   </div>
 </section>
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 8px">${estimator}</section>
 <section style="max-width:1080px;margin:0 auto;padding:32px 24px 40px;display:flex;flex-direction:column;gap:20px">
   ${PT.map((c) => `<div data-reveal style="${resCard};padding:0;overflow:hidden">
     <h2 style="font-size:19px;padding:20px 24px 12px;margin:0">${c.label}</h2>
-    ${c.types.map((t) => `<div class="pt-row"><div><div style="font-weight:700;color:var(--text);font-size:15px">${t.label}</div><div style="font-size:12.5px;color:var(--muted)">${[t.method, t.peopleWaiting ? `${num(t.peopleWaiting)} people waiting` : '', t.varies ? 'varies by country' : '', t.live ? '' : 'app estimate'].filter(Boolean).join(' · ') || '&nbsp;'}</div></div><div class="pt-bar"><div style="width:${Math.max(2, Math.round((t.months / maxM) * 100))}%"></div></div><div class="pt-m">${fmtMonths(t.months)}</div></div>`).join('')}
+    ${c.types.map((t) => `<div class="pt-row"><div><div style="font-weight:700;color:var(--text);font-size:15px">${t.label}</div><div style="font-size:12.5px;color:var(--muted)">${[t.method, t.peopleWaiting ? `${num(t.peopleWaiting)} ${T('people waiting')}` : '', t.varies ? T('varies by country') : '', t.live ? '' : T('app estimate')].filter(Boolean).join(' · ') || '&nbsp;'}</div></div><div class="pt-bar"><div style="width:${Math.max(2, Math.round((t.months / maxM) * 100))}%"></div></div><div class="pt-m">${fmtMonths(t.months)}</div></div>`).join('')}
   </div>`).join('')}
-  <p style="font-size:13px;color:var(--muted);margin:4px 4px 0">Times marked “app estimate” are not in IRCC’s published table and use the app’s typical figure. Country-specific programs vary widely; check canada.ca for your visa office. The app tracks your own file against these times and alerts you when they change.</p>
+  <p style="font-size:13px;color:var(--muted);margin:4px 4px 0">${T('Times marked “app estimate” are not in IRCC’s published table and use the app’s typical figure. Country-specific programs vary widely; check canada.ca for your visa office. The app tracks your own file against these times and alerts you when they change.')}</p>
 </section>
-${s5End('Track your file to the decision.')}
+${s5End(T('Track your file to the decision.'))}
 ${footerFull()}
 </div>
 <script>
@@ -1983,8 +1989,10 @@ ${footerFull()}
     var start=new Date(date.value+'T12:00:00'), end=add(start,t.months);
     var pct=Math.max(0,Math.min(100,Math.round((today-start)/(end-start)*100)));
     var left=Math.round((end-today)/864e5);
-    out.innerHTML='<div class="pt-res"><div><div class="klabel">Estimated decision</div><div class="pt-big">'+fmt(end)+'</div><div style="color:var(--text2);font-size:14px">'+(left>0?'about '+(left>60?Math.round(left/30.44)+' months':left+' days')+' from now':'past the typical time; most files are decided by now')+(t.varies?' · varies by country':'')+'</div></div><div style="min-width:0"><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px"><span>'+pct+'% of the typical time</span><span>'+t.months+' months</span></div><div class="pt-prog"><div style="width:'+pct+'%"></div></div></div></div>'
-      +'<ol class="pt-stages">'+t.stages.map(function(s){ var at=add(start,t.months*s[1]); return '<li class="'+(at<=today?'done':'')+'"><b>'+s[0]+'</b><span>'+(s[1]===0?fmt(start):'from around '+fmt(at))+'</span></li>'; }).join('')+'</ol>';
+    var U={ about:'${jsStr(T('about {n} {u} from now', { n: "'+n+'", u: "'+u+'" }))}', m1:'${jsStr(T('month'))}', m:'${jsStr(T('months'))}', d1:'${jsStr(T('day'))}', d:'${jsStr(T('days'))}' };
+    var mm=Math.round(left/30.44), u = left>60 ? (mm===1?U.m1:U.m) : (left===1?U.d1:U.d), nn = left>60?mm:left;
+    out.innerHTML='<div class="pt-res"><div><div class="klabel">${T('Estimated decision')}</div><div class="pt-big">'+fmt(end)+'</div><div style="color:var(--text2);font-size:14px">'+(left>0?U.about.replace("'+n+'",nn).replace("'+u+'",u):'${jsStr(T('past the typical time; most files are decided by now'))}')+(t.varies?' · ${T('varies by country')}':'')+'</div></div><div style="min-width:0"><div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:6px"><span>'+pct+'% ${T('of the typical time')}</span><span>'+t.months+' ${jsStr(T('months'))}</span></div><div class="pt-prog"><div style="width:'+pct+'%"></div></div></div></div>'
+      +'<ol class="pt-stages">'+t.stages.map(function(s){ var at=add(start,t.months*s[1]); return '<li class="'+(at<=today?'done':'')+'"><b>'+s[0]+'</b><span>'+(s[1]===0?fmt(start):'${jsStr(T('from around {date}', { date: "'+fmt(at)+'" }))}')+'</span></li>'; }).join('')+'</ol>';
   }
   sel.addEventListener('change',run); date.addEventListener('input',run); run();
 })();
@@ -1997,22 +2005,22 @@ function checklistsPage() {
   const total = (p) => p.sections.reduce((n, s) => n + s.items.length, 0);
   const body = `${nav('checklists', 'app')}
 <div style="min-height:100vh;position:relative">
-${pageHero('Document checklists for', 'every program.', 'What to gather for Express Entry, provincial nominee, family sponsorship, study, work and citizenship applications. Tick items off as you go; your progress stays in this browser.')}
+${pageHero(T('Document checklists for'), T('every program.'), T('What to gather for Express Entry, provincial nominee, family sponsorship, study, work and citizenship applications. Tick items off as you go; your progress stays in this browser.'))}
 <section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
   <div class="calctabs ck-tabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px">${CHECKLIST_PROGRAMS.map((p, i) => `<button type="button" class="filterchip${i === 0 ? ' on' : ''}" data-p="${p.id}">${p.label}</button>`).join('')}</div>
   ${CHECKLIST_PROGRAMS.map((p, i) => `<div class="ck-panel" id="${p.id}" data-p="${p.id}"${i ? ' hidden' : ''}>
     <div style="${resCard};margin-bottom:20px">
       <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:flex-start">
         <div style="max-width:620px"><h2 style="font-size:clamp(26px,3vw,34px);margin:0 0 6px">${p.label}</h2><p style="color:var(--text2);font-size:15px;margin:0">${p.intro}</p></div>
-        <div class="ck-actions" style="display:flex;gap:8px"><button type="button" class="btn btn-quiet ck-print" style="padding:9px 14px;font-size:14px">Print</button><button type="button" class="btn btn-quiet ck-reset" style="padding:9px 14px;font-size:14px">Reset</button></div>
+        <div class="ck-actions" style="display:flex;gap:8px"><button type="button" class="btn btn-quiet ck-print" style="padding:9px 14px;font-size:14px">${T('Print')}</button><button type="button" class="btn btn-quiet ck-reset" style="padding:9px 14px;font-size:14px">${T('Reset')}</button></div>
       </div>
-      <div style="margin-top:20px"><div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text2);margin-bottom:6px"><span class="ck-count">0 of ${total(p)} ready</span><span class="ck-pct">0%</span></div><div class="pt-prog"><div class="ck-bar" style="width:0"></div></div></div>
+      <div style="margin-top:20px"><div style="display:flex;justify-content:space-between;font-size:13.5px;color:var(--text2);margin-bottom:6px"><span class="ck-count">${T('0 of {n} ready', { n: total(p) })}</span><span class="ck-pct">0%</span></div><div class="pt-prog"><div class="ck-bar" style="width:0"></div></div></div>
     </div>
     <div class="ck-grid">${p.sections.map((s) => `<div style="${resCard}"><h3 style="font-size:17px;margin:0 0 12px">${s.title}</h3>${s.items.map((it) => `<label class="ck-item"><input type="checkbox" data-k="${p.id}:${it.id}"><span><b>${it.label}</b>${it.hint ? `<small>${it.hint}</small>` : ''}</span></label>`).join('')}</div>`).join('')}</div>
   </div>`).join('')}
-  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">General guidance compiled from IRCC document requirements. Once you have an ITA or start an application, the personalized checklist in your IRCC account is the official list. In the app, each checklist is tied to your tracked application.</p>
+  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">${T('General guidance compiled from IRCC document requirements. Once you have an ITA or start an application, the personalized checklist in your IRCC account is the official list. In the app, each checklist is tied to your tracked application.')}</p>
 </section>
-${s5End('Keep every document on track.')}
+${s5End(T('Keep every document on track.'))}
 ${footerFull()}
 </div>
 <script>
@@ -2025,7 +2033,7 @@ ${footerFull()}
     var boxes=panel.querySelectorAll('input[type=checkbox]'), done=0;
     boxes.forEach(function(b){ if(b.checked) done++; });
     var pct=Math.round(done/boxes.length*100);
-    panel.querySelector('.ck-count').textContent=done+' of '+boxes.length+' ready';
+    panel.querySelector('.ck-count').textContent=done+' ${T('of')} '+boxes.length+' ${T('ready')}';
     panel.querySelector('.ck-pct').textContent=pct+'%';
     panel.querySelector('.ck-bar').style.width=pct+'%';
   }
@@ -2057,62 +2065,62 @@ ${footerFull()}
 // The app's milestone types (mobile/src/store/timelineStore.ts), in the app's order, with a
 // line on what each one means. Entries live in the visitor's browser only.
 const MILESTONES_WEB = [
-  ['ITA', 'ITA', 'bell', '#2E6FD4', 'Invitation to Apply. You have 60 days to submit your complete application.'],
-  ['Application Submitted', 'Application submitted', 'arrowUp', '#0E8A63', 'Your e-APR is in and the fees are paid. IRCC’s processing time counts from here.'],
-  ['AOR Received', 'AOR received', 'checklist', '#0E8A63', 'Acknowledgement of Receipt: IRCC confirms your application is complete enough to process.'],
-  ['Biometrics Requested', 'Biometrics requested', 'timer', '#C07A0A', 'A Biometric Instruction Letter. You usually have 30 days to give fingerprints and a photo.'],
-  ['Biometrics Completed', 'Biometrics completed', 'checkCircle', '#0E8A63', 'Fingerprints and photo given at a collection point.'],
-  ['Medical Requested', 'Medical requested', 'timer', '#C07A0A', 'IRCC asks for an immigration medical exam with a panel physician.'],
-  ['Medical Passed', 'Medical passed', 'checkCircle', '#0E8A63', 'Your medical results are on file and show as passed.'],
-  ['Passport Requested', 'Passport requested', 'folder', '#C07A0A', 'Passport request (PPR): send your passport for the visa and COPR. Usually the last step for applicants outside Canada.'],
-  ['Passport Submitted', 'Passport submitted', 'arrowUp', '#2E6FD4', 'Passport handed in at a visa application centre.'],
-  ['Passport Collected', 'Passport collected', 'checkCircle', '#0E8A63', 'Passport back with your visa and COPR.'],
-  ['ADR', 'ADR', 'folder', '#D9741A', 'Additional Document Request: IRCC needs something more before it can continue.'],
-  ['Portal 1', 'PR portal 1', 'compass', '#7C5BD0', 'The PR confirmation portal asks you to confirm you are in Canada and your address.'],
-  ['Portal 2', 'PR portal 2', 'compass', '#5B3FB0', 'You upload a photo for your PR card; the eCOPR usually follows.'],
-  ['Final Decision', 'Final decision', 'award', '#D3342B', 'Approval, your COPR, and the end of the wait.'],
-  ['Custom', 'Custom', 'pin', '#6B7A8D', 'Anything else worth a date: a background check, an MP inquiry, a GCMS note.'],
+  ['ITA', 'ITA', 'bell', '#2E6FD4', T('Invitation to Apply. You have 60 days to submit your complete application.')],
+  ['Application Submitted', 'Application submitted', 'arrowUp', '#0E8A63', T('Your e-APR is in and the fees are paid. IRCC’s processing time counts from here.')],
+  ['AOR Received', 'AOR received', 'checklist', '#0E8A63', T('Acknowledgement of Receipt: IRCC confirms your application is complete enough to process.')],
+  ['Biometrics Requested', 'Biometrics requested', 'timer', '#C07A0A', T('A Biometric Instruction Letter. You usually have 30 days to give fingerprints and a photo.')],
+  ['Biometrics Completed', 'Biometrics completed', 'checkCircle', '#0E8A63', T('Fingerprints and photo given at a collection point.')],
+  ['Medical Requested', 'Medical requested', 'timer', '#C07A0A', T('IRCC asks for an immigration medical exam with a panel physician.')],
+  ['Medical Passed', 'Medical passed', 'checkCircle', '#0E8A63', T('Your medical results are on file and show as passed.')],
+  ['Passport Requested', 'Passport requested', 'folder', '#C07A0A', T('Passport request (PPR): send your passport for the visa and COPR. Usually the last step for applicants outside Canada.')],
+  ['Passport Submitted', 'Passport submitted', 'arrowUp', '#2E6FD4', T('Passport handed in at a visa application centre.')],
+  ['Passport Collected', 'Passport collected', 'checkCircle', '#0E8A63', T('Passport back with your visa and COPR.')],
+  ['ADR', 'ADR', 'folder', '#D9741A', T('Additional Document Request: IRCC needs something more before it can continue.')],
+  ['Portal 1', 'PR portal 1', 'compass', '#7C5BD0', T('The PR confirmation portal asks you to confirm you are in Canada and your address.')],
+  ['Portal 2', 'PR portal 2', 'compass', '#5B3FB0', T('You upload a photo for your PR card; the eCOPR usually follows.')],
+  ['Final Decision', 'Final decision', 'award', '#D3342B', T('Approval, your COPR, and the end of the wait.')],
+  ['Custom', 'Custom', 'pin', '#6B7A8D', T('Anything else worth a date: a background check, an MP inquiry, a GCMS note.')],
 ];
 
 function timelinePage() {
-  const META = Object.fromEntries(MILESTONES_WEB.map(([type, label, ic, color]) => [type, { label, color, icon: icon(ic, 18) }]));
+  const META = Object.fromEntries(MILESTONES_WEB.map(([type, label, ic, color]) => [type, { label: T(label), color, icon: icon(ic, 18) }]));
   const body = `${nav('timeline', 'app')}
 <div style="min-height:100vh;position:relative">
-${pageHero('Your application,', 'step by step.', 'Log your ITA, AOR, biometrics, medical and passport dates. See the days between each step and how far along IRCC’s processing time you are. Everything stays in this browser.')}
+${pageHero(T('Your application,'), T('step by step.'), T('Log your ITA, AOR, biometrics, medical and passport dates. See the days between each step and how far along IRCC’s processing time you are. Everything stays in this browser.'))}
 <section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
   <div class="tl-grid">
     <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
       <div data-reveal style="${resCard}">
-        ${resH2('Add a milestone')}
+        ${resH2(T('Add a milestone'))}
         <form id="tl-form" class="fields" style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:14px">
-          <label style="${LBL}">Milestone<select id="tl-type" style="${SEL}">${MILESTONES_WEB.map(([type, label]) => `<option value="${type}">${label}</option>`).join('')}</select></label>
-          <label style="${LBL}">Date<input id="tl-date" type="hidden" data-datepicker style="${INP}"></label>
-          <label id="tl-custom-wrap" style="${LBL};grid-column:1/-1" hidden>Label<input id="tl-custom" type="text" maxlength="60" placeholder="e.g. Background check started" style="${INP}"></label>
-          <label style="${LBL};grid-column:1/-1">Note (optional)<input id="tl-note" type="text" maxlength="140" placeholder="Anything worth remembering" style="${INP}"></label>
-          <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button type="submit" id="tl-save" class="btn btn-accent">Add milestone</button><button type="button" id="tl-cancel" class="btn btn-quiet" hidden>Cancel edit</button></div>
+          <label style="${LBL}">${T('Milestone')}<select id="tl-type" style="${SEL}">${MILESTONES_WEB.map(([type, label]) => `<option value="${type}">${T(label)}</option>`).join('')}</select></label>
+          <label style="${LBL}">${T('Date')}<input id="tl-date" type="hidden" data-datepicker style="${INP}"></label>
+          <label id="tl-custom-wrap" style="${LBL};grid-column:1/-1" hidden>${T('Label')}<input id="tl-custom" type="text" maxlength="60" placeholder="${T('e.g. Background check started')}" style="${INP}"></label>
+          <label style="${LBL};grid-column:1/-1">${T('Note (optional)')}<input id="tl-note" type="text" maxlength="140" placeholder="${T('Anything worth remembering')}" style="${INP}"></label>
+          <div style="grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap"><button type="submit" id="tl-save" class="btn btn-accent">${T('Add milestone')}</button><button type="button" id="tl-cancel" class="btn btn-quiet" hidden>${T('Cancel edit')}</button></div>
         </form>
       </div>
       <div data-reveal style="${resCard}">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px"><h2 style="font-size:20px;margin:0">Your timeline</h2><div class="ck-actions" style="display:flex;gap:8px"><button type="button" id="tl-print" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">Print</button><button type="button" id="tl-clear" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">Clear all</button></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px"><h2 style="font-size:20px;margin:0">${T('Your timeline')}</h2><div class="ck-actions" style="display:flex;gap:8px"><button type="button" id="tl-print" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">${T('Print')}</button><button type="button" id="tl-clear" class="btn btn-quiet" style="padding:8px 13px;font-size:13.5px">${T('Clear all')}</button></div></div>
         <ol id="tl-list" class="tl-list"></ol>
-        <div id="tl-empty" class="tl-empty"><p style="font-weight:700;color:var(--text);margin:0 0 4px">No milestones yet</p><p style="margin:0">Start with the date you got your ITA or submitted your application.</p></div>
+        <div id="tl-empty" class="tl-empty"><p style="font-weight:700;color:var(--text);margin:0 0 4px">${T('No milestones yet')}</p><p style="margin:0">${T('Start with the date you got your ITA or submitted your application.')}</p></div>
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
       <div data-reveal style="${resCard}">
-        ${resH2('Against IRCC’s processing time', 'Counted from the date you submitted.')}
-        <label style="${LBL};margin-bottom:16px">Your program<select id="tl-prog" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
+        ${resH2(T('Against IRCC’s processing time'), T('Counted from the date you submitted.'))}
+        <label style="${LBL};margin-bottom:16px">${T('Your program')}<select id="tl-prog" style="${SEL}">${PT.map((c) => `<optgroup label="${c.label}">${c.types.map((t) => `<option value="${t.id}"${t.id === 'ee_cec' ? ' selected' : ''}>${t.label}</option>`).join('')}</optgroup>`).join('')}</select></label>
         <div id="tl-progress"></div>
       </div>
       <div data-reveal style="${resCard}">
-        ${resH2('What each step means')}
-        <dl class="tl-gloss">${MILESTONES_WEB.filter(([t]) => t !== 'Custom').map(([, label, ic, color, desc]) => `<div><dt><span style="color:${color}">${icon(ic, 15)}</span>${label}</dt><dd>${desc}</dd></div>`).join('')}</dl>
+        ${resH2(T('What each step means'))}
+        <dl class="tl-gloss">${MILESTONES_WEB.filter(([t]) => t !== 'Custom').map(([, label, ic, color, desc]) => `<div><dt><span style="color:${color}">${icon(ic, 15)}</span>${T(label)}</dt><dd>${desc}</dd></div>`).join('')}</dl>
       </div>
     </div>
   </div>
-  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">The order varies by file: medicals can come before AOR, and applicants inside Canada usually get the PR portal instead of a passport request. Your IRCC account is the source of truth. The app keeps this timeline on your phone with reminders.</p>
+  <p style="font-size:13px;color:var(--muted);margin:22px 4px 0">${T('The order varies by file: medicals can come before AOR, and applicants inside Canada usually get the PR portal instead of a passport request. Your IRCC account is the source of truth. The app keeps this timeline on your phone with reminders.')}</p>
 </section>
-${s5End('Carry your timeline in your pocket.')}
+${s5End(T('Carry your timeline in your pocket.'))}
 ${footerFull()}
 </div>
 <script>
@@ -2132,7 +2140,7 @@ ${footerFull()}
   function sorted(){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; }); }
   date.value=today().toISOString().slice(0,10);
   type.addEventListener('change',function(){ cwrap.hidden=type.value!=='Custom'; });
-  function reset(){ editing=null; form.reset(); date.value=today().toISOString().slice(0,10); cwrap.hidden=true; $('tl-save').textContent='Add milestone'; $('tl-cancel').hidden=true; }
+  function reset(){ editing=null; form.reset(); date.value=today().toISOString().slice(0,10); cwrap.hidden=true; $('tl-save').textContent='${jsStr(T('Add milestone'))}'; $('tl-cancel').hidden=true; }
   $('tl-cancel').addEventListener('click',reset);
   form.addEventListener('submit',function(e){
     e.preventDefault();
@@ -2142,7 +2150,7 @@ ${footerFull()}
     if(editing) list=list.map(function(x){ return x.id===editing?m:x; }); else list.push(m);
     save(); reset(); render();
   });
-  $('tl-clear').addEventListener('click',function(){ if(!list.length) return; if(!$('tl-clear').dataset.armed){ $('tl-clear').dataset.armed='1'; $('tl-clear').textContent='Tap again to clear'; setTimeout(function(){ delete $('tl-clear').dataset.armed; $('tl-clear').textContent='Clear all'; },3000); return; } list=[]; save(); reset(); render(); delete $('tl-clear').dataset.armed; $('tl-clear').textContent='Clear all'; });
+  $('tl-clear').addEventListener('click',function(){ if(!list.length) return; if(!$('tl-clear').dataset.armed){ $('tl-clear').dataset.armed='1'; $('tl-clear').textContent='${jsStr(T('Tap again to clear'))}'; setTimeout(function(){ delete $('tl-clear').dataset.armed; $('tl-clear').textContent='${jsStr(T('Clear all'))}'; },3000); return; } list=[]; save(); reset(); render(); delete $('tl-clear').dataset.armed; $('tl-clear').textContent='${jsStr(T('Clear all'))}'; });
   $('tl-print').addEventListener('click',function(){ window.print(); });
   $('tl-prog').addEventListener('change',function(){ try{ localStorage.setItem(KEY+'-program',this.value); }catch(e){} progress(); });
   $('tl-list').addEventListener('click',function(e){
@@ -2150,19 +2158,19 @@ ${footerFull()}
     var id=b.closest('li').getAttribute('data-id'), m=list.filter(function(x){ return x.id===id; })[0]; if(!m) return;
     if(b.getAttribute('data-act')==='del'){ list=list.filter(function(x){ return x.id!==id; }); save(); if(editing===id) reset(); render(); return; }
     editing=id; type.value=m.type; date.value=m.date; note.value=m.note||''; custom.value=m.customLabel||''; cwrap.hidden=m.type!=='Custom';
-    $('tl-save').textContent='Save changes'; $('tl-cancel').hidden=false; form.scrollIntoView({behavior:'smooth',block:'center'});
+    $('tl-save').textContent='${jsStr(T('Save changes'))}'; $('tl-cancel').hidden=false; form.scrollIntoView({behavior:'smooth',block:'center'});
   });
   function render(){
     var s=sorted(), t=today(), out='';
     $('tl-empty').hidden=s.length>0;
     s.forEach(function(m,i){
       var meta=META[m.type], d=at(m.date), ago=days(d,t), gap=i?days(at(s[i-1].date),d):null;
-      var when=ago===0?'today':ago>0?ago+' day'+(ago===1?'':'s')+' ago':'in '+(-ago)+' day'+(ago===-1?'':'s');
+      var when=ago===0?'${jsStr(T('today'))}':ago>0?(ago===1?'${jsStr(T('1 day ago'))}':ago+' ${jsStr(T('days ago'))}'):(ago===-1?'${jsStr(T('in 1 day'))}':'${jsStr(T('in'))} '+(-ago)+' ${jsStr(T('days'))}');
       var label=m.type==='Custom'&&m.customLabel?esc(m.customLabel):meta.label;
-      out+='<li data-id="'+m.id+'">'+(gap!==null?'<div class="tl-gap">+'+gap+' day'+(gap===1?'':'s')+'</div>':'')
+      out+='<li data-id="'+m.id+'">'+(gap!==null?'<div class="tl-gap">+'+gap+' '+(gap===1?'${jsStr(T('day'))}':'${jsStr(T('days'))}')+'</div>':'')
         +'<div class="tl-item"><span class="tl-ic" style="color:'+meta.color+';background:color-mix(in srgb, '+meta.color+' 14%, transparent)">'+meta.icon+'</span>'
         +'<div style="min-width:0;flex:1"><b>'+label+'</b><span>'+fmt(d)+' · '+when+'</span>'+(m.note?'<em>'+esc(m.note)+'</em>':'')+'</div>'
-        +'<div class="tl-act"><button type="button" data-act="edit" aria-label="Edit">Edit</button><button type="button" data-act="del" aria-label="Delete">Delete</button></div></div></li>';
+        +'<div class="tl-act"><button type="button" data-act="edit" aria-label="${T('Edit')}">${T('Edit')}</button><button type="button" data-act="del" aria-label="${T('Delete')}">${T('Delete')}</button></div></div></li>';
     });
     $('tl-list').innerHTML=out;
     progress();
@@ -2171,13 +2179,13 @@ ${footerFull()}
     var p=PROG[$('tl-prog').value], s=sorted(), box=$('tl-progress');
     var start=s.filter(function(m){ return m.type==='Application Submitted'; })[0]||s.filter(function(m){ return m.type==='AOR Received'; })[0];
     if(!p){ box.innerHTML=''; return; }
-    if(!start){ box.innerHTML='<p style="font-size:14px;color:var(--text2);margin:0">Add your <b>Application submitted</b> date to see how far along you are. IRCC currently takes about <b>'+p.months+' months</b> for this program.</p>'; return; }
+    if(!start){ box.innerHTML='<p style="font-size:14px;color:var(--text2);margin:0">${T('Add your <b>Application submitted</b> date to see how far along you are. IRCC currently takes about <b>{n} months</b> for this program.', { n: "'+p.months+'" })}</p>'; return; }
     var d0=at(start.date), end=new Date(d0.getTime()+p.months*30.44*864e5), t=today(), el=Math.max(0,days(d0,t)), total=days(d0,end), pct=Math.min(100,Math.round(el/total*100));
     var done=s.some(function(m){ return m.type==='Final Decision'; });
-    box.innerHTML='<div class="klabel">'+(done?'Decided':'Day '+el+' of about '+total)+'</div>'
-      +'<div class="pt-big">'+(done?'Approved':pct+'%')+'</div>'
+    box.innerHTML='<div class="klabel">'+(done?'${jsStr(T('Decided'))}':'${jsStr(T('Day'))} '+el+' ${jsStr(T('of about'))} '+total)+'</div>'
+      +'<div class="pt-big">'+(done?'${jsStr(T('Approved'))}':pct+'%')+'</div>'
       +'<div class="pt-prog" style="margin:10px 0 12px"><div style="width:'+(done?100:pct)+'%"></div></div>'
-      +'<p style="font-size:14px;color:var(--text2);margin:0">'+(done?'Congratulations. Your final decision is logged.':'Typical decision around <b>'+fmt(end)+'</b>, based on IRCC’s '+p.months+'-month time for '+esc(p.label)+'.')+'</p>';
+      +'<p style="font-size:14px;color:var(--text2);margin:0">'+(done?'${jsStr(T('Congratulations. Your final decision is logged.'))}':'${jsStr(T('Typical decision around <b>{date}</b>, based on IRCC’s {n}-month time for {label}.', { date: "'+fmt(end)+'", n: "'+p.months+'", label: "'+esc(p.label)+'" }))}')+'</p>';
   }
   render();
 })();
@@ -2187,17 +2195,17 @@ ${footerFull()}
 
 // ------------------------------------------------------------------ CALCULATORS
 // Option lists (verbatim from the design component).
-const CRS_EDU_OPTS = [{ v: 'less_than_secondary', l: 'Less than secondary' }, { v: 'secondary', l: 'Secondary / high school' }, { v: '1year', l: '1-year post-secondary' }, { v: '2year', l: '2-year post-secondary' }, { v: 'bachelors', l: "Bachelor's degree" }, { v: 'two_or_more', l: 'Two or more credentials' }, { v: 'masters', l: "Master's / professional" }, { v: 'phd', l: 'Doctoral (PhD)' }];
-const CWE_OPTS = [{ v: 0, l: 'None' }, { v: 1, l: '1 year' }, { v: 2, l: '2 years' }, { v: 3, l: '3 years' }, { v: 4, l: '4 years' }, { v: 5, l: '5+ years' }];
-const FSW_EDU_OPTS = [{ v: 'phd', l: 'Doctoral (PhD)' }, { v: 'masters_professional', l: "Master's / professional" }, { v: 'two_or_more', l: 'Two or more credentials' }, { v: 'bachelors_3yr', l: '3-year+ degree' }, { v: 'diploma_2yr', l: '2-year diploma' }, { v: 'diploma_1yr', l: '1-year diploma' }, { v: 'secondary', l: 'Secondary' }];
-const FSW_WORK_OPTS = [{ v: 'none', l: 'None' }, { v: '1', l: '1 year' }, { v: '2_3', l: '2–3 years' }, { v: '4_5', l: '4–5 years' }, { v: '6plus', l: '6+ years' }];
-const SIRS_WORK_OPTS = [{ v: 'none', l: 'None' }, { v: '1_2', l: '1–2 years' }, { v: '2_3', l: '2–3 years' }, { v: '3_4', l: '3–4 years' }, { v: '4_5', l: '4–5 years' }, { v: '5plus', l: '5+ years' }];
-const SIRS_EDU_OPTS = [{ v: 'doctorate', l: 'Doctorate' }, { v: 'masters', l: "Master's" }, { v: 'postgrad_cert', l: 'Post-grad certificate' }, { v: 'bachelors', l: "Bachelor's" }, { v: 'associate', l: 'Associate degree' }, { v: 'diploma_cert', l: 'Diploma / certificate' }, { v: 'secondary', l: 'Secondary' }];
-const SIRS_CLB_OPTS = [{ v: 'clb9plus', l: 'CLB 9+' }, { v: 'clb8', l: 'CLB 8' }, { v: 'clb7', l: 'CLB 7' }, { v: 'clb6', l: 'CLB 6' }, { v: 'clb5', l: 'CLB 5' }, { v: 'clb4', l: 'CLB 4' }, { v: 'below4', l: 'Below CLB 4' }];
-const SINP_EDU_OPTS = [{ v: 'masters_phd', l: "Master's / PhD" }, { v: 'bachelors', l: "Bachelor's (3-4 yr)" }, { v: 'trade_cert', l: 'Trade certificate' }, { v: 'diploma_2yr', l: '2-year diploma' }, { v: 'diploma_1yr', l: '1-year diploma' }, { v: 'none', l: 'None' }];
-const SINP_AGE_OPTS = [{ v: 'under18', l: 'Under 18' }, { v: '18_21', l: '18–21' }, { v: '22_34', l: '22–34' }, { v: '35_45', l: '35–45' }, { v: '46_50', l: '46–50' }, { v: 'over50', l: 'Over 50' }];
-const SINP_CLB_OPTS = [{ v: 'clb8plus', l: 'CLB 8+' }, { v: 'clb7', l: 'CLB 7' }, { v: 'clb6', l: 'CLB 6' }, { v: 'clb5', l: 'CLB 5' }, { v: 'clb4', l: 'CLB 4' }, { v: 'below4', l: 'Below CLB 4 / none' }];
-const YEAR_OPTS = [{ v: 0, l: '0 years' }, { v: 1, l: '1 year' }, { v: 2, l: '2 years' }, { v: 3, l: '3 years' }, { v: 4, l: '4 years' }, { v: 5, l: '5 years' }];
+const CRS_EDU_OPTS = [{ v: 'less_than_secondary', l: T('Less than secondary') }, { v: 'secondary', l: T('Secondary / high school') }, { v: '1year', l: T('1-year post-secondary') }, { v: '2year', l: T('2-year post-secondary') }, { v: 'bachelors', l: T("Bachelor's degree") }, { v: 'two_or_more', l: T('Two or more credentials') }, { v: 'masters', l: T("Master's / professional") }, { v: 'phd', l: T('Doctoral (PhD)') }];
+const CWE_OPTS = [{ v: 0, l: T('None') }, { v: 1, l: T('1 year') }, { v: 2, l: T('2 years') }, { v: 3, l: T('3 years') }, { v: 4, l: T('4 years') }, { v: 5, l: T('5+ years') }];
+const FSW_EDU_OPTS = [{ v: 'phd', l: T('Doctoral (PhD)') }, { v: 'masters_professional', l: T("Master's / professional") }, { v: 'two_or_more', l: T('Two or more credentials') }, { v: 'bachelors_3yr', l: T('3-year+ degree') }, { v: 'diploma_2yr', l: T('2-year diploma') }, { v: 'diploma_1yr', l: T('1-year diploma') }, { v: 'secondary', l: T('Secondary') }];
+const FSW_WORK_OPTS = [{ v: 'none', l: T('None') }, { v: '1', l: T('1 year') }, { v: '2_3', l: T('2–3 years') }, { v: '4_5', l: T('4–5 years') }, { v: '6plus', l: T('6+ years') }];
+const SIRS_WORK_OPTS = [{ v: 'none', l: T('None') }, { v: '1_2', l: T('1–2 years') }, { v: '2_3', l: T('2–3 years') }, { v: '3_4', l: T('3–4 years') }, { v: '4_5', l: T('4–5 years') }, { v: '5plus', l: T('5+ years') }];
+const SIRS_EDU_OPTS = [{ v: 'doctorate', l: T('Doctorate') }, { v: 'masters', l: T("Master's") }, { v: 'postgrad_cert', l: T('Post-grad certificate') }, { v: 'bachelors', l: T("Bachelor's") }, { v: 'associate', l: T('Associate degree') }, { v: 'diploma_cert', l: T('Diploma / certificate') }, { v: 'secondary', l: T('Secondary') }];
+const SIRS_CLB_OPTS = [{ v: 'clb9plus', l: 'CLB 9+' }, { v: 'clb8', l: 'CLB 8' }, { v: 'clb7', l: 'CLB 7' }, { v: 'clb6', l: 'CLB 6' }, { v: 'clb5', l: 'CLB 5' }, { v: 'clb4', l: 'CLB 4' }, { v: 'below4', l: T('Below CLB 4') }];
+const SINP_EDU_OPTS = [{ v: 'masters_phd', l: T("Master's / PhD") }, { v: 'bachelors', l: T("Bachelor's (3-4 yr)") }, { v: 'trade_cert', l: T('Trade certificate') }, { v: 'diploma_2yr', l: T('2-year diploma') }, { v: 'diploma_1yr', l: T('1-year diploma') }, { v: 'none', l: T('None') }];
+const SINP_AGE_OPTS = [{ v: 'under18', l: T('Under 18') }, { v: '18_21', l: T('18–21') }, { v: '22_34', l: T('22–34') }, { v: '35_45', l: T('35–45') }, { v: '46_50', l: T('46–50') }, { v: 'over50', l: T('Over 50') }];
+const SINP_CLB_OPTS = [{ v: 'clb8plus', l: 'CLB 8+' }, { v: 'clb7', l: 'CLB 7' }, { v: 'clb6', l: 'CLB 6' }, { v: 'clb5', l: 'CLB 5' }, { v: 'clb4', l: 'CLB 4' }, { v: 'below4', l: T('Below CLB 4 / none') }];
+const YEAR_OPTS = [{ v: 0, l: T('0 years') }, { v: 1, l: T('1 year') }, { v: 2, l: T('2 years') }, { v: 3, l: T('3 years') }, { v: 4, l: T('4 years') }, { v: 5, l: T('5 years') }];
 
 const STATE0 = {
   crs: { maritalStatus: 'single', age: 29, education: 'bachelors', canadianEducation: 'none', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, hasSecondLang: false, secondLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, canadianWorkExp: 1, foreignWorkExp: 1, spouseEducation: 'bachelors', spouseLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, spouseCanadianWorkExp: 0, hasProvincialNomination: false, hasSiblingInCanada: false, hasTradeCert: false },
@@ -2238,14 +2246,14 @@ const langBlock = (key, langs) => {
   const L = LANG0[key];
   return `<div class="langblock" data-lang="${key}">
   <div class="langhead">
-    <label style="${LBL_SM}">Test<select data-langtest style="${SEL_SM}">${langOpts(langs, L.test)}</select></label>
-    <label class="sametoggle"><input type="checkbox" data-langsame> Same score for all four</label>
+    <label style="${LBL_SM}">${T('Test')}<select data-langtest style="${SEL_SM}">${langOpts(langs, L.test)}</select></label>
+    <label class="sametoggle"><input type="checkbox" data-langsame> ${T('Same score for all four')}</label>
   </div>
-  <div class="fields4 langfour" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">${SKILLS.map((sk) => `<label style="${LBL_SM}">${capWord(sk)}<input data-langraw="${sk}" type="number" inputmode="decimal" ${rawRange(L.test, sk)} value="${L.raw[sk]}" placeholder="Score" style="${INP}"><span class="clbout" data-clbout="${sk}"></span></label>`).join('')}</div>
-  <div class="langone" hidden><label style="${LBL_SM};max-width:240px">Score, all four abilities<input data-langraw="all" type="number" inputmode="decimal" ${rawRange(L.test, 'speaking')} value="" placeholder="Score" style="${INP}"><span class="clbout" data-clbout="all"></span></label></div>
+  <div class="fields4 langfour" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">${SKILLS.map((sk) => `<label style="${LBL_SM}">${T(capWord(sk))}<input data-langraw="${sk}" type="number" inputmode="decimal" ${rawRange(L.test, sk)} value="${L.raw[sk]}" placeholder="${T('Score')}" style="${INP}"><span class="clbout" data-clbout="${sk}"></span></label>`).join('')}</div>
+  <div class="langone" hidden><label style="${LBL_SM};max-width:240px">${T('Score, all four abilities')}<input data-langraw="all" type="number" inputmode="decimal" ${rawRange(L.test, 'speaking')} value="" placeholder="${T('Score')}" style="${INP}"><span class="clbout" data-clbout="all"></span></label></div>
 </div>`;
 };
-const LANG_HINT = '<p class="langhint">Pick your test and enter your scores. They are converted to CLB levels as you type.</p>';
+const LANG_HINT = `<p class="langhint">${T('Pick your test and enter your scores. They are converted to CLB levels as you type.')}</p>`;
 // Newest Canadian Experience Class round, the benchmark the score card compares against.
 const LAST_CEC = (() => { const r = FEED.rounds.find((x) => x.label === 'Canadian Experience Class'); return r ? { no: r.number, crs: r.crs, date: fullDate(r) } : null; })();
 
@@ -2261,46 +2269,46 @@ function calcForms() {
   const crsForm = `
 <div id="form-crs" style="display:flex;flex-direction:column;gap:22px">
   <div style="${CARD}">
-    <div style="${CARDLABEL}">Core / human capital</div>
+    <div style="${CARDLABEL}">${T('Core / human capital')}</div>
     <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${lblSelect('crs.maritalStatus', c.maritalStatus, [{ v: 'single', l: 'Single / not married' }, { v: 'married', l: 'Married / common-law' }, { v: 'married_not_accompanying', l: 'Married — spouse not accompanying' }], 'Marital status')}
-      ${lblInput('crs.age', c.age, 'Age', 'type="number" min="17" max="55"')}
-      ${lblSelect('crs.education', c.education, CRS_EDU_OPTS, 'Education level')}
-      ${lblSelect('crs.canadianEducation', c.canadianEducation, [{ v: 'none', l: 'No' }, { v: '1_2year', l: 'Yes, a 1–2 year program (+15)' }, { v: '3year_plus', l: 'Yes, 3+ years or graduate (+30)' }], 'Studied in Canada after high school?')}
+      ${lblSelect('crs.maritalStatus', c.maritalStatus, [{ v: 'single', l: T('Single / not married') }, { v: 'married', l: T('Married / common-law') }, { v: 'married_not_accompanying', l: T('Married — spouse not accompanying') }], T('Marital status'))}
+      ${lblInput('crs.age', c.age, T('Age'), 'type="number" min="17" max="55"')}
+      ${lblSelect('crs.education', c.education, CRS_EDU_OPTS, T('Education level'))}
+      ${lblSelect('crs.canadianEducation', c.canadianEducation, [{ v: 'none', l: T('No') }, { v: '1_2year', l: T('Yes, a 1–2 year program (+15)') }, { v: '3year_plus', l: T('Yes, 3+ years or graduate (+30)') }], T('Studied in Canada after high school?'))}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">First official language</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${T('First official language')}</div>
     ${LANG_HINT}
     ${langBlock('crs.firstLang', ['en', 'fr'])}
-    <button type="button" class="chip" id="crs-second-chip" data-field="crs.hasSecondLang" style="margin-top:16px">+ Add French (second official language)</button>
+    <button type="button" class="chip" id="crs-second-chip" data-field="crs.hasSecondLang" style="margin-top:16px">+ ${T('Add French (second official language)')}</button>
     <div id="crs-second" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--hairline)">
-      <div class="langsub">Second official language. The French bonus (up to +50) is added automatically from these scores.</div>
+      <div class="langsub">${T('Second official language. The French bonus (up to +50) is added automatically from these scores.')}</div>
       ${langBlock('crs.secondLang', ['fr'])}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="${CARDLABEL}">Work experience</div>
+    <div style="${CARDLABEL}">${T('Work experience')}</div>
     <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${lblSelect('crs.canadianWorkExp', c.canadianWorkExp, CWE_OPTS, 'Canadian work experience')}
-      ${lblSelect('crs.foreignWorkExp', c.foreignWorkExp, [{ v: 0, l: 'None' }, { v: 1, l: '1–2 years' }, { v: 3, l: '3+ years' }], 'Foreign work experience')}
+      ${lblSelect('crs.canadianWorkExp', c.canadianWorkExp, CWE_OPTS, T('Canadian work experience'))}
+      ${lblSelect('crs.foreignWorkExp', c.foreignWorkExp, [{ v: 0, l: T('None') }, { v: 1, l: T('1–2 years') }, { v: 3, l: T('3+ years') }], T('Foreign work experience'))}
     </div>
   </div>
   <div id="crs-spouse" style="display:none">
     <div style="${CARD}">
-      <div style="${CARDLABEL}">Spouse / common-law partner</div>
+      <div style="${CARDLABEL}">${T('Spouse / common-law partner')}</div>
       <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        ${lblSelect('crs.spouseEducation', c.spouseEducation, CRS_EDU_OPTS, 'Spouse education')}
-        ${lblSelect('crs.spouseCanadianWorkExp', c.spouseCanadianWorkExp, CWE_OPTS, 'Spouse Canadian work exp.')}
+        ${lblSelect('crs.spouseEducation', c.spouseEducation, CRS_EDU_OPTS, T('Spouse education'))}
+        ${lblSelect('crs.spouseCanadianWorkExp', c.spouseCanadianWorkExp, CWE_OPTS, T('Spouse Canadian work exp.'))}
       </div>
-      <div class="langsub">Spouse's language test (English or French)</div>
+      <div class="langsub">${T('Spouse\'s language test (English or French)')}</div>
       ${langBlock('crs.spouseLang', ['en', 'fr'])}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Additional points</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">${T('Additional points')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${chip('crs.hasProvincialNomination', 'Provincial nomination (+600)')}${chip('crs.hasSiblingInCanada', 'Brother or sister in Canada (+15)')}${chip('crs.hasTradeCert', 'Trade certificate of qualification (up to +50)')}
+      ${chip('crs.hasProvincialNomination', T('Provincial nomination (+600)'))}${chip('crs.hasSiblingInCanada', T('Brother or sister in Canada (+15)'))}${chip('crs.hasTradeCert', T('Trade certificate of qualification (up to +50)'))}
     </div>
   </div>
 </div>`;
@@ -2308,22 +2316,22 @@ function calcForms() {
   const fswForm = `
 <div id="form-fsw" style="display:none;flex-direction:column;gap:22px">
   <div style="${CARD}">
-    <div style="${CARDLABEL}">Selection factors</div>
+    <div style="${CARDLABEL}">${T('Selection factors')}</div>
     <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${lblInput('fsw.age', f.age, 'Age', 'type="number" min="16" max="60"')}
-      ${lblSelect('fsw.education', f.education, FSW_EDU_OPTS, 'Education')}
-      ${lblSelect('fsw.workYears', f.workYears, FSW_WORK_OPTS, 'Skilled work experience')}
+      ${lblInput('fsw.age', f.age, T('Age'), 'type="number" min="16" max="60"')}
+      ${lblSelect('fsw.education', f.education, FSW_EDU_OPTS, T('Education'))}
+      ${lblSelect('fsw.workYears', f.workYears, FSW_WORK_OPTS, T('Skilled work experience'))}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="${CARDLABEL};margin-bottom:6px">First official language</div>
+    <div style="${CARDLABEL};margin-bottom:6px">${T('First official language')}</div>
     ${LANG_HINT}
     ${langBlock('fsw.firstClb', ['en', 'fr'])}
   </div>
   <div style="${CARD}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Points bonuses &amp; adaptability</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">${T('Points bonuses & adaptability')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${chip('fsw.secondLangClb5', '2nd language CLB 5+ (+4)')}${chip('fsw.hasArrangedEmployment', 'Arranged employment')}${chip('fsw.studiedInCanada', 'You studied in Canada')}${chip('fsw.workedInCanada', 'You worked in Canada')}${chip('fsw.hasRelativeInCanada', 'Relative in Canada')}${chip('fsw.spouseLangClb4', 'Spouse language CLB 4+')}${chip('fsw.spouseStudiedInCanada', 'Spouse studied in Canada')}${chip('fsw.spouseWorkedInCanada', 'Spouse worked in Canada')}
+      ${chip('fsw.secondLangClb5', T('2nd language CLB 5+ (+4)'))}${chip('fsw.hasArrangedEmployment', T('Arranged employment'))}${chip('fsw.studiedInCanada', T('You studied in Canada'))}${chip('fsw.workedInCanada', T('You worked in Canada'))}${chip('fsw.hasRelativeInCanada', T('Relative in Canada'))}${chip('fsw.spouseLangClb4', T('Spouse language CLB 4+'))}${chip('fsw.spouseStudiedInCanada', T('Spouse studied in Canada'))}${chip('fsw.spouseWorkedInCanada', T('Spouse worked in Canada'))}
     </div>
   </div>
 </div>`;
@@ -2331,20 +2339,20 @@ function calcForms() {
   const bcForm = `
 <div id="form-bc" style="display:none;flex-direction:column;gap:22px">
   <div style="${CARD}">
-    <div style="${CARDLABEL}">Human capital &amp; economic factors</div>
+    <div style="${CARDLABEL}">${T('Human capital & economic factors')}</div>
     <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${lblSelect('sirs.workYears', s.workYears, SIRS_WORK_OPTS, 'Directly-related work experience')}
-      ${lblSelect('sirs.education', s.education, SIRS_EDU_OPTS, 'Highest education')}
-      ${lblSelect('sirs.educationLocation', s.educationLocation, [{ v: 'bc', l: 'In British Columbia' }, { v: 'canada', l: 'Elsewhere in Canada' }, { v: 'outside', l: 'Outside Canada' }], 'Where you studied')}
-      ${lblSelect('sirs.language', s.language, SIRS_CLB_OPTS, 'English/French ability (CLB)')}
-      ${lblInput('sirs.hourlyWage', s.hourlyWage, 'Hourly wage of B.C. job offer (CAD)', 'type="number" min="0" max="120"')}
-      ${lblSelect('sirs.region', s.region, [{ v: 'metro_vancouver', l: 'Metro Vancouver' }, { v: 'area2', l: 'Area 2 (Abbotsford, Chilliwack, Squamish…)' }, { v: 'area3', l: 'Area 3 (rest of B.C.)' }], 'Region of employment')}
+      ${lblSelect('sirs.workYears', s.workYears, SIRS_WORK_OPTS, T('Directly-related work experience'))}
+      ${lblSelect('sirs.education', s.education, SIRS_EDU_OPTS, T('Highest education'))}
+      ${lblSelect('sirs.educationLocation', s.educationLocation, [{ v: 'bc', l: T('In British Columbia') }, { v: 'canada', l: T('Elsewhere in Canada') }, { v: 'outside', l: T('Outside Canada') }], T('Where you studied'))}
+      ${lblSelect('sirs.language', s.language, SIRS_CLB_OPTS, T('English/French ability (CLB)'))}
+      ${lblInput('sirs.hourlyWage', s.hourlyWage, T('Hourly wage of B.C. job offer (CAD)'), 'type="number" min="0" max="120"')}
+      ${lblSelect('sirs.region', s.region, [{ v: 'metro_vancouver', l: T('Metro Vancouver') }, { v: 'area2', l: T('Area 2 (Abbotsford, Chilliwack, Squamish…)') }, { v: 'area3', l: T('Area 3 (rest of B.C.)') }], T('Region of employment'))}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Bonuses</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">${T('Bonuses')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${chip('sirs.hasCanadianExp', 'Canadian work experience')}${chip('sirs.currentlyWorkingInJob', 'Currently in the B.C. job')}${chip('sirs.hasTradesOrProfessionalCert', 'Trades / professional cert')}${chip('sirs.bothOfficialLanguages', 'Both official languages')}${chip('sirs.hasRegionalExperience', 'Regional experience bonus')}
+      ${chip('sirs.hasCanadianExp', T('Canadian work experience'))}${chip('sirs.currentlyWorkingInJob', T('Currently in the B.C. job'))}${chip('sirs.hasTradesOrProfessionalCert', T('Trades / professional cert'))}${chip('sirs.bothOfficialLanguages', T('Both official languages'))}${chip('sirs.hasRegionalExperience', T('Regional experience bonus'))}
     </div>
   </div>
 </div>`;
@@ -2352,20 +2360,20 @@ function calcForms() {
   const sinpForm = `
 <div id="form-sinp" style="display:none;flex-direction:column;gap:22px">
   <div style="${CARD}">
-    <div style="${CARDLABEL}">EOI points grid</div>
+    <div style="${CARDLABEL}">${T('EOI points grid')}</div>
     <div class="fields" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      ${lblSelect('sinp.education', sn.education, SINP_EDU_OPTS, 'Education / training')}
-      ${lblSelect('sinp.age', sn.age, SINP_AGE_OPTS, 'Age')}
-      ${lblSelect('sinp.language', sn.language, SINP_CLB_OPTS, 'First language (CLB)')}
-      ${lblSelect('sinp.secondLanguage', sn.secondLanguage, SINP_CLB_OPTS, 'Second official language (CLB)')}
-      ${lblSelect('sinp.workRecentYears', sn.workRecentYears, YEAR_OPTS, 'Work in field — last 5 yrs')}
-      ${lblSelect('sinp.workEarlierYears', sn.workEarlierYears, YEAR_OPTS, 'Work in field — 6–10 yrs ago')}
+      ${lblSelect('sinp.education', sn.education, SINP_EDU_OPTS, T('Education / training'))}
+      ${lblSelect('sinp.age', sn.age, SINP_AGE_OPTS, T('Age'))}
+      ${lblSelect('sinp.language', sn.language, SINP_CLB_OPTS, T('First language (CLB)'))}
+      ${lblSelect('sinp.secondLanguage', sn.secondLanguage, SINP_CLB_OPTS, T('Second official language (CLB)'))}
+      ${lblSelect('sinp.workRecentYears', sn.workRecentYears, YEAR_OPTS, T('Work in field — last 5 yrs'))}
+      ${lblSelect('sinp.workEarlierYears', sn.workEarlierYears, YEAR_OPTS, T('Work in field — 6–10 yrs ago'))}
     </div>
   </div>
   <div style="${CARD}">
-    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Connection to Saskatchewan</div>
+    <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">${T('Connection to Saskatchewan')}</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${chip('sinp.hasSaskJobOffer', 'Sask. job offer (+30)')}${chip('sinp.hasSaskFamily', 'Close family in Sask. (+20)')}${chip('sinp.hasSaskWorkExp', 'Past Sask. work (+5)')}${chip('sinp.hasSaskStudy', 'Studied in Sask. (+5)')}
+      ${chip('sinp.hasSaskJobOffer', T('Sask. job offer (+30)'))}${chip('sinp.hasSaskFamily', T('Close family in Sask. (+20)'))}${chip('sinp.hasSaskWorkExp', T('Past Sask. work (+5)'))}${chip('sinp.hasSaskStudy', T('Studied in Sask. (+5)'))}
     </div>
   </div>
 </div>`;
@@ -2436,13 +2444,13 @@ function crsCalc(i){
   }
   var total = Math.min(1200, coreTotal + spouseTotal + skillPts + addPts);
   return { total:total, minClb:minClb, rows:[
-    { label:'Age', val:agePts, max:married?100:110 },
-    { label:'Education', val:eduPts, max:married?140:150 },
-    { label:'Language (1st + 2nd)', val:firstLangPts + secondLangPts, max:married?150:160 },
-    { label:'Canadian work experience', val:cwePts, max:married?70:80 },
-    { label:'Spouse factors', val:spouseTotal, max:40 },
-    { label:'Skill transferability', val:skillPts, max:100 },
-    { label:'Additional points', val:addPts, max:600 },
+    { label:'${T('Age')}', val:agePts, max:married?100:110 },
+    { label:'${T('Education')}', val:eduPts, max:married?140:150 },
+    { label:'${T('Language (1st + 2nd)')}', val:firstLangPts + secondLangPts, max:married?150:160 },
+    { label:'${T('Canadian work experience')}', val:cwePts, max:married?70:80 },
+    { label:'${T('Spouse factors')}', val:spouseTotal, max:40 },
+    { label:'${T('Skill transferability')}', val:skillPts, max:100 },
+    { label:'${T('Additional points')}', val:addPts, max:600 },
   ] };
 }
 `;
@@ -2454,7 +2462,7 @@ const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
 const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL });
 const GUIDE_PAGES = [GUIDES.hub, ...GUIDES.guides, GUIDES.about];
 PAGES.splice(PAGES.findIndex((p) => p.file === 'privacy'), 0, ...GUIDE_PAGES);
-const GUIDE_LINKS = [['/guides', 'All guides'], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/:.*$/, '').replace(/^How the CRS Score Is Calculated$/, 'How CRS is calculated')])];
+const GUIDE_LINKS = [['/guides', T('All guides')], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/:.*$/, '').replace(/^How the CRS Score Is Calculated$/, T('How CRS is calculated'))])];
 const absLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
 
 const guideJsonLd = (g) => ({
@@ -2479,15 +2487,15 @@ function guidePage(g) {
   const [h1, ...rest] = html.split(/(?<=<\/h1>)/);
   const crumbs = g.hub || g.about
     ? ''
-    : `<nav class="guide-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides">Guides</a></nav>`;
-  const meta = g.hub || g.about ? '' : `<p class="guide-meta">Last reviewed ${new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} against IRCC's published rules. Estimates only, not immigration advice.</p>`;
+    : `<nav class="guide-crumbs" aria-label="${T('Breadcrumb')}"><a href="/">${T('Home')}</a> / <a href="/guides">${T('Guides')}</a></nav>`;
+  const meta = g.hub || g.about ? '' : `<p class="guide-meta">${T('Last reviewed {date} against IRCC\'s published rules. Estimates only, not immigration advice.', { date: new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) })}</p>`;
   const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
   const relatedBlock = related.length
-    ? `<section class="guide-related"><h2>Related guides</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
+    ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
     : '';
   const cta = g.about
     ? ''
-    : `<div class="guide-cta"><p>Run your own numbers: the CRS, FSW, BC PNP and SINP calculators work in your browser and keep everything you enter on your device.</p>${accentBtn('/crs-calculator', 'Open the calculators')}</div>`;
+    : `<div class="guide-cta"><p>${T('Run your own numbers: the CRS, FSW, BC PNP and SINP calculators work in your browser and keep everything you enter on your device.')}</p>${accentBtn('/crs-calculator', T('Open the calculators'))}</div>`;
   const body = `${nav(g.hub ? 'guides' : g.about ? '' : 'guides', 'calc')}
 <div style="min-height:100vh;position:relative">
 <main class="doc"><article class="doc-card">${crumbs}${h1}${meta}${rest.join('')}${cta}${relatedBlock}</article></main>
@@ -2502,8 +2510,8 @@ const calcScript = (ACTIVE) => `<script>
 (function(){
   var state = ${JSON.stringify(STATE0)};
   var active = '${ACTIVE}';
-  var TITLES = { crs:'CRS: Express Entry score', fsw:'Federal Skilled Worker: 67-point grid', bc:'BC PNP: SIRS score', sinp:'Saskatchewan SINP: EOI points' };
-  var SUBS = { crs:'Official IRCC Comprehensive Ranking System, out of 1,200.', fsw:'Six selection factors — 67 of 100 needed to be eligible.', bc:'Skills Immigration Registration System, out of 200.', sinp:'International Skilled Worker EOI — 60 of 110 to qualify.' };
+  var TITLES = { crs:'${jsStr(T('CRS: Express Entry score'))}', fsw:'${jsStr(T('Federal Skilled Worker: 67-point grid'))}', bc:'${jsStr(T('BC PNP: SIRS score'))}', sinp:'${jsStr(T('Saskatchewan SINP: EOI points'))}' };
+  var SUBS = { crs:'${jsStr(T('Official IRCC Comprehensive Ranking System, out of 1,200.'))}', fsw:'${jsStr(T('Six selection factors — 67 of 100 needed to be eligible.'))}', bc:'${jsStr(T('Skills Immigration Registration System, out of 200.'))}', sinp:'${jsStr(T('International Skilled Worker EOI — 60 of 110 to qualify.'))}' };
 
   function getPath(f){ return f.split('.').reduce(function(o,k){ return o==null?o:o[k]; }, state); }
   function setPath(f,v){ var p=f.split('.'); var o=state; for(var i=0;i<p.length-1;i++){ o=o[p[i]]; } o[p[p.length-1]]=v; }
@@ -2531,14 +2539,14 @@ ${CLB_CLIENT_SRC}
     var base=crsCalc(crsInput()).total, best=null;
     function tryIt(label, over, sFr){ var d=crsCalc(crsInput(over, sFr)).total-base; if(d>0 && (!best || d>best.d)) best={ label:label, d:d }; }
     var F=s.firstLang, m=minOf(F), unit=langOf('crs.firstLang')==='fr'?'NCLC':'CLB';
-    if (m<10){ var t=Math.max(4,m+1), nf={}; SKILLS.forEach(function(k){ nf[k]=Math.max(F[k],t); }); tryIt('Every language ability at '+unit+' '+t+' or higher', { firstLang:nf }); }
+    if (m<10){ var t=Math.max(4,m+1), nf={}; SKILLS.forEach(function(k){ nf[k]=Math.max(F[k],t); }); tryIt('${jsStr(T('Every language ability at @@U@@ @@T@@ or higher'))}'.replace('@@U@@',unit).replace('@@T@@',t), { firstLang:nf }); }
     if (langOf('crs.firstLang')==='en'){
       var cur = s.hasSecondLang ? s.secondLang : {speaking:0,listening:0,reading:0,writing:0};
-      if (!(s.hasSecondLang && langOf('crs.secondLang')==='fr' && minOf(cur)>=7)){ var f7={}; SKILLS.forEach(function(k){ f7[k]=Math.max(cur[k],7); }); tryIt('French at NCLC 7 in all four abilities', { hasSecondLang:true, secondLang:f7 }, true); }
+      if (!(s.hasSecondLang && langOf('crs.secondLang')==='fr' && minOf(cur)>=7)){ var f7={}; SKILLS.forEach(function(k){ f7[k]=Math.max(cur[k],7); }); tryIt('${jsStr(T('French at NCLC 7 in all four abilities'))}', { hasSecondLang:true, secondLang:f7 }, true); }
     }
-    if (s.canadianWorkExp<5) tryIt('One more year of skilled work in Canada', { canadianWorkExp:s.canadianWorkExp+1 });
-    if (['masters','phd'].indexOf(s.education)<0) tryIt('A master\u2019s degree', { education:'masters' });
-    if (s.maritalStatus==='married' && minOf(s.spouseLang)<9) tryIt('Your spouse at CLB 9 in all four abilities', { spouseLang:{speaking:9,listening:9,reading:9,writing:9} });
+    if (s.canadianWorkExp<5) tryIt('${jsStr(T('One more year of skilled work in Canada'))}', { canadianWorkExp:s.canadianWorkExp+1 });
+    if (['masters','phd'].indexOf(s.education)<0) tryIt('${jsStr(T('A master’s degree'))}', { education:'masters' });
+    if (s.maritalStatus==='married' && minOf(s.spouseLang)<9) tryIt('${jsStr(T('Your spouse at CLB 9 in all four abilities'))}', { spouseLang:{speaking:9,listening:9,reading:9,writing:9} });
     return best;
   }
 
@@ -2559,12 +2567,12 @@ ${CRS_CALC_SRC}
       (i.workedInCanada?10:0)+(i.spouseWorkedInCanada?5:0)+(i.hasArrangedEmployment?5:0)+(i.hasRelativeInCanada?5:0));
     var total = language+education+work+agePts+arranged+adapt;
     return { total:total, pass: total>=67 && minFirst>=7 && i.workYears!=='none', rows:[
-      {label:'Language', val:language, max:28},
-      {label:'Education', val:education, max:25},
-      {label:'Work experience', val:work, max:15},
-      {label:'Age', val:agePts, max:12},
-      {label:'Arranged employment', val:arranged, max:10},
-      {label:'Adaptability', val:adapt, max:10},
+      {label:'${T('Language')}', val:language, max:28},
+      {label:'${T('Education')}', val:education, max:25},
+      {label:'${T('Work experience')}', val:work, max:15},
+      {label:'${T('Age')}', val:agePts, max:12},
+      {label:'${T('Arranged employment')}', val:arranged, max:10},
+      {label:'${T('Adaptability')}', val:adapt, max:10},
     ] };
   }
   function sirsCalc(i){
@@ -2580,11 +2588,11 @@ ${CRS_CALC_SRC}
     var region = Math.min(25, REG[i.region] + (i.hasRegionalExperience?10:0));
     var total = workExperience+education+language+wage+region;
     return { total:total, rows:[
-      {label:'Work experience', val:workExperience, max:40},
-      {label:'Education', val:education, max:40},
-      {label:'Language', val:language, max:40},
-      {label:'Wage', val:wage, max:55},
-      {label:'Regional', val:region, max:25},
+      {label:'${T('Work experience')}', val:workExperience, max:40},
+      {label:'${T('Education')}', val:education, max:40},
+      {label:'${T('Language')}', val:language, max:40},
+      {label:'${T('Wage')}', val:wage, max:55},
+      {label:'${T('Regional')}', val:region, max:25},
     ] };
   }
   function sinpCalc(i){
@@ -2602,11 +2610,11 @@ ${CRS_CALC_SRC}
     var connection = Math.min(30, (i.hasSaskJobOffer?30:0)+(i.hasSaskFamily?20:0)+(i.hasSaskWorkExp?5:0)+(i.hasSaskStudy?5:0));
     var total = education+work+language+age+connection;
     return { total:total, pass: total>=60, rows:[
-      {label:'Education', val:education, max:23},
-      {label:'Work experience', val:work, max:15},
-      {label:'Language', val:language, max:30},
-      {label:'Age', val:age, max:12},
-      {label:'Sask. connection', val:connection, max:30},
+      {label:'${T('Education')}', val:education, max:23},
+      {label:'${T('Work experience')}', val:work, max:15},
+      {label:'${T('Language')}', val:language, max:30},
+      {label:'${T('Age')}', val:age, max:12},
+      {label:'${T('Sask. connection')}', val:connection, max:30},
     ] };
   }
 
@@ -2617,35 +2625,35 @@ ${CRS_CALC_SRC}
       var r=crsCalc(crsInput());
       var diff = LAST_CEC ? r.total-LAST_CEC.crs : null;
       var above = diff!=null && diff>=0, close = diff!=null && diff>-30;
-      return { label:'Comprehensive Ranking System', total:r.total, max:'1,200',
-        badgeText: diff==null ? '' : (above ? diff+' above CEC' : (-diff)+' below CEC'),
+      return { label:'${jsStr(T('Comprehensive Ranking System'))}', total:r.total, max:'1,200',
+        badgeText: diff==null ? '' : (above ? diff+' ${jsStr(T('above CEC'))}' : (-diff)+' ${jsStr(T('below CEC'))}'),
         badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;background:'+(above?'var(--successSoft)':close?'var(--warningSoft)':'var(--bg3)')+';color:'+(above?'var(--success)':close?'var(--warningInk)':'var(--text2)'),
         barPct:Math.round(r.total/1200*100),
-        note: LAST_CEC ? 'The last Canadian Experience Class round (#'+LAST_CEC.no+', '+LAST_CEC.date+') cut off at '+LAST_CEC.crs+'. Category rounds can go far lower, and a provincial nomination adds 600.' : 'Category rounds can go far lower, and a provincial nomination adds 600.',
+        note: LAST_CEC ? '${jsStr(T('The last Canadian Experience Class round (#@@NO@@, @@DATE@@) cut off at @@CRS@@. Category rounds can go far lower, and a provincial nomination adds 600.'))}'.replace('@@NO@@',LAST_CEC.no).replace('@@DATE@@',LAST_CEC.date).replace('@@CRS@@',LAST_CEC.crs) : '${jsStr(T('Category rounds can go far lower, and a provincial nomination adds 600.'))}',
         boost: boost(), rows:r.rows, grad:grad };
     } else if (active==='fsw'){
       var r=fswCalc(state.fsw);
-      return { label:'FSW six selection factors', total:r.total, max:'100',
-        badgeText: r.pass?'Eligible (67+)':'Below 67',
+      return { label:'${jsStr(T('FSW six selection factors'))}', total:r.total, max:'100',
+        badgeText: r.pass?'${jsStr(T('Eligible (67+)'))}':'${jsStr(T('Below 67'))}',
         badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'var(--successSoft)':'var(--accentSoft)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
         barPct:Math.round(r.total/100*100),
-        note: r.pass?'You meet the 67-point pass mark. You must also meet the CLB 7 and 1-year work minimums.':'You need at least 67 points, CLB 7 in all abilities, and 1 year of skilled work to qualify.',
+        note: r.pass?'${jsStr(T('You meet the 67-point pass mark. You must also meet the CLB 7 and 1-year work minimums.'))}':'${jsStr(T('You need at least 67 points, CLB 7 in all abilities, and 1 year of skilled work to qualify.'))}',
         rows:r.rows, grad:grad };
     } else if (active==='bc'){
       var r=sirsCalc(state.sirs);
-      return { label:'BC PNP SIRS score', total:r.total, max:'200',
-        badgeText:'No fixed pass mark',
+      return { label:'${jsStr(T('BC PNP SIRS score'))}', total:r.total, max:'200',
+        badgeText:'${jsStr(T('No fixed pass mark'))}',
         badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:var(--bg3);color:var(--text2)',
         barPct:Math.round(r.total/200*100),
-        note:'BC PNP has no fixed cutoff — candidates compete in periodic Skills Immigration draws. Higher wage and region points move you up.',
+        note:'${jsStr(T('BC PNP has no fixed cutoff — candidates compete in periodic Skills Immigration draws. Higher wage and region points move you up.'))}',
         rows:r.rows, grad:grad };
     } else {
       var r=sinpCalc(state.sinp);
-      return { label:'Saskatchewan SINP EOI', total:r.total, max:'110',
-        badgeText: r.pass?'Qualifies (60+)':'Below 60',
+      return { label:'${jsStr(T('Saskatchewan SINP EOI'))}', total:r.total, max:'110',
+        badgeText: r.pass?'${jsStr(T('Qualifies (60+)'))}':'${jsStr(T('Below 60'))}',
         badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(r.pass?'var(--successSoft)':'var(--accentSoft)')+';color:'+(r.pass?'var(--success)':'var(--danger)'),
         barPct:Math.round(r.total/110*100),
-        note: r.pass?'You meet the 60-point minimum to enter the EOI pool. Draws select the highest scores.':'You need at least 60 points to be placed in the SINP EOI pool.',
+        note: r.pass?'${jsStr(T('You meet the 60-point minimum to enter the EOI pool. Draws select the highest scores.'))}':'${jsStr(T('You need at least 60 points to be placed in the SINP EOI pool.'))}',
         rows:r.rows, grad:grad };
     }
   }
@@ -2661,7 +2669,7 @@ ${CRS_CALC_SRC}
     document.getElementById('r-bar').style.cssText=bar(res.barPct,res.grad);
     document.getElementById('r-note').textContent=res.note;
     var rb=document.getElementById('r-boost');
-    if (res.boost){ rb.hidden=false; rb.innerHTML='Biggest boost for this profile: <b>'+res.boost.label+'</b> <span class=\"rboost-pts\">+'+res.boost.d+'</span> <a href=\"/improve-crs-score\">More ways</a>'; } else rb.hidden=true;
+    if (res.boost){ rb.hidden=false; rb.innerHTML='${jsStr(T('Biggest boost for this profile:'))} <b>'+res.boost.label+'</b> <span class=\"rboost-pts\">+'+res.boost.d+'</span> <a href=\"/improve-crs-score\">${jsStr(T('More ways'))}</a>'; } else rb.hidden=true;
     document.getElementById('r-rows').innerHTML=res.rows.map(function(x){
       var pct=x.max?Math.round(x.val/x.max*100):0;
       return '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--text2)">'+x.label+'</span><span style="color:var(--text);font-weight:700"><span style="font-family:\\'Satoshi\\',sans-serif">'+x.val+'</span> <span style="color:var(--muted);font-weight:500">/ '+x.max+'</span></span></div><div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="'+bar(pct,'var(--accent)')+'"></div></div></div>';
@@ -2678,11 +2686,11 @@ ${CRS_CALC_SRC}
     var key=block.getAttribute('data-lang'), L=LANG[key], unit=unitFor(key), out={};
     SKILLS.forEach(function(k){ out[k]=toClb(L.test,k,L.raw[k]); });
     setPath(key, out);
-    SKILLS.forEach(function(k){ var o=block.querySelector('[data-clbout="'+k+'"]'); o.textContent = L.raw[k]==='' ? '' : (out[k] ? unit+' '+out[k] : 'below '+unit+' 4'); o.classList.toggle('low', L.raw[k]!=='' && !out[k]); });
+    SKILLS.forEach(function(k){ var o=block.querySelector('[data-clbout="'+k+'"]'); o.textContent = L.raw[k]==='' ? '' : (out[k] ? unit+' '+out[k] : '${jsStr(T('below @@U@@ 4'))}'.replace('@@U@@',unit)); o.classList.toggle('low', L.raw[k]!=='' && !out[k]); });
     var all=block.querySelector('[data-clbout="all"]');
     if (L.raw.speaking===''){ all.textContent=''; }
     else { var u=SKILLS.map(function(k){ return out[k]; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
-      all.textContent = u.length===1 ? (u[0] ? unit+' '+u[0]+' in all four' : 'below '+unit+' 4') : SKILLS.map(function(k){ return k[0].toUpperCase()+' '+(out[k]||'<4'); }).join(' · '); }
+      all.textContent = u.length===1 ? (u[0] ? unit+' '+u[0]+' ${jsStr(T('in all four'))}' : '${jsStr(T('below @@U@@ 4'))}'.replace('@@U@@',unit)) : SKILLS.map(function(k){ return k[0].toUpperCase()+' '+(out[k]||'<4'); }).join(' · '); }
   }
   function setRanges(block){
     var L=LANG[block.getAttribute('data-lang')], t=CLB_TESTS[L.test].range;
@@ -2698,7 +2706,7 @@ ${CRS_CALC_SRC}
     var b=root.querySelector('[data-lang="crs.secondLang"]'); if(!b) return;
     var want = langOf('crs.firstLang')==='fr' ? 'en' : 'fr', sel=b.querySelector('[data-langtest]');
     var chipEl=document.getElementById('crs-second-chip');
-    if (chipEl){ var w = want==='fr' ? 'French' : 'English'; chipEl.textContent = (state.crs.hasSecondLang ? 'Remove ' : '+ Add ')+w+' (second official language)'; }
+    if (chipEl){ var w = want==='fr' ? '${jsStr(T('French'))}' : '${jsStr(T('English'))}'; chipEl.textContent = (state.crs.hasSecondLang ? '${jsStr(T('Remove @@W@@ (second official language)', { w: '@@W@@' }))}'.replace('@@W@@', w) : '${jsStr(T('+ Add @@W@@ (second official language)', { w: '@@W@@' }))}'.replace('@@W@@', w)); }
     if (CLB_TESTS[LANG['crs.secondLang'].test].lang===want) return;
     sel.innerHTML=OPTS[want]; LANG['crs.secondLang'].test=sel.value;
     LANG['crs.secondLang'].raw={speaking:'',listening:'',reading:'',writing:''};
@@ -2732,7 +2740,7 @@ ${CRS_CALC_SRC}
   root.querySelectorAll('.chip[data-field]').forEach(function(b){
     b.addEventListener('click', function(){
       var f=b.getAttribute('data-field'); setPath(f,!getPath(f)); b.classList.toggle('on', !!getPath(f)); b.setAttribute('aria-pressed', !!getPath(f));
-      if(f==='crs.hasSecondLang'){ var w=langOf('crs.firstLang')==='fr'?'English':'French'; b.textContent=getPath(f)?'Remove '+w+' (second official language)':'+ Add '+w+' (second official language)'; }
+      if(f==='crs.hasSecondLang'){ var w=langOf('crs.firstLang')==='fr'?'${jsStr(T('English'))}':'${jsStr(T('French'))}'; b.textContent=getPath(f)?'${jsStr(T('Remove @@W@@ (second official language)', { w: '@@W@@' }))}'.replace('@@W@@', w):'${jsStr(T('+ Add @@W@@ (second official language)', { w: '@@W@@' }))}'.replace('@@W@@', w); }
       syncVis(); render();
     });
   });
@@ -2751,11 +2759,11 @@ ${CRS_CALC_SRC}
 const LOWEST_CATEGORY = FEED.rounds.filter((r) => r.label !== 'Provincial Nominee Program').reduce((a, b) => (b.crs < a.crs ? b : a), FEED.rounds[0]);
 const CALC_INFO = {
   crs: {
-    file: 'crs-calculator', name: 'CRS calculator (Express Entry)',
-    lead: 'CRS calculator for', accent: 'Express Entry.',
-    lede: 'Enter your test scores and profile to get your Comprehensive Ranking System score out of 1,200. It runs in your browser; nothing you type is sent anywhere.',
-    formTitle: 'CRS: Express Entry score', formSub: 'Official IRCC Comprehensive Ranking System, out of 1,200.',
-    about: `## How the CRS score works
+    file: 'crs-calculator', name: T('CRS calculator (Express Entry)'),
+    lead: T('CRS calculator for'), accent: T('Express Entry.'),
+    lede: T('Enter your test scores and profile to get your Comprehensive Ranking System score out of 1,200. It runs in your browser; nothing you type is sent anywhere.'),
+    formTitle: T('CRS: Express Entry score'), formSub: T('Official IRCC Comprehensive Ranking System, out of 1,200.'),
+    about: T(`## How the CRS score works
 
 Immigration, Refugees and Citizenship Canada ranks every Express Entry profile with the Comprehensive Ranking System. This calculator uses IRCC's published grid:
 
@@ -2764,22 +2772,22 @@ Immigration, Refugees and Citizenship Canada ranks every Express Entry profile w
 - **Skill transferability**, up to 100: education and foreign work combined with strong language or Canadian experience.
 - **Additional points**, up to 600: a provincial nomination, French ability, study in Canada, or a brother or sister in Canada.
 
-Language counts per ability, and transferability uses your lowest one, so one weak band can cost more than it looks. The full tables are in [how the CRS score is calculated](/crs-points), and [how to improve your CRS score](/improve-crs-score) shows what each change is worth.`,
+Language counts per ability, and transferability uses your lowest one, so one weak band can cost more than it looks. The full tables are in [how the CRS score is calculated](/crs-points), and [how to improve your CRS score](/improve-crs-score) shows what each change is worth.`),
     faq: [
-      ['What is a good CRS score?', `There is no pass mark. Each round of invitations sets its own cutoff.${LAST_CEC ? ` The last Canadian Experience Class round (#${LAST_CEC.no}, ${LAST_CEC.date}) cut off at ${LAST_CEC.crs}.` : ''} Category rounds can go much lower: the lowest recent cutoff was ${LOWEST_CATEGORY.crs} (${LOWEST_CATEGORY.label}, #${LOWEST_CATEGORY.number}). See every round on the draws page.`],
-      ['Which language tests can I enter?', 'IELTS General Training, CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French. The calculator converts each score to a CLB or NCLC level with IRCC’s tables, or you can enter CLB levels directly.'],
-      ['Does a job offer add CRS points?', 'No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025, so a job offer no longer changes your CRS score.'],
-      ['How is the French bonus calculated?', 'French at NCLC 7 or higher in all four abilities adds 50 points if your English is at least CLB 5, or 25 points otherwise. The calculator works this out from the French test you enter.'],
-      ['Is this my official score?', 'No. It is an estimate for planning. Your official score is the one IRCC shows in your Express Entry profile.'],
+      [T('What is a good CRS score?'), T('There is no pass mark. Each round of invitations sets its own cutoff.{cec} Category rounds can go much lower: the lowest recent cutoff was {low} ({label}, #{no}). See every round on the draws page.', { cec: LAST_CEC ? ` The last Canadian Experience Class round (#${LAST_CEC.no}, ${LAST_CEC.date}) cut off at ${LAST_CEC.crs}.` : '', low: LOWEST_CATEGORY.crs, label: LOWEST_CATEGORY.label, no: LOWEST_CATEGORY.number })],
+      [T('Which language tests can I enter?'), T('IELTS General Training, CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French. The calculator converts each score to a CLB or NCLC level with IRCC’s tables, or you can enter CLB levels directly.')],
+      [T('Does a job offer add CRS points?'), T('No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025, so a job offer no longer changes your CRS score.')],
+      [T('How is the French bonus calculated?'), T('French at NCLC 7 or higher in all four abilities adds 50 points if your English is at least CLB 5, or 25 points otherwise. The calculator works this out from the French test you enter.')],
+      [T('Is this my official score?'), T('No. It is an estimate for planning. Your official score is the one IRCC shows in your Express Entry profile.')],
     ],
-    guide: ['/crs-points', 'How the CRS score is calculated'],
+    guide: ['/crs-points', T('How the CRS score is calculated')],
   },
   fsw: {
-    file: 'fsw-calculator', name: 'FSW 67-point calculator',
-    lead: 'FSW calculator:', accent: 'the 67-point test.',
-    lede: 'Check whether you qualify for the Federal Skilled Worker Program before entering the Express Entry pool. Six factors, 67 of 100 points to pass.',
-    formTitle: 'Federal Skilled Worker: 67-point grid', formSub: 'Six selection factors. 67 of 100 needed to be eligible.',
-    about: `## How the FSW grid works
+    file: 'fsw-calculator', name: T('FSW 67-point calculator'),
+    lead: T('FSW calculator:'), accent: T('the 67-point test.'),
+    lede: T('Check whether you qualify for the Federal Skilled Worker Program before entering the Express Entry pool. Six factors, 67 of 100 points to pass.'),
+    formTitle: T('Federal Skilled Worker: 67-point grid'), formSub: T('Six selection factors. 67 of 100 needed to be eligible.'),
+    about: T(`## How the FSW grid works
 
 The Federal Skilled Worker Program is one of the three Express Entry programs. To enter the pool under it, you need at least **67 out of 100** on six selection factors:
 
@@ -2790,20 +2798,20 @@ The Federal Skilled Worker Program is one of the three Express Entry programs. T
 - **Arranged employment**, 10.
 - **Adaptability**, up to 10: previous study or work in Canada, a relative in Canada, or your spouse's language, study or work.
 
-This is a pass/fail check. It does not change your CRS score. The [FSW 67 points guide](/fsw-67-points) has every table.`,
+This is a pass/fail check. It does not change your CRS score. The [FSW 67 points guide](/fsw-67-points) has every table.`),
     faq: [
-      ['What do I need besides 67 points?', 'CLB 7 in all four abilities of your first official language, at least one year of continuous skilled work (TEER 0, 1, 2 or 3) in the last ten years, an Educational Credential Assessment for foreign education, and proof of funds unless you have a valid job offer and are authorized to work in Canada.'],
-      ['Does my FSW score affect my CRS score?', 'No. The 67-point grid only decides whether you can enter the pool under FSW. Your rank in the pool comes from the CRS.'],
-      ['Do I need a job offer?', 'No. A valid job offer adds 10 points for arranged employment and 5 for adaptability, but most candidates qualify without one.'],
+      [T('What do I need besides 67 points?'), T('CLB 7 in all four abilities of your first official language, at least one year of continuous skilled work (TEER 0, 1, 2 or 3) in the last ten years, an Educational Credential Assessment for foreign education, and proof of funds unless you have a valid job offer and are authorized to work in Canada.')],
+      [T('Does my FSW score affect my CRS score?'), T('No. The 67-point grid only decides whether you can enter the pool under FSW. Your rank in the pool comes from the CRS.')],
+      [T('Do I need a job offer?'), T('No. A valid job offer adds 10 points for arranged employment and 5 for adaptability, but most candidates qualify without one.')],
     ],
-    guide: ['/fsw-67-points', 'FSW 67 points explained'],
+    guide: ['/fsw-67-points', T('FSW 67 points explained')],
   },
   bc: {
-    file: 'bc-pnp-calculator', name: 'BC PNP SIRS calculator',
-    lead: 'BC PNP calculator:', accent: 'your SIRS score.',
-    lede: 'Estimate your British Columbia Skills Immigration Registration System score out of 200 before you register for a BC PNP skills draw.',
-    formTitle: 'BC PNP: SIRS score', formSub: 'Skills Immigration Registration System, out of 200.',
-    about: `## How the SIRS score works
+    file: 'bc-pnp-calculator', name: T('BC PNP SIRS calculator'),
+    lead: T('BC PNP calculator:'), accent: T('your SIRS score.'),
+    lede: T('Estimate your British Columbia Skills Immigration Registration System score out of 200 before you register for a BC PNP skills draw.'),
+    formTitle: T('BC PNP: SIRS score'), formSub: T('Skills Immigration Registration System, out of 200.'),
+    about: T(`## How the SIRS score works
 
 The BC Provincial Nominee Program ranks Skills Immigration registrations with the Skills Immigration Registration System (SIRS). It has five parts:
 
@@ -2813,20 +2821,20 @@ The BC Provincial Nominee Program ranks Skills Immigration registrations with th
 - **Hourly wage** of the B.C. job offer, up to 55. Higher wages earn more, reaching the maximum at $70 an hour.
 - **Region of employment**, up to 25: jobs outside Metro Vancouver earn more, plus points for experience or study in that region.
 
-A BC PNP nomination adds 600 points to an Express Entry profile. See [Express Entry draw types](/express-entry-draws) for how nominee rounds work.`,
+A BC PNP nomination adds 600 points to an Express Entry profile. See [Express Entry draw types](/express-entry-draws) for how nominee rounds work.`),
     faq: [
-      ['What is a good SIRS score?', 'There is no fixed pass mark. BC PNP invites the highest-scoring registrations in periodic draws, often by stream or occupation, and the cutoffs change from draw to draw. Check the BC PNP site for recent draws.'],
-      ['Why does the wage matter so much?', 'The hourly wage of your B.C. job offer is worth up to 55 points, more than any other single factor, so a higher-paid offer can move you up a long way.'],
-      ['Does a BC PNP nomination help with Express Entry?', 'Yes. A nomination through an Express Entry-aligned BC PNP stream adds 600 CRS points, which in practice leads to an invitation in the next nominee round.'],
+      [T('What is a good SIRS score?'), T('There is no fixed pass mark. BC PNP invites the highest-scoring registrations in periodic draws, often by stream or occupation, and the cutoffs change from draw to draw. Check the BC PNP site for recent draws.')],
+      [T('Why does the wage matter so much?'), T('The hourly wage of your B.C. job offer is worth up to 55 points, more than any other single factor, so a higher-paid offer can move you up a long way.')],
+      [T('Does a BC PNP nomination help with Express Entry?'), T('Yes. A nomination through an Express Entry-aligned BC PNP stream adds 600 CRS points, which in practice leads to an invitation in the next nominee round.')],
     ],
-    guide: ['/express-entry-draws', 'Express Entry draw types'],
+    guide: ['/express-entry-draws', T('Express Entry draw types')],
   },
   sinp: {
-    file: 'sinp-calculator', name: 'Saskatchewan SINP EOI calculator',
-    lead: 'SINP points', accent: 'calculator.',
-    lede: 'Calculate your Saskatchewan Immigrant Nominee Program Expression of Interest score out of 110 and check the 60-point minimum.',
-    formTitle: 'Saskatchewan SINP: EOI points', formSub: 'International Skilled Worker EOI. 60 of 110 to qualify.',
-    about: `## How the SINP EOI score works
+    file: 'sinp-calculator', name: T('Saskatchewan SINP EOI calculator'),
+    lead: T('SINP points'), accent: T('calculator.'),
+    lede: T('Calculate your Saskatchewan Immigrant Nominee Program Expression of Interest score out of 110 and check the 60-point minimum.'),
+    formTitle: T('Saskatchewan SINP: EOI points'), formSub: T('International Skilled Worker EOI. 60 of 110 to qualify.'),
+    about: T(`## How the SINP EOI score works
 
 The Saskatchewan Immigrant Nominee Program scores International Skilled Worker Expressions of Interest out of **110**. You need at least **60** to enter the pool:
 
@@ -2836,24 +2844,24 @@ The Saskatchewan Immigrant Nominee Program scores International Skilled Worker E
 - **Age**, up to 12: full points from 22 to 34.
 - **Connection to Saskatchewan**, up to 30: a job offer, close family, or past work or study in the province.
 
-Saskatchewan invites the highest scores from the pool in periodic draws. A nomination through an Express Entry-linked stream adds 600 CRS points.`,
+Saskatchewan invites the highest scores from the pool in periodic draws. A nomination through an Express Entry-linked stream adds 600 CRS points.`),
     faq: [
-      ['What is the minimum SINP score?', '60 out of 110. That only gets you into the Expression of Interest pool; draws invite the highest-scoring candidates, so cutoffs are usually higher.'],
-      ['Do I need a job offer for SINP?', 'Not for the Occupations In-Demand or Express Entry categories. A Saskatchewan job offer is worth up to 30 points for connection to the province, which is the largest single bonus.'],
-      ['Does SINP help with Express Entry?', 'Yes. A nomination through the Saskatchewan Express Entry category adds 600 CRS points.'],
+      [T('What is the minimum SINP score?'), T('60 out of 110. That only gets you into the Expression of Interest pool; draws invite the highest-scoring candidates, so cutoffs are usually higher.')],
+      [T('Do I need a job offer for SINP?'), T('Not for the Occupations In-Demand or Express Entry categories. A Saskatchewan job offer is worth up to 30 points for connection to the province, which is the largest single bonus.')],
+      [T('Does SINP help with Express Entry?'), T('Yes. A nomination through the Saskatchewan Express Entry category adds 600 CRS points.')],
     ],
-    guide: ['/express-entry-draws', 'Express Entry draw types'],
+    guide: ['/express-entry-draws', T('Express Entry draw types')],
   },
 };
 const calcAboutMd = (id) => {
   const i = CALC_INFO[id];
   return `${i.about}
 
-## Questions
+## ${T('Questions')}
 
 ${i.faq.map(([q, a]) => `### ${q}\n\n${a}`).join('\n\n')}
 
-## Other calculators
+## ${T('Other calculators')}
 
 ${Object.entries(CALC_INFO).filter(([k]) => k !== id).map(([k, x]) => `- [${x.name}](${CALC_ROUTES[k]})`).join('\n')}
 `;
@@ -2878,7 +2886,7 @@ ${pageHero(info.lead, info.accent, info.lede)}
   <div class="calcresult" id="calc-result" data-reveal style="position:sticky;top:88px;scroll-margin-top:80px">
     <div style="background:linear-gradient(155deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:20px;padding:26px;box-shadow:var(--shadow)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-        <span id="r-label" style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)">Comprehensive Ranking System</span>
+        <span id="r-label" style="font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)">${T('Comprehensive Ranking System')}</span>
         <span id="r-badge"></span>
       </div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:2px">
@@ -2890,18 +2898,18 @@ ${pageHero(info.lead, info.accent, info.lede)}
       <p id="r-boost" class="rboost" hidden></p>
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:20px;margin-top:16px">
-      <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">Points breakdown</div>
+      <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">${T('Points breakdown')}</div>
       <div id="r-rows" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>
-    <a class="link-accent" href="/" style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">Estimate only · verify with the official tool ↗</a>
+    <a class="link-accent" href="/" style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">${T('Estimate only · verify with the official tool ↗')}</a>
   </div>
 </section>
 <section class="wrap calc-about"><article class="doc-card">${addHeadingIds(marked.parse(calcAboutMd(id)))}</article></section>
 </div>
 ${footerFull()}
 </div>
-<a class="scorebar" id="scorebar" href="#calc-result" aria-label="See your score breakdown">
-  <span style="display:flex;flex-direction:column;min-width:0"><span id="sb-label" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Comprehensive Ranking System</span><span style="font-size:12.5px;color:var(--text2)">Tap for the breakdown</span></span>
+<a class="scorebar" id="scorebar" href="#calc-result" aria-label="${T('See your score breakdown')}">
+  <span style="display:flex;flex-direction:column;min-width:0"><span id="sb-label" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${T('Comprehensive Ranking System')}</span><span style="font-size:12.5px;color:var(--text2)">${T('Tap for the breakdown')}</span></span>
   <span style="display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex-shrink:0"><span id="sb-total" class="num" style="font-size:30px;line-height:1;color:var(--text)">0</span><span id="sb-max" style="font-size:13px;color:var(--muted);font-weight:600">/ 1,200</span></span>
 </a>
 ${calcScript(id)}`;
@@ -3249,13 +3257,13 @@ function notFoundPage() {
   const body = `${nav('', 'calc')}
 <div style="min-height:100vh;position:relative">
 <main style="position:relative;z-index:1;max-width:820px;margin:0 auto;padding:80px 24px 72px">
-  <h1 class="split" style="font-size:clamp(42px,5.6vw,72px);line-height:1.02;margin:0 0 18px">This page doesn't <em style="font-style:normal;color:var(--accentInk)">exist.</em></h1>
-  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:620px">The link may be old or mistyped. Everything on crspulse.com lives at one of these pages:</p>
+  <h1 class="split" style="font-size:clamp(42px,5.6vw,72px);line-height:1.02;margin:0 0 18px">${T('This page doesn\'t <em style="font-style:normal;color:var(--accentInk)">exist.</em>')}</h1>
+  <p style="font-size:16.5px;line-height:1.6;color:var(--text2);margin:0 0 30px;max-width:620px">${T('The link may be old or mistyped. Everything on crspulse.com lives at one of these pages:')}</p>
   <div style="display:flex;flex-direction:column;gap:10px">
     ${links.map(([href, label, desc]) => `<a class="lift" href="${href}" style="display:block;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 18px;color:var(--text)"><div style="font-size:15px;font-weight:700;margin-bottom:3px">${label}</div><div style="font-size:13px;line-height:1.5;color:var(--text2)">${desc}</div></a>`).join('')}
   </div>
   <div style="margin-top:34px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px">
-    <div style="font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">For AI agents</div>
+    <div style="font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">${T('For AI agents')}</div>
     <pre style="margin:0;overflow-x:auto;font-size:12.5px;line-height:1.6;color:var(--text2);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap">${agentMd.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</pre>
   </div>
 </main>
