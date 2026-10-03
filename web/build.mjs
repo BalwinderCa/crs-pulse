@@ -238,6 +238,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
 @keyframes livering{ 0%{ transform:scale(.4); opacity:.7 } 80%,100%{ transform:scale(1.25); opacity:0 } }
 .langswitch{ height:34px; min-width:34px; padding:0 9px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:12.5px; font-weight:700; letter-spacing:.3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
 .langswitch:hover{ color:var(--text); border-color:var(--text2); }
+.langswitch{ gap:6px; }
+.langflag{ width:20px; height:14px; border-radius:2px; box-shadow:0 0 0 1px var(--hairline); flex-shrink:0; }
 .theme-btn{ width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s ease, border-color .15s ease; flex-shrink:0; }
 .headcta{ padding:0 15px; height:34px; font-size:14px; border-radius:9px; gap:7px; white-space:nowrap; flex-shrink:0; }
 .menu{ display:none; position:relative; }
@@ -710,6 +712,13 @@ const RESOURCES = [
   ['/timeline', T('Application timeline'), 'timeline', T('Log milestones and the days between'), 'clock'],
 ];
 
+// Flag on the language switch: the flag of the language it switches TO. Inline SVG, not
+// emoji, because Windows renders flag emoji as plain letters. `id` keeps the Union Jack's
+// clip paths unique when the header and the menu both draw it.
+const langFlag = (id) => (LANG === 'en'
+  ? '<svg class="langflag" viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#002654"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#CE1126"/></svg>'
+  : `<svg class="langflag" viewBox="0 0 60 30" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><clipPath id="${id}s"><path d="M0,0v30h60V0z"/></clipPath><clipPath id="${id}t"><path d="M30,15h30v15zv15H0zH0V0zV0h30z"/></clipPath><g clip-path="url(#${id}s)"><path d="M0,0v30h60V0z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" clip-path="url(#${id}t)" stroke="#C8102E" stroke-width="4"/><path d="M30,0v30M0,15h60" stroke="#fff" stroke-width="10"/><path d="M30,0v30M0,15h60" stroke="#C8102E" stroke-width="6"/></g></svg>`);
+
 function nav(active, cta) {
   const links = [['/', T('Home'), 'home']];
   const mid = [['/draws', T('Draws'), 'draws']];
@@ -740,7 +749,7 @@ function nav(active, cta) {
     <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}${calcDrop}${mid.map((l) => link(l, 'navlink')).join('')}${resDrop}${after.map((l) => link(l, 'navlink')).join('')}</div>
     <div class="headright">
       ${live}
-      <a class="langswitch head-theme" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}" aria-label="${LANG === 'en' ? 'Français' : 'English'}">${LANG === 'en' ? 'FR' : 'EN'}</a>
+      <a class="langswitch head-theme" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}" aria-label="${LANG === 'en' ? 'Français' : 'English'}">${langFlag('lfh')}${LANG === 'en' ? 'FR' : 'EN'}</a>
       ${themeBtn('head-theme')}
       ${ctaBtn}
       <details class="menu">
@@ -756,7 +765,7 @@ function nav(active, cta) {
           <div class="menuhead"></div>
           ${after.map((l) => link(l, 'menulink')).join('')}
           <a class="menulink" href="/#faq">FAQ</a>
-          <div class="menufoot">${live}<a class="langswitch" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}">${LANG === 'en' ? 'Français' : 'English'}</a>${themeBtn('menu-theme')}</div>
+          <div class="menufoot">${live}<a class="langswitch" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}">${langFlag('lfm')}${LANG === 'en' ? 'Français' : 'English'}</a>${themeBtn('menu-theme')}</div>
         </div>
       </details>
     </div>
