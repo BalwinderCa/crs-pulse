@@ -25,6 +25,10 @@ import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import { buildGuides, GUIDES_REVIEWED } from './guides.mjs';
 import { TESTS as LANG_TESTS, SKILLS, toClb, CLB_CLIENT_SRC } from './clb.mjs';
+import { LANG, LOCALE, HTML_LANG, T, MISSING } from './i18n.mjs';
+import { toFr } from './i18n/routes.mjs';
+// A translated string for a single-quoted JS string literal inside a client <script> template.
+const jsStr = (str) => JSON.stringify(String(str)).slice(1, -1).replace(/'/g, "\\'");
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(here, '../docs');
@@ -34,7 +38,8 @@ const DOCS = resolve(here, '../docs');
 // on an immigration site is worse than not shipping.
 const FEED = JSON.parse(readFileSync(resolve(here, '../data/ee-rounds.json'), 'utf8'));
 if (!FEED.rounds?.length || !FEED.pool?.length) throw new Error('data/ee-rounds.json has no usable rounds');
-const OUT = resolve(here, 'public');
+// The French build (CRS_LANG=fr) writes under public/fr; see writePage().
+const OUT = resolve(here, 'public', LANG === 'fr' ? 'fr' : '');
 const ASSETS = resolve(here, 'assets');
 
 const APP_STORE_URL = 'https://apps.apple.com/app/crs-pulse-ircc-tracker/id6784619403';
@@ -46,8 +51,8 @@ const BUILT = new Date().toISOString().slice(0, 10);
 // every mirror commit, so search snippets show the current cutoff.
 const LATEST = FEED.rounds[0];
 const YEAR = String(LATEST.date).slice(0, 4);
-const fmtN = (n) => Number(n).toLocaleString('en-CA');
-const SHORT_DATE = new Date(`${LATEST.date}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+const fmtN = (n) => Number(n).toLocaleString(LOCALE);
+const SHORT_DATE = new Date(`${LATEST.date}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', timeZone: 'UTC' });
 
 // Every public page, in nav order. Single source of truth for <title>/<meta description>,
 // the markdown twin agents get via `Accept: text/markdown`, sitemap.xml and llms.txt.
@@ -55,81 +60,81 @@ const SHORT_DATE = new Date(`${LATEST.date}T12:00:00Z`).toLocaleDateString('en-C
 const PAGES = [
   {
     file: 'index', path: '/', priority: '1.0',
-    title: 'CRS Pulse \u2014 Express Entry CRS Calculator & IRCC Draw Tracker',
-    description: 'Calculate your Canada Express Entry CRS score, track live IRCC draws, and get push alerts for new rounds. Free, private, and on-device.',
+    title: T('CRS Pulse \u2014 Express Entry CRS Calculator & IRCC Draw Tracker'),
+    description: T('Calculate your Canada Express Entry CRS score, track live IRCC draws, and get push alerts for new rounds. Free, private, and on-device.'),
     llm: 'What CRS Pulse is, the four calculators, recent draws, privacy model and FAQ.',
   },
   // One page per calculator (calc: the form it renders). /calculators 301s to the CRS one.
   {
     file: 'crs-calculator', path: '/crs-calculator', priority: '0.9', calc: 'crs',
-    title: `CRS Calculator ${YEAR}: Free Express Entry Score Calculator`,
-    description: 'Free CRS calculator for Express Entry. Enter your IELTS, CELPIP, PTE Core, TEF or TCF scores and get your Comprehensive Ranking System score out of 1,200.',
+    title: T('CRS Calculator {year}: Free Express Entry Score Calculator', { year: YEAR }),
+    description: T('Free CRS calculator for Express Entry. Enter your IELTS, CELPIP, PTE Core, TEF or TCF scores and get your Comprehensive Ranking System score out of 1,200.'),
     llm: 'The CRS (Express Entry) calculator: inputs, how each factor scores, and the biggest-boost suggestion. Runs in-browser, no upload.',
   },
   {
     file: 'fsw-calculator', path: '/fsw-calculator', priority: '0.8', calc: 'fsw',
-    title: 'FSW Calculator: Federal Skilled Worker 67 Points Check',
-    description: 'Check Federal Skilled Worker eligibility on the 67-point grid: language, education, experience, age, job offer and adaptability. Free, in your browser.',
+    title: T('FSW Calculator: Federal Skilled Worker 67 Points Check'),
+    description: T('Check Federal Skilled Worker eligibility on the 67-point grid: language, education, experience, age, job offer and adaptability. Free, in your browser.'),
     llm: 'The FSW 67-point eligibility calculator: six selection factors, the 67-point pass mark and the CLB 7 / one-year minimums.',
   },
   {
     file: 'bc-pnp-calculator', path: '/bc-pnp-calculator', priority: '0.8', calc: 'bc',
-    title: 'BC PNP Calculator: SIRS Points Score out of 200',
-    description: 'Estimate your BC PNP Skills Immigration Registration System (SIRS) score out of 200 from work experience, education, language, wage and region.',
+    title: T('BC PNP Calculator: SIRS Points Score out of 200'),
+    description: T('Estimate your BC PNP Skills Immigration Registration System (SIRS) score out of 200 from work experience, education, language, wage and region.'),
     llm: 'The BC PNP SIRS calculator: five factors scored out of 200, with no fixed pass mark.',
   },
   {
     file: 'sinp-calculator', path: '/sinp-calculator', priority: '0.8', calc: 'sinp',
-    title: 'SINP Points Calculator: Saskatchewan EOI Score out of 110',
-    description: 'Calculate your Saskatchewan Immigrant Nominee Program EOI points out of 110 and check the 60-point minimum. Free and private, in your browser.',
+    title: T('SINP Points Calculator: Saskatchewan EOI Score out of 110'),
+    description: T('Calculate your Saskatchewan Immigrant Nominee Program EOI points out of 110 and check the 60-point minimum. Free and private, in your browser.'),
     llm: 'The Saskatchewan SINP International Skilled Worker EOI calculator: five factors out of 110, 60 to qualify.',
   },
   {
     file: 'draws', path: '/draws', priority: '0.9',
-    title: `Express Entry Draws ${YEAR}: Latest CRS Cutoffs | CRS Pulse`,
-    description: `Latest Express Entry draw #${LATEST.number} (${SHORT_DATE}): ${LATEST.label}, CRS ${LATEST.crs}, ${fmtN(LATEST.size)} ITAs. Every round from IRCC with cutoff trends and pool data.`,
+    title: T('Express Entry Draws {year}: Latest CRS Cutoffs | CRS Pulse', { year: YEAR }),
+    description: T('Latest Express Entry draw #{n} ({date}): {label}, CRS {crs}, {size} ITAs. Every round from IRCC with cutoff trends and pool data.', { n: LATEST.number, date: SHORT_DATE, label: T(LATEST.label), crs: LATEST.crs, size: fmtN(LATEST.size) }),
     llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
   },
   {
     file: 'analytics', path: '/analytics', priority: '0.8',
-    title: `Express Entry Draw Analytics ${YEAR}: Cutoffs by Category`,
-    description: 'Express Entry cutoffs, cadence and invitations by category from recent IRCC rounds, plus a tool that shows which rounds your CRS score would have cleared.',
+    title: T('Express Entry Draw Analytics {year}: Cutoffs by Category', { year: YEAR }),
+    description: T('Express Entry cutoffs, cadence and invitations by category from recent IRCC rounds, plus a tool that shows which rounds your CRS score would have cleared.'),
     llm: 'Per-category cutoff summary (rounds, low/average/high), invitations by category, draw cadence, and how a CRS score compares with recent rounds and the pool.',
   },
   {
     file: 'checklists', path: '/checklists', priority: '0.8',
-    title: 'Immigration Document Checklists: PR, PNP, Study & Work',
-    description: 'Free document checklists for Express Entry, PNP, family sponsorship, study and work permits, and citizenship. Track your progress privately in your browser.',
+    title: T('Immigration Document Checklists: PR, PNP, Study & Work'),
+    description: T('Free document checklists for Express Entry, PNP, family sponsorship, study and work permits, and citizenship. Track your progress privately in your browser.'),
     llm: 'Document lists by program (Express Entry, PNP paper, family sponsorship, study permit, work permit, citizenship), grouped by section with hints.',
   },
   {
     file: 'processing-times', path: '/processing-times', priority: '0.8',
-    title: `IRCC Processing Times ${YEAR}: PR, Family, Citizenship & More`,
-    description: 'Current IRCC processing times for Express Entry, PNP, family sponsorship, citizenship and more, with people waiting and a decision-date estimator.',
+    title: T('IRCC Processing Times {year}: PR, Family, Citizenship & More', { year: YEAR }),
+    description: T('Current IRCC processing times for Express Entry, PNP, family sponsorship, citizenship and more, with people waiting and a decision-date estimator.'),
     llm: 'IRCC processing time in months and people waiting for every application type, grouped by category, plus the typical stages of each.',
   },
   {
     file: 'timeline', path: '/timeline', priority: '0.7',
-    title: 'Express Entry Timeline Tracker: ITA, AOR, Biometrics to COPR',
-    description: 'Log Express Entry milestones from ITA and AOR to biometrics, medical and COPR. See days between steps against IRCC processing times. Private, in your browser.',
+    title: T('Express Entry Timeline Tracker: ITA, AOR, Biometrics to COPR'),
+    description: T('Log Express Entry milestones from ITA and AOR to biometrics, medical and COPR. See days between steps against IRCC processing times. Private, in your browser.'),
     llm: 'The PR application milestone sequence (ITA, submission, AOR, biometrics, medical, ADR, PR portal, passport request, final decision) with what each step means.',
   },
   {
     file: 'features', path: '/features', priority: '0.7',
-    title: 'Express Entry App: Draw Alerts, PR Tracker & Checklists',
-    description: 'Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics \u2014 free.',
+    title: T('Express Entry App: Draw Alerts, PR Tracker & Checklists'),
+    description: T('Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics \u2014 free.'),
     llm: 'What the iPhone app does at each stage: tracker, checklists, timeline, alerts, analytics.',
   },
   {
     file: 'privacy', path: '/privacy', priority: '0.5',
-    title: 'Privacy Policy \u2014 CRS Pulse',
-    description: 'Privacy Policy for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.',
+    title: T('Privacy Policy \u2014 CRS Pulse'),
+    description: T('Privacy Policy for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.'),
     llm: 'What is stored, where it is stored (on-device) and what leaves the phone.',
   },
   {
     file: 'terms', path: '/terms', priority: '0.5',
-    title: 'Terms of Use \u2014 CRS Pulse',
-    description: 'Terms of Use for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.',
+    title: T('Terms of Use \u2014 CRS Pulse'),
+    description: T('Terms of Use for CRS Pulse \u2014 the Express Entry CRS calculator and IRCC draw tracker.'),
     llm: 'Terms of use, including the estimates-only / not-immigration-advice disclaimer.',
   },
 ];
@@ -231,6 +236,8 @@ a:focus-visible, button:focus-visible, summary:focus-visible{ outline:2px solid 
   .livedot::after{ content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--success); opacity:0; animation:livering 2.4s ease-out infinite; }
 }
 @keyframes livering{ 0%{ transform:scale(.4); opacity:.7 } 80%,100%{ transform:scale(1.25); opacity:0 } }
+.langswitch{ height:34px; min-width:34px; padding:0 9px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:12.5px; font-weight:700; letter-spacing:.3px; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; }
+.langswitch:hover{ color:var(--text); border-color:var(--text2); }
 .theme-btn{ width:34px; height:34px; border-radius:9px; border:1px solid var(--border); background:var(--card); color:var(--text2); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color .15s ease, border-color .15s ease; flex-shrink:0; }
 .headcta{ padding:0 15px; height:34px; font-size:14px; border-radius:9px; gap:7px; white-space:nowrap; flex-shrink:0; }
 .menu{ display:none; position:relative; }
@@ -733,6 +740,7 @@ function nav(active, cta) {
     <div class="navlinks">${links.map((l) => link(l, 'navlink')).join('')}${calcDrop}${mid.map((l) => link(l, 'navlink')).join('')}${resDrop}${after.map((l) => link(l, 'navlink')).join('')}</div>
     <div class="headright">
       ${live}
+      <a class="langswitch head-theme" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}" aria-label="${LANG === 'en' ? 'Français' : 'English'}">${LANG === 'en' ? 'FR' : 'EN'}</a>
       ${themeBtn('head-theme')}
       ${ctaBtn}
       <details class="menu">
@@ -748,7 +756,7 @@ function nav(active, cta) {
           <div class="menuhead"></div>
           ${after.map((l) => link(l, 'menulink')).join('')}
           <a class="menulink" href="/#faq">FAQ</a>
-          <div class="menufoot">${live}${themeBtn('menu-theme')}</div>
+          <div class="menufoot">${live}<a class="langswitch" data-keep href="__LANGSWITCH__" hreflang="${LANG === 'en' ? 'fr' : 'en'}" lang="${LANG === 'en' ? 'fr' : 'en'}">${LANG === 'en' ? 'Français' : 'English'}</a>${themeBtn('menu-theme')}</div>
         </div>
       </details>
     </div>
@@ -826,15 +834,23 @@ const footerFull = () => `
 </footer>`;
 
 function shell({ title, description, path, jsonld, noindex, body, head2 = '', scripts = '', twin = true }) {
+  if (LANG === 'fr') twin = false;
   // `path` is set for the six real pages: it drives the canonical URL and the
   // rel=alternate pointer at the markdown twin agents can ask for. The 404 page
   // has no canonical home, so it passes neither and goes out noindex.
+  // `path` is always the English path; the French build rewrites URLs in writePage().
+  const fr = path ? toFr(path) : null;
   const head = path
     ? `<link rel="canonical" href="${SITE}${path}">
-${twin ? `<link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">` : ''}`
+${twin && LANG === 'en' ? `<link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">` : ''}
+${fr ? `<link rel="alternate" hreflang="en-CA" href="${SITE}${path}" data-keep>
+<link rel="alternate" hreflang="fr-CA" href="${SITE}${fr}" data-keep>
+<link rel="alternate" hreflang="x-default" href="${SITE}${path}" data-keep>` : ''}`
     : '';
+  const switchTo = LANG === 'en' ? (fr ? SITE + fr : `${SITE}/fr`) : `${SITE}${path || '/'}`;
+  body = body.replace(/__LANGSWITCH__/g, switchTo);
   return `<!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="${HTML_LANG}" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -849,7 +865,8 @@ ${twin ? `<link rel="alternate" type="text/markdown" href="${SITE}${path === '/'
 <meta property="og:description" content="${description}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="CRS Pulse">
-<meta property="og:locale" content="en_CA">
+<meta property="og:locale" content="${LANG === 'fr' ? 'fr_CA' : 'en_CA'}">
+${fr ? `<meta property="og:locale:alternate" content="${LANG === 'fr' ? 'en_CA' : 'fr_CA'}">` : ''}
 ${path ? `<meta property="og:url" content="${SITE}${path}">` : ''}
 <meta property="og:image" content="${SITE}/img/og.png">
 <meta property="og:image:width" content="1200">
@@ -919,11 +936,14 @@ const DRAW_CATEGORIES = [
 const categorise = (name) =>
   DRAW_CATEGORIES.find(([re]) => re.test(name))?.slice(1) ?? ['Other', '#5B7392'];
 
-const num = (n) => Number(n).toLocaleString('en-CA');
+const num = (n) => Number(n).toLocaleString(LOCALE);
 const shortDate = (iso) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const longDate = (iso) =>
-  new Date(`${iso}T12:00:00Z`).toLocaleDateString('en-CA', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+// IRCC's drawDateFull/updatedFull are English text; the French build formats the ISO date.
+const fullDate = (r) => (LANG === 'fr' ? longDate(r.date) : r.dateFull || longDate(r.date));
+const feedDate = () => (LANG === 'fr' ? longDate(FEED.updated) : FEED.updatedFull ?? FEED.updated);
 
 const DRAWS = FEED.rounds.map((r) => {
   const [cat, dot] = categorise(r.label || r.name);
@@ -1292,7 +1312,7 @@ window.addEventListener('DOMContentLoaded', function(){
     el.innerHTML = el.innerHTML.trim().split(/(\\s+|<[^>]+>)/).filter(Boolean).map(function(t){ if(/^</.test(t)) return t; if(/^\\s+$/.test(t)) return ' '; return '<span class="w"><span style="--d:' + (i++ * 55) + 'ms">' + t + '</span></span>'; }).join(''); });
   var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .16, rootMargin: '0px 0px -6% 0px' });
   document.querySelectorAll('[data-r], .split').forEach(function(el){ if(el.dataset.r) el.style.setProperty('--d', el.dataset.r + 'ms'); R ? el.classList.add('in') : io.observe(el); });
-  var fmt = function(n){ return n.toLocaleString('en-CA'); };
+  var fmt = function(n){ return n.toLocaleString('${LOCALE}'); };
   document.querySelectorAll('[data-count]').forEach(function(el){ var end = +el.dataset.count; if(R) return; el.textContent = '0';
     var o = new IntersectionObserver(function(es){ if(!es[0].isIntersecting) return; o.disconnect(); var t0 = performance.now();
       (function step(t){ var p = Math.min(1, (t - t0) / 1500), k = 1 - Math.pow(1 - p, 4); el.textContent = fmt(Math.round(end * k)); if(p < 1) requestAnimationFrame(step); })(t0); }, { threshold: .6 });
@@ -1492,7 +1512,7 @@ function drawsPage() {
   const body = `${nav('draws', 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the official IRCC feed, with category filters, cutoff trends and the pool. Figures mirror IRCC as of ${FEED.updatedFull ?? FEED.updated}; the app refreshes live.`)}
+${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the official IRCC feed, with category filters, cutoff trends and the pool. Figures mirror IRCC as of ${feedDate()}; the app refreshes live.`)}
 
 <section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
   <div class="s5-live">
@@ -1521,7 +1541,7 @@ ${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the of
     <div class="drawinner" id="drawtable">
       <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
       ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">${DRAW_PAGE_NOS.has(d.no) ? `<a href="/draws/${d.no}" style="color:inherit">#${d.no}</a>` : `#${d.no}`}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Satoshi',sans-serif;font-size:19px;font-weight:900;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
-      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
+      <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${feedDate()} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
     </div>
   </div>
   <div class="drawtypes"><span>Full history by round type:</span>${DRAW_CATS.map((c) => `<a href="/draws/${c.slug}">${c.name[0].toUpperCase()}${c.name.slice(1)}</a>`).join('')}</div>
@@ -1601,7 +1621,7 @@ function drawPageMd(r) {
   const lines = [];
   if (prevSame) {
     const gap = daysBetween(r.date, prevSame.date);
-    lines.push(`The previous ${name} round, [#${prevSame.number}](${drawLink(prevSame)}) on ${prevSame.dateFull || longDate(prevSame.date)}, cut off at ${prevSame.crs} with ${num(prevSame.size)} invitations. This round was ${signed(r.crs - prevSame.crs)}, ${gap} day${gap === 1 ? '' : 's'} later.`);
+    lines.push(`The previous ${name} round, [#${prevSame.number}](${drawLink(prevSame)}) on ${fullDate(prevSame)}, cut off at ${prevSame.crs} with ${num(prevSame.size)} invitations. This round was ${signed(r.crs - prevSame.crs)}, ${gap} day${gap === 1 ? '' : 's'} later.`);
   } else lines.push(`This was the first ${name} round in IRCC's published history.`);
   if (prevAny && prevAny !== prevSame) lines.push(`The round before it overall was [#${prevAny.number}](${drawLink(prevAny)}) (${prevAny.label || prevAny.name}, ${shortDate(prevAny.date)}), with a cutoff of ${prevAny.crs}.`);
   if (sameSince.length >= 3) lines.push(lower === 0 ? `It was the lowest ${name} cutoff of the ${sameSince.length} such rounds since 2023 up to that date.` : `Of the ${sameSince.length} ${name} rounds since 2023 up to that date, ${lower} had a lower cutoff.`);
@@ -1616,13 +1636,13 @@ ${mdTable(['CRS score', 'Profiles'], r.pool.map((b) => [b.label, num(b.count)]))
     : '';
   return `# Express Entry draw #${r.number}: ${r.label || r.name}
 
-On ${r.dateFull || longDate(r.date)}, IRCC invited **${num(r.size)}** candidates in a ${r.label || r.name} round. The lowest score invited, the cutoff, was **${r.crs}**.
+On ${fullDate(r)}, IRCC invited **${num(r.size)}** candidates in a ${r.label || r.name} round. The lowest score invited, the cutoff, was **${r.crs}**.
 
 ## Key facts
 
 ${mdTable(['Detail', 'Value'], [
     ['Round', `#${r.number}`],
-    ['Date', r.dateFull || longDate(r.date)],
+    ['Date', fullDate(r)],
     ['Round type', r.label || r.name],
     ['Invitations', num(r.size)],
     ['CRS cutoff', String(r.crs)],
@@ -1678,7 +1698,7 @@ function catPageMd(c) {
   const Name = `${c.name[0].toUpperCase()}${c.name.slice(1)}`;
   return `# ${Name} Express Entry draws
 
-IRCC has held **${rows.length}** ${c.name} rounds since ${first.dateFull || longDate(first.date)}, inviting **${num(rows.reduce((n, r) => n + r.size, 0))}** candidates. The latest, [#${latest.number}](${drawLink(latest)}) on ${latest.dateFull || longDate(latest.date)}, cut off at **${latest.crs}** with ${num(latest.size)} invitations.
+IRCC has held **${rows.length}** ${c.name} rounds since ${fullDate(first)}, inviting **${num(rows.reduce((n, r) => n + r.size, 0))}** candidates. The latest, [#${latest.number}](${drawLink(latest)}) on ${fullDate(latest)}, cut off at **${latest.crs}** with ${num(latest.size)} invitations.
 
 ${mdTable(['Measure', 'Value'], [
     [`Rounds in ${YEAR}`, String(thisYear.length)],
@@ -1728,15 +1748,15 @@ function drawPage(r) {
   const i = HISTORY.indexOf(r);
   const newer = HISTORY.slice(0, i).reverse().find((x) => DRAW_PAGE_NOS.has(x.number));
   const older = HISTORY.slice(i + 1).find((x) => DRAW_PAGE_NOS.has(x.number));
-  let description = `Round #${r.number} on ${r.dateFull || longDate(r.date)} invited ${num(r.size)} candidates (${r.label || r.name}) with a CRS cutoff of ${r.crs}. Tie-break, pool and how it compares.`;
-  if (description.length > 160) description = `Round #${r.number} on ${r.dateFull || longDate(r.date)}: ${num(r.size)} ${r.cat} invitations, CRS cutoff ${r.crs}. Tie-break, pool and how it compares.`;
+  let description = `Round #${r.number} on ${fullDate(r)} invited ${num(r.size)} candidates (${r.label || r.name}) with a CRS cutoff of ${r.crs}. Tie-break, pool and how it compares.`;
+  if (description.length > 160) description = `Round #${r.number} on ${fullDate(r)}: ${num(r.size)} ${r.cat} invitations, CRS cutoff ${r.crs}. Tie-break, pool and how it compares.`;
   const pager = `<nav class="drawpager" aria-label="Other draws">${older ? `<a href="/draws/${older.number}">← Draw #${older.number}</a>` : '<span></span>'}${newer ? `<a href="/draws/${newer.number}">Draw #${newer.number} →</a>` : '<span></span>'}</nav>`;
   return drawDocPage({
     path: `/draws/${r.number}`,
     title: `Express Entry Draw #${r.number} (${shortDate(r.date)}): ${r.cat}, CRS ${r.crs}`,
     description,
     md: drawPageMd(r),
-    meta: `${r.dateFull || longDate(r.date)} · from IRCC's published results`,
+    meta: `${fullDate(r)} · from IRCC's published results`,
     jsonld: {
       '@context': 'https://schema.org',
       '@graph': [
@@ -1756,7 +1776,7 @@ function catPage(c) {
     title: `${label} Express Entry Draws ${YEAR}: Every Round & Cutoff`,
     description: `Every ${c.name} Express Entry round from IRCC: ${c.rounds.length} rounds with cutoffs, invitations and the trend. Latest: #${c.rounds[0].number}, CRS ${c.rounds[0].crs}.`,
     md: catPageMd(c),
-    meta: `Updated ${c.rounds[0].dateFull || longDate(c.rounds[0].date)} from IRCC's published results`,
+    meta: `Updated ${fullDate(c.rounds[0])} from IRCC's published results`,
     jsonld: draw3Crumbs(`/draws/${c.slug}`, `${Name} draws`),
   });
 }
@@ -1824,7 +1844,7 @@ function cutoffChart() {
   for (; m.getTime() <= t1; m.setUTCMonth(m.getUTCMonth() + 1)) months.push(new Date(m));
   return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cutoff score of each recent round, by date and category" style="display:block;overflow:visible">
   ${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hairline)"/><text x="${L - 10}" y="${y(v) + 4}" text-anchor="end" font-size="13" fill="var(--muted)">${v}</text>`).join('')}
-  ${months.map((d) => `<text x="${L + ((d.getTime() - t0) / Math.max(1, t1 - t0)) * (W - L - R)}" y="${H - 12}" text-anchor="middle" font-size="13" fill="var(--muted)">${d.toLocaleDateString('en-CA', { month: 'short', timeZone: 'UTC' })}</text>`).join('')}
+  ${months.map((d) => `<text x="${L + ((d.getTime() - t0) / Math.max(1, t1 - t0)) * (W - L - R)}" y="${H - 12}" text-anchor="middle" font-size="13" fill="var(--muted)">${d.toLocaleDateString(LOCALE, { month: 'short', timeZone: 'UTC' })}</text>`).join('')}
   ${DRAWS.slice().reverse().map((d) => `<circle cx="${x(d.iso).toFixed(1)}" cy="${y(d.crs).toFixed(1)}" r="8" fill="${d.dot}" stroke="var(--card)" stroke-width="2.5"><title>#${d.no} ${d.cat}, ${d.date}: CRS ${d.crs}, ${d.invited} invitations</title></circle>`).join('')}
 </svg>`;
 }
@@ -1844,7 +1864,7 @@ function analyticsPage() {
 
   const body = `${nav('analytics', 'app')}
 <div style="min-height:100vh;position:relative">
-${pageHero('Express Entry draws,', 'by the numbers.', `Cutoffs, cadence and invitations for every category, worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to ${DRAWS[0].date}). Mirrored from IRCC as of ${FEED.updatedFull ?? FEED.updated}.`)}
+${pageHero('Express Entry draws,', 'by the numbers.', `Cutoffs, cadence and invitations for every category, worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to ${DRAWS[0].date}). Mirrored from IRCC as of ${feedDate()}.`)}
 <section style="max-width:1080px;margin:0 auto;padding:14px 24px 8px">
   <div class="s5-live">
     <div data-r="0"><b data-count="${A.invited}">${num(A.invited)}</b><span>invitations across these ${DRAWS.length} rounds</span></div>
@@ -1889,7 +1909,7 @@ ${footerFull()}
     var s=Math.max(0,Math.min(1200,parseInt(input.value,10)||0)), above=0;
     BANDS.forEach(function(b){ if(b[0]>s) above+=b[2]; else if(b[1]>s) above+=b[2]*(b[1]-s)/(b[1]-b[0]+1); });
     var pct=Math.max(0,Math.min(100,Math.round((1-above/TOTAL)*100)));
-    pool.innerHTML='A score of <b>'+s+'</b> sits above roughly <b>'+pct+'%</b> of the '+TOTAL.toLocaleString('en-CA')+' profiles in the pool.';
+    pool.innerHTML='A score of <b>'+s+'</b> sits above roughly <b>'+pct+'%</b> of the '+TOTAL.toLocaleString('${LOCALE}')+' profiles in the pool.';
     rows.forEach(function(r){
       var c=CATS[+r.getAttribute('data-i')], eff=c.cat==='PNP'?s+600:s, n=c.scores.filter(function(v){return v<=eff}).length;
       r.querySelector('.an-out').textContent='cleared '+n+' of '+c.rounds+' round'+(c.rounds===1?'':'s');
@@ -1957,7 +1977,7 @@ ${footerFull()}
   var today=new Date(); today.setHours(12,0,0,0);
   var d0=new Date(today); d0.setMonth(d0.getMonth()-2); date.value=d0.toISOString().slice(0,10);
   function add(d,m){ var x=new Date(d.getTime()); x.setTime(x.getTime()+m*30.44*864e5); return x; }
-  function fmt(d){ return d.toLocaleDateString('en-CA',{month:'long',day:'numeric',year:'numeric'}); }
+  function fmt(d){ return d.toLocaleDateString('${LOCALE}',{month:'long',day:'numeric',year:'numeric'}); }
   function run(){
     var t=T[sel.value]; if(!t||!date.value){ out.innerHTML=''; return; }
     var start=new Date(date.value+'T12:00:00'), end=add(start,t.months);
@@ -2106,7 +2126,7 @@ ${footerFull()}
   function today(){ var d=new Date(); d.setHours(12,0,0,0); return d; }
   function at(s){ return new Date(s+'T12:00:00'); }
   function days(a,b){ return Math.round((b-a)/864e5); }
-  function fmt(d){ return d.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'}); }
+  function fmt(d){ return d.toLocaleDateString('${LOCALE}',{month:'short',day:'numeric',year:'numeric'}); }
   function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function save(){ try{ localStorage.setItem(KEY,JSON.stringify(list)); }catch(e){} }
   function sorted(){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; }); }
@@ -2227,7 +2247,7 @@ const langBlock = (key, langs) => {
 };
 const LANG_HINT = '<p class="langhint">Pick your test and enter your scores. They are converted to CLB levels as you type.</p>';
 // Newest Canadian Experience Class round, the benchmark the score card compares against.
-const LAST_CEC = (() => { const r = FEED.rounds.find((x) => x.label === 'Canadian Experience Class'); return r ? { no: r.number, crs: r.crs, date: r.dateFull } : null; })();
+const LAST_CEC = (() => { const r = FEED.rounds.find((x) => x.label === 'Canadian Experience Class'); return r ? { no: r.number, crs: r.crs, date: fullDate(r) } : null; })();
 
 const lblSelect = (field, cur, opts, label, style = SEL, lblStyle = LBL) =>
   `<label style="${lblStyle}">${label}<select data-field="${field}" style="${style}">${opts.map((o) => optTag(o, cur)).join('')}</select></label>`;
@@ -2446,7 +2466,7 @@ const guideJsonLd = (g) => ({
   mainEntityOfPage: `${SITE}${g.path}`,
   datePublished: GUIDES_REVIEWED,
   dateModified: GUIDES_REVIEWED,
-  inLanguage: 'en-CA',
+  inLanguage: LOCALE,
   image: `${SITE}/img/og.png`,
   author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` },
   publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } },
@@ -2460,7 +2480,7 @@ function guidePage(g) {
   const crumbs = g.hub || g.about
     ? ''
     : `<nav class="guide-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/guides">Guides</a></nav>`;
-  const meta = g.hub || g.about ? '' : `<p class="guide-meta">Last reviewed ${new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} against IRCC's published rules. Estimates only, not immigration advice.</p>`;
+  const meta = g.hub || g.about ? '' : `<p class="guide-meta">Last reviewed ${new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} against IRCC's published rules. Estimates only, not immigration advice.</p>`;
   const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
   const relatedBlock = related.length
     ? `<section class="guide-related"><h2>Related guides</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
@@ -2962,7 +2982,7 @@ ${mdList(FEATURES_SMALL.map(([, title, desc]) => `**${title}** — ${plain(desc)
 
 ${mdTable(['Round', 'Date', 'Category', 'Invitations', 'Cutoff CRS'], HOME_DRAWS.map(([no, date, cat, invited, cutoff]) => [no, date, cat, invited, cutoff]))}
 
-Mirrored from IRCC as of ${FEED.updatedFull ?? FEED.updated}. Full history and trends: ${SITE}/draws
+Mirrored from IRCC as of ${feedDate()}. Full history and trends: ${SITE}/draws
 
 ## Privacy
 
@@ -2997,7 +3017,7 @@ const absMdLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
 const drawsMd = () => `${mdHead('draws')}
 The app pulls rounds of invitations straight from IRCC's public JSON feed and pushes an
 alert within about 15 minutes of publication. The figures below mirror that feed as of
-${FEED.updatedFull ?? FEED.updated}; canada.ca is authoritative for anything newer.
+${feedDate()}; canada.ca is authoritative for anything newer.
 
 Year to date (${FEED.ytd.year}): **${num(FEED.ytd.invitations)} invitations** across
 **${FEED.ytd.rounds} rounds** in ${FEED.ytd.categories} categories. Candidate pool:
@@ -3036,7 +3056,7 @@ ${MD_FOOTER}
 
 const analyticsMd = () => `${mdHead('analytics')}
 Worked out from the last ${DRAWS.length} rounds IRCC published (${ANALYTICS.first.date} to
-${DRAWS[0].date}), mirrored as of ${FEED.updatedFull ?? FEED.updated}.
+${DRAWS[0].date}), mirrored as of ${feedDate()}.
 
 - **${num(ANALYTICS.invited)} invitations** across these rounds.
 - **${ANALYTICS.avgGap} days** between rounds on average; the longest gap was ${ANALYTICS.longestGap} days.
@@ -3157,7 +3177,7 @@ How to call it:
   (a 307 points you at the twin, so follow redirects). Appending \`.md\` to the path works
   just as well: \`${SITE}/draws.md\`.
 - Start here: this file, then ${SITE}/sitemap.xml for the full URL list.
-- Draw figures mirror IRCC's public feed as of ${FEED.updatedFull ?? FEED.updated} (latest
+- Draw figures mirror IRCC's public feed as of ${feedDate()} (latest
   round #${DRAWS[0].no}). For anything newer, use the app — it reads IRCC's feed directly —
   or canada.ca.
 
@@ -3204,6 +3224,7 @@ User-agent: *
 Allow: /
 
 Sitemap: ${SITE}/sitemap.xml
+Sitemap: ${SITE}/sitemap-fr.xml
 `;
 
 // ------------------------------------------------------------------ 404
@@ -3337,6 +3358,33 @@ const homeJsonLd = () => ({
 
 // ------------------------------------------------------------------ build
 mkdirSync(OUT, { recursive: true });
+const PUBLIC = resolve(here, 'public');
+
+// In French, every internal link and absolute URL is rewritten to its French path
+// (i18n/routes.mjs). The hreflang alternates are marked data-keep and left alone.
+const ASSET_PATH = /^\/(img|js|fonts|favicon|apple-touch-icon|_vercel)\b/;
+function localize(html) {
+  if (LANG === 'en') return html;
+  const kept = [];
+  html = html.replace(/<[^>]*\sdata-keep[^>]*>/g, (m) => { kept.push(m); return `\u0000${kept.length - 1}\u0000`; });
+  html = html.replace(/href="(\/[^"]*)"/g, (m, p) => (ASSET_PATH.test(p) ? m : `href="${toFr(p) ?? p}"`));
+  html = html.replace(/https:\/\/www\.crspulse\.com(\/[A-Za-z0-9\-/#]*)?(?=["'\s<)\\])/g, (m, p = '/') => (ASSET_PATH.test(p) ? m : `${SITE}${toFr(p) ?? p}`));
+  return html.replace(/\u0000(\d+)\u0000/g, (_m, i) => kept[Number(i)]);
+}
+/** Write one page, given its English path; the French build maps it to its French file. */
+function writePage(enPath, html) {
+  let file;
+  if (LANG === 'en') file = resolve(PUBLIC, enPath === '/' ? 'index.html' : `${enPath.slice(1)}.html`);
+  else {
+    const fr = toFr(enPath);
+    if (!fr) throw new Error(`no French path for ${enPath}`);
+    file = resolve(PUBLIC, `${fr.slice(1)}.html`);
+  }
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, localize(html).replace(/ data-keep\b/g, ''));
+}
+
+if (LANG === 'en') {
 mkdirSync(resolve(OUT, 'img'), { recursive: true });
 // Every image the site ships is committed under web/assets, so this is a plain copy: a
 // missing one is a broken checkout and should fail the build.
@@ -3371,20 +3419,22 @@ copyAsset('screenshots/02_home.webp', 'img/app-home.webp');
 copyAsset('screenshots/03_draws.webp', 'img/app-draws.webp');
 copyAsset('screenshots/05_analytics_plan.webp', 'img/app-analytics.webp');
 copyAsset('screenshots/06_timeline.webp', 'img/app-timeline.webp');
-writeFileSync(resolve(OUT, 'index.html'), home());
-for (const id of Object.keys(CALC_ROUTES)) writeFileSync(resolve(OUT, `${CALC_INFO[id].file}.html`), calculatorPage(id));
-writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
-writeFileSync(resolve(OUT, 'analytics.html'), analyticsPage());
-writeFileSync(resolve(OUT, 'checklists.html'), checklistsPage());
-writeFileSync(resolve(OUT, 'processing-times.html'), processingPage());
-writeFileSync(resolve(OUT, 'timeline.html'), timelinePage());
-writeFileSync(resolve(OUT, 'features.html'), featuresPage());
-for (const g of GUIDE_PAGES) writeFileSync(resolve(OUT, `${g.file}.html`), guidePage(g));
-mkdirSync(resolve(OUT, 'draws'), { recursive: true });
-for (const r of DRAW_PAGE_ROUNDS) writeFileSync(resolve(OUT, 'draws', `${r.number}.html`), drawPage(r));
-for (const c of DRAW_CATS) writeFileSync(resolve(OUT, 'draws', `${c.slug}.html`), catPage(c));
-writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
-writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));
+}
+
+writePage('/', home());
+for (const id of Object.keys(CALC_ROUTES)) writePage(CALC_ROUTES[id], calculatorPage(id));
+writePage('/draws', drawsPage());
+writePage('/analytics', analyticsPage());
+writePage('/checklists', checklistsPage());
+writePage('/processing-times', processingPage());
+writePage('/timeline', timelinePage());
+writePage('/features', featuresPage());
+for (const g of GUIDE_PAGES) writePage(g.path, guidePage(g));
+for (const r of DRAW_PAGE_ROUNDS) writePage(`/draws/${r.number}`, drawPage(r));
+for (const c of DRAW_CATS) writePage(`/draws/${c.slug}`, catPage(c));
+writePage('/privacy', doc('privacy', 'PRIVACY_POLICY.md'));
+writePage('/terms', doc('terms', 'TERMS_OF_USE.md'));
+if (LANG === 'en') {
 writeFileSync(resolve(OUT, '404.html'), notFoundPage());
 // Markdown twins — reached from the HTML URL when the request carries
 // Accept: text/markdown (see vercel.json redirects), and directly at the .md path.
@@ -3399,3 +3449,9 @@ const sellerLine = (pub) => `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`;
 writeFileSync(resolve(OUT, 'app-ads.txt'), sellerLine(ADMOB_PUB));
 writeFileSync(resolve(OUT, 'ads.txt'), sellerLine(ADSENSE_CLIENT.replace('ca-', '')));
 console.log(`Built ${PAGES.length} pages (html + md), 404, llms.txt, sitemap.xml, robots.txt → web/public/`);
+} else {
+  writeFileSync(resolve(PUBLIC, 'sitemap-fr.xml'), localize(sitemapXml()));
+  // Every English string the French build fell back on. web/i18n.test.mjs requires none.
+  writeFileSync(resolve(OUT, '_i18n-missing.json'), `${JSON.stringify([...MISSING].sort(), null, 1)}\n`);
+  console.log(`Built the French site → web/public/fr/ (${MISSING.size} strings untranslated, see public/fr/_i18n-missing.json)`);
+}
