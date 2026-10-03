@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
-import { pickLatestRound, toMirrorRecord, toSiteRound, buildSiteFeed, buildYtd, cleanDrawName, POOL_BANDS } from './fetch-latest-draw.mjs';
+import { pickLatestRound, toMirrorRecord, toSiteRound, buildSiteFeed, buildYtd, cleanDrawName, POOL_BANDS, buildAllRounds } from './fetch-latest-draw.mjs';
 import { parseMonths, parsePeople, buildProcessingTimes } from './fetch-processing-times.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -155,4 +155,24 @@ test('mirror scripts do NOT spoof a browser User-Agent (Akamai bot-blocks it)', 
     );
     assert.ok(/\bcurl\b/.test(src), `${f} should fetch via curl`);
   }
+});
+
+test('buildAllRounds keeps every usable round, newest first, with draw-page fields', () => {
+  const rounds = [
+    { drawNumber: '446', drawDate: '2026-09-29', drawName: 'Canadian Experience Class', drawSize: '3,000', drawCRS: '518',
+      drawText2: 'Canadian Experience Class', drawCutOff: 'May 2, 2026 at  10:01:02 UTC', drawDistributionAsOn: 'September 27, 2026',
+      dd1: '700', dd2: '21,000', dd18: '250,000' },
+    { drawNumber: '447', drawDate: '2026-10-01', drawName: 'Trades Occupations, 2026-Version 3', drawSize: '3,500', drawCRS: '476' },
+    { drawNumber: '', drawDate: '2026-10-02' },
+  ];
+  const all = buildAllRounds(rounds);
+  assert.deepEqual(all.map((r) => r.number), ['447', '446']);
+  assert.equal(all[0].label, 'Trades Occupations');
+  assert.equal(all[0].tieBreak, null);
+  assert.deepEqual(all[0].pool, []);
+  assert.equal(all[1].tieBreak, 'May 2, 2026 at 10:01:02 UTC');
+  assert.equal(all[1].programs, 'Canadian Experience Class');
+  assert.deepEqual(all[1].pool, [{ label: '601–1200', count: 700 }, { label: '501–600', count: 21000 }]);
+  assert.equal(all[1].poolTotal, 250000);
+  assert.deepEqual(buildAllRounds(null), []);
 });

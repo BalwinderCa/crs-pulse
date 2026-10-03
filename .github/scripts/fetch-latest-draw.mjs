@@ -21,6 +21,9 @@ const OUT = 'data/latest-draw.json';
 // pool distribution, and this job already has the whole feed in hand.
 const SITE_OUT = 'data/ee-rounds.json';
 const SITE_ROUNDS = 20;
+// Every round IRCC has ever published, for the per-draw and per-category pages. Kept
+// separate from ee-rounds.json so the 20-round file the pages already read stays small.
+const ALL_OUT = 'data/ee-rounds-all.json';
 
 /** Pick the round with the highest numeric drawNumber. Pure — unit tested. */
 export function pickLatestRound(rounds) {
@@ -121,6 +124,28 @@ export function buildSiteFeed(rounds, limit = SITE_ROUNDS) {
   };
 }
 
+/**
+ * Every usable round, newest first, with the extra fields a draw page shows: when it
+ * ran, the tie-break time, the programs it covered, and the pool snapshot IRCC
+ * published with it. Pure — unit tested.
+ */
+export function buildAllRounds(rounds) {
+  return (Array.isArray(rounds) ? rounds : [])
+    .filter((r) => parseInt(r?.drawNumber, 10) && String(r?.drawDate ?? '').length >= 10)
+    .sort((a, b) => parseInt(b.drawNumber, 10) - parseInt(a.drawNumber, 10))
+    .map((r) => {
+      const pool = POOL_BANDS.map(([field, label]) => ({ label, count: count(r[field]) })).filter((b) => b.count > 0);
+      return {
+        ...toSiteRound(r),
+        programs: r.drawText2 ? String(r.drawText2).trim() : null,
+        tieBreak: r.drawCutOff ? String(r.drawCutOff).replace(/\s+/g, ' ').trim() : null,
+        poolAsOf: r.drawDistributionAsOn ?? null,
+        pool,
+        poolTotal: count(r.dd18),
+      };
+    });
+}
+
 function fetchRounds() {
   let body;
   try {
@@ -173,6 +198,11 @@ function main() {
   }
   writeFileSync(SITE_OUT, `${JSON.stringify(site, null, 2)}\n`);
   console.log(`Wrote ${site.rounds.length} rounds + ${site.pool.length} pool bands for the website`);
+
+  const all = buildAllRounds(rounds);
+  // One round per line: the file grows by a line per draw, so diffs stay readable.
+  writeFileSync(ALL_OUT, `{"rounds":[\n${all.map((r) => JSON.stringify(r)).join(',\n')}\n]}\n`);
+  console.log(`Wrote ${all.length} rounds to the full history`);
 }
 
 // Only run main() when executed directly (not when imported by a test).

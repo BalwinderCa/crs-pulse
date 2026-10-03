@@ -480,6 +480,12 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 
 .doc-card{ padding:0; }
 .calc-about{ padding-top:24px; padding-bottom:72px; }
+.drawpager{ display:flex; justify-content:space-between; gap:12px; margin-top:2.4em; padding-top:1.2em; border-top:1px solid var(--hairline); font-weight:600; }
+.catchart{ margin:1.6em 0 2em; }
+.drawtypes{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:16px; font-size:14px; }
+.drawtypes span{ color:var(--muted); }
+.drawtypes a{ font-weight:600; color:var(--accentInk); }
+.catchart figcaption{ font-size:13px; color:var(--muted); margin-top:6px; }
 .calc-about .doc-card{ max-width:760px; }
 .doc-card table{ width:100%; border-collapse:collapse; margin:1.2em 0 1.6em; font-size:15px; display:block; overflow-x:auto; }
 .doc-card th,.doc-card td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--hairline); color:var(--text2); vertical-align:top; }
@@ -819,13 +825,13 @@ const footerFull = () => `
   </div>
 </footer>`;
 
-function shell({ title, description, path, jsonld, noindex, body, head2 = '', scripts = '' }) {
+function shell({ title, description, path, jsonld, noindex, body, head2 = '', scripts = '', twin = true }) {
   // `path` is set for the six real pages: it drives the canonical URL and the
   // rel=alternate pointer at the markdown twin agents can ask for. The 404 page
   // has no canonical home, so it passes neither and goes out noindex.
   const head = path
     ? `<link rel="canonical" href="${SITE}${path}">
-<link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">`
+${twin ? `<link rel="alternate" type="text/markdown" href="${SITE}${path === '/' ? '/index.md' : `${path}.md`}">` : ''}`
     : '';
   return `<!doctype html>
 <html lang="en" data-theme="dark">
@@ -1514,10 +1520,11 @@ ${pageHero('Rounds of invitations,', 'live from IRCC.', `Every round from the of
   <div class="drawscroll" style="background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden">
     <div class="drawinner" id="drawtable">
       <div style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);color:var(--muted);font-size:11.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase"><span>Round</span><span>Date</span><span>Category</span><span style="text-align:right">Invitations</span><span style="text-align:right">Cutoff</span></div>
-      ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">#${d.no}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Satoshi',sans-serif;font-size:19px;font-weight:900;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
+      ${ALL_DRAWS.map((d, i) => `<div class="drawrow" data-cat="${d.cat}" style="display:grid;grid-template-columns:70px 96px 1fr 120px 100px;gap:12px;padding:14px 22px;border-bottom:1px solid var(--border);align-items:center"><div style="font-weight:700;font-size:14px;color:var(--text)">${DRAW_PAGE_NOS.has(d.no) ? `<a href="/draws/${d.no}" style="color:inherit">#${d.no}</a>` : `#${d.no}`}</div><div style="font-size:13px;color:var(--text2)">${d.date}</div><div style="display:flex;align-items:center;gap:9px"><span style="width:9px;height:9px;border-radius:50%;background:${d.dot};flex-shrink:0"></span><span style="font-size:14.5px;font-weight:600;color:var(--text)">${d.cat}</span></div><div style="text-align:right;font-size:14px;color:var(--text2)">${d.invited}</div><div style="text-align:right"><span style="font-family:'Satoshi',sans-serif;font-size:19px;font-weight:900;color:${i === 0 ? 'var(--accentInk)' : 'var(--text)'}">${d.cutoff}</span></div></div>`).join('')}
       <div style="padding:13px 22px;color:var(--muted);font-size:11.5px">Last ${ALL_DRAWS.length} rounds, mirrored from IRCC on ${FEED.updatedFull ?? FEED.updated} · in the app this table syncs the live IRCC feed with pull-to-refresh.</div>
     </div>
   </div>
+  <div class="drawtypes"><span>Full history by round type:</span>${DRAW_CATS.map((c) => `<a href="/draws/${c.slug}">${c.name[0].toUpperCase()}${c.name.slice(1)}</a>`).join('')}</div>
 </section>
 
 <section style="max-width:1080px;margin:0 auto;padding:8px 24px 40px">
@@ -1544,6 +1551,219 @@ function filterDraws(cat,btn){document.querySelectorAll('#drawtable .drawrow').f
 </script>`;
   return shell({ ...page('draws'), body: noDashes(body) });
 }
+
+
+// ------------------------------------------------------------------ DRAW PAGES
+// One page per round since 2023 (/draws/447) and one per category (/draws/cec), from the
+// full IRCC history the mirror job writes to data/ee-rounds-all.json. Every figure is
+// IRCC's; the prose around it is generated from those figures.
+const HISTORY = (() => {
+  try { return JSON.parse(readFileSync(resolve(here, '../data/ee-rounds-all.json'), 'utf8')).rounds; } catch { return FEED.rounds; }
+})().map((r) => { const [cat] = categorise(r.label || r.name); return { ...r, cat, n: parseInt(r.number, 10) }; });
+const DRAW_PAGES_FROM = '2023-01-01';
+const DRAW_PAGE_ROUNDS = HISTORY.filter((r) => r.date >= DRAW_PAGES_FROM);
+const DRAW_PAGE_NOS = new Set(DRAW_PAGE_ROUNDS.map((r) => r.number));
+// short category -> [slug, name in prose, what the round selects for]
+const DRAW_CAT_INFO = {
+  General: ['general', 'general', 'General rounds consider every candidate in the pool, whatever their program. Apart from nominee rounds, they usually have the highest cutoffs.'],
+  CEC: ['cec', 'Canadian Experience Class', 'Canadian Experience Class rounds invite only candidates eligible for the CEC: at least one year of skilled work in Canada in the last three years.'],
+  PNP: ['pnp', 'Provincial Nominee Program', 'Provincial Nominee Program rounds invite candidates who already hold a provincial or territorial nomination. Their scores include the 600 nomination points, so these cutoffs look high; without the nomination they are usually low.'],
+  French: ['french', 'French-language proficiency', 'French-language rounds invite candidates with French at NCLC 7 or higher in all four abilities, whatever their occupation. They have run regularly, with cutoffs well below general rounds.'],
+  Healthcare: ['healthcare', 'healthcare', 'Healthcare rounds invite candidates with recent work experience in an eligible healthcare or social services occupation (including the physician rounds). IRCC lists the occupations on its category-based selection page.'],
+  STEM: ['stem', 'STEM', 'STEM rounds invited candidates with recent work experience in an eligible science, technology, engineering or mathematics occupation.'],
+  Transport: ['transport', 'transport', 'Transport rounds invite candidates with recent work experience in an eligible transport occupation.'],
+  Trades: ['trades', 'trades', 'Trades rounds invite candidates with recent work experience in an eligible trade occupation, such as electricians, plumbers and carpenters.'],
+  Education: ['education', 'education', 'Education rounds invite candidates with recent work experience in an eligible education occupation, such as teachers and early childhood educators.'],
+  Agriculture: ['agriculture', 'agriculture and agri-food', 'Agriculture rounds invite candidates with recent work experience in an eligible agriculture or agri-food occupation.'],
+  Managers: ['senior-managers', 'senior manager', 'Senior manager rounds invite candidates with recent Canadian work experience as a senior manager.'],
+  Military: ['military', 'skilled military recruit', 'Skilled military recruit rounds invite candidates referred through Canadian Armed Forces recruitment.'],
+};
+const DRAW_CATS = Object.entries(DRAW_CAT_INFO)
+  .map(([cat, [slug, name, blurb]]) => ({ cat, slug, name, blurb, rounds: HISTORY.filter((r) => r.cat === cat) }))
+  .filter((c) => c.rounds.length >= 2);
+const catOf = (cat) => DRAW_CATS.find((c) => c.cat === cat);
+const catName = (cat) => (catOf(cat) ? catOf(cat).name : DRAW_CAT_INFO[cat]?.[1] ?? cat);
+const signed = (v) => (v === 0 ? 'the same' : `${Math.abs(v)} point${Math.abs(v) === 1 ? '' : 's'} ${v > 0 ? 'higher' : 'lower'}`);
+const daysBetween = (a, b) => Math.round((Date.parse(`${a}T12:00:00Z`) - Date.parse(`${b}T12:00:00Z`)) / 86400000);
+const ordinal = (n) => { const t = n % 100; if (t >= 11 && t <= 13) return `${n}th`; return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' })[n % 10] || 'th'}`; };
+const drawLink = (r) => (DRAW_PAGE_NOS.has(r.number) ? `/draws/${r.number}` : '/draws');
+
+function drawPageMd(r) {
+  const i = HISTORY.indexOf(r);
+  const prevAny = HISTORY[i + 1];
+  const prevSame = HISTORY.slice(i + 1).find((x) => x.cat === r.cat);
+  const c = catOf(r.cat);
+  const name = catName(r.cat);
+  const sameSince = HISTORY.filter((x) => x.cat === r.cat && x.date >= DRAW_PAGES_FROM && x.n <= r.n);
+  const lower = sameSince.filter((x) => x.crs < r.crs).length;
+  const year = r.date.slice(0, 4);
+  const ytd = HISTORY.filter((x) => x.date.startsWith(year) && x.n <= r.n);
+  const lines = [];
+  if (prevSame) {
+    const gap = daysBetween(r.date, prevSame.date);
+    lines.push(`The previous ${name} round, [#${prevSame.number}](${drawLink(prevSame)}) on ${prevSame.dateFull || longDate(prevSame.date)}, cut off at ${prevSame.crs} with ${num(prevSame.size)} invitations. This round was ${signed(r.crs - prevSame.crs)}, ${gap} day${gap === 1 ? '' : 's'} later.`);
+  } else lines.push(`This was the first ${name} round in IRCC's published history.`);
+  if (prevAny && prevAny !== prevSame) lines.push(`The round before it overall was [#${prevAny.number}](${drawLink(prevAny)}) (${prevAny.label || prevAny.name}, ${shortDate(prevAny.date)}), with a cutoff of ${prevAny.crs}.`);
+  if (sameSince.length >= 3) lines.push(lower === 0 ? `It was the lowest ${name} cutoff of the ${sameSince.length} such rounds since 2023 up to that date.` : `Of the ${sameSince.length} ${name} rounds since 2023 up to that date, ${lower} had a lower cutoff.`);
+  lines.push(`It was the ${ordinal(ytd.length)} round of ${year}. By then IRCC had issued ${num(ytd.reduce((n, x) => n + x.size, 0))} invitations that year.`);
+  const pool = r.pool && r.pool.length
+    ? `## The pool at the time
+
+IRCC's snapshot of the pool${r.poolAsOf ? ` on ${r.poolAsOf}` : ''}${r.poolTotal ? `: ${num(r.poolTotal)} profiles in total` : ''}.
+
+${mdTable(['CRS score', 'Profiles'], r.pool.map((b) => [b.label, num(b.count)]))}
+`
+    : '';
+  return `# Express Entry draw #${r.number}: ${r.label || r.name}
+
+On ${r.dateFull || longDate(r.date)}, IRCC invited **${num(r.size)}** candidates in a ${r.label || r.name} round. The lowest score invited, the cutoff, was **${r.crs}**.
+
+## Key facts
+
+${mdTable(['Detail', 'Value'], [
+    ['Round', `#${r.number}`],
+    ['Date', r.dateFull || longDate(r.date)],
+    ['Round type', r.label || r.name],
+    ['Invitations', num(r.size)],
+    ['CRS cutoff', String(r.crs)],
+    ...(r.tieBreak ? [['Tie-break', `Profiles at ${r.crs} submitted before ${r.tieBreak}`]] : []),
+    ...(r.programs ? [['Programs', r.programs]] : []),
+  ])}
+
+## How it compares
+
+${lines.join('\n\n')}
+
+${pool}
+## What ${/^[aeiou]/i.test(name) ? 'an' : 'a'} ${name} round means
+
+${c ? c.blurb : (DRAW_CAT_INFO[r.cat]?.[2] ?? DRAW_CAT_INFO.General[2])} See [Express Entry draw types](/express-entry-draws) for how the round types differ.
+
+## Where does your score stand?
+
+The [CRS calculator](/crs-calculator) works out your score from your test results and profile, and shows how far it is from the last Canadian Experience Class cutoff.
+
+${c ? `[Every ${name} round](/draws/${c.slug}) · ` : ''}[All recent draws](/draws)
+`;
+}
+
+function catChart(rows) {
+  const pts = rows.filter((r) => r.date >= DRAW_PAGES_FROM).slice().reverse();
+  if (pts.length < 2) return '';
+  const W = 1000, H = 260, L = 48, R = 16, T = 16, B = 34;
+  const t0 = Date.parse(pts[0].date), t1 = Date.parse(pts[pts.length - 1].date);
+  const lo = Math.floor((Math.min(...pts.map((p) => p.crs)) - 20) / 50) * 50, hi = Math.ceil((Math.max(...pts.map((p) => p.crs)) + 20) / 50) * 50;
+  const x = (d) => L + ((Date.parse(d) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+  const y = (v) => T + (1 - (v - lo) / Math.max(1, hi - lo)) * (H - T - B);
+  const step = hi - lo > 300 ? 100 : 50;
+  const ticks = []; for (let v = lo; v <= hi; v += step) ticks.push(v);
+  const years = [...new Set(pts.map((p) => p.date.slice(0, 4)))];
+  return `<figure class="catchart"><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Cutoff of each round since 2023" style="display:block;overflow:visible">
+${ticks.map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--hairline)"/><text x="${L - 8}" y="${y(v) + 4}" text-anchor="end" font-size="13" fill="var(--muted)">${v}</text>`).join('')}
+${years.map((yr) => { const d = `${yr}-01-01` < pts[0].date ? pts[0].date : `${yr}-01-01`; return `<text x="${x(d)}" y="${H - 8}" font-size="13" fill="var(--muted)">${yr}</text>`; }).join('')}
+<polyline fill="none" stroke="var(--accent)" stroke-width="2" points="${pts.map((p) => `${x(p.date).toFixed(1)},${y(p.crs).toFixed(1)}`).join(' ')}"/>
+${pts.map((p) => `<circle cx="${x(p.date).toFixed(1)}" cy="${y(p.crs).toFixed(1)}" r="4" fill="var(--accent)"><title>#${p.number}, ${shortDate(p.date)}: ${p.crs}</title></circle>`).join('')}
+</svg><figcaption>Cutoff of each round since 2023</figcaption></figure>`;
+}
+
+function catPageMd(c) {
+  const rows = c.rounds;
+  const latest = rows[0], first = rows[rows.length - 1];
+  const thisYear = rows.filter((r) => r.date.startsWith(YEAR));
+  const yearAgo = new Date(Date.parse(`${latest.date}T12:00:00Z`) - 365 * 86400000).toISOString().slice(0, 10);
+  const last12 = rows.filter((r) => r.date > yearAgo);
+  const avg = (a) => Math.round(a.reduce((n, r) => n + r.crs, 0) / a.length);
+  const lowest = rows.reduce((a, b) => (b.crs < a.crs ? b : a));
+  const others = DRAW_CATS.filter((x) => x !== c);
+  const Name = `${c.name[0].toUpperCase()}${c.name.slice(1)}`;
+  return `# ${Name} Express Entry draws
+
+IRCC has held **${rows.length}** ${c.name} rounds since ${first.dateFull || longDate(first.date)}, inviting **${num(rows.reduce((n, r) => n + r.size, 0))}** candidates. The latest, [#${latest.number}](${drawLink(latest)}) on ${latest.dateFull || longDate(latest.date)}, cut off at **${latest.crs}** with ${num(latest.size)} invitations.
+
+${mdTable(['Measure', 'Value'], [
+    [`Rounds in ${YEAR}`, String(thisYear.length)],
+    [`Invitations in ${YEAR}`, num(thisYear.reduce((n, r) => n + r.size, 0))],
+    ...(last12.length ? [['Average cutoff, last 12 months', `${avg(last12)} (${last12.length} round${last12.length === 1 ? '' : 's'})`], ['Range, last 12 months', `${Math.min(...last12.map((r) => r.crs))} to ${Math.max(...last12.map((r) => r.crs))}`]] : []),
+    ['Lowest cutoff on record', `${lowest.crs} (#${lowest.number}, ${shortDate(lowest.date)})`],
+  ])}
+
+${catChart(rows)}
+
+## What these rounds are
+
+${c.blurb}${c.cat === 'Trades' ? ' This history also includes the earlier Federal Skilled Trades Program rounds.' : ''} See [Express Entry draw types](/express-entry-draws) for how the round types differ, and the [CRS calculator](/crs-calculator) to see where your score stands.
+
+## Every ${c.name} round
+
+${mdTable(['Round', 'Date', 'Invitations', 'Cutoff'], rows.map((r) => [DRAW_PAGE_NOS.has(r.number) ? `[#${r.number}](/draws/${r.number})` : `#${r.number}`, shortDate(r.date), num(r.size), String(r.crs)]))}
+
+## Other round types
+
+${others.map((x) => `- [${x.name[0].toUpperCase()}${x.name.slice(1)} rounds](/draws/${x.slug}) (${x.rounds.length})`).join('\n')}
+`;
+}
+
+const draw3Crumbs = (path, name) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'CRS Pulse', item: `${SITE}/` },
+    { '@type': 'ListItem', position: 2, name: 'Express Entry draws', item: `${SITE}/draws` },
+    { '@type': 'ListItem', position: 3, name, item: `${SITE}${path}` },
+  ],
+});
+
+function drawDocPage({ path, title, description, md, meta, jsonld, extra = '' }) {
+  const html = addHeadingIds(marked.parse(md));
+  const [h1, ...rest] = html.split(/(?<=<\/h1>)/);
+  const body = `${nav('draws', 'calc')}
+<div style="min-height:100vh;position:relative">
+<main class="doc"><article class="doc-card"><nav class="guide-crumbs" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/draws">Draws</a></nav>${h1}<p class="guide-meta">${meta}</p>${rest.join('')}${extra}</article></main>
+${footerFull()}
+</div>`;
+  return shell({ title, description, path, jsonld, body, twin: false });
+}
+
+function drawPage(r) {
+  const i = HISTORY.indexOf(r);
+  const newer = HISTORY.slice(0, i).reverse().find((x) => DRAW_PAGE_NOS.has(x.number));
+  const older = HISTORY.slice(i + 1).find((x) => DRAW_PAGE_NOS.has(x.number));
+  let description = `Round #${r.number} on ${r.dateFull || longDate(r.date)} invited ${num(r.size)} candidates (${r.label || r.name}) with a CRS cutoff of ${r.crs}. Tie-break, pool and how it compares.`;
+  if (description.length > 160) description = `Round #${r.number} on ${r.dateFull || longDate(r.date)}: ${num(r.size)} ${r.cat} invitations, CRS cutoff ${r.crs}. Tie-break, pool and how it compares.`;
+  const pager = `<nav class="drawpager" aria-label="Other draws">${older ? `<a href="/draws/${older.number}">← Draw #${older.number}</a>` : '<span></span>'}${newer ? `<a href="/draws/${newer.number}">Draw #${newer.number} →</a>` : '<span></span>'}</nav>`;
+  return drawDocPage({
+    path: `/draws/${r.number}`,
+    title: `Express Entry Draw #${r.number} (${shortDate(r.date)}): ${r.cat}, CRS ${r.crs}`,
+    description,
+    md: drawPageMd(r),
+    meta: `${r.dateFull || longDate(r.date)} · from IRCC's published results`,
+    jsonld: {
+      '@context': 'https://schema.org',
+      '@graph': [
+        { '@type': 'Article', headline: `Express Entry draw #${r.number}: ${r.label || r.name}`, description, datePublished: r.date, dateModified: r.date, url: `${SITE}/draws/${r.number}`, image: `${SITE}/img/og.png`, author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` }, publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } } },
+        { ...draw3Crumbs(`/draws/${r.number}`, `Draw #${r.number}`), '@context': undefined },
+      ],
+    },
+    extra: pager,
+  });
+}
+
+function catPage(c) {
+  const Name = `${c.name[0].toUpperCase()}${c.name.slice(1)}`;
+  const label = { cec: 'CEC', pnp: 'PNP', general: 'General', french: 'French', 'senior-managers': 'Senior Manager', agriculture: 'Agriculture' }[c.slug] || Name;
+  return drawDocPage({
+    path: `/draws/${c.slug}`,
+    title: `${label} Express Entry Draws ${YEAR}: Every Round & Cutoff`,
+    description: `Every ${c.name} Express Entry round from IRCC: ${c.rounds.length} rounds with cutoffs, invitations and the trend. Latest: #${c.rounds[0].number}, CRS ${c.rounds[0].crs}.`,
+    md: catPageMd(c),
+    meta: `Updated ${c.rounds[0].dateFull || longDate(c.rounds[0].date)} from IRCC's published results`,
+    jsonld: draw3Crumbs(`/draws/${c.slug}`, `${Name} draws`),
+  });
+}
+const DRAW_SITEMAP = [
+  ...DRAW_CATS.map((c) => ({ path: `/draws/${c.slug}`, lastmod: c.rounds[0].date, freq: 'weekly', priority: '0.7' })),
+  ...DRAW_PAGE_ROUNDS.map((r) => ({ path: `/draws/${r.number}`, lastmod: r.date, freq: 'yearly', priority: '0.5' })),
+];
 
 // ------------------------------------------------------------------ RESOURCES
 // The three pages under the header's Resources menu. Document checklists and the IRCC
@@ -2969,6 +3189,12 @@ ${PAGES.map((p) => `  <url>
     <changefreq>${p.priority === '0.5' ? 'yearly' : 'weekly'}</changefreq>
     <priority>${p.priority}</priority>
   </url>`).join('\n')}
+${DRAW_SITEMAP.map((p) => `  <url>
+    <loc>${SITE}${p.path}</loc>
+    <lastmod>${p.lastmod}</lastmod>
+    <changefreq>${p.freq}</changefreq>
+    <priority>${p.priority}</priority>
+  </url>`).join('\n')}
 </urlset>
 `;
 
@@ -3154,6 +3380,9 @@ writeFileSync(resolve(OUT, 'processing-times.html'), processingPage());
 writeFileSync(resolve(OUT, 'timeline.html'), timelinePage());
 writeFileSync(resolve(OUT, 'features.html'), featuresPage());
 for (const g of GUIDE_PAGES) writeFileSync(resolve(OUT, `${g.file}.html`), guidePage(g));
+mkdirSync(resolve(OUT, 'draws'), { recursive: true });
+for (const r of DRAW_PAGE_ROUNDS) writeFileSync(resolve(OUT, 'draws', `${r.number}.html`), drawPage(r));
+for (const c of DRAW_CATS) writeFileSync(resolve(OUT, 'draws', `${c.slug}.html`), catPage(c));
 writeFileSync(resolve(OUT, 'privacy.html'), doc('privacy', 'PRIVACY_POLICY.md'));
 writeFileSync(resolve(OUT, 'terms.html'), doc('terms', 'TERMS_OF_USE.md'));
 writeFileSync(resolve(OUT, '404.html'), notFoundPage());

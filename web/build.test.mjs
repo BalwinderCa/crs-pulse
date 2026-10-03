@@ -4,7 +4,7 @@
 // emits — the two files are edited independently, and a drift there silently serves HTML
 // to an agent asking for markdown.
 import { execFileSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -98,8 +98,12 @@ test('sitemap.xml lists every route with a lastmod', () => {
   assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
   assert.match(xml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  assert.deepEqual(locs, ROUTES.map(([path]) => `${SITE}${path}`));
-  assert.equal([...xml.matchAll(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/g)].length, ROUTES.length);
+  // The named routes first, then the generated draw history (/draws/<round|type>).
+  assert.deepEqual(locs.slice(0, ROUTES.length), ROUTES.map(([path]) => `${SITE}${path}`));
+  const extra = locs.slice(ROUTES.length);
+  assert.ok(extra.length > 100, 'expected the per-draw pages in the sitemap');
+  assert.ok(extra.every((u) => /^https:\/\/www\.crspulse\.com\/draws\/[a-z0-9-]+$/.test(u)), 'unexpected extra sitemap URL');
+  assert.equal([...xml.matchAll(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/g)].length, locs.length);
   // Unescaped ampersands are the classic way a sitemap stops parsing.
   assert.doesNotMatch(xml, /&(?!amp;|lt;|gt;|quot;|apos;)/);
 });
@@ -162,4 +166,22 @@ test('vercel.json sets Vary: Accept on both variants of every route', () => {
     assert.equal(typeOn.get(`/${file}.md`), 'text/markdown; charset=utf-8', `/${file}.md content type`);
   }
   assert.equal(typeOn.get('/llms.txt'), 'text/markdown; charset=utf-8');
+});
+
+test('every draw page in the sitemap is built, canonical, and linked pages exist', () => {
+  const xml = read('sitemap.xml');
+  const paths = [...xml.matchAll(/<loc>https:\/\/www\.crspulse\.com(\/draws\/[^<]+)<\/loc>/g)].map((m) => m[1]);
+  const built = new Set(readdirSync(resolve(OUT, 'draws')).map((f) => `/draws/${f.replace(/\.html$/, '')}`));
+  for (const path of paths) {
+    assert.ok(built.has(path), `${path} is in the sitemap but not built`);
+    const html = read(`${path.slice(1)}.html`);
+    assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}${path}">`));
+    assert.doesNotMatch(html, /type="text\/markdown"/, `${path} advertises a markdown twin it does not have`);
+    assert.equal((html.match(/<h1[\s>]/g) || []).length, 1, `${path} needs exactly one h1`);
+  }
+  // Every /draws/<x> link anywhere on the site points at a page that exists.
+  const pages = ['draws.html', ...[...built].map((p) => `${p.slice(1)}.html`)];
+  for (const f of pages) {
+    for (const [, href] of read(f).matchAll(/href="(\/draws\/[^"#]+)"/g)) assert.ok(built.has(href), `${f} links ${href}, which is not built`);
+  }
 });
