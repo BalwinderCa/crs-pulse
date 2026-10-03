@@ -11,6 +11,22 @@ mobile/build/
 build/
 expo-env.d.ts
 
+# Generated native projects. EAS runs `expo prebuild` only when mobile/ios (or
+# mobile/android) is missing from the upload. A local copy left behind by
+# `expo run:ios` or a simulator build gets compiled instead of app.config.js.
+# That shipped iOS 1.0.10 build 56 with a stale Info.plist (old version string, no
+# NSUserTrackingUsageDescription), which crashed on launch. eas-cli reads only
+# THIS file, the one at the repository root, and while it exists every
+# .gitignore is skipped, so a mobile/.easignore or mobile/.gitignore rule
+# does not protect the build. mobile/__tests__/utils/easignore.test.ts keeps them.
+mobile/ios/
+mobile/android/
+
+# Mobile tooling output: goldie simulator/APK builds and captures, argent recordings.
+mobile/goldie/.builds/
+mobile/goldie/out/
+mobile/.argent/recordings/
+
 # iOS build artifacts
 mobile/ios/build/
 mobile/ios/DerivedData/

@@ -58,12 +58,26 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-02).** iOS: **v1.0.9 (build 54)** is live. **v1.0.10 (build 56)**
-was submitted for App Review on 2026-10-02, set to release automatically on approval to all users
-(no phased release). Build 56 was built from `bed6f09`, which already bumps `app.config.js` to
-1.0.11. The binary still reports 1.0.10, so make the next iOS version 1.0.11. Its "What's New"
-covers the work since 1.0.9: tracking the next application after a decision, removing a previous
-application, clearer decided-application labels, and the maple-leaf header mark. 1.0.9 itself was
+**Store status (as of 2026-10-03).** iOS: **v1.0.10 (build 56)** was approved and released
+automatically on 2026-10-03, and it **crashes about 0.4 s after every launch**. **v1.0.11 (build
+57)**, built by `.github/workflows/ios-build.yml` from `351d2f4`, carries the fix and is in App
+Review. Until it ships, every user who updated to 1.0.10 is stuck. Its "What's New" covers the
+work since 1.0.9: tracking the next application after a decision, removing a previous application,
+clearer decided-application labels, and the maple-leaf header mark.
+
+*Why build 56 crashed:* it was uploaded with a stale local `mobile/ios/` from an `expo run:ios` on
+2026-10-01. EAS logged "Skipped running expo prebuild because the ios directory already exists"
+and compiled that project instead of `app.config.js`. It had the old version string (that's why
+the binary said 1.0.10) and no `NSUserTrackingUsageDescription`, so expo-tracking-transparency
+aborted at launch. The `mobile/.easignore` that was meant to exclude `ios/` was never read:
+**eas-cli reads only the repository-root `.easignore`, and while it exists every `.gitignore` is
+skipped.** The root file now excludes `mobile/ios/` and `mobile/android/`, and
+`mobile/__tests__/utils/easignore.test.ts` guards it; `172fbd8` also makes the ATT string
+unconditional. Nobody had opened build 56 in TestFlight before it was submitted (0 installs), so
+**launch a TestFlight build on a device before submitting it**, and prefer manual release for any
+build that hasn't been opened.
+
+1.0.9 itself was
 submitted 2026-09-27 and released automatically on approval; PostHog shows Apple's review devices
 on 2026-09-28/29 and the first real users from 2026-09-29 ~07:20 UTC.
 1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
