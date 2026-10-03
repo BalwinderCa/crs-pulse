@@ -2620,16 +2620,12 @@ ${Object.entries(CALC_INFO).filter(([k]) => k !== id).map(([k, x]) => `- [${x.na
 
 function calculatorPage(id) {
   const info = CALC_INFO[id];
-  // The four calculators are separate pages now; the tab strip links between them.
-  const tabs = [['crs', 'calc', 'CRS'], ['fsw', 'checkCircle', 'FSW 67-point'], ['bc', 'compass', 'BC PNP SIRS'], ['sinp', 'pin', 'Saskatchewan SINP']]
-    .map(([k, ico, label]) => `<a class="calctab${k === id ? ' on' : ''}" href="${CALC_ROUTES[k]}"${k === id ? ' aria-current="page"' : ''}>${icon(ico, 17)} ${label}</a>`).join('');
+  // No tab strip: the header's Calculators menu and the "Other calculators" list under
+  // the explainer link the four pages.
   const body = `${nav(`calc-${id}`, 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
 ${pageHero(info.lead, info.accent, info.lede)}
-<section style="max-width:1080px;margin:0 auto;padding:0 24px">
-  <div class="calctabs" style="display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)">${tabs}</div>
-</section>
 <section id="calc" class="calcbody" style="max-width:1080px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
     <div style="margin-bottom:18px">
