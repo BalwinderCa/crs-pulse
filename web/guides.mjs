@@ -1,3 +1,5 @@
+import { TESTS, CLB_LEVELS } from './clb.mjs';
+
 // Long-form guides and the About page. Each entry renders to an HTML page (through
 // build.mjs's guide shell) and doubles as that page's markdown twin.
 //
@@ -49,43 +51,8 @@ const FIRST_LANG_ROWS = [
 const CWE_ROWS = [['None or less than a year', 0, 0, 0], ['1 year', 40, 35, 5], ['2 years', 53, 46, 7], ['3 years', 64, 56, 8], ['4 years', 72, 63, 9], ['5 years or more', 80, 70, 10]];
 
 // ---------------------------------------------------------------- CLB tables
-// Minimum score for each CLB level, per ability: [reading, writing, listening, speaking].
-// Mirrors toCLB() in crsCalculator.ts (IRCC equivalency charts).
-const CLB_LEVELS = [10, 9, 8, 7, 6, 5, 4];
-const TESTS = {
-  ielts: {
-    name: 'IELTS General Training',
-    scale: 'band scores from 0 to 9',
-    min: {
-      10: ['8.0', '7.5', '8.5', '7.5'], 9: ['7.0', '7.0', '8.0', '7.0'], 8: ['6.5', '6.5', '7.5', '6.5'],
-      7: ['6.0', '6.0', '6.0', '6.0'], 6: ['5.0', '5.5', '5.5', '5.5'], 5: ['4.0', '5.0', '5.0', '5.0'], 4: ['3.5', '4.0', '4.5', '4.0'],
-    },
-  },
-  pte: {
-    name: 'PTE Core',
-    scale: 'scores from 10 to 90',
-    min: {
-      10: [88, 90, 89, 89], 9: [78, 88, 82, 84], 8: [69, 79, 71, 76], 7: [60, 69, 60, 68],
-      6: [51, 60, 50, 59], 5: [42, 51, 39, 51], 4: [33, 41, 28, 42],
-    },
-  },
-  tef: {
-    name: 'TEF Canada (tests taken from December 10, 2023)',
-    scale: 'scores from 0 to 699',
-    min: {
-      10: [546, 558, 546, 556], 9: [503, 512, 503, 518], 8: [462, 472, 462, 494], 7: [434, 428, 434, 456],
-      6: [393, 379, 393, 422], 5: [352, 330, 352, 387], 4: [306, 268, 306, 328],
-    },
-  },
-  tcf: {
-    name: 'TCF Canada',
-    scale: 'reading and listening from 0 to 699, writing and speaking from 0 to 20',
-    min: {
-      10: [549, 16, 549, 16], 9: [524, 14, 523, 14], 8: [499, 12, 503, 12], 7: [453, 10, 458, 10],
-      6: [406, 7, 398, 7], 5: [375, 6, 369, 6], 4: [342, 4, 331, 4],
-    },
-  },
-};
+// Shared with the in-browser calculators (clb.mjs), so the tables here and the live
+// conversion on /calculators can't disagree.
 const clbTable = (t) => table(['CLB / NCLC', 'Reading', 'Writing', 'Listening', 'Speaking'],
   CLB_LEVELS.map((c) => [`${c === 10 ? '10 or more' : c}`, ...t.min[c].map((v) => `${v}+`)]));
 

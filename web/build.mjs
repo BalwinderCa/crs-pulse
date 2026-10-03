@@ -23,6 +23,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { marked } from 'marked';
 import { buildGuides, GUIDES_REVIEWED } from './guides.mjs';
+import { TESTS as LANG_TESTS, SKILLS, toClb, CLB_CLIENT_SRC } from './clb.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const DOCS = resolve(here, '../docs');
@@ -356,6 +357,22 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 /* calculator controls */
 .chip{ cursor:pointer; padding:9px 14px; border-radius:8px; border:1px solid var(--border); background:var(--input); color:var(--text2); font-size:13px; font-weight:600; transition:all .15s ease; }
 .chip.on{ border-color:var(--accentBtn); background:var(--accentBtn); color:#fff; }
+.chip.toggle{ display:inline-flex; align-items:center; gap:9px; }
+.chip.toggle::before{ content:""; width:15px; height:15px; border-radius:4px; border:1.5px solid var(--muted); flex-shrink:0; box-sizing:border-box; }
+.chip.toggle.on::before{ border-color:#fff; background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23C92A22' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 10.5l4 4 8-9'/%3E%3C/svg%3E") center/11px no-repeat; }
+.langblock [hidden], .rboost[hidden]{ display:none!important; }
+.langhint{ font-size:12.5px; color:var(--muted); margin:0 0 14px; }
+.langsub{ font-size:12.5px; color:var(--text2); font-weight:600; margin-bottom:12px; }
+.langhead{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:14px 20px; margin-bottom:14px; }
+.langhead > label:first-child{ flex:1 1 240px; max-width:340px; }
+.sametoggle{ display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--text2); font-weight:500; padding-bottom:10px; cursor:pointer; }
+.sametoggle input{ width:16px; height:16px; accent-color:var(--accentBtn); }
+.clbout{ font-size:12px; font-weight:700; color:var(--success); min-height:16px; font-variant-numeric:tabular-nums; }
+.clbout.low{ color:var(--warningInk); }
+.rboost{ font-size:12.5px; line-height:1.5; color:var(--text2); margin:10px 0 0; padding-top:10px; border-top:1px solid var(--hairline); }
+.rboost b{ color:var(--text); }
+.rboost-pts{ font-weight:700; color:var(--success); }
+.rboost a{ color:var(--accentInk); font-weight:600; margin-left:4px; }
 .calctab{ cursor:pointer; padding:12px 16px; border:none; background:none; border-bottom:2px solid transparent; color:var(--text2); font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:8px; }
 .calctab.on{ border-bottom-color:var(--accent); color:var(--text); font-weight:700; }
 .filterchip{ cursor:pointer; padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:600; }
@@ -1905,12 +1922,10 @@ ${footerFull()}
 
 // ------------------------------------------------------------------ CALCULATORS
 // Option lists (verbatim from the design component).
-const CLB_OPTS = [{ v: 0, l: 'Below CLB 4' }, { v: 4, l: 'CLB 4' }, { v: 5, l: 'CLB 5' }, { v: 6, l: 'CLB 6' }, { v: 7, l: 'CLB 7' }, { v: 8, l: 'CLB 8' }, { v: 9, l: 'CLB 9' }, { v: 10, l: 'CLB 10+' }];
 const CRS_EDU_OPTS = [{ v: 'less_than_secondary', l: 'Less than secondary' }, { v: 'secondary', l: 'Secondary / high school' }, { v: '1year', l: '1-year post-secondary' }, { v: '2year', l: '2-year post-secondary' }, { v: 'bachelors', l: "Bachelor's degree" }, { v: 'two_or_more', l: 'Two or more credentials' }, { v: 'masters', l: "Master's / professional" }, { v: 'phd', l: 'Doctoral (PhD)' }];
 const CWE_OPTS = [{ v: 0, l: 'None' }, { v: 1, l: '1 year' }, { v: 2, l: '2 years' }, { v: 3, l: '3 years' }, { v: 4, l: '4 years' }, { v: 5, l: '5+ years' }];
 const FSW_EDU_OPTS = [{ v: 'phd', l: 'Doctoral (PhD)' }, { v: 'masters_professional', l: "Master's / professional" }, { v: 'two_or_more', l: 'Two or more credentials' }, { v: 'bachelors_3yr', l: '3-year+ degree' }, { v: 'diploma_2yr', l: '2-year diploma' }, { v: 'diploma_1yr', l: '1-year diploma' }, { v: 'secondary', l: 'Secondary' }];
 const FSW_WORK_OPTS = [{ v: 'none', l: 'None' }, { v: '1', l: '1 year' }, { v: '2_3', l: '2–3 years' }, { v: '4_5', l: '4–5 years' }, { v: '6plus', l: '6+ years' }];
-const FSW_CLB_OPTS = [{ v: 'clb9plus', l: 'CLB 9+' }, { v: 'clb8', l: 'CLB 8' }, { v: 'clb7', l: 'CLB 7' }, { v: 'below7', l: 'Below CLB 7' }];
 const SIRS_WORK_OPTS = [{ v: 'none', l: 'None' }, { v: '1_2', l: '1–2 years' }, { v: '2_3', l: '2–3 years' }, { v: '3_4', l: '3–4 years' }, { v: '4_5', l: '4–5 years' }, { v: '5plus', l: '5+ years' }];
 const SIRS_EDU_OPTS = [{ v: 'doctorate', l: 'Doctorate' }, { v: 'masters', l: "Master's" }, { v: 'postgrad_cert', l: 'Post-grad certificate' }, { v: 'bachelors', l: "Bachelor's" }, { v: 'associate', l: 'Associate degree' }, { v: 'diploma_cert', l: 'Diploma / certificate' }, { v: 'secondary', l: 'Secondary' }];
 const SIRS_CLB_OPTS = [{ v: 'clb9plus', l: 'CLB 9+' }, { v: 'clb8', l: 'CLB 8' }, { v: 'clb7', l: 'CLB 7' }, { v: 'clb6', l: 'CLB 6' }, { v: 'clb5', l: 'CLB 5' }, { v: 'clb4', l: 'CLB 4' }, { v: 'below4', l: 'Below CLB 4' }];
@@ -1920,8 +1935,8 @@ const SINP_CLB_OPTS = [{ v: 'clb8plus', l: 'CLB 8+' }, { v: 'clb7', l: 'CLB 7' }
 const YEAR_OPTS = [{ v: 0, l: '0 years' }, { v: 1, l: '1 year' }, { v: 2, l: '2 years' }, { v: 3, l: '3 years' }, { v: 4, l: '4 years' }, { v: 5, l: '5 years' }];
 
 const STATE0 = {
-  crs: { maritalStatus: 'single', age: 29, education: 'bachelors', canadianEducation: 'none', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, hasSecondLang: false, secondLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, canadianWorkExp: 1, foreignWorkExp: 1, spouseEducation: 'bachelors', spouseLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, spouseCanadianWorkExp: 0, hasProvincialNomination: false, hasSiblingInCanada: false, hasTradeCert: false, frenchNCLC7: false },
-  fsw: { age: 30, education: 'bachelors_3yr', workYears: '4_5', langLevel: 'clb9plus', secondLangClb5: false, hasArrangedEmployment: false, studiedInCanada: false, workedInCanada: false, hasRelativeInCanada: false, spouseLangClb4: false, spouseStudiedInCanada: false, spouseWorkedInCanada: false },
+  crs: { maritalStatus: 'single', age: 29, education: 'bachelors', canadianEducation: 'none', firstLang: { speaking: 9, listening: 9, reading: 9, writing: 9 }, hasSecondLang: false, secondLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, canadianWorkExp: 1, foreignWorkExp: 1, spouseEducation: 'bachelors', spouseLang: { speaking: 0, listening: 0, reading: 0, writing: 0 }, spouseCanadianWorkExp: 0, hasProvincialNomination: false, hasSiblingInCanada: false, hasTradeCert: false },
+  fsw: { age: 30, education: 'bachelors_3yr', workYears: '4_5', firstClb: { speaking: 9, listening: 9, reading: 9, writing: 9 }, secondLangClb5: false, hasArrangedEmployment: false, studiedInCanada: false, workedInCanada: false, hasRelativeInCanada: false, spouseLangClb4: false, spouseStudiedInCanada: false, spouseWorkedInCanada: false },
   sirs: { workYears: '4_5', hasCanadianExp: false, currentlyWorkingInJob: false, education: 'bachelors', educationLocation: 'outside', hasTradesOrProfessionalCert: false, language: 'clb8', bothOfficialLanguages: false, hourlyWage: 32, region: 'metro_vancouver', hasRegionalExperience: false },
   sinp: { education: 'bachelors', age: '22_34', language: 'clb7', secondLanguage: 'below4', workRecentYears: 3, workEarlierYears: 0, hasSaskJobOffer: false, hasSaskFamily: false, hasSaskWorkExp: false, hasSaskStudy: false },
 };
@@ -1935,14 +1950,46 @@ const CARD = 'background:var(--card);border:1px solid var(--border);border-radiu
 const CARDLABEL = 'font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px';
 
 const optTag = (o, cur) => `<option value="${o.v}"${String(o.v) === String(cur) ? ' selected' : ''}>${o.l}</option>`;
+// Language inputs: people know their test scores, not CLB levels, so each block takes
+// a test and raw scores and converts them live (clb.mjs). Keyed by the state path that
+// receives the CLB levels. Defaults are IELTS scores that land on CLB 9 everywhere.
+const RAW_EMPTY = { speaking: '', listening: '', reading: '', writing: '' };
+const LANG0 = {
+  'crs.firstLang': { test: 'ielts', same: false, raw: { speaking: '7.0', listening: '8.0', reading: '7.0', writing: '7.0' } },
+  'crs.secondLang': { test: 'tef', same: false, raw: { ...RAW_EMPTY } },
+  'crs.spouseLang': { test: 'ielts', same: false, raw: { ...RAW_EMPTY } },
+  'fsw.firstClb': { test: 'ielts', same: false, raw: { speaking: '7.0', listening: '8.0', reading: '7.0', writing: '7.0' } },
+};
+for (const [key, L] of Object.entries(LANG0)) {
+  const target = Object.fromEntries(SKILLS.map((sk) => [sk, toClb(L.test, sk, L.raw[sk])]));
+  const [form, field] = key.split('.');
+  STATE0[form][field] = target;
+}
+const langOpts = (langs, cur) => Object.entries(LANG_TESTS).filter(([, t]) => langs.includes(t.lang))
+  .map(([k, t]) => `<option value="${k}"${k === cur ? ' selected' : ''}>${t.name}</option>`).join('');
+const rawRange = (test, sk) => { const r = LANG_TESTS[test].range; return `min="${r.min}" max="${r.small?.[sk] ?? r.max}" step="${r.step}"`; };
+const capWord = (w) => w[0].toUpperCase() + w.slice(1);
+const langBlock = (key, langs) => {
+  const L = LANG0[key];
+  return `<div class="langblock" data-lang="${key}">
+  <div class="langhead">
+    <label style="${LBL_SM}">Test<select data-langtest style="${SEL_SM}">${langOpts(langs, L.test)}</select></label>
+    <label class="sametoggle"><input type="checkbox" data-langsame> Same score for all four</label>
+  </div>
+  <div class="fields4 langfour" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">${SKILLS.map((sk) => `<label style="${LBL_SM}">${capWord(sk)}<input data-langraw="${sk}" type="number" inputmode="decimal" ${rawRange(L.test, sk)} value="${L.raw[sk]}" placeholder="Score" style="${INP}"><span class="clbout" data-clbout="${sk}"></span></label>`).join('')}</div>
+  <div class="langone" hidden><label style="${LBL_SM};max-width:240px">Score, all four abilities<input data-langraw="all" type="number" inputmode="decimal" ${rawRange(L.test, 'speaking')} value="" placeholder="Score" style="${INP}"><span class="clbout" data-clbout="all"></span></label></div>
+</div>`;
+};
+const LANG_HINT = '<p class="langhint">Pick your test and enter your scores. They are converted to CLB levels as you type.</p>';
+// Newest Canadian Experience Class round, the benchmark the score card compares against.
+const LAST_CEC = (() => { const r = FEED.rounds.find((x) => x.label === 'Canadian Experience Class'); return r ? { no: r.number, crs: r.crs, date: r.dateFull } : null; })();
+
 const lblSelect = (field, cur, opts, label, style = SEL, lblStyle = LBL) =>
   `<label style="${lblStyle}">${label}<select data-field="${field}" style="${style}">${opts.map((o) => optTag(o, cur)).join('')}</select></label>`;
 const lblInput = (field, cur, label, attrs) =>
   `<label style="${LBL}">${label}<input data-field="${field}" value="${cur}" ${attrs} style="${INP}"></label>`;
 const rawSelect = (field, cur, opts) => `<select data-field="${field}" style="${SEL}">${opts.map((o) => optTag(o, cur)).join('')}</select>`;
-const chip = (field, label) => `<button class="chip" data-field="${field}">${label}</button>`;
-const langGrid = (prefix, obj, opts = CLB_OPTS, pre = '') =>
-  ['speaking', 'listening', 'reading', 'writing'].map((k) => lblSelect(`${prefix}.${k}`, obj[k], opts, `${pre}${k[0].toUpperCase()}${k.slice(1)}`, SEL_SM, LBL_SM)).join('');
+const chip = (field, label) => `<button type="button" class="chip toggle" data-field="${field}" aria-pressed="false">${label}</button>`;
 
 function calcForms() {
   const c = STATE0.crs, f = STATE0.fsw, s = STATE0.sirs, sn = STATE0.sinp;
@@ -1954,16 +2001,17 @@ function calcForms() {
       ${lblSelect('crs.maritalStatus', c.maritalStatus, [{ v: 'single', l: 'Single / not married' }, { v: 'married', l: 'Married / common-law' }, { v: 'married_not_accompanying', l: 'Married — spouse not accompanying' }], 'Marital status')}
       ${lblInput('crs.age', c.age, 'Age', 'type="number" min="17" max="55"')}
       ${lblSelect('crs.education', c.education, CRS_EDU_OPTS, 'Education level')}
-      ${lblSelect('crs.canadianEducation', c.canadianEducation, [{ v: 'none', l: 'None' }, { v: '1_2year', l: '1–2 year credential' }, { v: '3year_plus', l: '3-year+ / graduate' }], 'Canadian education')}
+      ${lblSelect('crs.canadianEducation', c.canadianEducation, [{ v: 'none', l: 'No' }, { v: '1_2year', l: 'Yes, a 1–2 year program (+15)' }, { v: '3year_plus', l: 'Yes, 3+ years or graduate (+30)' }], 'Studied in Canada after high school?')}
     </div>
   </div>
   <div style="${CARD}">
     <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">First official language</div>
-    <p style="font-size:12px;color:var(--muted);margin:0 0 14px">Enter your CLB / NCLC level per ability (convert IELTS · CELPIP · PTE · TEF in-app).</p>
-    <div class="fields4" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">${langGrid('crs.firstLang', c.firstLang)}</div>
-    <button class="chip" id="crs-second-chip" data-field="crs.hasSecondLang" style="margin-top:14px">+ Add a second official language</button>
-    <div id="crs-second" style="display:none">
-      <div class="fields4" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:14px">${langGrid('crs.secondLang', c.secondLang, CLB_OPTS, '2nd ')}</div>
+    ${LANG_HINT}
+    ${langBlock('crs.firstLang', ['en', 'fr'])}
+    <button type="button" class="chip" id="crs-second-chip" data-field="crs.hasSecondLang" style="margin-top:16px">+ Add French (second official language)</button>
+    <div id="crs-second" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid var(--hairline)">
+      <div class="langsub">Second official language. The French bonus (up to +50) is added automatically from these scores.</div>
+      ${langBlock('crs.secondLang', ['fr'])}
     </div>
   </div>
   <div style="${CARD}">
@@ -1980,14 +2028,14 @@ function calcForms() {
         ${lblSelect('crs.spouseEducation', c.spouseEducation, CRS_EDU_OPTS, 'Spouse education')}
         ${lblSelect('crs.spouseCanadianWorkExp', c.spouseCanadianWorkExp, CWE_OPTS, 'Spouse Canadian work exp.')}
       </div>
-      <div style="font-size:12px;color:var(--text2);font-weight:600;margin-bottom:8px">Spouse language (CLB, all four abilities)</div>
-      <div class="fields4" style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px">${langGrid('crs.spouseLang', c.spouseLang)}</div>
+      <div class="langsub">Spouse's language test (English or French)</div>
+      ${langBlock('crs.spouseLang', ['en', 'fr'])}
     </div>
   </div>
   <div style="${CARD}">
     <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Additional points</div>
     <div style="display:flex;flex-wrap:wrap;gap:10px">
-      ${chip('crs.hasProvincialNomination', 'Provincial nomination (+600)')}${chip('crs.hasSiblingInCanada', 'Sibling in Canada (+15)')}${chip('crs.hasTradeCert', 'Trade certificate')}${chip('crs.frenchNCLC7', 'French NCLC 7+ all abilities')}
+      ${chip('crs.hasProvincialNomination', 'Provincial nomination (+600)')}${chip('crs.hasSiblingInCanada', 'Brother or sister in Canada (+15)')}${chip('crs.hasTradeCert', 'Trade certificate of qualification (up to +50)')}
     </div>
   </div>
 </div>`;
@@ -2000,8 +2048,12 @@ function calcForms() {
       ${lblInput('fsw.age', f.age, 'Age', 'type="number" min="16" max="60"')}
       ${lblSelect('fsw.education', f.education, FSW_EDU_OPTS, 'Education')}
       ${lblSelect('fsw.workYears', f.workYears, FSW_WORK_OPTS, 'Skilled work experience')}
-      ${lblSelect('fsw.langLevel', f.langLevel, FSW_CLB_OPTS, 'First-language ability (lowest of 4)')}
     </div>
+  </div>
+  <div style="${CARD}">
+    <div style="${CARDLABEL};margin-bottom:6px">First official language</div>
+    ${LANG_HINT}
+    ${langBlock('fsw.firstClb', ['en', 'fr'])}
   </div>
   <div style="${CARD}">
     <div style="font-size:12.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.6px;margin-bottom:14px">Points bonuses &amp; adaptability</div>
@@ -2114,7 +2166,7 @@ function crsCalc(i){
   else {
     if (i.canadianEducation==='3year_plus') addPts+=30; else if (i.canadianEducation==='1_2year') addPts+=15;
     if (i.hasSiblingInCanada) addPts+=15;
-    if (i.frenchNCLC7) addPts += (minClb>=5 ? 50 : 25);
+    if (i.frenchNCLC7) addPts += ((i.englishMin != null ? i.englishMin : minClb)>=5 ? 50 : 25);
     addPts = Math.min(600, addPts);
   }
   var total = Math.min(1200, coreTotal + spouseTotal + skillPts + addPts);
@@ -2191,6 +2243,39 @@ const CALC_SCRIPT = `<script>
   function getPath(f){ return f.split('.').reduce(function(o,k){ return o==null?o:o[k]; }, state); }
   function setPath(f,v){ var p=f.split('.'); var o=state; for(var i=0;i<p.length-1;i++){ o=o[p[i]]; } o[p[p.length-1]]=v; }
   function bar(pct,color){ return 'height:100%;border-radius:6px;width:'+Math.max(0,Math.min(100,pct))+'%;background:'+color; }
+${CLB_CLIENT_SRC}
+  var LANG = ${JSON.stringify(LANG0)};
+  var SKILLS = ['speaking','listening','reading','writing'];
+  var LAST_CEC = ${JSON.stringify(LAST_CEC)};
+  var OPTS = { en: ${JSON.stringify(langOpts(['en'], ''))}, fr: ${JSON.stringify(langOpts(['fr'], ''))} };
+  function minOf(o){ return Math.min(o.speaking,o.listening,o.reading,o.writing); }
+  function langOf(key){ return CLB_TESTS[LANG[key].test].lang; }
+  // CRS input with the French bonus derived from whichever test is French.
+  function crsInput(over, secondFr){
+    var s=Object.assign({}, state.crs, over||{});
+    var firstFr = langOf('crs.firstLang')==='fr';
+    var sFr = secondFr!=null ? secondFr : langOf('crs.secondLang')==='fr';
+    var second = s.hasSecondLang ? s.secondLang : null;
+    var fr = firstFr ? minOf(s.firstLang) : (second && sFr ? minOf(second) : 0);
+    var en = firstFr ? (second && !sFr ? minOf(second) : 0) : minOf(s.firstLang);
+    s.frenchNCLC7 = fr>=7; s.englishMin = en; return s;
+  }
+  // One line: the single change worth the most points for this profile.
+  function boost(){
+    var s=state.crs; if (s.hasProvincialNomination) return null;
+    var base=crsCalc(crsInput()).total, best=null;
+    function tryIt(label, over, sFr){ var d=crsCalc(crsInput(over, sFr)).total-base; if(d>0 && (!best || d>best.d)) best={ label:label, d:d }; }
+    var F=s.firstLang, m=minOf(F), unit=langOf('crs.firstLang')==='fr'?'NCLC':'CLB';
+    if (m<10){ var t=Math.max(4,m+1), nf={}; SKILLS.forEach(function(k){ nf[k]=Math.max(F[k],t); }); tryIt('Every language ability at '+unit+' '+t+' or higher', { firstLang:nf }); }
+    if (langOf('crs.firstLang')==='en'){
+      var cur = s.hasSecondLang ? s.secondLang : {speaking:0,listening:0,reading:0,writing:0};
+      if (!(s.hasSecondLang && langOf('crs.secondLang')==='fr' && minOf(cur)>=7)){ var f7={}; SKILLS.forEach(function(k){ f7[k]=Math.max(cur[k],7); }); tryIt('French at NCLC 7 in all four abilities', { hasSecondLang:true, secondLang:f7 }, true); }
+    }
+    if (s.canadianWorkExp<5) tryIt('One more year of skilled work in Canada', { canadianWorkExp:s.canadianWorkExp+1 });
+    if (['masters','phd'].indexOf(s.education)<0) tryIt('A master\u2019s degree', { education:'masters' });
+    if (s.maritalStatus==='married' && minOf(s.spouseLang)<9) tryIt('Your spouse at CLB 9 in all four abilities', { spouseLang:{speaking:9,listening:9,reading:9,writing:9} });
+    return best;
+  }
 
 ${CRS_CALC_SRC}
   function fswCalc(i){
@@ -2198,7 +2283,9 @@ ${CRS_CALC_SRC}
     var EDU = { phd:25, masters_professional:23, two_or_more:22, bachelors_3yr:21, diploma_2yr:19, diploma_1yr:15, secondary:5 };
     var WORK = { none:0, '1':9, '2_3':11, '4_5':13, '6plus':15 };
     var agePts = (i.age<18||i.age>=47)?0:(i.age<=35?12:Math.max(0,12-(i.age-35)));
-    var per = LANG[i.langLevel]; var language = Math.min(28, per*4 + (i.secondLangClb5?4:0));
+    var C = i.firstClb, P = function(c){ return c>=9?6:c===8?5:c===7?4:0; };
+    var minFirst = Math.min(C.speaking,C.listening,C.reading,C.writing);
+    var language = Math.min(28, P(C.speaking)+P(C.listening)+P(C.reading)+P(C.writing) + (i.secondLangClb5?4:0));
     var education = EDU[i.education];
     var work = WORK[i.workYears];
     var arranged = i.hasArrangedEmployment?10:0;
@@ -2206,7 +2293,7 @@ ${CRS_CALC_SRC}
       (i.spouseLangClb4?5:0)+(i.studiedInCanada?5:0)+(i.spouseStudiedInCanada?5:0)+
       (i.workedInCanada?10:0)+(i.spouseWorkedInCanada?5:0)+(i.hasArrangedEmployment?5:0)+(i.hasRelativeInCanada?5:0));
     var total = language+education+work+agePts+arranged+adapt;
-    return { total:total, pass: total>=67 && i.langLevel!=='below7' && i.workYears!=='none', rows:[
+    return { total:total, pass: total>=67 && minFirst>=7 && i.workYears!=='none', rows:[
       {label:'Language', val:language, max:28},
       {label:'Education', val:education, max:25},
       {label:'Work experience', val:work, max:15},
@@ -2262,13 +2349,15 @@ ${CRS_CALC_SRC}
   function computeResult(){
     var accent='var(--accent)', grad='linear-gradient(90deg,var(--accent2),var(--accent))';
     if (active==='crs'){
-      var r=crsCalc(state.crs); var strong=r.total>=520, near=r.total>=470;
+      var r=crsCalc(crsInput());
+      var diff = LAST_CEC ? r.total-LAST_CEC.crs : null;
+      var above = diff!=null && diff>=0, close = diff!=null && diff>-30;
       return { label:'Comprehensive Ranking System', total:r.total, max:'1,200',
-        badgeText: strong?'Competitive':near?'In range':'Build it up',
-        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;background:'+(strong?'var(--successSoft)':near?'var(--warningSoft)':'var(--bg3)')+';color:'+(strong?'var(--success)':near?'var(--warningInk)':'var(--text2)'),
+        badgeText: diff==null ? '' : (above ? diff+' above CEC' : (-diff)+' below CEC'),
+        badgeStyle:'padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;white-space:nowrap;background:'+(above?'var(--successSoft)':close?'var(--warningSoft)':'var(--bg3)')+';color:'+(above?'var(--success)':close?'var(--warningInk)':'var(--text2)'),
         barPct:Math.round(r.total/1200*100),
-        note: strong?'At or above many recent general/CEC cutoffs. A provincial nomination adds 600 points.':'Recent CEC cutoffs sat around 507–518; category draws can go far lower. A nomination adds 600 points.',
-        rows:r.rows, grad:grad };
+        note: LAST_CEC ? 'The last Canadian Experience Class round (#'+LAST_CEC.no+', '+LAST_CEC.date+') cut off at '+LAST_CEC.crs+'. Category rounds can go far lower, and a provincial nomination adds 600.' : 'Category rounds can go far lower, and a provincial nomination adds 600.',
+        boost: boost(), rows:r.rows, grad:grad };
     } else if (active==='fsw'){
       var r=fswCalc(state.fsw);
       return { label:'FSW six selection factors', total:r.total, max:'100',
@@ -2306,6 +2395,8 @@ ${CRS_CALC_SRC}
     document.getElementById('sb-label').textContent=res.label;
     document.getElementById('r-bar').style.cssText=bar(res.barPct,res.grad);
     document.getElementById('r-note').textContent=res.note;
+    var rb=document.getElementById('r-boost');
+    if (res.boost){ rb.hidden=false; rb.innerHTML='Biggest boost for this profile: <b>'+res.boost.label+'</b> <span class=\"rboost-pts\">+'+res.boost.d+'</span> <a href=\"/improve-crs-score\">More ways</a>'; } else rb.hidden=true;
     document.getElementById('r-rows').innerHTML=res.rows.map(function(x){
       var pct=x.max?Math.round(x.val/x.max*100):0;
       return '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px"><span style="color:var(--text2)">'+x.label+'</span><span style="color:var(--text);font-weight:700"><span style="font-family:\\'Satoshi\\',sans-serif">'+x.val+'</span> <span style="color:var(--muted);font-weight:500">/ '+x.max+'</span></span></div><div style="height:5px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="'+bar(pct,'var(--accent)')+'"></div></div></div>';
@@ -2326,6 +2417,57 @@ ${CRS_CALC_SRC}
   }
 
   var root=document.getElementById('calc');
+  function unitFor(key){ return langOf(key)==='fr'?'NCLC':'CLB'; }
+  function applyLang(block){
+    var key=block.getAttribute('data-lang'), L=LANG[key], unit=unitFor(key), out={};
+    SKILLS.forEach(function(k){ out[k]=toClb(L.test,k,L.raw[k]); });
+    setPath(key, out);
+    SKILLS.forEach(function(k){ var o=block.querySelector('[data-clbout="'+k+'"]'); o.textContent = L.raw[k]==='' ? '' : (out[k] ? unit+' '+out[k] : 'below '+unit+' 4'); o.classList.toggle('low', L.raw[k]!=='' && !out[k]); });
+    var all=block.querySelector('[data-clbout="all"]');
+    if (L.raw.speaking===''){ all.textContent=''; }
+    else { var u=SKILLS.map(function(k){ return out[k]; }).filter(function(v,i,a){ return a.indexOf(v)===i; });
+      all.textContent = u.length===1 ? (u[0] ? unit+' '+u[0]+' in all four' : 'below '+unit+' 4') : SKILLS.map(function(k){ return k[0].toUpperCase()+' '+(out[k]||'<4'); }).join(' · '); }
+  }
+  function setRanges(block){
+    var L=LANG[block.getAttribute('data-lang')], t=CLB_TESTS[L.test].range;
+    block.querySelectorAll('[data-langraw]').forEach(function(inp){ var sk=inp.getAttribute('data-langraw'); inp.min=t.min; inp.step=t.step; inp.max=(t.small && t.small[sk]) || t.max; });
+    // TCF scores writing/speaking out of 20 and reading/listening out of 699: one shared score makes no sense.
+    var tcf = L.test==='tcf'; var same=block.querySelector('[data-langsame]');
+    same.parentNode.hidden = tcf; if (tcf && L.same){ L.same=false; same.checked=false; }
+    block.querySelector('.langfour').hidden = L.same; block.querySelector('.langone').hidden = !L.same;
+  }
+  function fillInputs(block){ var L=LANG[block.getAttribute('data-lang')]; block.querySelectorAll('[data-langraw]').forEach(function(inp){ var sk=inp.getAttribute('data-langraw'); inp.value = sk==='all' ? L.raw.speaking : L.raw[sk]; }); }
+  // The second official language must be the other one: French after an English test, and vice versa.
+  function syncSecondOptions(){
+    var b=root.querySelector('[data-lang="crs.secondLang"]'); if(!b) return;
+    var want = langOf('crs.firstLang')==='fr' ? 'en' : 'fr', sel=b.querySelector('[data-langtest]');
+    var chipEl=document.getElementById('crs-second-chip');
+    if (chipEl){ var w = want==='fr' ? 'French' : 'English'; chipEl.textContent = (state.crs.hasSecondLang ? 'Remove ' : '+ Add ')+w+' (second official language)'; }
+    if (CLB_TESTS[LANG['crs.secondLang'].test].lang===want) return;
+    sel.innerHTML=OPTS[want]; LANG['crs.secondLang'].test=sel.value;
+    LANG['crs.secondLang'].raw={speaking:'',listening:'',reading:'',writing:''};
+    fillInputs(b); setRanges(b); applyLang(b);
+  }
+  function onLang(e){
+    var t=e.target, block=t.closest('.langblock'); if(!block) return;
+    var key=block.getAttribute('data-lang'), L=LANG[key];
+    if (t.hasAttribute('data-langtest')){
+      if (e.type!=='change') return;
+      L.test=t.value; L.raw={speaking:'',listening:'',reading:'',writing:''};
+      fillInputs(block); setRanges(block); if (key==='crs.firstLang') syncSecondOptions();
+    } else if (t.hasAttribute('data-langsame')){
+      L.same=t.checked;
+      if (L.same){ var v=L.raw.speaking; SKILLS.forEach(function(k){ L.raw[k]=v; }); fillInputs(block); }
+      setRanges(block);
+    } else if (t.hasAttribute('data-langraw')){
+      var sk=t.getAttribute('data-langraw');
+      if (sk==='all') SKILLS.forEach(function(k){ L.raw[k]=t.value; }); else L.raw[sk]=t.value;
+    } else return;
+    applyLang(block); render();
+  }
+  root.addEventListener('input', onLang);
+  root.addEventListener('change', onLang);
+  root.querySelectorAll('.langblock').forEach(function(b){ setRanges(b); applyLang(b); });
   root.addEventListener('change', function(e){
     var t=e.target; var f=t.getAttribute('data-field'); if(!f) return;
     var raw=t.value; var n=Number(raw); var val=(raw!==''&&!isNaN(n))?n:raw;
@@ -2333,8 +2475,8 @@ ${CRS_CALC_SRC}
   });
   root.querySelectorAll('.chip[data-field]').forEach(function(b){
     b.addEventListener('click', function(){
-      var f=b.getAttribute('data-field'); setPath(f,!getPath(f)); b.classList.toggle('on', !!getPath(f));
-      if(f==='crs.hasSecondLang'){ b.textContent=getPath(f)?'✓ Second official language added':'+ Add a second official language'; }
+      var f=b.getAttribute('data-field'); setPath(f,!getPath(f)); b.classList.toggle('on', !!getPath(f)); b.setAttribute('aria-pressed', !!getPath(f));
+      if(f==='crs.hasSecondLang'){ var w=langOf('crs.firstLang')==='fr'?'English':'French'; b.textContent=getPath(f)?'Remove '+w+' (second official language)':'+ Add '+w+' (second official language)'; }
       syncVis(); render();
     });
   });
@@ -2382,6 +2524,7 @@ ${pageHero('Score yourself against', 'every grid.', 'Pick a program below. Every
       </div>
       <div style="height:8px;background:var(--bg3);border-radius:6px;overflow:hidden;margin:14px 0 6px"><div id="r-bar" style="height:100%;width:0"></div></div>
       <p id="r-note" style="font-size:12.5px;line-height:1.5;color:var(--text2);margin:8px 0 0"></p>
+      <p id="r-boost" class="rboost" hidden></p>
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:20px;margin-top:16px">
       <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">Points breakdown</div>
