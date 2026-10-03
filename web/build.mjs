@@ -1,6 +1,7 @@
 // Builds the CRS Pulse public site into web/public/:
 //   /             → home (hero + features + calculators + draws preview + FAQ)
-//   /calculators  → live in-browser CRS / FSW / BC PNP SIRS / SINP EOI calculators
+//   /crs-calculator, /fsw-calculator, /bc-pnp-calculator, /sinp-calculator → one live
+//     in-browser calculator each (/calculators 301s to the CRS one, see vercel.json)
 //   /draws        → live IRCC draw tracking, cutoff trend + pool composition
 //   /analytics    → draw analytics + where a score lands
 //   /checklists   → per-program document checklists (from the app's data)
@@ -58,11 +59,30 @@ const PAGES = [
     description: 'Calculate your Canada Express Entry CRS score, track live IRCC draws, and get push alerts for new rounds. Free, private, and on-device.',
     llm: 'What CRS Pulse is, the four calculators, recent draws, privacy model and FAQ.',
   },
+  // One page per calculator (calc: the form it renders). /calculators 301s to the CRS one.
   {
-    file: 'calculators', path: '/calculators', priority: '0.9',
-    title: `CRS Calculator ${YEAR}: Express Entry, FSW, BC PNP & SINP`,
-    description: 'Free CRS score calculator for Express Entry, plus the FSW 67-point grid, BC PNP SIRS and Saskatchewan SINP EOI points. Runs in your browser, nothing uploaded.',
-    llm: 'The four point grids with their inputs, maximums and pass marks. Run them in-browser, no upload.',
+    file: 'crs-calculator', path: '/crs-calculator', priority: '0.9', calc: 'crs',
+    title: `CRS Calculator ${YEAR}: Free Express Entry Score Calculator`,
+    description: 'Free CRS calculator for Express Entry. Enter your IELTS, CELPIP, PTE Core, TEF or TCF scores and get your Comprehensive Ranking System score out of 1,200.',
+    llm: 'The CRS (Express Entry) calculator: inputs, how each factor scores, and the biggest-boost suggestion. Runs in-browser, no upload.',
+  },
+  {
+    file: 'fsw-calculator', path: '/fsw-calculator', priority: '0.8', calc: 'fsw',
+    title: 'FSW Calculator: Federal Skilled Worker 67 Points Check',
+    description: 'Check Federal Skilled Worker eligibility on the 67-point grid: language, education, experience, age, job offer and adaptability. Free, in your browser.',
+    llm: 'The FSW 67-point eligibility calculator: six selection factors, the 67-point pass mark and the CLB 7 / one-year minimums.',
+  },
+  {
+    file: 'bc-pnp-calculator', path: '/bc-pnp-calculator', priority: '0.8', calc: 'bc',
+    title: 'BC PNP Calculator: SIRS Points Score out of 200',
+    description: 'Estimate your BC PNP Skills Immigration Registration System (SIRS) score out of 200 from work experience, education, language, wage and region.',
+    llm: 'The BC PNP SIRS calculator: five factors scored out of 200, with no fixed pass mark.',
+  },
+  {
+    file: 'sinp-calculator', path: '/sinp-calculator', priority: '0.8', calc: 'sinp',
+    title: 'SINP Points Calculator: Saskatchewan EOI Score out of 110',
+    description: 'Calculate your Saskatchewan Immigrant Nominee Program EOI points out of 110 and check the 60-point minimum. Free and private, in your browser.',
+    llm: 'The Saskatchewan SINP International Skilled Worker EOI calculator: five factors out of 110, 60 to qualify.',
   },
   {
     file: 'draws', path: '/draws', priority: '0.9',
@@ -459,6 +479,8 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 @media (max-width:430px){ .fields{ grid-template-columns:minmax(0,1fr)!important; } }
 
 .doc-card{ padding:0; }
+.calc-about{ padding-top:24px; padding-bottom:72px; }
+.calc-about .doc-card{ max-width:760px; }
 .doc-card table{ width:100%; border-collapse:collapse; margin:1.2em 0 1.6em; font-size:15px; display:block; overflow-x:auto; }
 .doc-card th,.doc-card td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--hairline); color:var(--text2); vertical-align:top; }
 .doc-card th{ color:var(--text); font-weight:700; border-bottom:1.5px solid var(--border); white-space:nowrap; }
@@ -655,12 +677,14 @@ const DATEPICKER_JS = `<script>
 // gone. Hierarchy on this site comes from type, hairlines and alignment.
 const CHECK = `<svg viewBox="0 0 20 20" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.5l4 4 8-9"/></svg>`;
 
+// Calculator id -> its page. Also the targets for old /calculators#<id> links.
+const CALC_ROUTES = { crs: '/crs-calculator', fsw: '/fsw-calculator', bc: '/bc-pnp-calculator', sinp: '/sinp-calculator' };
 // The header's Calculators menu: [href, label, key, one-line description, tag].
 const CALC_MENU = [
-  ['/calculators#crs', 'CRS calculator', 'calc-crs', 'Express Entry ranking score', '/1,200'],
-  ['/calculators#fsw', 'FSW 67-point grid', 'calc-fsw', 'Federal Skilled Worker eligibility', '/100'],
-  ['/calculators#bc', 'BC PNP SIRS', 'calc-bc', 'British Columbia skills registration', '/200'],
-  ['/calculators#sinp', 'Saskatchewan SINP', 'calc-sinp', 'Saskatchewan EOI points', '/110'],
+  [CALC_ROUTES.crs, 'CRS calculator', 'calc-crs', 'Express Entry ranking score', '/1,200'],
+  [CALC_ROUTES.fsw, 'FSW 67-point grid', 'calc-fsw', 'Federal Skilled Worker eligibility', '/100'],
+  [CALC_ROUTES.bc, 'BC PNP SIRS', 'calc-bc', 'British Columbia skills registration', '/200'],
+  [CALC_ROUTES.sinp, 'Saskatchewan SINP', 'calc-sinp', 'Saskatchewan EOI points', '/110'],
 ];
 
 // The header's Resources menu: [href, label, key, one-line description, icon].
@@ -682,12 +706,12 @@ function nav(active, cta) {
   // A plain list: name, muted one-liner, optional right-hand tag. No icon tiles.
   const dropdown = (id, label, current, items, tagged) => `<div class="navdrop"><button type="button" class="navlink navdrop-btn" aria-expanded="false" aria-controls="${id}"${current ? ' data-current' : ''}>${label}${chevron}</button>
       <div class="droppanel" id="${id}">${items.map(([href, name, key, desc, tag]) => `<a class="dropitem" href="${href}"${active === key ? ' aria-current="page"' : ''}><span class="dropname">${name}${tagged ? `<span class="droptag">${tag}</span>` : ''}</span><small>${desc}</small></a>`).join('')}</div></div>`;
-  const calcDrop = dropdown('calc-menu', 'Calculators', active === 'calc', CALC_MENU, true);
+  const calcDrop = dropdown('calc-menu', 'Calculators', String(active).startsWith('calc'), CALC_MENU, true);
   const resDrop = dropdown('res-menu', 'Resources', RESOURCES.some(([, , key]) => key === active), RESOURCES, false);
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
     ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>Get the app</span></a>`
-    : `<a class="btn btn-accent headcta" href="/calculators">Calculate CRS</a>`;
+    : `<a class="btn btn-accent headcta" href="/crs-calculator">Calculate CRS</a>`;
   const latest = DRAWS[0];
   const live = `<a class="livechip" href="/draws" title="Latest Express Entry draw: round #${latest.no}, ${latest.label}, ${latest.date}"><span class="livedot" aria-hidden="true"></span><span>#${latest.no}</span><span class="livesep" aria-hidden="true"></span><span>CRS <b>${latest.cutoff}</b></span></a>`;
   const themeBtn = (cls) => `<button class="theme-btn ${cls}" type="button" onclick="toggleTheme()" data-theme-icon aria-label="Toggle dark mode">${icon('moon', 16)}</button>`;
@@ -751,7 +775,7 @@ const footerFull = () => `
       <div>
         <div class="klabel" style="color:var(--text);margin-bottom:12px">Product</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
-          <a class="foot-link" href="/calculators">Calculators</a>
+          <a class="foot-link" href="/crs-calculator">Calculators</a>
           <a class="foot-link" href="/draws">Draws &amp; trends</a>
           <a class="foot-link" href="/analytics">Draw analytics</a>
           <a class="foot-link" href="/checklists">Document checklists</a>
@@ -764,10 +788,10 @@ const footerFull = () => `
       <div>
         <div class="klabel" style="color:var(--text);margin-bottom:12px">Calculators</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
-          <a class="foot-link" href="/calculators">CRS (Express Entry)</a>
-          <a class="foot-link" href="/calculators#fsw">FSW 67-point grid</a>
-          <a class="foot-link" href="/calculators#bc">BC PNP SIRS</a>
-          <a class="foot-link" href="/calculators#sinp">Saskatchewan SINP</a>
+          <a class="foot-link" href="/crs-calculator">CRS (Express Entry)</a>
+          <a class="foot-link" href="/fsw-calculator">FSW 67-point grid</a>
+          <a class="foot-link" href="/bc-pnp-calculator">BC PNP SIRS</a>
+          <a class="foot-link" href="/sinp-calculator">Saskatchewan SINP</a>
         </div>
       </div>
       <div>
@@ -931,7 +955,7 @@ const pageHero = (lead, accent, lede) => `
 </section></div>`;
 const MAPLE = `<svg class="dg-leaf" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M256 16l-38 72c-4 8-12 7-20 3l-28-14 18 96c4 18-8 18-14 10l-40-46-7 23c-1 4-6 7-10 6l-51-11 13 49c3 11 5 15-3 18l-19 8 88 71c4 3 6 8 4 13l-8 25c31-4 58-9 89-12 3 0 7 3 7 6l-4 99h18l-4-99c0-3 4-6 7-6 31 3 58 8 89 12l-8-25c-2-5 0-10 4-13l88-71-19-8c-8-3-6-7-3-18l13-49-51 11c-4 1-9-2-10-6l-7-23-40 46c-6 8-18 8-14-10l18-96-28 14c-8 4-16 5-20-3z"/></svg>`;
 const s5End = (title = 'Check your CRS score tonight.') => `
-<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section></div>`;
+<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">Calculators</a></div></section></div>`;
 
 // ------------------------------------------------------------------ home components
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
@@ -1023,7 +1047,7 @@ function calculatorPreview(sample) {
   const tone = strong ? 'var(--success)' : near ? 'var(--warningInk)' : 'var(--text2)';
   const soft = strong ? 'var(--successSoft)' : near ? 'var(--warningSoft)' : 'var(--bg3)';
   return `
-<a class="card card-lift lift" href="/calculators" style="display:block;color:var(--text);overflow:hidden">
+<a class="card card-lift lift" href="/crs-calculator" style="display:block;color:var(--text);overflow:hidden">
   <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;align-items:center;padding:12px 18px;background:var(--bg2);border-bottom:1px solid var(--hairline)">
     <span style="font-size:13px;font-weight:600">CRS: Express Entry score</span>
     <span class="klabel">Runs in your browser</span>
@@ -1301,7 +1325,7 @@ function home() {
 
   const heroCopy = `<div><h1 class="split">Your Express Entry journey, <em>in one app.</em></h1>
       <p data-r="500" class="s5-sub">Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.</p>
-      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/calculators">Calculate my CRS</a></div></div>`;
+      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} Download for iPhone</a><a class="s5-btn s5-soft" href="/crs-calculator">Calculate my CRS</a></div></div>`;
   const hero = `<div class="dg-hero">${MAPLE}<div class="wrap">
   <section class="s5-hero">
     ${heroCopy}
@@ -1329,10 +1353,10 @@ ${hero}
 <div class="s5-marquee" aria-label="Recent Express Entry rounds"><div class="s5-track">${[...DRAWS.slice(0, 12), ...DRAWS.slice(0, 12)].map((d, i) => `<div class="s5-d"${i >= 12 ? ' aria-hidden="true"' : ''}><b>${d.crs}</b><span>#${d.no} ${d.cat}, ${d.date.replace(/, \d{4}$/, '')}</span></div>`).join('')}</div></div>
 <div class="wrap">
   <section class="s5-calcs"><h2 data-r="0">Four point grids, right in your browser.</h2>
-    <div class="s5-snap">${[['CRS', 'Express Entry', '1,200', 'The Comprehensive Ranking System IRCC uses to rank every profile in the pool.', ''], ['FSW', '67-point grid', '100', 'Federal Skilled Worker eligibility: six selection factors, 67 to qualify.', '#fsw'], ['BC PNP', 'SIRS', '200', 'British Columbia’s Skills Immigration Registration System score.', '#bc'], ['SINP', 'EOI', '110', 'Saskatchewan’s International Skilled Worker points assessment.', '#sinp']].map(([a, b, mx, d, h], i) => `<a href="/calculators${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
+    <div class="s5-snap">${[['CRS', 'Express Entry', '1,200', 'The Comprehensive Ranking System IRCC uses to rank every profile in the pool.', CALC_ROUTES.crs], ['FSW', '67-point grid', '100', 'Federal Skilled Worker eligibility: six selection factors, 67 to qualify.', CALC_ROUTES.fsw], ['BC PNP', 'SIRS', '200', 'British Columbia’s Skills Immigration Registration System score.', CALC_ROUTES.bc], ['SINP', 'EOI', '110', 'Saskatchewan’s International Skilled Worker points assessment.', CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
   ${priv}
   <section class="s5-faq" id="faq"><h2 data-r="0">Questions people ask.</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
-  <section class="s5-end" data-r="0"><h2>Check your CRS score tonight.</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/calculators">Calculators</a></div></section>
+  <section class="s5-end" data-r="0"><h2>Check your CRS score tonight.</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">Calculators</a></div></section>
 </div>
 </main>
 ${footerFull()}`;
@@ -2105,7 +2129,7 @@ function calcForms() {
   </div>
 </div>`;
 
-  return crsForm + fswForm + bcForm + sinpForm;
+  return { crs: crsForm, fsw: fswForm, bc: bcForm, sinp: sinpForm };
 }
 
 // The CRS grid, kept as source text so it has exactly one definition: it is interpolated
@@ -2222,7 +2246,7 @@ function guidePage(g) {
     : '';
   const cta = g.about
     ? ''
-    : `<div class="guide-cta"><p>Run your own numbers: the CRS, FSW, BC PNP and SINP calculators work in your browser and keep everything you enter on your device.</p>${accentBtn('/calculators', 'Open the calculators')}</div>`;
+    : `<div class="guide-cta"><p>Run your own numbers: the CRS, FSW, BC PNP and SINP calculators work in your browser and keep everything you enter on your device.</p>${accentBtn('/crs-calculator', 'Open the calculators')}</div>`;
   const body = `${nav(g.hub ? 'guides' : g.about ? '' : 'guides', 'calc')}
 <div style="min-height:100vh;position:relative">
 <main class="doc"><article class="doc-card">${crumbs}${h1}${meta}${rest.join('')}${cta}${relatedBlock}</article></main>
@@ -2233,10 +2257,10 @@ ${footerFull()}
 const guideMd = (g) => `${absLinks(g.md)}${g.hub || g.about ? '' : `\nLast reviewed ${GUIDES_REVIEWED} against IRCC's published rules.\n`}\n${MD_FOOTER}\n`;
 
 // Client engine: calc functions verbatim from the design component.
-const CALC_SCRIPT = `<script>
+const calcScript = (ACTIVE) => `<script>
 (function(){
   var state = ${JSON.stringify(STATE0)};
-  var active = 'crs';
+  var active = '${ACTIVE}';
   var TITLES = { crs:'CRS: Express Entry score', fsw:'Federal Skilled Worker: 67-point grid', bc:'BC PNP: SIRS score', sinp:'Saskatchewan SINP: EOI points' };
   var SUBS = { crs:'Official IRCC Comprehensive Ranking System, out of 1,200.', fsw:'Six selection factors — 67 of 100 needed to be eligible.', bc:'Skills Immigration Registration System, out of 200.', sinp:'International Skilled Worker EOI — 60 of 110 to qualify.' };
 
@@ -2406,15 +2430,6 @@ ${CRS_CALC_SRC}
     var sp=document.getElementById('crs-spouse'); if(sp) sp.style.display=state.crs.maritalStatus==='married'?'':'none';
     var sc=document.getElementById('crs-second'); if(sc) sc.style.display=state.crs.hasSecondLang?'':'none';
   }
-  function setTab(id){
-    active=id;
-    document.querySelectorAll('.calctab').forEach(function(t){ var on=t.getAttribute('data-tab')===id; t.classList.toggle('on', on); t.setAttribute('aria-pressed', on); });
-    if(history.replaceState) history.replaceState(null, '', id==='crs' ? location.pathname : '#'+id);
-    ['crs','fsw','bc','sinp'].forEach(function(k){ var el=document.getElementById('form-'+k); if(el) el.style.display=(k===id)?'flex':'none'; });
-    document.getElementById('calc-title').textContent=TITLES[id];
-    document.getElementById('calc-sub').textContent=SUBS[id];
-    syncVis(); render();
-  }
 
   var root=document.getElementById('calc');
   function unitFor(key){ return langOf(key)==='fr'?'NCLC':'CLB'; }
@@ -2480,37 +2495,148 @@ ${CRS_CALC_SRC}
       syncVis(); render();
     });
   });
-  document.querySelectorAll('.calctab').forEach(function(tb){ tb.addEventListener('click', function(){ setTab(tb.getAttribute('data-tab')); }); });
   // Phones: the score bar pins to the bottom while the result card is off-screen.
   var sb=document.getElementById('scorebar'), rc=document.getElementById('calc-result');
   if(sb && rc && 'IntersectionObserver' in window){
     new IntersectionObserver(function(es){ sb.classList.toggle('hide', es[0].isIntersecting); }).observe(rc);
   }
-  // /calculators#fsw (footer, other pages) opens that grid directly.
-  var fromHash=location.hash.slice(1);
-  if(TITLES[fromHash] && fromHash!=='crs') setTab(fromHash); else { syncVis(); render(); }
-  // The header's Calculators menu links here with a hash; switch tabs without a reload.
-  addEventListener('hashchange', function(){ var h=location.hash.slice(1); if(TITLES[h]){ setTab(h); scrollTo({top:0}); } });
+  syncVis(); render();
 })();
 </script>`;
 
-function calculatorsPage() {
+// ------------------------------------------------------------------ calculator pages
+// Copy for the four calculator pages: hero, form heading, the explainer under the form
+// and its FAQ (also the FAQPage JSON-LD). Factor maxima match the calc functions above.
+const LOWEST_CATEGORY = FEED.rounds.filter((r) => r.label !== 'Provincial Nominee Program').reduce((a, b) => (b.crs < a.crs ? b : a), FEED.rounds[0]);
+const CALC_INFO = {
+  crs: {
+    file: 'crs-calculator', name: 'CRS calculator (Express Entry)',
+    lead: 'CRS calculator for', accent: 'Express Entry.',
+    lede: 'Enter your test scores and profile to get your Comprehensive Ranking System score out of 1,200. It runs in your browser; nothing you type is sent anywhere.',
+    formTitle: 'CRS: Express Entry score', formSub: 'Official IRCC Comprehensive Ranking System, out of 1,200.',
+    about: `## How the CRS score works
+
+Immigration, Refugees and Citizenship Canada ranks every Express Entry profile with the Comprehensive Ranking System. This calculator uses IRCC's published grid:
+
+- **Core human capital**, up to 500 (460 with a spouse): age, education, official languages and Canadian work experience.
+- **Spouse or partner factors**, up to 40, only when your partner is coming with you.
+- **Skill transferability**, up to 100: education and foreign work combined with strong language or Canadian experience.
+- **Additional points**, up to 600: a provincial nomination, French ability, study in Canada, or a brother or sister in Canada.
+
+Language counts per ability, and transferability uses your lowest one, so one weak band can cost more than it looks. The full tables are in [how the CRS score is calculated](/crs-points), and [how to improve your CRS score](/improve-crs-score) shows what each change is worth.`,
+    faq: [
+      ['What is a good CRS score?', `There is no pass mark. Each round of invitations sets its own cutoff.${LAST_CEC ? ` The last Canadian Experience Class round (#${LAST_CEC.no}, ${LAST_CEC.date}) cut off at ${LAST_CEC.crs}.` : ''} Category rounds can go much lower: the lowest recent cutoff was ${LOWEST_CATEGORY.crs} (${LOWEST_CATEGORY.label}, #${LOWEST_CATEGORY.number}). See every round on the draws page.`],
+      ['Which language tests can I enter?', 'IELTS General Training, CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French. The calculator converts each score to a CLB or NCLC level with IRCC’s tables, or you can enter CLB levels directly.'],
+      ['Does a job offer add CRS points?', 'No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025, so a job offer no longer changes your CRS score.'],
+      ['How is the French bonus calculated?', 'French at NCLC 7 or higher in all four abilities adds 50 points if your English is at least CLB 5, or 25 points otherwise. The calculator works this out from the French test you enter.'],
+      ['Is this my official score?', 'No. It is an estimate for planning. Your official score is the one IRCC shows in your Express Entry profile.'],
+    ],
+    guide: ['/crs-points', 'How the CRS score is calculated'],
+  },
+  fsw: {
+    file: 'fsw-calculator', name: 'FSW 67-point calculator',
+    lead: 'FSW calculator:', accent: 'the 67-point test.',
+    lede: 'Check whether you qualify for the Federal Skilled Worker Program before entering the Express Entry pool. Six factors, 67 of 100 points to pass.',
+    formTitle: 'Federal Skilled Worker: 67-point grid', formSub: 'Six selection factors. 67 of 100 needed to be eligible.',
+    about: `## How the FSW grid works
+
+The Federal Skilled Worker Program is one of the three Express Entry programs. To enter the pool under it, you need at least **67 out of 100** on six selection factors:
+
+- **Language**, up to 28: per ability, 6 points at CLB 9 or more, 5 at CLB 8, 4 at CLB 7, plus 4 for a second official language at CLB 5.
+- **Education**, up to 25.
+- **Work experience**, up to 15: 9 points for one year, rising to 15 for six years or more.
+- **Age**, up to 12: full points from 18 to 35, then one fewer each year, reaching zero at 47.
+- **Arranged employment**, 10.
+- **Adaptability**, up to 10: previous study or work in Canada, a relative in Canada, or your spouse's language, study or work.
+
+This is a pass/fail check. It does not change your CRS score. The [FSW 67 points guide](/fsw-67-points) has every table.`,
+    faq: [
+      ['What do I need besides 67 points?', 'CLB 7 in all four abilities of your first official language, at least one year of continuous skilled work (TEER 0, 1, 2 or 3) in the last ten years, an Educational Credential Assessment for foreign education, and proof of funds unless you have a valid job offer and are authorized to work in Canada.'],
+      ['Does my FSW score affect my CRS score?', 'No. The 67-point grid only decides whether you can enter the pool under FSW. Your rank in the pool comes from the CRS.'],
+      ['Do I need a job offer?', 'No. A valid job offer adds 10 points for arranged employment and 5 for adaptability, but most candidates qualify without one.'],
+    ],
+    guide: ['/fsw-67-points', 'FSW 67 points explained'],
+  },
+  bc: {
+    file: 'bc-pnp-calculator', name: 'BC PNP SIRS calculator',
+    lead: 'BC PNP calculator:', accent: 'your SIRS score.',
+    lede: 'Estimate your British Columbia Skills Immigration Registration System score out of 200 before you register for a BC PNP skills draw.',
+    formTitle: 'BC PNP: SIRS score', formSub: 'Skills Immigration Registration System, out of 200.',
+    about: `## How the SIRS score works
+
+The BC Provincial Nominee Program ranks Skills Immigration registrations with the Skills Immigration Registration System (SIRS). It has five parts:
+
+- **Work experience**, up to 40: directly related experience, plus points for Canadian experience and for currently working in the job.
+- **Education**, up to 40: your highest level, where you studied, and a trades or professional credential.
+- **Language**, up to 40, with extra points for ability in both English and French.
+- **Hourly wage** of the B.C. job offer, up to 55. Higher wages earn more, reaching the maximum at $70 an hour.
+- **Region of employment**, up to 25: jobs outside Metro Vancouver earn more, plus points for experience or study in that region.
+
+A BC PNP nomination adds 600 points to an Express Entry profile. See [Express Entry draw types](/express-entry-draws) for how nominee rounds work.`,
+    faq: [
+      ['What is a good SIRS score?', 'There is no fixed pass mark. BC PNP invites the highest-scoring registrations in periodic draws, often by stream or occupation, and the cutoffs change from draw to draw. Check the BC PNP site for recent draws.'],
+      ['Why does the wage matter so much?', 'The hourly wage of your B.C. job offer is worth up to 55 points, more than any other single factor, so a higher-paid offer can move you up a long way.'],
+      ['Does a BC PNP nomination help with Express Entry?', 'Yes. A nomination through an Express Entry-aligned BC PNP stream adds 600 CRS points, which in practice leads to an invitation in the next nominee round.'],
+    ],
+    guide: ['/express-entry-draws', 'Express Entry draw types'],
+  },
+  sinp: {
+    file: 'sinp-calculator', name: 'Saskatchewan SINP EOI calculator',
+    lead: 'SINP points', accent: 'calculator.',
+    lede: 'Calculate your Saskatchewan Immigrant Nominee Program Expression of Interest score out of 110 and check the 60-point minimum.',
+    formTitle: 'Saskatchewan SINP: EOI points', formSub: 'International Skilled Worker EOI. 60 of 110 to qualify.',
+    about: `## How the SINP EOI score works
+
+The Saskatchewan Immigrant Nominee Program scores International Skilled Worker Expressions of Interest out of **110**. You need at least **60** to enter the pool:
+
+- **Education and training**, up to 23.
+- **Skilled work experience**, up to 15: two points for each of the last five years, plus points for earlier years.
+- **Language ability**, up to 30, across your first and second official languages.
+- **Age**, up to 12: full points from 22 to 34.
+- **Connection to Saskatchewan**, up to 30: a job offer, close family, or past work or study in the province.
+
+Saskatchewan invites the highest scores from the pool in periodic draws. A nomination through an Express Entry-linked stream adds 600 CRS points.`,
+    faq: [
+      ['What is the minimum SINP score?', '60 out of 110. That only gets you into the Expression of Interest pool; draws invite the highest-scoring candidates, so cutoffs are usually higher.'],
+      ['Do I need a job offer for SINP?', 'Not for the Occupations In-Demand or Express Entry categories. A Saskatchewan job offer is worth up to 30 points for connection to the province, which is the largest single bonus.'],
+      ['Does SINP help with Express Entry?', 'Yes. A nomination through the Saskatchewan Express Entry category adds 600 CRS points.'],
+    ],
+    guide: ['/express-entry-draws', 'Express Entry draw types'],
+  },
+};
+const calcAboutMd = (id) => {
+  const i = CALC_INFO[id];
+  return `${i.about}
+
+## Questions
+
+${i.faq.map(([q, a]) => `### ${q}\n\n${a}`).join('\n\n')}
+
+## Other calculators
+
+${Object.entries(CALC_INFO).filter(([k]) => k !== id).map(([k, x]) => `- [${x.name}](${CALC_ROUTES[k]})`).join('\n')}
+`;
+};
+
+function calculatorPage(id) {
+  const info = CALC_INFO[id];
+  // The four calculators are separate pages now; the tab strip links between them.
   const tabs = [['crs', 'calc', 'CRS'], ['fsw', 'checkCircle', 'FSW 67-point'], ['bc', 'compass', 'BC PNP SIRS'], ['sinp', 'pin', 'Saskatchewan SINP']]
-    .map(([id, ico, label], i) => `<button class="calctab${i === 0 ? ' on' : ''}" data-tab="${id}" aria-pressed="${i === 0}">${icon(ico, 17)} ${label}</button>`).join('');
-  const body = `${nav('calc', 'app')}
+    .map(([k, ico, label]) => `<a class="calctab${k === id ? ' on' : ''}" href="${CALC_ROUTES[k]}"${k === id ? ' aria-current="page"' : ''}>${icon(ico, 17)} ${label}</a>`).join('');
+  const body = `${nav(`calc-${id}`, 'app')}
 <div style="min-height:100vh;position:relative">
 <div style="position:relative;z-index:1">
-${pageHero('Score yourself against', 'every grid.', 'Pick a program below. Everything computes live in your browser and nothing is sent anywhere. These are estimates for planning; confirm with the official IRCC or provincial tool.')}
+${pageHero(info.lead, info.accent, info.lede)}
 <section style="max-width:1080px;margin:0 auto;padding:0 24px">
   <div class="calctabs" style="display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--border)">${tabs}</div>
 </section>
 <section id="calc" class="calcbody" style="max-width:1080px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
     <div style="margin-bottom:18px">
-      <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">CRS: Express Entry score</h2>
-      <p id="calc-sub" style="font-size:14px;color:var(--text2);margin:0">Official IRCC Comprehensive Ranking System, out of 1,200.</p>
+      <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">${info.formTitle}</h2>
+      <p id="calc-sub" style="font-size:14px;color:var(--text2);margin:0">${info.formSub}</p>
     </div>
-    ${calcForms()}
+    ${calcForms()[id].replace('style="display:none;flex-direction', 'style="display:flex;flex-direction')}
   </div>
   <div class="calcresult" id="calc-result" data-reveal style="position:sticky;top:88px;scroll-margin-top:80px">
     <div style="background:linear-gradient(155deg,var(--grad1),var(--grad2));border:1px solid var(--border);border-radius:20px;padding:26px;box-shadow:var(--shadow)">
@@ -2533,6 +2659,7 @@ ${pageHero('Score yourself against', 'every grid.', 'Pick a program below. Every
     <a class="link-accent" href="/" style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">Estimate only · verify with the official tool ↗</a>
   </div>
 </section>
+<section class="wrap calc-about"><article class="doc-card">${addHeadingIds(marked.parse(calcAboutMd(id)))}</article></section>
 </div>
 ${footerFull()}
 </div>
@@ -2540,8 +2667,12 @@ ${footerFull()}
   <span style="display:flex;flex-direction:column;min-width:0"><span id="sb-label" style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Comprehensive Ranking System</span><span style="font-size:12.5px;color:var(--text2)">Tap for the breakdown</span></span>
   <span style="display:flex;align-items:baseline;gap:5px;white-space:nowrap;flex-shrink:0"><span id="sb-total" class="num" style="font-size:30px;line-height:1;color:var(--text)">0</span><span id="sb-max" style="font-size:13px;color:var(--muted);font-weight:600">/ 1,200</span></span>
 </a>
-${CALC_SCRIPT}`;
-  return shell({ ...page('calculators'), jsonld: calcJsonLd(), body: noDashes(body) });
+${calcScript(id)}`;
+  // Old /calculators#fsw links arrive here after the /calculators 301; send them on.
+  const legacy = id === 'crs'
+    ? `<script>(function(){var m=${JSON.stringify({ fsw: CALC_ROUTES.fsw, bc: CALC_ROUTES.bc, sinp: CALC_ROUTES.sinp })};var h=location.hash.slice(1);if(m[h])location.replace(m[h]);})();</script>`
+    : '';
+  return shell({ ...page(info.file), head2: legacy, jsonld: calcJsonLd(id), body: noDashes(body) });
 }
 
 // ------------------------------------------------------------------ DOCS
@@ -2604,7 +2735,7 @@ The app carries Google AdMob banner ads; nothing else tracks you.
 
 ${mdList(CALC_META.map(([, name, max, desc]) => `**${name}** — max ${max}. ${desc}`))}
 
-All four run in the browser at ${SITE}/calculators — inputs are never uploaded.
+Each has its own page: ${Object.values(CALC_ROUTES).map((r) => `${SITE}${r}`).join(', ')}. They run in the browser; inputs are never uploaded.
 
 ## What the app does
 
@@ -2629,30 +2760,22 @@ ${FAQ.map(([q, a]) => `### ${q}\n\n${plain(a)}`).join('\n\n')}
 ${MD_FOOTER}
 `;
 
-const calculatorsMd = () => `${mdHead('calculators')}
-Four point grids, each computed live in the browser. Nothing is sent to a server. These are
-estimates for planning — confirm a final score with the official IRCC or provincial tool.
+const calcMd = (id) => {
+  const i = CALC_INFO[id];
+  const meta = CALC_META.find(([k]) => k === (id === 'bc' ? 'sirs' : id));
+  return `${mdHead(i.file)}
+Runs live in the browser at ${SITE}${CALC_ROUTES[id]}. Nothing is sent to a server. Estimates for
+planning; confirm a final score with the official IRCC or provincial tool.
 
-${CALC_META.map(([key, name, max, desc]) => `## ${name}
+Maximum: **${meta[2]}**
 
-Maximum: **${max}**
+Inputs: ${Object.keys(STATE0[meta[0]]).join(', ')}.
 
-${desc}
-
-Inputs: ${Object.keys(STATE0[key]).join(', ')}.`).join('\n\n')}
-
-## Which grid applies
-
-- Everyone in the Express Entry pool is ranked by **CRS**.
-- **FSW 67** is the eligibility test for the Federal Skilled Worker program; it does not
-  affect CRS ranking.
-- **BC PNP SIRS** and **SINP EOI** are provincial nominee streams. A provincial nomination
-  adds 600 CRS points, which is why nomination rounds show cutoffs above 700.
-
-Try them: ${SITE}/calculators
-
+${absMdLinks(calcAboutMd(id))}
 ${MD_FOOTER}
 `;
+};
+const absMdLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
 
 const drawsMd = () => `${mdHead('draws')}
 The app pulls rounds of invitations straight from IRCC's public JSON feed and pushes an
@@ -2761,7 +2884,7 @@ ${MD_FOOTER}
 
 const MD_PAGES = {
   'index.md': homeMd,
-  'calculators.md': calculatorsMd,
+  ...Object.fromEntries(Object.keys(CALC_ROUTES).map((id) => [`${CALC_INFO[id].file}.md`, () => calcMd(id)])),
   'draws.md': drawsMd,
   'analytics.md': analyticsMd,
   'checklists.md': checklistsMd,
@@ -2793,7 +2916,8 @@ history, or PR application timing**. Specifically:
 
 - **Scoring a candidate profile.** Turn age, education, CLB language levels, Canadian and
   foreign work experience, spouse factors and a provincial nomination into a CRS score out
-  of 1,200 — see ${SITE}/calculators.md for the exact input list per grid.
+  of 1,200 — see ${SITE}/crs-calculator.md for the exact input list (and the FSW, BC PNP and
+  SINP pages for the other grids).
 - **Checking eligibility before ranking.** The FSW 67-point grid decides whether a profile
   can enter the Federal Skilled Worker pool at all; CRS only ranks profiles already in it.
 - **Comparing a score against real cutoffs.** ${SITE}/draws.md carries round number, date,
@@ -2909,27 +3033,31 @@ const crumbsJsonLd = (path, title) => ({
   ],
 });
 
-// The four in-browser calculators as free web applications.
-const calcJsonLd = () => ({
-  '@context': 'https://schema.org',
-  '@graph': [
-    ['CRS calculator (Express Entry)', 'Comprehensive Ranking System score out of 1,200, using IRCC\u2019s published grid.'],
-    ['FSW 67-point calculator', 'Federal Skilled Worker selection grid: six factors, 67 points to be eligible.'],
-    ['BC PNP SIRS calculator', 'British Columbia Skills Immigration Registration System score out of 200.'],
-    ['SINP EOI points calculator', 'Saskatchewan Immigrant Nominee Program Expression of Interest score out of 110.'],
-  ].map(([name, description]) => ({
-    '@type': 'WebApplication',
-    name,
-    description,
-    url: `${SITE}/calculators`,
-    applicationCategory: 'UtilitiesApplication',
-    browserRequirements: 'Requires JavaScript',
-    operatingSystem: 'Any',
-    isAccessibleForFree: true,
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD' },
-    publisher: { '@id': `${SITE}/#org` },
-  })),
-});
+// One calculator page: the free web application plus its FAQ.
+const calcJsonLd = (id) => {
+  const i = CALC_INFO[id];
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        name: i.name,
+        description: page(i.file).description,
+        url: `${SITE}${CALC_ROUTES[id]}`,
+        applicationCategory: 'UtilitiesApplication',
+        browserRequirements: 'Requires JavaScript',
+        operatingSystem: 'Any',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD' },
+        publisher: { '@id': `${SITE}/#org` },
+      },
+      {
+        '@type': 'FAQPage',
+        mainEntity: i.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+      },
+    ],
+  };
+};
 
 const homeJsonLd = () => ({
   '@context': 'https://schema.org',
@@ -3021,7 +3149,7 @@ copyAsset('screenshots/03_draws.webp', 'img/app-draws.webp');
 copyAsset('screenshots/05_analytics_plan.webp', 'img/app-analytics.webp');
 copyAsset('screenshots/06_timeline.webp', 'img/app-timeline.webp');
 writeFileSync(resolve(OUT, 'index.html'), home());
-writeFileSync(resolve(OUT, 'calculators.html'), calculatorsPage());
+for (const id of Object.keys(CALC_ROUTES)) writeFileSync(resolve(OUT, `${CALC_INFO[id].file}.html`), calculatorPage(id));
 writeFileSync(resolve(OUT, 'draws.html'), drawsPage());
 writeFileSync(resolve(OUT, 'analytics.html'), analyticsPage());
 writeFileSync(resolve(OUT, 'checklists.html'), checklistsPage());

@@ -12,7 +12,10 @@
 /** URL path -> the markdown twin the build emits for it. */
 export const TWIN = {
   '/': '/index.md',
-  '/calculators': '/calculators.md',
+  '/crs-calculator': '/crs-calculator.md',
+  '/fsw-calculator': '/fsw-calculator.md',
+  '/bc-pnp-calculator': '/bc-pnp-calculator.md',
+  '/sinp-calculator': '/sinp-calculator.md',
   '/draws': '/draws.md',
   '/analytics': '/analytics.md',
   '/checklists': '/checklists.md',
@@ -34,7 +37,7 @@ export const TWIN = {
 // Vercel statically parses this export, so the matcher has to be a literal — it cannot
 // be derived from TWIN. web/middleware.test.mjs asserts the two stay in step.
 export const config = {
-  matcher: ['/', '/calculators', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/about', '/privacy', '/terms'],
+  matcher: ['/', '/crs-calculator', '/fsw-calculator', '/bc-pnp-calculator', '/sinp-calculator', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/about', '/privacy', '/terms'],
 };
 
 /**

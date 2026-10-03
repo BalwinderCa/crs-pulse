@@ -6,9 +6,21 @@
   "outputDirectory": "web/public",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/calculators",
+      "destination": "/crs-calculator",
+      "permanent": true
+    },
+    {
+      "source": "/calculators.md",
+      "destination": "/crs-calculator.md",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
-      "source": "/:page(|calculators|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms)",
+      "source": "/:page(|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms)",
       "headers": [
         {
           "key": "Vary",
@@ -17,7 +29,7 @@
       ]
     },
     {
-      "source": "/:page(index|calculators|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms).md",
+      "source": "/:page(index|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|about|privacy|terms).md",
       "headers": [
         {
           "key": "Content-Type",

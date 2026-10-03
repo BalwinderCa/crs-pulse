@@ -18,7 +18,10 @@ const SITE = 'https://www.crspulse.com';
 // [url path, output basename] for every public page.
 const ROUTES = [
   ['/', 'index'],
-  ['/calculators', 'calculators'],
+  ['/crs-calculator', 'crs-calculator'],
+  ['/fsw-calculator', 'fsw-calculator'],
+  ['/bc-pnp-calculator', 'bc-pnp-calculator'],
+  ['/sinp-calculator', 'sinp-calculator'],
   ['/draws', 'draws'],
   ['/analytics', 'analytics'],
   ['/checklists', 'checklists'],

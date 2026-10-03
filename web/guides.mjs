@@ -52,7 +52,7 @@ const CWE_ROWS = [['None or less than a year', 0, 0, 0], ['1 year', 40, 35, 5], 
 
 // ---------------------------------------------------------------- CLB tables
 // Shared with the in-browser calculators (clb.mjs), so the tables here and the live
-// conversion on /calculators can't disagree.
+// conversion on the calculator pages can't disagree.
 const clbTable = (t) => table(['CLB / NCLC', 'Reading', 'Writing', 'Listening', 'Speaking'],
   CLB_LEVELS.map((c) => [`${c === 10 ? '10 or more' : c}`, ...t.min[c].map((v) => `${v}+`)]));
 
@@ -131,7 +131,7 @@ export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL }) {
 
 The Comprehensive Ranking System (CRS) is how Immigration, Refugees and Citizenship Canada (IRCC) ranks everyone in the Express Entry pool. Your profile gets a score out of **1,200**. When IRCC holds a round of invitations, it invites the highest-ranked candidates who fit that round, so the score decides whether you get an Invitation to Apply (ITA).
 
-This guide walks through every part of the grid, with the actual point values, and ends with two worked examples. You can run your own numbers in the [CRS calculator](/calculators).
+This guide walks through every part of the grid, with the actual point values, and ends with two worked examples. You can run your own numbers in the [CRS calculator](/crs-calculator).
 
 ## The four parts of the score
 
@@ -261,7 +261,7 @@ This guide is a plain-language summary. IRCC's own grid is the authority, and yo
     related: ['crs-points', 'language-tests-clb', 'express-entry-draws'],
     md: `# How to improve your CRS score
 
-If your score sits below recent cutoffs, the useful question is which change gives the most points for the effort. This guide measures each option against one sample profile, using the same calculator that runs on the [calculators page](/calculators).
+If your score sits below recent cutoffs, the useful question is which change gives the most points for the effort. This guide measures each option against one sample profile, using the same calculator that runs on the [CRS calculator](/crs-calculator).
 
 **The sample profile:** single, 29 years old, a bachelor's degree, CLB 9 in all four English abilities, three years of skilled work abroad, no Canadian experience. That profile scores **${base}**.
 
@@ -269,7 +269,7 @@ If your score sits below recent cutoffs, the useful question is which change giv
 
 ${table(['Change', 'Points added', 'New score'], deltas.map(([l, d]) => [l, `+${d}`, base + d]))}
 
-The numbers are for this profile only. The same change can be worth more or less for you, because several factors interact. Run your own profile in the [calculator](/calculators) before you commit time or money to one route.
+The numbers are for this profile only. The same change can be worth more or less for you, because several factors interact. Run your own profile in the [calculator](/crs-calculator) before you commit time or money to one route.
 
 ## 1. Retake your language test
 
@@ -315,7 +315,7 @@ Points are often missed rather than missing:
 
 ## 7. Seek a provincial nomination
 
-A provincial or territorial nomination adds 600 points, which in practice guarantees an invitation in the next nominee round. Provinces run their own streams with their own criteria, often tied to an occupation, a job offer, or ties to the province. See the [BC PNP and Saskatchewan calculators](/calculators#bc).
+A provincial or territorial nomination adds 600 points, which in practice guarantees an invitation in the next nominee round. Provinces run their own streams with their own criteria, often tied to an occupation, a job offer, or ties to the province. See the [BC PNP](/bc-pnp-calculator) and [Saskatchewan](/sinp-calculator) calculators.
 
 ## What no longer works
 
@@ -342,7 +342,7 @@ A provincial or territorial nomination adds 600 points, which in practice guaran
 
 Express Entry does not use test scores directly. IRCC converts each ability (reading, writing, listening, speaking) to a **Canadian Language Benchmark** level, or **NCLC** for French. Your CRS points, your eligibility and the transferability bonuses all depend on those levels.
 
-The tables below give the minimum score for each level. They are the same thresholds the [CRS calculator](/calculators) uses.
+The tables below give the minimum score for each level. They are the same thresholds the [CRS calculator](/crs-calculator) uses.
 
 ## Which tests are accepted
 
@@ -409,7 +409,7 @@ Test providers and IRCC occasionally revise equivalencies. If your test date is 
 
 The Federal Skilled Worker Program (FSW) is one of the three programs that feed the Express Entry pool. Before you can enter the pool under FSW, you must score at least **67 out of 100** on its six selection factors. This is a pass/fail check, separate from the CRS score that ranks you once you are in.
 
-You can run the grid in the [FSW calculator](/calculators#fsw).
+You can run the grid in the [FSW calculator](/fsw-calculator).
 
 ## Minimum requirements
 
@@ -639,7 +639,7 @@ ${guides.map((g) => `## [${g.title.replace(/:.*$/, '')}](${g.path})\n\n${g.descr
 
 ## Tools that go with them
 
-- [CRS, FSW, BC PNP and Saskatchewan calculators](/calculators)
+- Calculators: [CRS](/crs-calculator), [FSW 67-point](/fsw-calculator), [BC PNP SIRS](/bc-pnp-calculator) and [Saskatchewan SINP](/sinp-calculator)
 - [Latest Express Entry draws](/draws) and [draw analytics](/analytics)
 - [IRCC processing times](/processing-times)
 - [Document checklists](/checklists) and the [application timeline](/timeline)
