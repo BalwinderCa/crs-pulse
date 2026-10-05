@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { format, parseISO } from 'date-fns';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,7 +37,9 @@ export default function ApplicationSetupScreen() {
   const [categoryId, setCategoryId] = useState<string | null>(application?.categoryId ?? null);
   const [typeId, setTypeId] = useState<string | null>(application?.typeId ?? null);
   const [date, setDate] = useState<Date>(() => {
-    const d = application?.appliedDate ? new Date(application.appliedDate) : new Date();
+    // parseISO reads 'yyyy-MM-dd' as local midnight; new Date() would read it as
+    // UTC midnight, which is the previous evening anywhere west of Greenwich.
+    const d = application?.appliedDate ? parseISO(application.appliedDate.slice(0, 10)) : new Date();
     return Number.isNaN(d.getTime()) ? new Date() : d;
   });
   const [showPicker, setShowPicker] = useState(false);
@@ -60,7 +63,9 @@ export default function ApplicationSetupScreen() {
     if (step < STEPS - 1) {
       setStep(step + 1);
     } else {
-      finish(date.toISOString().slice(0, 10));
+      // The picker's local calendar day. toISOString() would convert to UTC first,
+      // turning an evening pick in Canada into the next day.
+      finish(format(date, 'yyyy-MM-dd'));
     }
   };
 
