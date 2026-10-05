@@ -58,15 +58,20 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-05).** **v1.0.12 is in flight on both platforms**, built from
+**Store status (as of 2026-10-05).** **v1.0.12 is uploaded on both platforms**, built from
 `8bfee9e`. It has two changes since 1.0.11:
 - `ac2e83f`: the applied date is saved as the local calendar day. It was being saved via
   `toISOString()`, so an evening pick in Canada was stored as the next day.
 - `8103461`: one native ad below the home screen's recent draws.
 
-iOS was started on 2026-10-05 by `ios-build.yml` (run 37323604528), going to TestFlight; it is
-not yet submitted for review. Android is EAS build `61c360c0` (versionCode 26), going to the
-Alpha track. Open the TestFlight build on a device and release manually. Existing users whose
+iOS **build 58** (`ios-build.yml` run 37323604528, EAS `8ed0359a`) was uploaded to App Store
+Connect on 2026-10-05 at 15:58 UTC. It is in TestFlight and not yet submitted for review.
+Android **versionCode 26** (EAS `61c360c0`) was submitted to the **Alpha** track at 16:06 UTC.
+
+Both jobs waited about 90 minutes in EAS's Free Tier Queue: the free plan runs one job at a time,
+and `eas submit` is a queued job too. The iOS submit step normally takes 20 s. If that wait ever
+outlasts GitHub's 6-hour job limit, re-run only the submit with `eas submit --id <build>`; the
+build doesn't need to be redone. Open the TestFlight build on a device and release manually. Existing users whose
 applied date is a day late have to re-pick it, because a shifted date can't be told apart from a
 correct one.
 
