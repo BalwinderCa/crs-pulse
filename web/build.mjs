@@ -91,7 +91,7 @@ const PAGES = [
   },
   {
     file: 'draws', path: '/draws', priority: '0.9',
-    title: T('Express Entry Draws {year}: Latest CRS Cutoffs | CRS Pulse', { year: YEAR }),
+    title: T('Express Entry Draws {year}: Latest IRCC CRS Cutoffs | CRS Pulse', { year: YEAR }),
     description: T('Latest Express Entry draw #{n} ({date}): {label}, CRS {crs}, {size} ITAs. Every round from IRCC with cutoff trends and pool data.', { n: LATEST.number, date: SHORT_DATE, label: T(LATEST.label), crs: LATEST.crs, size: fmtN(LATEST.size) }),
     llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
   },

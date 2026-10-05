@@ -792,12 +792,14 @@ Réussir la grille de 67 points vous fait seulement entrer dans le bassin. Votre
   // =================================================================== draw types
   guides.push({
     file: 'express-entry-draws', path: '/express-entry-draws', priority: '0.8',
-    title: L('Express Entry Draw Types Explained: CEC, PNP, French & More', "Types de tirages Entrée express : CEC, PCP, français et plus"),
+    title: L('Draw Types in Express Entry: CEC, PNP, French & Category Rounds', "Types de rondes d’Entrée express : CEC, PCP, français et catégories"),
     description: L('What each kind of Express Entry round means, who qualifies, and the CRS cutoffs recent rounds of each type needed, from IRCC data.', "Ce que signifie chaque type de ronde d’Entrée express, qui peut être invité, et les scores CRS minimaux des rondes récentes de chaque type, d’après les données d’IRCC."),
     llm: 'The kinds of Express Entry rounds (general, program-specific, category-based, PNP) with per-category cutoff ranges and invitation counts from recent IRCC rounds.',
     short: L('What each round type means and what it needed', "Ce que veut dire chaque type de ronde et ce qu’il exigeait"),
     related: ['crs-points', 'improve-crs-score', 'express-entry-process'],
     md: L(`# Express Entry draw types, explained
+
+> **Looking for the latest draw?** Round #${last.number} on ${last.dateFull} was ${last.label}: ${fmt(last.size)} invitations, cutoff ${last.crs}. See [the latest Express Entry draws](/draws) for every round and its CRS cutoff.
 
 IRCC invites candidates from the Express Entry pool in **rounds of invitations**, often called draws. Each round has a type, a number of invitations, and a cutoff score: the CRS of the lowest-ranked person invited. The type decides who can be invited at all, which is why cutoffs vary so much from one round to the next.
 
@@ -850,6 +852,8 @@ An Invitation to Apply gives you 60 days to submit a complete application for pe
 
 Round data on this site is mirrored from IRCC's published feed and refreshed automatically when a new round is posted.
 `, `# Les types de tirages Entrée express, expliqués
+
+> **Vous cherchez le dernier tirage ?** La ronde n° ${last.number}, le ${dateOf(last)}, était : ${T(last.label)}, ${fmt(last.size)} invitations, score minimal de ${last.crs}. Consultez [les derniers tirages Entrée express](/draws) pour chaque ronde et son score minimal.
 
 IRCC invite les candidats du bassin d’Entrée express lors de **rondes d’invitations**, souvent appelées tirages. Chaque ronde a un type, un nombre d’invitations et un score minimal : le score CRS de la personne la moins bien classée qui a été invitée. C’est le type qui détermine qui peut être invité, ce qui explique pourquoi les scores minimaux varient tant d’une ronde à l’autre.
 
