@@ -58,7 +58,19 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-03).** iOS: **v1.0.11 (build 57)** is live. It was built by
+**Store status (as of 2026-10-05).** **v1.0.12 is in flight on both platforms**, built from
+`8bfee9e`. It has two changes since 1.0.11:
+- `ac2e83f`: the applied date is saved as the local calendar day. It was being saved via
+  `toISOString()`, so an evening pick in Canada was stored as the next day.
+- `8103461`: one native ad below the home screen's recent draws.
+
+iOS was started on 2026-10-05 by `ios-build.yml` (run 37323604528), going to TestFlight; it is
+not yet submitted for review. Android is EAS build `61c360c0` (versionCode 26), going to the
+Alpha track. Open the TestFlight build on a device and release manually. Existing users whose
+applied date is a day late have to re-pick it, because a shifted date can't be told apart from a
+correct one.
+
+iOS: **v1.0.11 (build 57)** is live. It was built by
 `.github/workflows/ios-build.yml` from `351d2f4`, got an expedited review, and was approved and
 released on 2026-10-03. PostHog shows real users on it from ~19:45 UTC that day, including
 devices that had been crash-looping on 1.0.10. **v1.0.10 (build 56)**, released automatically
@@ -85,12 +97,12 @@ on 2026-09-28/29 and the first real users from 2026-09-29 ~07:20 UTC.
 1.0.9's only change is anonymous PostHog analytics (see `analyticsService.ts` below), plus the
 onboarding/privacy copy that goes with it. The App Store privacy label was updated the same day:
 Product Interaction, Device ID and Coarse Location each gained the Analytics purpose. Android is
-**not live**, and the Production track is Inactive. The newest Play upload is **v1.0.11 /
+**not live**, and the Production track is Inactive. Before 1.0.12 (above), the newest Play upload was **v1.0.11 /
 versionCode 25**, built from `bed6f09` (the same mobile code as iOS build 56). Play Console shows it in
 **Closed testing - Alpha**, fully rolled out and available to testers since 2026-10-01 11:41.
 A manual re-upload on 2026-10-02 was rejected with "Version code 25 has already been used".
-**Android shows 1.0.11 for the code iOS ships as 1.0.10.** The next upload needs versionCode ≥ 26,
-which EAS assigns automatically (`autoIncrement`, remote version source). versionCode 23 was built from
+**Android shows 1.0.11 for the code iOS ships as 1.0.10.** From 1.0.12 the two version strings
+match again. EAS assigns versionCodes automatically (`autoIncrement`, remote version source). versionCode 23 was built from
 `3b850fd`, one commit before iOS build 54, so it still bundles `expo-localization` and PostHog
 reads the locale from it. The two platforms are otherwise feature-identical: every `Platform.OS` branch is a platform
 idiom (keyboard avoidance, date picker, store URL, share payload, ad-unit choice, iOS-only ATT
