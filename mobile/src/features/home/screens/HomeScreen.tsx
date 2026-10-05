@@ -13,6 +13,7 @@ import { useApplicationStore } from '@/store/applicationStore';
 import { useTimelineStore } from '@/store/timelineStore';
 import { findApplicationType } from '@/features/tracker/data/processingTimes';
 import { useProcessingTimes } from '@/features/tracker/hooks/useProcessingTimes';
+import { AdBanner } from '@/components/common/AdBanner';
 import { Card } from '@/components/common/Card';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -434,6 +435,10 @@ export default function HomeScreen() {
           </Card>
         </View>
       )}
+
+      {/* One native ad, below the draws card rather than inside it so it can't be
+          mistaken for a draw row. Renders nothing on no-fill. */}
+      {draws.length > 0 && <AdBanner />}
 
     </ScreenWrapper>
   );
