@@ -402,6 +402,17 @@ label > select, label > input{ width:100%; min-width:0; max-width:100%; box-sizi
 .rboost b{ color:var(--text); }
 .rboost-pts{ font-weight:700; color:var(--success); }
 .rboost a{ color:var(--accentInk); font-weight:600; margin-left:4px; }
+.rcuts{ margin:12px 0 0; padding-top:10px; border-top:1px solid var(--hairline); }
+.rcuts-h{ font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.rcuts ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
+.rcuts li{ display:flex; align-items:baseline; gap:8px; font-size:12.5px; line-height:1.35; color:var(--text2); }
+.rcut-mark{ width:12px; flex-shrink:0; font-weight:700; color:var(--success); }
+.rcut-l{ flex:1; min-width:0; }
+.rcut-d{ color:var(--muted); font-size:11.5px; white-space:nowrap; }
+.rcut-n{ font-weight:700; color:var(--text2); font-variant-numeric:tabular-nums; }
+.rcuts li.ok .rcut-l, .rcuts li.ok .rcut-n{ color:var(--text); }
+.rcuts-f{ font-size:11.5px; line-height:1.45; color:var(--muted); margin:8px 0 0; }
+.rcuts-f a{ color:var(--accentInk); font-weight:600; }
 .calctab{ cursor:pointer; padding:12px 16px; border:none; background:none; border-bottom:2px solid transparent; color:var(--text2); font-size:14.5px; font-weight:600; display:flex; align-items:center; gap:8px; }
 .calctab.on{ border-bottom-color:var(--accent); color:var(--text); font-weight:700; }
 .filterchip{ cursor:pointer; padding:7px 14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text2); font-size:13px; font-weight:600; }
@@ -993,7 +1004,7 @@ const pageHero = (lead, accent, lede) => `
 </section></div>`;
 const MAPLE = `<svg class="dg-leaf" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M256 16l-38 72c-4 8-12 7-20 3l-28-14 18 96c4 18-8 18-14 10l-40-46-7 23c-1 4-6 7-10 6l-51-11 13 49c3 11 5 15-3 18l-19 8 88 71c4 3 6 8 4 13l-8 25c31-4 58-9 89-12 3 0 7 3 7 6l-4 99h18l-4-99c0-3 4-6 7-6 31 3 58 8 89 12l-8-25c-2-5 0-10 4-13l88-71-19-8c-8-3-6-7-3-18l13-49-51 11c-4 1-9-2-10-6l-7-23-40 46c-6 8-18 8-14-10l18-96-28 14c-8 4-16 5-20-3z"/></svg>`;
 const s5End = (title = T('Check your CRS score tonight.')) => `
-<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('Calculators')}</a></div></section></div>`;
+<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section></div>`;
 
 // ------------------------------------------------------------------ home components
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
@@ -1394,7 +1405,7 @@ ${hero}
     <div class="s5-snap">${[['CRS', T('Express Entry'), '1,200', T('The Comprehensive Ranking System IRCC uses to rank every profile in the pool.'), CALC_ROUTES.crs], ['FSW', T('67-point grid'), '100', T('Federal Skilled Worker eligibility: six selection factors, 67 to qualify.'), CALC_ROUTES.fsw], ['BC PNP', T('SIRS'), '200', T('British Columbia’s Skills Immigration Registration System score.'), CALC_ROUTES.bc], ['SINP', T('EOI'), '110', T('Saskatchewan’s International Skilled Worker points assessment.'), CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
   ${priv}
   <section class="s5-faq" id="faq"><h2 data-r="0">${T('Questions people ask.')}</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
-  <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('Calculators')}</a></div></section>
+  <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section>
 </div>
 </main>
 ${footerFull()}`;
@@ -2267,6 +2278,25 @@ const langBlock = (key, langs) => {
 const LANG_HINT = `<p class="langhint">${T('Pick your test and enter your scores. They are converted to CLB levels as you type.')}</p>`;
 // Newest Canadian Experience Class round, the benchmark the score card compares against.
 const LAST_CEC = (() => { const r = FEED.rounds.find((x) => x.label === 'Canadian Experience Class'); return r ? { no: r.number, crs: r.crs, date: fullDate(r) } : null; })();
+// Newest round of each type in the feed, lowest cutoff first; the CRS score card marks the
+// ones a score would have cleared. PNP is left out: its cutoff already includes the 600
+// nomination points, so it says nothing to someone without a nomination.
+const IRCC_CRS_TOOL = LANG === 'fr'
+  ? 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note.html'
+  : 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score.html';
+const IRCC_CRS_CRITERIA = LANG === 'fr'
+  ? 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note/criteries-scg.html'
+  : 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html';
+const LATEST_BY_TYPE = (() => {
+  const seen = new Map();
+  for (const r of FEED.rounds) if (r.label !== 'Provincial Nominee Program' && !seen.has(r.label)) seen.set(r.label, r);
+  return [...seen.values()].sort((a, b) => a.crs - b.crs);
+})();
+const crsCutoffs = () => `<div id="r-cuts" class="rcuts">
+        <div class="rcuts-h">${T('Latest cutoff by round type')}</div>
+        <ul>${LATEST_BY_TYPE.map((r) => `<li data-crs="${r.crs}"><span class="rcut-mark" aria-hidden="true"></span><span class="rcut-l">${T(r.label)} <span class="rcut-d">#${r.number} · ${shortDate(r.date)}</span></span><span class="rcut-n">${r.crs}</span></li>`).join('')}</ul>
+        <p class="rcuts-f">${T('A tick means your score was at or above that round’s cutoff. Category rounds only invite candidates who qualify for the category. Mirrored from IRCC as of {date}.', { date: feedDate() })} <a href="/draws">${T('All draws')}</a></p>
+      </div>`;
 
 const lblSelect = (field, cur, opts, label, style = SEL, lblStyle = LBL) =>
   `<label style="${lblStyle}">${label}<select data-field="${field}" style="${style}">${opts.map((o) => optTag(o, cur)).join('')}</select></label>`;
@@ -2680,6 +2710,8 @@ ${CRS_CALC_SRC}
     document.getElementById('r-bar').style.cssText=bar(res.barPct,res.grad);
     document.getElementById('r-note').textContent=res.note;
     var rb=document.getElementById('r-boost');
+    var cuts=document.getElementById('r-cuts');
+    if (cuts) Array.prototype.forEach.call(cuts.querySelectorAll('li'), function(li){ var ok=res.total>=+li.getAttribute('data-crs'); li.classList.toggle('ok', ok); li.firstChild.textContent=ok?'✓':''; });
     if (res.boost){ rb.hidden=false; rb.innerHTML='${jsStr(T('Biggest boost for this profile:'))} <b>'+res.boost.label+'</b> <span class=\"rboost-pts\">+'+res.boost.d+'</span> <a href=\"/improve-crs-score\">${jsStr(T('More ways'))}</a>'; } else rb.hidden=true;
     document.getElementById('r-rows').innerHTML=res.rows.map(function(x){
       var pct=x.max?Math.round(x.val/x.max*100):0;
@@ -2792,6 +2824,8 @@ Language counts per ability, and transferability uses your lowest one, so one we
       [T('Is this my official score?'), T('No. It is an estimate for planning. Your official score is the one IRCC shows in your Express Entry profile.')],
     ],
     guide: ['/crs-points', T('How the CRS score is calculated')],
+    official: IRCC_CRS_TOOL,
+    sources: T('**Sources.** The points come from IRCC’s [published CRS criteria]({criteria}), and the cutoffs on this page are mirrored from IRCC’s rounds of invitations as of {date}. Check your score with [IRCC’s own calculator]({tool}) before you act on it.', { criteria: IRCC_CRS_CRITERIA, tool: IRCC_CRS_TOOL, date: feedDate() }),
   },
   fsw: {
     file: 'fsw-calculator', name: T('FSW 67-point calculator'),
@@ -2866,7 +2900,7 @@ Saskatchewan invites the highest scores from the pool in periodic draws. A nomin
 };
 const calcAboutMd = (id) => {
   const i = CALC_INFO[id];
-  return `${i.about}
+  return `${i.about}${i.sources ? `\n\n${i.sources}` : ''}
 
 ## ${T('Questions')}
 
@@ -2907,12 +2941,13 @@ ${pageHero(info.lead, info.accent, info.lede)}
       <div style="height:8px;background:var(--bg3);border-radius:6px;overflow:hidden;margin:14px 0 6px"><div id="r-bar" style="height:100%;width:0"></div></div>
       <p id="r-note" style="font-size:12.5px;line-height:1.5;color:var(--text2);margin:8px 0 0"></p>
       <p id="r-boost" class="rboost" hidden></p>
+      ${id === 'crs' ? crsCutoffs() : ''}
     </div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:24px;padding:20px;margin-top:16px">
       <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">${T('Points breakdown')}</div>
       <div id="r-rows" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>
-    <a class="link-accent" href="/" style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">${T('Estimate only · verify with the official tool ↗')}</a>
+    <a class="link-accent" href="${info.official ?? '/'}"${info.official ? ' rel="noopener"' : ''} style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">${T('Estimate only · verify with the official tool ↗')}</a>
   </div>
 </section>
 <section class="wrap calc-about"><article class="doc-card">${addHeadingIds(marked.parse(calcAboutMd(id)))}</article></section>
@@ -3313,6 +3348,8 @@ const calcJsonLd = (id) => {
         isAccessibleForFree: true,
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD' },
         publisher: { '@id': `${SITE}/#org` },
+        // The page's cutoffs come from the draw feed, so it changes when the feed does.
+        dateModified: FEED.updated,
       },
       {
         '@type': 'FAQPage',

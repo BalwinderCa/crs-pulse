@@ -652,5 +652,9 @@
  "{n} points lower": "{n} points de moins",
  "{n} rounds in {days} days": "{n} rondes en {days} jours",
  "{n} years": "{n} ans",
- "The last Canadian Experience Class round (#{no}, {date}) cut off at {crs}.": "La dernière ronde de la Catégorie de l’expérience canadienne (n° {no}, {date}) avait un score minimal de {crs}."
+ "The last Canadian Experience Class round (#{no}, {date}) cut off at {crs}.": "La dernière ronde de la Catégorie de l’expérience canadienne (n° {no}, {date}) avait un score minimal de {crs}.",
+ "Latest cutoff by round type": "Dernier score minimal par type de ronde",
+ "A tick means your score was at or above that round’s cutoff. Category rounds only invite candidates who qualify for the category. Mirrored from IRCC as of {date}.": "Un crochet indique que votre score atteint ou dépasse le score minimal de cette ronde. Les rondes par catégorie n’invitent que les candidats admissibles à la catégorie. Données reprises d’IRCC en date du {date}.",
+ "All draws": "Tous les tirages",
+ "**Sources.** The points come from IRCC’s [published CRS criteria]({criteria}), and the cutoffs on this page are mirrored from IRCC’s rounds of invitations as of {date}. Check your score with [IRCC’s own calculator]({tool}) before you act on it.": "**Sources.** Les points suivent les [critères du SCG publiés par IRCC]({criteria}), et les scores minimaux de cette page sont repris des rondes d’invitations d’IRCC en date du {date}. Vérifiez votre score avec [le calculateur d’IRCC]({tool}) avant d’agir."
 }
