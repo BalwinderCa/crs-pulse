@@ -2287,6 +2287,13 @@ const IRCC_CRS_TOOL = LANG === 'fr'
 const IRCC_CRS_CRITERIA = LANG === 'fr'
   ? 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note/criteries-scg.html'
   : 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html';
+// The official grid behind each of the other calculators. FSW is IRCC's; BC PNP and SINP
+// are run by the provinces and publish in English only.
+const FSW_GRID = LANG === 'fr'
+  ? 'https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/qui-presenter-demande/travailleurs-qualifies-federal.html'
+  : 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/become-candidate/eligibility/federal-skilled-workers/six-selection-factors-federal-skilled-workers.html';
+const BC_SIRS_GUIDE = 'https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents';
+const SINP_GRID = 'https://www.saskatchewan.ca/residents/moving-to-saskatchewan/live-in-saskatchewan/by-immigrating/saskatchewan-immigrant-nominee-program/assess-your-eligibility';
 const LATEST_BY_TYPE = (() => {
   const seen = new Map();
   for (const r of FEED.rounds) if (r.label !== 'Provincial Nominee Program' && !seen.has(r.label)) seen.set(r.label, r);
@@ -2850,6 +2857,7 @@ This is a pass/fail check. It does not change your CRS score. The [FSW 67 points
       [T('Do I need a job offer?'), T('No. A valid job offer adds 10 points for arranged employment and 5 for adaptability, but most candidates qualify without one.')],
     ],
     guide: ['/fsw-67-points', T('FSW 67 points explained')],
+    official: FSW_GRID, officialLabel: T('Estimate only · check IRCC’s points grid ↗'),
   },
   bc: {
     file: 'bc-pnp-calculator', name: T('BC PNP SIRS calculator'),
@@ -2873,6 +2881,7 @@ A BC PNP nomination adds 600 points to an Express Entry profile. See [Express En
       [T('Does a BC PNP nomination help with Express Entry?'), T('Yes. A nomination through an Express Entry-aligned BC PNP stream adds 600 CRS points, which in practice leads to an invitation in the next nominee round.')],
     ],
     guide: ['/express-entry-draws', T('Express Entry draw types')],
+    official: BC_SIRS_GUIDE, officialLabel: T('Estimate only · check the BC PNP program guide ↗'),
   },
   sinp: {
     file: 'sinp-calculator', name: T('Saskatchewan SINP EOI calculator'),
@@ -2896,6 +2905,7 @@ Saskatchewan invites the highest scores from the pool in periodic draws. A nomin
       [T('Does SINP help with Express Entry?'), T('Yes. A nomination through the Saskatchewan Express Entry category adds 600 CRS points.')],
     ],
     guide: ['/express-entry-draws', T('Express Entry draw types')],
+    official: SINP_GRID, officialLabel: T('Estimate only · check Saskatchewan’s points grid ↗'),
   },
 };
 const calcAboutMd = (id) => {
@@ -2947,7 +2957,7 @@ ${pageHero(info.lead, info.accent, info.lede)}
       <div style="font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:14px">${T('Points breakdown')}</div>
       <div id="r-rows" style="display:flex;flex-direction:column;gap:14px"></div>
     </div>
-    <a class="link-accent" href="${info.official ?? '/'}"${info.official ? ' rel="noopener"' : ''} style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">${T('Estimate only · verify with the official tool ↗')}</a>
+    <a class="link-accent" href="${info.official ?? '/'}"${info.official ? ' rel="noopener"' : ''} style="display:block;text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">${info.officialLabel ?? T('Estimate only · verify with the official tool ↗')}</a>
   </div>
 </section>
 <section class="wrap calc-about"><article class="doc-card">${addHeadingIds(marked.parse(calcAboutMd(id)))}</article></section>
