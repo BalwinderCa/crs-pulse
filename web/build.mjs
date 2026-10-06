@@ -2510,11 +2510,19 @@ const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
 const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL });
 const GUIDE_PAGES = [GUIDES.hub, ...GUIDES.guides, GUIDES.about];
 PAGES.splice(PAGES.findIndex((p) => p.file === 'privacy'), 0, ...GUIDE_PAGES);
-const GUIDE_LINKS = [['/guides', T('All guides')], ...GUIDES.guides.map((g) => [g.path, g.title.replace(/\s*:.*$/, '').replace(/^How the CRS Score Is Calculated$/, T('How CRS is calculated'))])];
+const guideLabel = (g) => g.label ?? g.title.replace(/\s*:.*$/, '');
+const GUIDE_LINKS = [['/guides', T('All guides')], ...GUIDES.guides.map((g) => [g.path, guideLabel(g).replace(/^How the CRS Score Is Calculated$/, T('How CRS is calculated'))])];
 const absLinks = (md) => md.replace(/\]\(\//g, `](${SITE}/`);
 
-const guideJsonLd = (g) => ({
-  '@context': 'https://schema.org',
+const guideJsonLd = (g) => {
+  const article = guideArticleLd(g);
+  if (!g.faq) return { '@context': 'https://schema.org', ...article };
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [article, { '@type': 'FAQPage', mainEntity: g.faq.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) }],
+  };
+};
+const guideArticleLd = (g) => ({
   '@type': 'Article',
   headline: g.title,
   description: g.description,
@@ -2539,7 +2547,7 @@ function guidePage(g) {
   const meta = g.hub || g.about ? '' : `<p class="guide-meta">${T('Last reviewed {date} against IRCC\'s published rules. Estimates only, not immigration advice.', { date: new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) })}</p>`;
   const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
   const relatedBlock = related.length
-    ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${r.title.replace(/\s*:.*$/, '')}<small>${r.short}</small></a>`).join('')}</div></section>`
+    ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${guideLabel(r)}<small>${r.short}</small></a>`).join('')}</div></section>`
     : '';
   const cta = g.about
     ? ''

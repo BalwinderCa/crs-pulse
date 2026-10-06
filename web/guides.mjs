@@ -127,9 +127,49 @@ export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL }) {
   const guides = [];
 
   // =================================================================== CRS points guide
+  const year = String(last.date).slice(0, 4);
+  // Maximum per factor, single / with spouse, read off the same tables the sections show.
+  const maxOf = (rs, i) => Math.max(...rs.map((r) => r[i]));
+  const FACTOR_MAX = [
+    [L('Age', 'Âge'), maxOf(AGE_ROWS, 1), maxOf(AGE_ROWS, 2)],
+    [L('Level of education', 'Niveau d’études'), maxOf(EDU_ROWS, 1), maxOf(EDU_ROWS, 2)],
+    [L('First official language (4 abilities)', 'Première langue officielle (4 compétences)'), 4 * maxOf(FIRST_LANG_ROWS, 1), 4 * maxOf(FIRST_LANG_ROWS, 2)],
+    [L('Second official language', 'Seconde langue officielle'), 24, 22],
+    [L('Canadian work experience', 'Expérience de travail au Canada'), maxOf(CWE_ROWS, 1), maxOf(CWE_ROWS, 2)],
+  ];
+  // Newest round of each type, lowest cutoff first. PNP is left out: its cutoff
+  // includes the 600 nomination points.
+  const latestByType = [...rows.reduce((m, r) => (r.label === 'Provincial Nominee Program' || m.has(r.label) ? m : m.set(r.label, r)), new Map()).values()].sort((a, b) => a.crs - b.crs);
+  const lowCut = latestByType[0];
+  const highCut = latestByType[latestByType.length - 1];
+  const latestTable = table(
+    L(['Round type', 'Latest round', 'Date', 'Cutoff'], ['Type de ronde', 'Dernière ronde', 'Date', 'Score minimal']),
+    latestByType.map((r) => [T(r.label), `#${r.number}`, dateOf(r), r.crs]),
+  );
+  // Questions people search for. Plain text: they also go into the FAQPage JSON-LD.
+  const crsFaq = [
+    [L('What is the maximum CRS score?', 'Quel est le score CRS maximal ?'),
+      L(`1,200. Core human capital is worth up to 500 (460 with a spouse), spouse factors up to 40, skill transferability up to 100, and additional points up to 600.`,
+        `${fmt(1200)}. Le capital humain de base vaut jusqu’à 500 points (460 avec un conjoint), les facteurs liés au conjoint jusqu’à 40, la transférabilité des compétences jusqu’à 100 et les points supplémentaires jusqu’à 600.`)],
+    [L('How many CRS points do I get for my age?', 'Combien de points CRS mon âge me donne-t-il ?'),
+      L(`Age is worth the most between 20 and 29: ${maxOf(AGE_ROWS, 1)} points, or ${maxOf(AGE_ROWS, 2)} with a spouse. It drops every year from 30 and reaches zero at 45.`,
+        `L’âge rapporte le plus entre 20 et 29 ans : ${maxOf(AGE_ROWS, 1)} points, ou ${maxOf(AGE_ROWS, 2)} avec un conjoint. Il baisse chaque année à partir de 30 ans et tombe à zéro à 45 ans.`)],
+    [L('How many CRS points is CLB 9 worth?', 'Combien de points CRS vaut le NCLC 9 ?'),
+      L(`CLB 9 in all four abilities of your first official language is worth ${4 * FIRST_LANG_ROWS[4][1]} core points (${4 * FIRST_LANG_ROWS[4][2]} with a spouse). It also unlocks the top tier of skill transferability, which can add up to 50 more with a degree or foreign work experience.`,
+        `Le NCLC 9 dans les quatre compétences de votre première langue officielle vaut ${4 * FIRST_LANG_ROWS[4][1]} points de base (${4 * FIRST_LANG_ROWS[4][2]} avec un conjoint). Il débloque aussi le palier supérieur de la transférabilité des compétences, qui peut ajouter jusqu’à 50 points avec un diplôme ou de l’expérience de travail à l’étranger.`)],
+    [L('Does a job offer still give CRS points?', 'Une offre d’emploi donne-t-elle encore des points CRS ?'),
+      L('No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025. A job offer can still matter for eligibility in some programs, but it no longer changes your CRS score.',
+        'Non. IRCC a retiré les 50 et 200 points pour l’emploi réservé le 25 mars 2025. Une offre d’emploi peut encore compter pour l’admissibilité à certains programmes, mais elle ne change plus votre score CRS.')],
+    [L(`What is a good CRS score in ${year}?`, `Qu’est-ce qu’un bon score CRS en ${year} ?`),
+      L(`It depends on the round. In the latest round of each type, cutoffs ran from ${lowCut.crs} (${lowCut.label}, #${lowCut.number}) to ${highCut.crs} (${highCut.label}, #${highCut.number}). Category rounds only invite candidates who qualify for the category.`,
+        `Cela dépend de la ronde. Dans la dernière ronde de chaque type, les scores minimaux allaient de ${lowCut.crs} (${T(lowCut.label)}, n° ${lowCut.number}) à ${highCut.crs} (${T(highCut.label)}, n° ${highCut.number}). Les rondes par catégorie n’invitent que les candidats admissibles à la catégorie.`)],
+  ];
+  const crsFaqMd = crsFaq.map(([q, a]) => `### ${q}\n\n${a}`).join('\n\n');
   guides.push({
     file: 'crs-points', path: '/crs-points', priority: '0.8',
-    title: L('How the CRS Score Is Calculated: Full Points Breakdown', "Calcul du score CRS : tous les points, facteur par facteur"),
+    title: L(`CRS Points ${year}: How the Express Entry Score Is Calculated`, `Points CRS ${year} : le calcul du score Entrée express`),
+    label: L('How the CRS Score Is Calculated', 'Calcul du score CRS'),
+    faq: crsFaq,
     description: L('Every CRS factor explained: age, education, language, Canadian work, spouse, skill transferability and additional points, with two worked examples.', "Chaque facteur du CRS expliqué : âge, études, langues, expérience canadienne, conjoint, transférabilité des compétences et points supplémentaires, avec deux exemples chiffrés."),
     llm: 'The full CRS grid as tables (core, spouse, skill transferability, additional points) with two worked examples computed by the site calculator.',
     short: L('Every CRS factor and its points, with worked examples', "Chaque facteur du CRS et ses points, avec des exemples"),
@@ -149,6 +189,10 @@ This guide walks through every part of the grid, with the actual point values, a
 | C. Skill transferability | Combinations of education, language and work experience | 100 |
 | D. Additional points | Provincial nomination, French, Canadian study, sibling in Canada | 600 |
 | **Total** | | **1,200** |
+
+### Maximum points per factor
+
+${table(['Factor', 'Single', 'With spouse'], [...FACTOR_MAX, ['**Core human capital**', '**500**', '**460**']])}
 
 One detail matters before the tables: if your spouse or common-law partner is coming to Canada with you, the core factors are scored on a slightly lower scale, and up to 40 points move to your partner's own factors. A partner who is a Canadian citizen or permanent resident, or who is not accompanying you, does not count, and you are scored as single.
 
@@ -249,6 +293,16 @@ A score has no pass mark on its own. Each round of invitations sets a cutoff: th
 
 If two candidates have the same score at the cutoff, IRCC uses the date and time each profile was submitted, and the earlier profile is invited first.
 
+### Latest cutoff for each round type
+
+${latestTable}
+
+Provincial Nominee Program rounds are left out: their cutoffs include the 600 nomination points. Figures are mirrored from IRCC as of ${L(FEED.updatedFull ?? FEED.updated, frDate(`${FEED.updated}T12:00:00Z`))}.
+
+## Questions
+
+${crsFaqMd}
+
 ## Sources
 
 - IRCC, [Comprehensive Ranking System criteria](${LINKS.crsGrid})
@@ -270,6 +324,10 @@ Ce guide passe en revue chaque partie de la grille, avec les points réels, et s
 | C. Transférabilité des compétences | Combinaisons d’études, de langue et d’expérience de travail | 100 |
 | D. Points supplémentaires | Désignation provinciale, français, études au Canada, frère ou sœur au Canada | 600 |
 | **Total** | | **${fmt(1200)}** |
+
+### Maximum de points par facteur
+
+${table(['Facteur', 'Personne seule', 'Avec conjoint'], [...FACTOR_MAX, ['**Capital humain de base**', '**500**', '**460**']])}
 
 Un point important avant les tableaux : si votre époux ou conjoint de fait vous accompagne au Canada, vos facteurs de base sont notés sur une échelle un peu plus basse, et jusqu’à 40 points passent aux facteurs de votre conjoint. Un conjoint citoyen canadien ou résident permanent, ou qui ne vous accompagne pas, ne compte pas : vous êtes alors noté comme une personne seule.
 
@@ -369,6 +427,16 @@ Le conjoint ajoute ses propres points, mais les facteurs de base du demandeur pr
 Un score n’a pas de note de passage en soi. Chaque ronde d’invitations fixe un score minimal : celui de la dernière personne invitée. Les rondes sont soit générales, soit limitées à un programme ou à une catégorie (par exemple la Catégorie de l’expérience canadienne, la compétence linguistique en français ou les soins de santé), et les scores minimaux varient beaucoup de l’une à l’autre. Consultez les [types de tirages Entrée express](/express-entry-draws) pour savoir ce qu’exigeaient les rondes récentes, ou l’[historique complet des tirages](/draws).
 
 Si plusieurs candidats ont le même score au seuil, IRCC applique la règle de départage : la date et l’heure de soumission du profil, le profil le plus ancien étant invité en premier.
+
+### Dernier score minimal par type de ronde
+
+${latestTable}
+
+Les rondes du Programme des candidats des provinces sont exclues : leur score minimal comprend les 600 points de la désignation. Données reprises d’IRCC en date du ${frDate(`${FEED.updated}T12:00:00Z`)}.
+
+## Questions
+
+${crsFaqMd}
 
 ## Sources
 
@@ -1082,7 +1150,7 @@ La norme de service d’IRCC est de traiter la plupart des demandes Entrée expr
 
 Plain-language guides to Canada's Express Entry system, written to sit alongside the calculators and live draw data on this site. Every table on these pages is generated from the same data the calculators use, so the numbers stay in step.
 
-${guides.map((g) => `## [${g.title.replace(/\s*:.*$/, '')}](${g.path})\n\n${g.description}`).join('\n\n')}
+${guides.map((g) => `## [${g.label ?? g.title.replace(/\s*:.*$/, '')}](${g.path})\n\n${g.description}`).join('\n\n')}
 
 ## Tools that go with them
 
@@ -1094,7 +1162,7 @@ ${guides.map((g) => `## [${g.title.replace(/\s*:.*$/, '')}](${g.path})\n\n${g.de
 
 Des guides en langage simple sur le système Entrée express du Canada, conçus pour accompagner les calculateurs et les données de tirages en direct de ce site. Chaque tableau de ces pages est produit à partir des mêmes données que les calculateurs, pour que les chiffres restent cohérents.
 
-${guides.map((g) => `## [${g.title.replace(/\s*:.*$/, '')}](${g.path})\n\n${g.description}`).join('\n\n')}
+${guides.map((g) => `## [${g.label ?? g.title.replace(/\s*:.*$/, '')}](${g.path})\n\n${g.description}`).join('\n\n')}
 
 ## Les outils qui les accompagnent
 
