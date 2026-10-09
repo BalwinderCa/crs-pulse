@@ -44,7 +44,10 @@ export const useProcessingTimesStore = create<ProcessingTimesStore>((set, get) =
           // A processing-times push IS the signal that this cache is wrong, so a
           // forced load must reach the network — otherwise the alert fires and the
           // app still shows the old figures until the window expires.
-          if (!force && Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return;
+          // A cache from before the mirror carried `peopleAhead` (pre-1.0.13) is
+          // refetched at once rather than hiding the people-ahead line for up to 6h.
+          const hasAhead = Object.values(cached.feed.times).some((v) => v?.peopleAhead);
+          if (!force && hasAhead && Date.now() - new Date(cached.fetchedAt).getTime() < STALE_MS) return;
         }
       }
     } catch {

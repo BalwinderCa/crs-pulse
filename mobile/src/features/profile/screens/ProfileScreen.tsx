@@ -26,10 +26,13 @@ import { summarizeProfile } from '../utils/profileSummary';
 // light and dark card surfaces, since the accent is used for text as well as fills.
 const ACCENT_OPTIONS: { value: string; labelKey: string }[] = [
   { value: '#DC2626', labelKey: 'profile.colorRed' },
-  { value: '#2563EB', labelKey: 'profile.colorBlue' },
-  { value: '#059669', labelKey: 'profile.colorGreen' },
-  { value: '#8B5CF6', labelKey: 'profile.colorPurple' },
   { value: '#EA580C', labelKey: 'profile.colorOrange' },
+  { value: '#A16207', labelKey: 'profile.colorAmber' },
+  { value: '#059669', labelKey: 'profile.colorGreen' },
+  { value: '#0D9488', labelKey: 'profile.colorTeal' },
+  { value: '#0284C7', labelKey: 'profile.colorSky' },
+  { value: '#2563EB', labelKey: 'profile.colorBlue' },
+  { value: '#8B5CF6', labelKey: 'profile.colorPurple' },
   { value: '#DB2777', labelKey: 'profile.colorPink' },
 ];
 
@@ -77,9 +80,10 @@ function makeStyles(c: Colors, accent: string) {
     themeBtnText:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     themeBtnTextActive: { color: c.textPrimary },
     subTitle:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm },
-    swatchRow:  { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
-    swatchRing: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-    swatch:     { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+    swatchRow:  { flexDirection: 'row' },
+    swatchCell: { flex: 1, alignItems: 'center' },
+    swatchRing: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+    swatch:     { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
 
     // Danger zone
     dangerTitle: { color: palette.danger, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -218,20 +222,21 @@ export default function ProfileScreen() {
           {ACCENT_OPTIONS.map((opt) => {
             const selected = accent.toUpperCase() === opt.value;
             return (
-              <TouchableOpacity
-                key={opt.value}
-                ph-label={`profile-accent-${opt.labelKey.replace('profile.color', '').toLowerCase()}`}
-                onPress={() => save({ accent_color: opt.value })}
-                style={[styles.swatchRing, selected && { borderColor: opt.value }]}
-                hitSlop={4}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                accessibilityLabel={t(opt.labelKey)}
-              >
-                <View style={[styles.swatch, { backgroundColor: opt.value }]}>
-                  {selected && <Ionicons name="checkmark" size={18} color="#fff" />}
-                </View>
-              </TouchableOpacity>
+              <View key={opt.value} style={styles.swatchCell}>
+                <TouchableOpacity
+                  ph-label={`profile-accent-${opt.labelKey.replace('profile.color', '').toLowerCase()}`}
+                  onPress={() => save({ accent_color: opt.value })}
+                  style={[styles.swatchRing, selected && { borderColor: opt.value }]}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  accessibilityLabel={t(opt.labelKey)}
+                >
+                  <View style={[styles.swatch, { backgroundColor: opt.value }]}>
+                    {selected && <Ionicons name="checkmark" size={13} color="#fff" />}
+                  </View>
+                </TouchableOpacity>
+              </View>
             );
           })}
         </View>

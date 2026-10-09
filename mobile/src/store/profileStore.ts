@@ -40,7 +40,7 @@ export type CalcInputs = {
 // so no score shows anywhere until the user fills in the calculator.
 export const DEFAULT_CALC_INPUTS: CalcInputs = {
   maritalStatus: 'single',
-  age: 29,
+  age: 28,
   education: 'secondary',
   canadianEducation: 'none',
   firstLangTest: 'IELTS',

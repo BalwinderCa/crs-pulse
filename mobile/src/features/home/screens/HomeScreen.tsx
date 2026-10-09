@@ -11,7 +11,7 @@ import { useProfileStore } from '@/store/profileStore';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useTimelineStore } from '@/store/timelineStore';
-import { findApplicationType } from '@/features/tracker/data/processingTimes';
+import { findApplicationType, peopleAheadFor } from '@/features/tracker/data/processingTimes';
 import { useProcessingTimes } from '@/features/tracker/hooks/useProcessingTimes';
 import { AdBanner } from '@/components/common/AdBanner';
 import { Card } from '@/components/common/Card';
@@ -112,7 +112,7 @@ export default function HomeScreen() {
   // IRCC's "people ahead of you" for the month the user applied; only while still waiting.
   const peopleAhead =
     tracked?.applied && !tracked.decided
-      ? tracked.type.peopleAhead?.[format(tracked.applied, 'yyyy-MM')] ?? null
+      ? peopleAheadFor(tracked.type.peopleAhead, format(tracked.applied, 'yyyy-MM'))
       : null;
 
   const score = profile?.crs_score ?? 0;
@@ -284,50 +284,37 @@ export default function HomeScreen() {
           )}
 
           <View style={[s.appInfoBox, { borderTopColor: c.border }]}>
-            {peopleAhead != null && (
-              <View style={s.appInfoRow}>
-                <Ionicons name="person-outline" size={14} color={c.textMuted} />
-                <Text style={[s.appInfoText, { color: c.textSecondary }]}>
-                  {peopleAhead === 0
-                    ? t('home.peopleAheadFew')
-                    : t('home.peopleAhead', { count: peopleAhead.toLocaleString() })}
+            {/* IRCC's queue figures as tiles: one glance instead of a stack of sentences. */}
+            <View style={s.queueRow}>
+              {peopleAhead != null && (
+                <View style={[s.queueTile, { backgroundColor: c.surfaceSecondary }]}>
+                  <Text style={[s.queueVal, { color: accent }]}>
+                    {peopleAhead === 'notYet' ? '—' : peopleAhead === 0 ? '<100' : peopleAhead.toLocaleString()}
+                  </Text>
+                  <Text style={[s.queueLabel, { color: c.textMuted }]}>
+                    {t(peopleAhead === 'notYet' ? 'home.statAheadNotYet' : 'home.statAhead')}
+                  </Text>
+                </View>
+              )}
+              {tracked.type.peopleWaiting != null && (
+                <View style={[s.queueTile, { backgroundColor: c.surfaceSecondary }]}>
+                  <Text style={[s.queueVal, { color: c.textPrimary }]}>
+                    {tracked.type.peopleWaiting.toLocaleString()}
+                  </Text>
+                  <Text style={[s.queueLabel, { color: c.textMuted }]}>{t('home.statWaiting')}</Text>
+                </View>
+              )}
+              <View style={[s.queueTile, { backgroundColor: c.surfaceSecondary }]}>
+                <Text style={[s.queueVal, { color: c.textPrimary }]}>
+                  {t('home.statMonths', { count: tracked.type.months })}
+                </Text>
+                <Text style={[s.queueLabel, { color: c.textMuted }]}>
+                  {t(tracked.type.varies ? 'home.statNewApplicantsVaries' : 'home.statNewApplicants')}
                 </Text>
               </View>
-            )}
-            {tracked.type.peopleWaiting != null && (
-              <View style={s.appInfoRow}>
-                <Ionicons name="people-outline" size={14} color={c.textMuted} />
-                <Text style={[s.appInfoText, { color: c.textSecondary }]}>
-                  {t('home.peopleWaiting', { count: tracked.type.peopleWaiting.toLocaleString() })}
-                </Text>
-              </View>
-            )}
-            {tracked.type.peopleWaiting != null && (
-              <View style={s.appInfoRow}>
-                <Ionicons name="speedometer-outline" size={14} color={c.textMuted} />
-                <Text style={[s.appInfoText, { color: c.textSecondary }]}>
-                  {t('home.decisionsPerMonth', { count: Math.round(tracked.type.peopleWaiting / tracked.type.months).toLocaleString() })}
-                </Text>
-              </View>
-            )}
-            <View style={s.appInfoRow}>
-              <Ionicons name="hourglass-outline" size={14} color={c.textMuted} />
-              <Text style={[s.appInfoText, { color: c.textSecondary }]}>
-                {t('home.processedInAbout', {
-                  months: tracked.type.months,
-                  unit: tracked.type.months === 1 ? t('home.month') : t('home.months'),
-                  varies: tracked.type.varies ? t('home.variesByCase') : '',
-                })}
-              </Text>
-            </View>
-            <View style={s.appInfoRow}>
-              <Ionicons name="refresh-outline" size={14} color={c.textMuted} />
-              <Text style={[s.appInfoText, { color: c.textMuted }]}>
-                {t('home.lastUpdated', { label: updatedLabel })}
-              </Text>
             </View>
             <Text style={[s.appNote, { color: c.textMuted }]}>
-              {t('home.processingNote')}
+              {t('home.sourceLine', { label: updatedLabel })}
             </Text>
           </View>
         </Card>
@@ -508,9 +495,11 @@ const s = StyleSheet.create({
   pastSub:     { fontSize: typography.xs, marginTop: 1 },
   appInfoBox:   { borderTopWidth: StyleSheet.hairlineWidth, marginTop: spacing.sm,
                   paddingTop: spacing.sm, gap: spacing.xs },
-  appInfoRow:   { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs },
-  appInfoText:  { flex: 1, fontSize: typography.xs, lineHeight: 17 },
-  appNote:      { fontSize: typography.xs, lineHeight: 16, marginTop: 2 },
+  queueRow:     { flexDirection: 'row', gap: spacing.xs },
+  queueTile:    { flex: 1, alignItems: 'center', gap: 2, paddingVertical: spacing.sm, paddingHorizontal: 4, borderRadius: borderRadius.md },
+  queueVal:     { fontSize: typography.lg, fontWeight: typography.black, letterSpacing: -0.3 },
+  queueLabel:   { fontSize: typography.xs, textAlign: 'center', lineHeight: 15 },
+  appNote:      { fontSize: typography.xs, lineHeight: 16, textAlign: 'center' },
 
   // Recent draws
   recentCard:        { paddingVertical: 0, paddingHorizontal: 0, overflow: 'hidden' },

@@ -236,3 +236,22 @@ export function applyLiveTimes(
     }),
   }));
 }
+
+/**
+ * IRCC's "people ahead of you" for an application filed in `month` ('YYYY-MM').
+ * Mirrors IRCC's own tool exactly: only the figure IRCC publishes for that month.
+ * IRCC's table ends a month or two before today, and its tool shows "Data not
+ * available" for newer months, so those return 'notYet' rather than a guess.
+ * Null when there's no table or the month isn't in it.
+ */
+export function peopleAheadFor(
+  table: Record<string, number> | undefined,
+  month: string,
+): number | 'notYet' | null {
+  if (!table) return null;
+  const exact = table[month];
+  if (exact != null) return exact;
+  const months = Object.keys(table).sort();
+  const last = months[months.length - 1];
+  return last && month > last ? 'notYet' : null;
+}

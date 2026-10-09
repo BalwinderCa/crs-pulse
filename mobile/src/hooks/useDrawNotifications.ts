@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -60,28 +60,41 @@ export function useDrawNotifications() {
     return map[reason];
   }, []);
 
+  // Flip the switch at once and do the push (un)registration behind it: the
+  // token fetch + worker round trip took long enough that the toggle seemed to
+  // hang. A failed enable flips it back and explains why.
+  const busy = useRef(false);
   const toggle = useCallback(async () => {
-    if (!enabled) {
-      const result = await registerForPushNotifications();
-      if (!result.ok) {
-        track('push_enable_failed', { reason: result.reason });
-        if (result.reason === 'permission_denied') {
-          Alert.alert(i18n.t('common.notificationsDisabled'), i18n.t('common.notifPermissionDenied'), [
-            { text: i18n.t('common.cancel'), style: 'cancel' },
-            { text: i18n.t('common.openSettings'), onPress: () => Linking.openSettings() },
-          ]);
-        } else {
-          Alert.alert(i18n.t('common.notificationsUnavailable'), i18n.t(failureKey(result.reason)));
-        }
-        return;
-      }
-    } else {
-      await unregisterPushNotifications();
-    }
+    if (busy.current) return;
+    busy.current = true;
     const next = !enabled;
-    track(next ? 'push_enabled' : 'push_disabled');
     setEnabled(next);
-    await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, next ? 'true' : 'false');
+    try {
+      if (next) {
+        const result = await registerForPushNotifications();
+        if (!result.ok) {
+          setEnabled(false);
+          track('push_enable_failed', { reason: result.reason });
+          if (result.reason === 'permission_denied') {
+            Alert.alert(i18n.t('common.notificationsDisabled'), i18n.t('common.notifPermissionDenied'), [
+              { text: i18n.t('common.cancel'), style: 'cancel' },
+              { text: i18n.t('common.openSettings'), onPress: () => Linking.openSettings() },
+            ]);
+          } else {
+            Alert.alert(i18n.t('common.notificationsUnavailable'), i18n.t(failureKey(result.reason)));
+          }
+          return;
+        }
+      } else {
+        await unregisterPushNotifications();
+      }
+      track(next ? 'push_enabled' : 'push_disabled');
+      await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, next ? 'true' : 'false');
+    } catch {
+      setEnabled(!next); // unexpected throw: show the state we actually have
+    } finally {
+      busy.current = false;
+    }
   }, [enabled, failureKey]);
 
   return { enabled, loading, toggle };

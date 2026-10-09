@@ -1,11 +1,12 @@
 import { Fragment, useEffect, useMemo } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { differenceInCalendarDays, parseISO } from 'date-fns';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { AdBanner } from '@/components/common/AdBanner';
+import { Toggle } from '@/components/common/Toggle';
 import { useDrawsStore } from '@/store/drawsStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useNotificationsStore } from '../store/notificationsStore';
@@ -72,11 +73,10 @@ export default function NotificationsScreen() {
                 {t('notifications.toggleHint')}
               </Text>
             </View>
-            <Switch
+            <Toggle
               value={alertsEnabled}
               onValueChange={toggleAlerts}
-              trackColor={{ false: c.surfaceTertiary, true: accent }}
-              thumbColor={palette.white}
+              activeColor={accent}
               accessibilityLabel={t('notifications.newDrawAlerts')}
             />
           </View>

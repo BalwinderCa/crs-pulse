@@ -41,7 +41,7 @@ describe('processingTimesStore', () => {
     await AsyncStorage.setItem(
       STORAGE_KEYS.PROCESSING_TIMES_CACHE,
       JSON.stringify({
-        feed: { updated: 'May 1, 2026', times: { ee_fsw: { months: 8 } } },
+        feed: { updated: 'May 1, 2026', times: { ee_fsw: { months: 8, peopleAhead: { '2026-08': 53800 } } } },
         fetchedAt: new Date().toISOString(),
       }),
     );
@@ -53,11 +53,27 @@ describe('processingTimesStore', () => {
     expect(spy).not.toHaveBeenCalled();
   });
 
+  it('refetches a fresh cache saved before the mirror carried peopleAhead', async () => {
+    await AsyncStorage.setItem(
+      STORAGE_KEYS.PROCESSING_TIMES_CACHE,
+      JSON.stringify({
+        feed: { updated: 'May 1, 2026', times: { ee_fsw: { months: 8 } } },
+        fetchedAt: new Date().toISOString(),
+      }),
+    );
+    const spy = jest.spyOn(global, 'fetch').mockImplementation(() =>
+      okJson({ updated: 'Sept 3, 2026', times: { ee_fsw: { months: 7, peopleAhead: { '2026-08': 53800 } } } }),
+    );
+    await useProcessingTimesStore.getState().load();
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(useProcessingTimesStore.getState().times?.ee_fsw?.peopleAhead?.['2026-08']).toBe(53800);
+  });
+
   // The exact scenario the push exists for: a fresh cache from minutes ago would
   // otherwise hide the very change the alert announced, for up to 6 hours.
   it('force bypasses the freshness window so a pushed change is visible immediately', async () => {
     const first = jest.spyOn(global, 'fetch').mockImplementation(() =>
-      okJson({ updated: 'August 10, 2026', times: { ee_cec: { months: 6 } } }),
+      okJson({ updated: 'August 10, 2026', times: { ee_cec: { months: 6, peopleAhead: { '2026-07': 49000 } } } }),
     );
     await useProcessingTimesStore.getState().load();
     expect(useProcessingTimesStore.getState().updated).toBe('August 10, 2026');

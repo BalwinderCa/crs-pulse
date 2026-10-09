@@ -2,6 +2,7 @@ import {
   applyLiveTimes,
   findApplicationType,
   APPLICATION_CATEGORIES,
+  peopleAheadFor,
   type LiveProcessingTimes,
 } from '@/features/tracker/data/processingTimes';
 
@@ -40,5 +41,24 @@ describe('applyLiveTimes (live processing-times overlay)', () => {
     applyLiveTimes(APPLICATION_CATEGORIES, { ee_cec: { months: 99 } });
     const after = findApplicationType('economic', 'ee_cec', APPLICATION_CATEGORIES)!.type.months;
     expect(after).toBe(before);
+  });
+});
+
+describe('peopleAheadFor', () => {
+  const table = { '2016-01': 0, '2026-07': 49000, '2026-08': 58900 };
+
+  it('reads the exact application month', () => {
+    expect(peopleAheadFor(table, '2026-07')).toBe(49000);
+    expect(peopleAheadFor(table, '2016-01')).toBe(0); // IRCC "Less than 100"
+  });
+
+  it('says "not yet" for months after IRCC\'s table instead of guessing', () => {
+    expect(peopleAheadFor(table, '2026-09')).toBe('notYet');
+  });
+
+  it('returns null with no table, or a month IRCC does not list', () => {
+    expect(peopleAheadFor(undefined, '2026-07')).toBeNull();
+    expect(peopleAheadFor(table, '2020-05')).toBeNull();
+    expect(peopleAheadFor(table, '2015-06')).toBeNull();
   });
 });

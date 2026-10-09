@@ -58,7 +58,15 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-05).** **v1.0.12 is uploaded on both platforms**, built from
+**Store status (as of 2026-10-09).** **v1.0.13 is uploaded on both platforms**, built from
+`02ed921`: IRCC "people ahead of you" on the home tracker card, two onboarding slides instead of
+three, the app open ad on every 2nd launch, profile details moved to a My Profile screen, the PDF
+export removed, and a Settings accent-color picker. iOS **build 59** (`ios-build.yml` run
+37902868718, EAS `78cd8741`) went to App Store Connect on 2026-10-09 and has not been opened on a
+device or submitted for review. Android **versionCode 27** (EAS `30190969`) was submitted to the
+**Alpha** track the same day. 1.0.12 was never submitted for review on either store.
+
+**Previously (as of 2026-10-05).** **v1.0.12 is uploaded on both platforms**, built from
 `8bfee9e`. It has two changes since 1.0.11:
 - `ac2e83f`: the applied date is saved as the local calendar day. It was being saved via
   `toISOString()`, so an evening pick in Canada was stored as the next day.

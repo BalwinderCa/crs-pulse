@@ -12,8 +12,8 @@ type ToggleProps = {
   accessibilityLabel?: string;
 };
 
-const TRACK_W = 48;
-const TRACK_H = 28;
+const TRACK_W = 40;
+const TRACK_H = 24;
 const PAD = 3;
 const KNOB = TRACK_H - PAD * 2;
 
@@ -55,7 +55,7 @@ export function Toggle({
       accessibilityRole="switch"
       accessibilityState={{ checked: value }}
       accessibilityLabel={accessibilityLabel}
-      hitSlop={8}
+      hitSlop={12}
     >
       <Animated.View style={[s.track, { backgroundColor }]}>
         <Animated.View style={[s.knob, { transform: [{ translateX }] }]} />
