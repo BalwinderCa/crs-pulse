@@ -1,8 +1,9 @@
 import '@/i18n'; // initialise i18next with bundled translations
 import React, { Suspense, useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from '@/components/common/AppToast';
 import { StyleSheet, View, ActivityIndicator, LogBox, Text, TextInput } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { palette } from '@/theme';
@@ -84,7 +85,10 @@ function AppInner() {
 
 function ToastHost() {
   const { tabBarHeight } = useTabBarLayout();
-  return <Toast bottomOffset={tabBarHeight + 8} />;
+  // Toasts show at the top; the library's fixed 40pt default sits under the
+  // notch / Dynamic Island (safe area ~59pt), so offset by the real inset.
+  const { top } = useSafeAreaInsets();
+  return <Toast config={toastConfig} topOffset={top + 8} bottomOffset={tabBarHeight + 8} />;
 }
 
 export default function App() {

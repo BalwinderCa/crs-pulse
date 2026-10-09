@@ -58,13 +58,16 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-09).** **v1.0.13 is uploaded on both platforms**, built from
-`02ed921`: IRCC "people ahead of you" on the home tracker card, two onboarding slides instead of
-three, the app open ad on every 2nd launch, profile details moved to a My Profile screen, the PDF
-export removed, and a Settings accent-color picker. iOS **build 59** (`ios-build.yml` run
-37902868718, EAS `78cd8741`) went to App Store Connect on 2026-10-09 and has not been opened on a
-device or submitted for review. Android **versionCode 27** (EAS `30190969`) was submitted to the
-**Alpha** track the same day. 1.0.12 was never submitted for review on either store.
+**Store status (as of 2026-10-09).** **v1.0.13 is uploaded on both platforms.** The latest are
+iOS **build 60** (EAS `d6148650`, from `ce4e44c`, tag `ios-build-1.0.13-b60`) in App Store Connect,
+not yet opened on a device or submitted for review, and Android **versionCode 28** (EAS `86daa00d`,
+auto-submitted to **Alpha**). They supersede build 59 / versionCode 27 (`02ed921`) from earlier the
+same day. 1.0.13 changes: IRCC "people ahead of you" on the home tracker (exact IRCC figure for the
+application month, "pending" after IRCC's table ends) shown as stat tiles with a one-line source
+note, two onboarding slides instead of three, the app open ad on every 2nd launch, profile details
+moved to a My Profile screen, the PDF export removed, a 9-color accent picker, a smaller
+notification toggle that flips immediately, and CRS calculator default age 28. 1.0.12 was never
+submitted for review on either store.
 
 **Previously (as of 2026-10-05).** **v1.0.12 is uploaded on both platforms**, built from
 `8bfee9e`. It has two changes since 1.0.11:

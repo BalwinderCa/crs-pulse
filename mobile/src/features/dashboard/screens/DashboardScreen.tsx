@@ -652,7 +652,18 @@ export default function DashboardScreen() {
   // ─── Main render ─────────────────────────────────────────────────────────────
 
   return (
-    <SafeAreaView style={[st.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
+    // The stack header pads for the notch itself, so the safe area skips 'top';
+    // with both, the gap above the header doubled.
+    <SafeAreaView style={[st.safe, { backgroundColor: c.surfacePrimary }]} edges={['left', 'right']}>
+      <AppHeader
+        title={t('crsCalculator.title')}
+        variant="stack"
+        right={scoreReady ? (
+          <View style={[st.catBadge, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
+            <Text style={[st.catTxt, { color: accent }]}>{cat}</Text>
+          </View>
+        ) : undefined}
+      />
       <ScrollView
         style={st.scroll}
         contentContainerStyle={[
@@ -663,20 +674,8 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Header */}
-        <AppHeader
-          title={t('crsCalculator.title')}
-          variant="stack"
-          right={scoreReady ? (
-            <View style={[st.catBadge, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
-              <Text style={[st.catTxt, { color: accent }]}>{cat}</Text>
-            </View>
-          ) : undefined}
-        />
-
         {/* Calculator */}
         <View style={st.calcSection}>
-          <Text style={[st.calcTitle, { color: c.textPrimary }]}>{t('crsCalculator.title')}</Text>
           <Text style={[st.calcSub, { color: c.textMuted }]}>
             {scoreReady ? t('crsCalculator.scoreLive') : t('crsCalculator.enterScores')}
           </Text>
@@ -712,10 +711,9 @@ export default function DashboardScreen() {
             </>
           )}
         </View>
-      </ScrollView>
 
-      {/* ── Floating Analytics button + score pill ── */}
-      <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="box-none">
+        {/* In the scroll flow, not floating: a floating button sat over the
+            language steppers and caught taps meant for them. */}
         {scoreReady && (
           <TouchableOpacity ph-label="crs-open-analytics"
             style={[st.fab, { backgroundColor: accent }]}
@@ -728,6 +726,10 @@ export default function DashboardScreen() {
             <Ionicons name="chevron-forward" size={15} color="#fff" />
           </TouchableOpacity>
         )}
+      </ScrollView>
+
+      {/* ── Floating score pill (taps pass through to the inputs below) ── */}
+      <View style={[st.floatWrap, { bottom: floatingBottomOffset }]} pointerEvents="box-none">
         {scoreReady ? (
           <View
             style={[st.floatCard, { backgroundColor: c.surfaceCard, borderColor: c.border,
@@ -797,8 +799,7 @@ const st = StyleSheet.create({
   catTxt:      { fontSize: typography.sm, fontWeight: typography.semibold },
 
   // Calculator
-  calcSection: { marginBottom: spacing.lg },
-  calcTitle:   { fontSize: typography.xl, fontWeight: typography.bold, marginBottom: 2 },
+  calcSection: { marginTop: spacing.md, marginBottom: spacing.lg },
   calcSub:     { fontSize: typography.xs, marginBottom: spacing.xs },
   disclaimer:  { fontSize: typography.xs, lineHeight: 16, marginBottom: spacing.lg, fontStyle: 'italic' },
 
@@ -882,11 +883,9 @@ const st = StyleSheet.create({
   floatCat:   { fontSize: typography.base, fontWeight: typography.bold },
   floatDiff:  { fontSize: typography.xl, fontWeight: typography.black },
   floatRule:  { width: 1, marginVertical: 4, alignSelf: 'stretch' },
-  fab:        { alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center',
-                gap: 2, paddingLeft: spacing.base, paddingRight: spacing.md,
-                paddingVertical: 10, borderRadius: 999, marginBottom: spacing.sm,
-                shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.25, shadowRadius: 8, elevation: 6 },
+  fab:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+                gap: 2, paddingVertical: spacing.md, borderRadius: borderRadius.lg,
+                marginTop: spacing.sm, marginBottom: spacing.base },
   fabTxt:     { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
   floatHint:    { flexDirection: 'row', alignItems: 'center', gap: spacing.sm,

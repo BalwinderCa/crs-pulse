@@ -1,5 +1,5 @@
-import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,6 +13,7 @@ import type { ThemeMode, AppLanguage } from '@/store/profileStore';
 import { resetAllData } from '@/utils/resetAllData';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
+import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { SkeletonCard } from '@/components/common/SkeletonCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -29,9 +30,9 @@ const ACCENT_OPTIONS: { value: string; labelKey: string }[] = [
   { value: '#EA580C', labelKey: 'profile.colorOrange' },
   { value: '#A16207', labelKey: 'profile.colorAmber' },
   { value: '#059669', labelKey: 'profile.colorGreen' },
-  { value: '#0D9488', labelKey: 'profile.colorTeal' },
   { value: '#0284C7', labelKey: 'profile.colorSky' },
   { value: '#2563EB', labelKey: 'profile.colorBlue' },
+  { value: '#6366F1', labelKey: 'profile.colorIndigo' },
   { value: '#8B5CF6', labelKey: 'profile.colorPurple' },
   { value: '#DB2777', labelKey: 'profile.colorPink' },
 ];
@@ -97,6 +98,7 @@ export default function ProfileScreen() {
   const { profile, save } = useProfileStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
+  const [confirmReset, setConfirmReset] = useState(false);
 
   const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
     { label: t('profile.themeSystem'), value: 'system', icon: 'phone-portrait-outline' },
@@ -277,30 +279,30 @@ export default function ProfileScreen() {
         <Button ph-label="profile-reset-data"
           title={t('profile.resetAllData')}
           variant="danger"
-          onPress={() => {
-            Alert.alert(
-              t('profile.resetTitle'),
-              t('profile.resetMsg'),
-              [
-                { text: t('profile.cancel'), style: 'cancel' },
-                {
-                  text: t('profile.resetEverything'),
-                  style: 'destructive',
-                  onPress: async () => {
-                    try {
-                      await resetAllData();
-                      Toast.show({ type: 'success', text1: t('profile.resetSuccess') });
-                    } catch {
-                      Toast.show({ type: 'error', text1: t('profile.resetFailed'), text2: t('profile.resetFailedMsg') });
-                    }
-                  },
-                },
-              ],
-            );
-          }}
+          onPress={() => setConfirmReset(true)}
           fullWidth
         />
       </Card>
+
+      <ConfirmDialog
+        visible={confirmReset}
+        destructive
+        title={t('profile.resetTitle')}
+        message={t('profile.resetMsg')}
+        confirmLabel={t('profile.resetEverything')}
+        cancelLabel={t('profile.cancel')}
+        onCancel={() => setConfirmReset(false)}
+        onConfirm={async () => {
+          try {
+            await resetAllData();
+            Toast.show({ type: 'success', text1: t('profile.resetSuccess') });
+          } catch {
+            Toast.show({ type: 'error', text1: t('profile.resetFailed'), text2: t('profile.resetFailedMsg') });
+          } finally {
+            setConfirmReset(false);
+          }
+        }}
+      />
     </ScreenWrapper>
   );
 }
