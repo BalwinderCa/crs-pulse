@@ -59,10 +59,10 @@ eas submit                                      # Submit to app stores
 ```
 
 **Store status (as of 2026-10-09).** **v1.0.13 is uploaded on both platforms.** The latest are
-iOS **build 60** (EAS `d6148650`, from `ce4e44c`, tag `ios-build-1.0.13-b60`) in App Store Connect,
-not yet opened on a device or submitted for review, and Android **versionCode 28** (EAS `86daa00d`,
-auto-submitted to **Alpha**). They supersede build 59 / versionCode 27 (`02ed921`) from earlier the
-same day. 1.0.13 changes: IRCC "people ahead of you" on the home tracker (exact IRCC figure for the
+iOS **build 61** (EAS `b87b3e78`, from `34a1ddc`, tag `ios-build-1.0.13-b61`) in App Store Connect,
+not yet opened on a device or submitted for review, and Android **versionCode 29** (EAS `62ca6352`,
+auto-submitted to **Alpha**). Build 61 adds themed toasts (below the notch), an in-app Reset All
+Data dialog and CRS calculator layout fixes on top of build 60 / versionCode 28 (`ce4e44c`). Those superseded build 59 / versionCode 27 (`02ed921`) from earlier the same day. 1.0.13 changes: IRCC "people ahead of you" on the home tracker (exact IRCC figure for the
 application month, "pending" after IRCC's table ends) shown as stat tiles with a one-line source
 note, two onboarding slides instead of three, the app open ad on every 2nd launch, profile details
 moved to a My Profile screen, the PDF export removed, a 9-color accent picker, a smaller
