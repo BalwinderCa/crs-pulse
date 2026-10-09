@@ -12,6 +12,7 @@ import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
 import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
+import MyProfileScreen from '@/features/profile/screens/MyProfileScreen';
 import SinpCalculatorScreen from '@/features/sinp/screens/SinpCalculatorScreen';
 import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
 import CalculatorsScreen from '@/features/calculators/screens/CalculatorsScreen';
@@ -135,6 +136,7 @@ export default function RootNavigator() {
         <Stack.Screen name="Main" component={MainNavigator} />
         <Stack.Screen name="Faq" component={FaqScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="SinpCalculator" component={SinpCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="CrsCalculator" component={DashboardScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Calculators" component={CalculatorsScreen} options={{ animation: 'slide_from_right' }} />

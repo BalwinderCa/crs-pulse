@@ -104,11 +104,11 @@ export async function initAds(): Promise<void> {
 }
 
 /** Show the splash ad on every Nth cold launch, not every one. */
-const APP_OPEN_EVERY_N_LAUNCHES = 3;
+const APP_OPEN_EVERY_N_LAUNCHES = 2;
 
 /**
  * Counts this cold launch and reports whether it is an ad launch — true on
- * every 3rd, so launches 1 and 2 boot straight through with no splash hold.
+ * every 2nd, so odd-numbered launches boot straight through with no splash hold.
  *
  * Consumes the turn, so call it exactly once per launch. Fails CLOSED: if
  * storage is unavailable we skip the ad rather than risk holding the splash on

@@ -17,6 +17,11 @@ export interface ApplicationType {
   method?: string;
   /** Approximate queue size (people waiting for a decision), when IRCC publishes it. */
   peopleWaiting?: number;
+  /**
+   * People ahead in the queue by application month ('YYYY-MM'), from IRCC's
+   * "people ahead of you" figures. 0 means IRCC's "Less than 100". Live data only.
+   */
+  peopleAhead?: Record<string, number>;
 }
 
 export interface ApplicationCategory {
@@ -206,9 +211,12 @@ export function findApplicationType(
 // available, its month + people-waiting numbers overlay the matching types so
 // the app shows current data without a store release. See processingTimesStore.
 
-export type LiveProcessingTimes = Record<string, { months: number; peopleWaiting?: number }>;
+export type LiveProcessingTimes = Record<
+  string,
+  { months: number; peopleWaiting?: number; peopleAhead?: Record<string, number> }
+>;
 
-/** Returns the categories with `months`/`peopleWaiting` overridden where live data exists. */
+/** Returns the categories with `months`/`peopleWaiting`/`peopleAhead` overridden where live data exists. */
 export function applyLiveTimes(
   categories: ApplicationCategory[],
   live: LiveProcessingTimes | null,
@@ -223,6 +231,7 @@ export function applyLiveTimes(
         ...t,
         months: override.months,
         ...(override.peopleWaiting != null ? { peopleWaiting: override.peopleWaiting } : {}),
+        ...(override.peopleAhead && typeof override.peopleAhead === 'object' ? { peopleAhead: override.peopleAhead } : {}),
       };
     }),
   }));

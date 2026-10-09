@@ -8,6 +8,8 @@
 // Source: https://www.canada.ca/content/dam/ircc/documents/json/flpt-en.json
 //   `current-flpt`: program code -> "About N months" / "More than 10 years" / ...
 //   `total-people`: program code -> "About 60,900 people waiting"
+//   `people-ahead`: "<code>-YYYY/MM" (month applied) -> "About 3,200 people ahead of you"
+//                   or "Less than 100 people ahead of you" (mirrored as 0)
 // Only month-based PR/economic/family/refugee/citizenship programs are mirrored;
 // day-based temporary/PR-card/document times don't fit the app's month model and
 // stay bundled.
@@ -65,11 +67,31 @@ export function parsePeople(value) {
   return m ? parseInt(m[1], 10) : null;
 }
 
-/** Pure: turn the IRCC flpt payload into { updated, times: { typeId: { months, peopleWaiting? } } }. */
+/** "About 3,200 people ahead of you" -> 3200, "Less than 100 ..." -> 0, else null. */
+export function parsePeopleAhead(value) {
+  if (typeof value !== 'string') return null;
+  if (/^\s*less than/i.test(value)) return 0;
+  return parsePeople(value);
+}
+
+/**
+ * Pure: turn the IRCC flpt payload into
+ * { updated, times: { typeId: { months, peopleWaiting?, peopleAhead?: { 'YYYY-MM': n } } } }.
+ */
 export function buildProcessingTimes(flpt) {
   const current = flpt?.['current-flpt'] ?? {};
   const people = flpt?.['total-people'] ?? {};
+  const ahead = flpt?.['people-ahead'] ?? {};
   const updated = flpt?.['default-update']?.flpt_lastupdated ?? null;
+
+  // Group "<code>-YYYY/MM" keys by program code. Codes contain hyphens, so split on the last one.
+  const aheadByCode = {};
+  for (const [key, value] of Object.entries(ahead)) {
+    const m = key.match(/^(.+)-(\d{4})\/(\d{2})$/);
+    const n = parsePeopleAhead(value);
+    if (!m || n == null) continue;
+    (aheadByCode[m[1]] ??= {})[`${m[2]}-${m[3]}`] = n;
+  }
 
   const times = {};
   for (const [code, typeId] of Object.entries(CODE_TO_TYPE)) {
@@ -78,6 +100,7 @@ export function buildProcessingTimes(flpt) {
     const entry = { months };
     const waiting = parsePeople(people[code]);
     if (waiting != null) entry.peopleWaiting = waiting;
+    if (aheadByCode[code]) entry.peopleAhead = aheadByCode[code];
     times[typeId] = entry;
   }
   return { updated, times };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,18 +18,20 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import {
-  calculateCRS,
-  suggestCategory,
-  type TefScale,
-} from '@/features/onboarding/utils/crsCalculator';
-import { buildCRSInput } from '@/features/onboarding/utils/buildCRSInput';
-import { isCrsScoreReady } from '@/utils/crsScoreReady';
-import { exportProfilePdf } from '@/utils/exportProfile';
-import { track } from '@/services/analyticsService';
 import type { Colors } from '@/theme/colors';
-import type { CalcInputs } from '@/store/profileStore';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { summarizeProfile } from '../utils/profileSummary';
+
+// Accent choices. Each keeps roughly the default red's contrast on both the
+// light and dark card surfaces, since the accent is used for text as well as fills.
+const ACCENT_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: '#DC2626', labelKey: 'profile.colorRed' },
+  { value: '#2563EB', labelKey: 'profile.colorBlue' },
+  { value: '#059669', labelKey: 'profile.colorGreen' },
+  { value: '#8B5CF6', labelKey: 'profile.colorPurple' },
+  { value: '#EA580C', labelKey: 'profile.colorOrange' },
+  { value: '#DB2777', labelKey: 'profile.colorPink' },
+];
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function makeStyles(c: Colors, accent: string) {
@@ -58,30 +60,6 @@ function makeStyles(c: Colors, accent: string) {
     },
     catText: { fontSize: typography.sm, fontWeight: typography.bold },
 
-    divider: { height: 1, backgroundColor: c.border, marginVertical: spacing.xs },
-
-    // Profile info rows
-    groupTitle: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: spacing.xs },
-    row:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.xs + 2 },
-    rowDivider: { height: 1, backgroundColor: c.border },
-    rowLabel:   { color: c.textMuted, fontSize: typography.sm, fontWeight: typography.medium },
-    rowValue:   { color: c.textPrimary, fontSize: typography.sm, fontWeight: typography.semibold, flexShrink: 1, textAlign: 'right', marginLeft: spacing.sm },
-
-    // Score breakdown
-    breakdownGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-    breakdownItem: {
-      flex: 1,
-      minWidth: '45%',
-      backgroundColor: c.surfaceSecondary,
-      borderRadius:    borderRadius.md,
-      borderWidth:     0.3,
-      borderColor:     c.border,
-      padding:         spacing.sm,
-      gap:             2,
-    },
-    bLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.4, textTransform: 'uppercase' },
-    bValue: { color: c.textPrimary, fontSize: typography.xl, fontWeight: typography.black },
-
     // Notification row
     notifRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
     notifText:  { flex: 1, gap: 2 },
@@ -98,15 +76,10 @@ function makeStyles(c: Colors, accent: string) {
     themeBtnActive: { borderColor: accent, backgroundColor: accent + '18' },
     themeBtnText:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     themeBtnTextActive: { color: c.textPrimary },
-
-    // Export & Share
-    exportRow:     { flexDirection: 'row', gap: spacing.sm },
-    exportBtn: {
-      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-      gap: spacing.xs, paddingVertical: spacing.sm + 2,
-      borderRadius: borderRadius.md, borderWidth: 0.5,
-    },
-    exportBtnText: { fontSize: typography.sm, fontWeight: typography.semibold },
+    subTitle:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm },
+    swatchRow:  { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.xs },
+    swatchRing: { width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+    swatch:     { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
 
     // Danger zone
     dangerTitle: { color: palette.danger, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase' },
@@ -120,31 +93,6 @@ export default function ProfileScreen() {
   const { profile, save } = useProfileStore();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { t } = useTranslation();
-  const [exporting,  setExporting]  = useState(false);
-
-  // ── Translation helpers ────────────────────────────────────────────────────
-  const EDU_LABELS: Record<string, string> = {
-    less_than_secondary: t('profile.eduLessThanSecondary'),
-    secondary:           t('profile.eduSecondary'),
-    '1year':             t('profile.eduOneYear'),
-    '2year':             t('profile.eduTwoYear'),
-    bachelors:           t('profile.eduBachelors'),
-    two_or_more:         t('profile.eduTwoOrMore'),
-    masters:             t('profile.eduMasters'),
-    phd:                 t('profile.eduPhd'),
-  };
-
-  const MARITAL_LABELS: Record<string, string> = {
-    single:                   t('profile.single'),
-    married:                  t('profile.married'),
-    married_not_accompanying: t('profile.marriedNotAccompanying'),
-  };
-
-  function workExpLabel(years: number): string {
-    if (years === 0) return t('profile.workNone');
-    if (years === 1) return t('profile.workOneYear');
-    return t('profile.workYearsPlus', { years });
-  }
 
   const THEME_OPTIONS: { label: string; value: ThemeMode; icon: string }[] = [
     { label: t('profile.themeSystem'), value: 'system', icon: 'phone-portrait-outline' },
@@ -173,109 +121,13 @@ export default function ProfileScreen() {
     );
   }
 
-  const inp = profile.calculatorInputs;
-  const n   = (v: unknown) => Number(v) || 0;
-  const coerced: CalcInputs = {
-    ...inp,
-    firstLangSpeaking:  n(inp.firstLangSpeaking),
-    firstLangListening: n(inp.firstLangListening),
-    firstLangReading:   n(inp.firstLangReading),
-    firstLangWriting:   n(inp.firstLangWriting),
-    secondLangSpeaking:  n(inp.secondLangSpeaking),
-    secondLangListening: n(inp.secondLangListening),
-    secondLangReading:   n(inp.secondLangReading),
-    secondLangWriting:   n(inp.secondLangWriting),
-    spouseLangSpeaking:  n(inp.spouseLangSpeaking),
-    spouseLangListening: n(inp.spouseLangListening),
-    spouseLangReading:   n(inp.spouseLangReading),
-    spouseLangWriting:   n(inp.spouseLangWriting),
-  };
-
-  const crsInput = buildCRSInput(coerced);
-  const result   = calculateCRS(crsInput);
-
-  const scoreReady = isCrsScoreReady(
-    inp.firstLangTest,
-    {
-      speaking: coerced.firstLangSpeaking,
-      listening: coerced.firstLangListening,
-      reading: coerced.firstLangReading,
-      writing: coerced.firstLangWriting,
-    },
-    (inp.tefScale ?? 'current') as TefScale,
-  );
-
-  const score = scoreReady ? result.total : 0;
-
-  const cat = scoreReady
-    ? (suggestCategory(crsInput, result.firstLangClb) as string)
-    : null;
+  const { scoreReady, score, cat } = summarizeProfile(profile.calculatorInputs);
 
   const scoreColor =
     !scoreReady ? colors.textMuted :
     score >= 490 ? palette.success :
     score >= 450 ? palette.warning :
     palette.danger;
-
-  const handleExportPdf = async () => {
-    setExporting(true);
-    try {
-      const shared = await exportProfilePdf(coerced, result, score, scoreReady ? cat : null, accent);
-      if (shared) {
-        track('pdf_exported');
-      } else {
-        Alert.alert(t('profile.sharingUnavailable'), t('profile.sharingUnavailableMsg'));
-      }
-    } catch {
-      Alert.alert(t('profile.exportFailed'), t('profile.exportFailedMsg'));
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const canEduValue = (v: string) =>
-    v === 'none' ? t('profile.eduNone') :
-    v === '1_2year' ? t('profile.edu1to2Year') :
-    t('profile.edu3PlusYear');
-
-  const infoGroups = [
-    {
-      title: t('profile.personal'),
-      rows: [
-        { label: t('profile.age'),           value: String(inp.age) },
-        { label: t('profile.maritalStatus'), value: MARITAL_LABELS[inp.maritalStatus] ?? inp.maritalStatus },
-      ],
-    },
-    {
-      title: t('profile.education'),
-      rows: [
-        { label: t('profile.highestLevel'),      value: EDU_LABELS[inp.education] ?? inp.education },
-        { label: t('profile.canadianEducation'), value: canEduValue(inp.canadianEducation) },
-      ],
-    },
-    {
-      title: t('profile.languageSection'),
-      rows: [
-        { label: t('profile.firstTest'),  value: inp.firstLangTest },
-        { label: t('profile.secondTest'), value: inp.hasSecondLang ? inp.secondLangTest : t('profile.workNone') },
-      ],
-    },
-    {
-      title: t('profile.workExperience'),
-      rows: [
-        { label: t('profile.canadian'),          value: workExpLabel(inp.canadianWorkExp) },
-        { label: t('profile.foreign'),           value: workExpLabel(inp.foreignWorkExp) },
-        { label: t('profile.tradeCertificate'),  value: inp.hasTradeCert ? t('profile.yes') : t('profile.no') },
-      ],
-    },
-    {
-      title: t('profile.additional'),
-      rows: [
-        { label: t('profile.provincialNom'),    value: inp.hasProvincialNomination ? t('profile.yesCheck') : t('profile.no') },
-        { label: t('profile.siblingInCanada'),  value: inp.hasSiblingInCanada ? t('profile.yes') : t('profile.no') },
-      ],
-    },
-  ];
 
   return (
     <ScreenWrapper scrollable keyboardAvoiding header={<AppHeader title={t('profile.title')} />}>
@@ -299,43 +151,22 @@ export default function ProfileScreen() {
         )}
       </Card>
 
-      {/* ── Profile Details (grouped) — hidden until the user has actually
-           entered their profile, so fresh installs don't echo the defaults ── */}
-      {scoreReady && infoGroups.map((group) => (
-        <Card key={group.title} style={styles.section}>
-          <Text style={styles.groupTitle}>{group.title}</Text>
-          {group.rows.map(({ label, value }) => (
-            <View key={label}>
-              <View style={styles.row}>
-                <Text style={styles.rowLabel}>{label}</Text>
-                <Text style={styles.rowValue}>{value}</Text>
-              </View>
-            </View>
-          ))}
-        </Card>
-      ))}
-
-      {/* ── Profile Report ── */}
-      {scoreReady && (
+      {/* ── My Profile (details live on their own screen) ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('profile.profileReport')}</Text>
-        <Text style={styles.hint}>{t('profile.downloadPdfHint')}</Text>
-        <View style={styles.exportRow}>
-          <TouchableOpacity ph-label="profile-export-pdf"
-            style={[styles.exportBtn, { backgroundColor: accent + '15', borderColor: accent + '50' }]}
-            onPress={handleExportPdf}
-            disabled={exporting}
-            activeOpacity={0.7}
-            accessibilityLabel={t('profile.exportPdf')}
-          >
-            <Ionicons name="document-outline" size={18} color={accent} />
-            <Text style={[styles.exportBtnText, { color: accent }]}>
-              {exporting ? t('profile.generating') : t('profile.exportPdf')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity ph-label="profile-my-profile"
+          style={styles.notifRow}
+          onPress={() => navigation.navigate('MyProfile')}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={t('profile.myProfile')}
+        >
+          <View style={styles.notifText}>
+            <Text style={styles.notifLabel}>{t('profile.myProfile')}</Text>
+            <Text style={styles.hint}>{t('profile.myProfileHint')}</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+        </TouchableOpacity>
       </Card>
-      )}
 
       {/* ── Notifications ── */}
       <Card style={styles.section}>
@@ -377,6 +208,29 @@ export default function ProfileScreen() {
                 <Text style={[styles.themeBtnText, selected && styles.themeBtnTextActive]}>
                   {opt.label}
                 </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        <Text style={styles.subTitle}>{t('profile.themeColor')}</Text>
+        <View style={styles.swatchRow}>
+          {ACCENT_OPTIONS.map((opt) => {
+            const selected = accent.toUpperCase() === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                ph-label={`profile-accent-${opt.labelKey.replace('profile.color', '').toLowerCase()}`}
+                onPress={() => save({ accent_color: opt.value })}
+                style={[styles.swatchRing, selected && { borderColor: opt.value }]}
+                hitSlop={4}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={t(opt.labelKey)}
+              >
+                <View style={[styles.swatch, { backgroundColor: opt.value }]}>
+                  {selected && <Ionicons name="checkmark" size={18} color="#fff" />}
+                </View>
               </TouchableOpacity>
             );
           })}

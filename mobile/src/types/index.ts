@@ -94,6 +94,7 @@ export type RootStackParamList = {
   Main: import('@react-navigation/native').NavigatorScreenParams<MainTabParamList> | undefined;
   Faq:  undefined;
   ReportIssue: undefined;
+  MyProfile: undefined;
   SinpCalculator: undefined;
   CrsCalculator: undefined;
   Calculators: undefined;

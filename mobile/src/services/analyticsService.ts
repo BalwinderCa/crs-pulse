@@ -62,7 +62,6 @@ type EventProperties = {
   push_enabled: undefined;
   push_disabled: undefined;
   push_enable_failed: { reason: PushRegisterFailure };
-  pdf_exported: undefined;
   milestone_added: undefined;
   checklist_item_checked: undefined;
   ad_shown: { format: 'banner' | 'native' | 'app_open' };

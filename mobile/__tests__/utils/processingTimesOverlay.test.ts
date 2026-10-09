@@ -22,6 +22,15 @@ describe('applyLiveTimes (live processing-times overlay)', () => {
     expect(fst.type.months).toBe(bundledFst.type.months);
   });
 
+  it('carries the per-month peopleAhead table onto the matching type', () => {
+    const live: LiveProcessingTimes = {
+      ee_cec: { months: 6, peopleAhead: { '2026-03': 17000, '2016-01': 0 } },
+    };
+    const cec = findApplicationType('economic', 'ee_cec', applyLiveTimes(APPLICATION_CATEGORIES, live))!;
+    expect(cec.type.peopleAhead).toEqual({ '2026-03': 17000, '2016-01': 0 });
+    expect(findApplicationType('economic', 'ee_cec', APPLICATION_CATEGORIES)!.type.peopleAhead).toBeUndefined();
+  });
+
   it('returns the original categories unchanged when live data is null', () => {
     expect(applyLiveTimes(APPLICATION_CATEGORIES, null)).toBe(APPLICATION_CATEGORIES);
   });

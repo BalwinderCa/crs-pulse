@@ -60,7 +60,6 @@ export default function OnboardingScreen() {
   const slides: Slide[] = useMemo(() => [
     { icon: 'earth-outline',       title: t('onboarding.slide0Title'), body: t('onboarding.slide0Body') },
     { icon: 'flash-outline',       title: t('onboarding.slide1Title'), body: t('onboarding.slide1Body') },
-    { icon: 'lock-closed-outline', title: t('onboarding.slide3Title'), body: t('onboarding.slide3Body') },
   ], [t]);
 
   const isLast = index === slides.length - 1;

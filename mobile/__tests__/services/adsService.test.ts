@@ -187,24 +187,23 @@ describe('adsService.showAppOpenAd — splash gating', () => {
   });
 });
 
-describe('adsService.takeAppOpenAdTurn — every 3rd launch', () => {
+describe('adsService.takeAppOpenAdTurn — every 2nd launch', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
   });
 
-  it('shows on launch 3, 6, 9 — never on the first two', async () => {
+  it('shows on launch 2, 4, 6 — never on the first', async () => {
     const { takeAppOpenAdTurn } = require('../../src/services/adsService');
     const turns: boolean[] = [];
-    for (let i = 0; i < 9; i++) turns.push(await takeAppOpenAdTurn());
-    expect(turns).toEqual([false, false, true, false, false, true, false, false, true]);
+    for (let i = 0; i < 6; i++) turns.push(await takeAppOpenAdTurn());
+    expect(turns).toEqual([false, true, false, true, false, true]);
   });
 
   it('survives a corrupt counter instead of stalling every launch', async () => {
     await AsyncStorage.setItem('crs_pulse.app_open_launches', 'not-a-number');
     const { takeAppOpenAdTurn } = require('../../src/services/adsService');
     expect(await takeAppOpenAdTurn()).toBe(false); // restarts at 1
-    expect(await takeAppOpenAdTurn()).toBe(false);
     expect(await takeAppOpenAdTurn()).toBe(true);
   });
 

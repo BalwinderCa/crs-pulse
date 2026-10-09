@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { pickLatestRound, toMirrorRecord, toSiteRound, buildSiteFeed, buildYtd, cleanDrawName, POOL_BANDS, buildAllRounds } from './fetch-latest-draw.mjs';
-import { parseMonths, parsePeople, buildProcessingTimes } from './fetch-processing-times.mjs';
+import { parseMonths, parsePeople, parsePeopleAhead, buildProcessingTimes } from './fetch-processing-times.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
@@ -141,6 +141,28 @@ test('buildProcessingTimes maps codes, skips unparseable months, keeps peopleWai
   assert.equal(out.updated, 'June 8, 2026');
   assert.deepEqual(out.times.ee_cec, { months: 5, peopleWaiting: 1200 });
   assert.equal(out.times.ee_fsw, undefined); // null months are skipped (keep bundled value)
+});
+
+test('parsePeopleAhead: counts, "Less than" as 0, null on junk', () => {
+  assert.equal(parsePeopleAhead('About 3,200 people ahead of you'), 3200);
+  assert.equal(parsePeopleAhead('Less than 100 people ahead of you'), 0);
+  assert.equal(parsePeopleAhead('n/a'), null);
+  assert.equal(parsePeopleAhead(undefined), null);
+});
+
+test('buildProcessingTimes groups people-ahead by hyphenated program code and month', () => {
+  const out = buildProcessingTimes({
+    'current-flpt': { cec: 'About 6 months', 'pnp-ee': 'About 7 months', fsw: 'About 7 months' },
+    'people-ahead': {
+      'cec-2026/03': 'About 17,000 people ahead of you',
+      'cec-2016/01': 'Less than 100 people ahead of you',
+      'pnp-ee-2026/08': 'About 12,800 people ahead of you',
+      'pnp-base-2026/08': 'About 99,000 people ahead of you',
+    },
+  });
+  assert.deepEqual(out.times.ee_cec.peopleAhead, { '2026-03': 17000, '2016-01': 0 });
+  assert.deepEqual(out.times.ee_pnp.peopleAhead, { '2026-08': 12800 });
+  assert.equal(out.times.ee_fsw.peopleAhead, undefined);
 });
 
 // ─── REGRESSION GUARD: the bug that broke notifications for ~4 weeks ───────────

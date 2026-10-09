@@ -109,6 +109,12 @@ export default function HomeScreen() {
     };
   }, [application, categories, decision]);
 
+  // IRCC's "people ahead of you" for the month the user applied; only while still waiting.
+  const peopleAhead =
+    tracked?.applied && !tracked.decided
+      ? tracked.type.peopleAhead?.[format(tracked.applied, 'yyyy-MM')] ?? null
+      : null;
+
   const score = profile?.crs_score ?? 0;
   const scoreReady = score > 0;
   const cat = profile?.category ?? 'General';
@@ -278,6 +284,16 @@ export default function HomeScreen() {
           )}
 
           <View style={[s.appInfoBox, { borderTopColor: c.border }]}>
+            {peopleAhead != null && (
+              <View style={s.appInfoRow}>
+                <Ionicons name="person-outline" size={14} color={c.textMuted} />
+                <Text style={[s.appInfoText, { color: c.textSecondary }]}>
+                  {peopleAhead === 0
+                    ? t('home.peopleAheadFew')
+                    : t('home.peopleAhead', { count: peopleAhead.toLocaleString() })}
+                </Text>
+              </View>
+            )}
             {tracked.type.peopleWaiting != null && (
               <View style={s.appInfoRow}>
                 <Ionicons name="people-outline" size={14} color={c.textMuted} />
