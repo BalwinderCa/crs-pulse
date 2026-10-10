@@ -58,10 +58,19 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-09).** **v1.0.13 is uploaded on both platforms.** The latest are
-iOS **build 61** (EAS `b87b3e78`, from `34a1ddc`, tag `ios-build-1.0.13-b61`) in App Store Connect,
-not yet opened on a device or submitted for review, and Android **versionCode 29** (EAS `62ca6352`,
-auto-submitted to **Alpha**). Build 61 adds themed toasts (below the notch), an in-app Reset All
+**Store status (as of 2026-10-10).** **iOS v1.0.13 (build 62) is Waiting for Review**, submitted
+2026-10-10 with **manual release**, so approval alone ships nothing: it will sit at "Pending
+Developer Release" until released by hand (phased release is off). Build 62 (EAS `337d8bca`, from
+`16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
+before it was submitted. The App Store listing is English (U.S.) only. Android **versionCode 30**
+(EAS `f81b4a37`, same commit) was built with auto-submit to **Alpha**; that it landed in Play
+Console has not been confirmed. Build 62 / versionCode 30 fix four things in build 61's reset
+dialog and accent picker: Android back could close the dialog while the wipe carried on, a failed
+reset still reported success, the result toast showed behind the dialog, and a stored teal accent
+was left with no swatch selected (it now loads as green).
+
+Build 61 / versionCode 29 (`34a1ddc`, EAS `b87b3e78` / `62ca6352`, 2026-10-09) added themed toasts
+(below the notch), an in-app Reset All
 Data dialog and CRS calculator layout fixes on top of build 60 / versionCode 28 (`ce4e44c`). Those
 superseded build 59 / versionCode 27 (`02ed921`) from earlier the same day. 1.0.13 changes: IRCC
 "people ahead of you" on the home tracker (exact IRCC figure for the application month, "pending"
