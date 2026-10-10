@@ -62,12 +62,14 @@ eas submit                                      # Submit to app stores
 iOS **build 61** (EAS `b87b3e78`, from `34a1ddc`, tag `ios-build-1.0.13-b61`) in App Store Connect,
 not yet opened on a device or submitted for review, and Android **versionCode 29** (EAS `62ca6352`,
 auto-submitted to **Alpha**). Build 61 adds themed toasts (below the notch), an in-app Reset All
-Data dialog and CRS calculator layout fixes on top of build 60 / versionCode 28 (`ce4e44c`). Those superseded build 59 / versionCode 27 (`02ed921`) from earlier the same day. 1.0.13 changes: IRCC "people ahead of you" on the home tracker (exact IRCC figure for the
-application month, "pending" after IRCC's table ends) shown as stat tiles with a one-line source
-note, two onboarding slides instead of three, the app open ad on every 2nd launch, profile details
-moved to a My Profile screen, the PDF export removed, a 9-color accent picker, a smaller
-notification toggle that flips immediately, and CRS calculator default age 28. 1.0.12 was never
-submitted for review on either store.
+Data dialog and CRS calculator layout fixes on top of build 60 / versionCode 28 (`ce4e44c`). Those
+superseded build 59 / versionCode 27 (`02ed921`) from earlier the same day. 1.0.13 changes: IRCC
+"people ahead of you" on the home tracker (exact IRCC figure for the application month, "pending"
+after IRCC's table ends) shown as stat tiles with a one-line source note, two onboarding slides
+instead of three, the app open ad on every 2nd launch, profile details moved to a My Profile
+screen, the PDF export removed, a 9-color accent picker (indigo replaced teal in build 61), a
+smaller notification toggle that flips immediately, and CRS calculator default age 28. 1.0.12 was
+never submitted for review on either store.
 
 **Previously (as of 2026-10-05).** **v1.0.12 is uploaded on both platforms**, built from
 `8bfee9e`. It has two changes since 1.0.11:
@@ -225,7 +227,7 @@ Each screen area lives under `src/features/<name>/` and contains its own compone
 - `checklist` — per-program document checklists with progress tracking
 - `notifications` — draw notifications history with unread badge
 - `profile` — settings (the "Settings" bottom tab renders `profile`'s `ProfileScreen`)
-- `onboarding` — first-time 4-slide welcome flow
+- `onboarding` — first-time 2-slide welcome flow
 - `faq` — accordion FAQ screen
 - `support` — contact / report issue form
 - `fsw` — Federal Skilled Worker 67-point calculator

@@ -97,6 +97,12 @@ export const DEFAULT_PROFILE: LocalProfile = {
   calculatorInputs: DEFAULT_CALC_INPUTS,
 };
 
+// Accents the picker no longer offers, mapped to the closest one it does, so a
+// stored choice never leaves the picker with nothing selected.
+const RETIRED_ACCENTS: Record<string, string> = {
+  '#0D9488': '#059669', // teal (removed in 1.0.13 build 61) → green
+};
+
 type ProfileStore = {
   profile: LocalProfile | null;
   resetKey: number;           // increments on hard reset — consumers can watch this
@@ -106,6 +112,11 @@ type ProfileStore = {
   reset: () => Promise<void>; // wipes to defaults
   clear: () => void;
 };
+
+function migrateAccent(stored: unknown): string {
+  if (typeof stored !== 'string') return DEFAULT_PROFILE.accent_color;
+  return RETIRED_ACCENTS[stored.toUpperCase()] ?? stored;
+}
 
 export const useProfileStore = create<ProfileStore>((set, get) => ({
   profile: null,
@@ -119,6 +130,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
       const profile: LocalProfile = {
         ...DEFAULT_PROFILE,
         ...parsed,
+        accent_color: migrateAccent(parsed.accent_color),
         language: (parsed.language === 'fr') ? 'fr' : 'en',
         calculatorInputs: { ...DEFAULT_CALC_INPUTS, ...(parsed.calculatorInputs ?? {}) },
       };

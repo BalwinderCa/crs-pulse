@@ -43,10 +43,13 @@ function ToastCard({ kind, text1, text2 }: { kind: Kind; text1?: string | undefi
   );
 }
 
+const card = (kind: Kind): ToastConfig[string] =>
+  (p) => <ToastCard kind={kind} text1={p.text1} text2={p.text2} />;
+
 export const toastConfig: ToastConfig = {
-  success: (p) => <ToastCard kind="success" text1={p.text1} text2={p.text2} />,
-  error:   (p) => <ToastCard kind="error" text1={p.text1} text2={p.text2} />,
-  info:    (p) => <ToastCard kind="info" text1={p.text1} text2={p.text2} />,
+  success: card('success'),
+  error:   card('error'),
+  info:    card('info'),
 };
 
 const s = StyleSheet.create({

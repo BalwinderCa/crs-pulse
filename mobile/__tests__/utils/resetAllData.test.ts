@@ -8,7 +8,7 @@ import { useNotificationsStore } from '@/features/notifications/store/notificati
 
 // Avoid touching the network / Expo when revoking the push token.
 jest.mock('@/services/pushService', () => ({
-  unregisterPushNotifications: jest.fn().mockResolvedValue(undefined),
+  unregisterPushNotifications: jest.fn().mockResolvedValue(true),
 }));
 
 const TIMELINE_KEY = 'timeline_milestones';
@@ -54,5 +54,22 @@ describe('resetAllData (H1) — full on-device wipe', () => {
     const { unregisterPushNotifications } = require('@/services/pushService');
     await resetAllData();
     expect(unregisterPushNotifications).toHaveBeenCalled();
+  });
+
+  it('rejects when the push revoke fails, after wiping everything else', async () => {
+    const { unregisterPushNotifications } = require('@/services/pushService');
+    unregisterPushNotifications.mockResolvedValueOnce(false);
+
+    await expect(resetAllData()).rejects.toThrow();
+
+    expect(useApplicationStore.getState().application).toBeNull();
+    expect(useTimelineStore.getState().milestones).toHaveLength(0);
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.DOC_CHECKLIST)).toBeNull();
+  });
+
+  it('rejects when the raw keys cannot be removed', async () => {
+    const spy = jest.spyOn(AsyncStorage, 'multiRemove').mockRejectedValue(new Error('disk'));
+    await expect(resetAllData()).rejects.toThrow();
+    spy.mockRestore();
   });
 });

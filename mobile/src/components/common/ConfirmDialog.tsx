@@ -15,6 +15,8 @@ type Props = {
   /** Destructive actions get a red icon and button; others use the accent color. */
   destructive?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Analytics label prefix: the buttons report as `<phLabel>-confirm` / `<phLabel>-cancel`. */
+  phLabel?: string;
   onConfirm: () => void | Promise<void>;
   onCancel: () => void;
 };
@@ -22,7 +24,8 @@ type Props = {
 /**
  * In-app confirmation dialog, drawn with the app's own card, buttons and theme
  * instead of the platform Alert, so it follows light/dark mode and the accent
- * color. Tapping the backdrop or Android back cancels.
+ * color. Tapping the backdrop or Android back cancels, except while the confirm
+ * action is running.
  */
 export function ConfirmDialog({
   visible,
@@ -32,6 +35,7 @@ export function ConfirmDialog({
   cancelLabel,
   destructive = false,
   icon = destructive ? 'warning-outline' : 'help-circle-outline',
+  phLabel,
   onConfirm,
   onCancel,
 }: Props) {
@@ -40,6 +44,12 @@ export function ConfirmDialog({
   const dark = useResolvedScheme() === 'dark';
   const tint = destructive ? palette.danger : accent;
   const [busy, setBusy] = useState(false);
+
+  // Once the action has started it can't be called off, so every cancel path
+  // (backdrop, Cancel button, Android back) is inert until it settles.
+  const cancel = () => {
+    if (!busy) onCancel();
+  };
 
   const confirm = async () => {
     setBusy(true);
@@ -51,9 +61,9 @@ export function ConfirmDialog({
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel} statusBarTranslucent>
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={cancel} statusBarTranslucent>
       <View style={s.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={busy ? undefined : onCancel} accessibilityLabel={cancelLabel} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={cancel} accessibilityLabel={cancelLabel} />
         <View
           style={[s.card, { backgroundColor: dark ? c.surfaceTertiary : c.surfaceCard, borderColor: c.border }]}
           accessibilityViewIsModal
@@ -65,13 +75,21 @@ export function ConfirmDialog({
           <Text style={[s.message, { color: c.textSecondary }]}>{message}</Text>
           <View style={s.actions}>
             <Button
+              ph-label={phLabel ? `${phLabel}-confirm` : undefined}
               title={confirmLabel}
               variant={destructive ? 'danger' : 'primary'}
               onPress={confirm}
               loading={busy}
               fullWidth
             />
-            <Button title={cancelLabel} variant="secondary" onPress={onCancel} disabled={busy} fullWidth />
+            <Button
+              ph-label={phLabel ? `${phLabel}-cancel` : undefined}
+              title={cancelLabel}
+              variant="secondary"
+              onPress={cancel}
+              disabled={busy}
+              fullWidth
+            />
           </View>
         </View>
       </View>

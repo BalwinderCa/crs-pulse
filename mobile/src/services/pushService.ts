@@ -105,9 +105,9 @@ export async function registerForPushNotifications(): Promise<PushRegisterResult
   }
 }
 
-export async function unregisterPushNotifications(): Promise<void> {
+export async function unregisterPushNotifications(): Promise<boolean> {
   const pushUrl = getPushUrl();
-  if (!pushUrl) return;
+  if (!pushUrl) return true;
 
   try {
     const token = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN);
@@ -119,8 +119,10 @@ export async function unregisterPushNotifications(): Promise<void> {
       });
       await AsyncStorage.removeItem(STORAGE_KEYS.PUSH_TOKEN);
     }
+    return true;
   } catch (err) {
     if (__DEV__) console.warn('Push unregister failed:', err);
+    return false;
   }
 }
 

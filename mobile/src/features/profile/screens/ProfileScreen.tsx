@@ -287,19 +287,20 @@ export default function ProfileScreen() {
       <ConfirmDialog
         visible={confirmReset}
         destructive
+        phLabel="profile-reset"
         title={t('profile.resetTitle')}
         message={t('profile.resetMsg')}
         confirmLabel={t('profile.resetEverything')}
         cancelLabel={t('profile.cancel')}
         onCancel={() => setConfirmReset(false)}
         onConfirm={async () => {
-          try {
-            await resetAllData();
+          const ok = await resetAllData().then(() => true, () => false);
+          // Close first: the toast is drawn under the dialog's modal window.
+          setConfirmReset(false);
+          if (ok) {
             Toast.show({ type: 'success', text1: t('profile.resetSuccess') });
-          } catch {
+          } else {
             Toast.show({ type: 'error', text1: t('profile.resetFailed'), text2: t('profile.resetFailedMsg') });
-          } finally {
-            setConfirmReset(false);
           }
         }}
       />

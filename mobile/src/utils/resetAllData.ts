@@ -14,14 +14,15 @@ import { unregisterPushNotifications } from '@/services/pushService';
  *   - the push registration (revoked server-side, best-effort).
  *
  * The app stores no other off-device identifier (the anonymous push token is the
- * only thing that ever leaves the device, and it's revoked above). The paid
- * entitlement flag is intentionally NOT cleared: it is a purchase, not personal
- * data, and Google Play remains its source of truth (restored on next launch).
+ * only thing that ever leaves the device, and it's revoked above).
  * Each step is independently guarded — one failure must not abort the rest.
+ * Every step still runs, and the promise then rejects if the push revoke or
+ * the raw key removal failed, so the caller can tell the user to retry. (A
+ * failed revoke keeps the token on-device, so a retry revokes it.)
  */
 export async function resetAllData(): Promise<void> {
   // In-memory store state (also persists defaults / removes keys).
-  await Promise.allSettled([
+  const results = await Promise.allSettled([
     useProfileStore.getState().reset(),
     useApplicationStore.getState().clear(),
     useCalculatorsStore.getState().clear(),
@@ -30,11 +31,16 @@ export async function resetAllData(): Promise<void> {
     // Revokes the token server-side and removes it locally.
     unregisterPushNotifications(),
   ]);
+  const revoke = results[results.length - 1];
+  let failed = results.some((r) => r.status === 'rejected')
+    || (revoke?.status === 'fulfilled' && revoke.value === false);
 
   // Remaining raw AsyncStorage keys with no dedicated store action.
   await AsyncStorage.multiRemove([
     STORAGE_KEYS.DOC_CHECKLIST,
     STORAGE_KEYS.LAST_SEEN_DRAW,
     STORAGE_KEYS.DRAW_NOTIFICATIONS,
-  ]).catch(() => {});
+  ]).catch(() => { failed = true; });
+
+  if (failed) throw new Error('resetAllData: some steps failed');
 }
