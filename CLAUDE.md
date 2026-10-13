@@ -67,10 +67,23 @@ continuously" on 2026-10-13 with "Apply for production" still disabled, so the e
 live is **2026-10-14**. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
-**Unreleased on `fix/lazy-ad-load` (`4e8dc76`):** ad slots request an ad only once they reach the
-screen. AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws
-list requested an ad for every mounted slot. After it ships, compare the native show rate against
-that figure. PostHog's `ad_shown` fires when an ad loads, not on an impression.
+**1.0.14 in flight (2026-10-13), not submitted for review.** Two changes: ad slots request an ad
+only once they reach the screen (`4e8dc76`), and `expo-updates` (`5c4117b`) so later JavaScript
+fixes can ship over the air.
+- **iOS build 63 must not be submitted.** It was built from `6e20864`, before `expo-updates` was
+  added, and is in TestFlight (EAS `9cce28a4`, tag `ios-build-1.0.14`). Submit the build from tag
+  `ios-build-1.0.14-b2` (run 38369941141, expected build 64) after opening it on a device.
+- Android **versionCode 31** (EAS `1e20e7b5`, from `5c4117b`) was built with auto-submit to Alpha.
+- AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws list
+  requested an ad for every mounted slot. After 1.0.14 ships, compare the native show rate against
+  that figure. PostHog's `ad_shown` fires when an ad loads, not on an impression.
+
+**OTA updates (EAS Update), from 1.0.14.** `runtimeVersion` follows the app version, so publish
+with `eas update --channel production` from a checkout whose `version` matches the installed
+build; 1.0.13 and older contain no `expo-updates` and can never receive one. Only JavaScript and
+assets can go this way: anything touching native modules or `app.config.js` needs a store build.
+The app applies a downloaded update on the next cold start. No update has been published yet, so
+the path is unproven end to end.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
