@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Dimensions, Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   ADMOB_BANNER_AD_UNIT,
@@ -74,16 +75,53 @@ const NATIVE_UNIT_ID = !NATIVE_CONFIGURED
       ? ADMOB_NATIVE_AD_UNIT.ios
       : ADMOB_NATIVE_AD_UNIT.android;
 
+const VISIBILITY_POLL_MS = 500;
+// Start loading just before the slot scrolls in, so the ad is usually there by
+// the time the user reaches it instead of pushing rows down in front of them.
+const PRELOAD_MARGIN = 200;
+
+/**
+ * True once the referenced view has been on screen (or within PRELOAD_MARGIN
+ * below it) while its screen was focused. A list mounts slots many screens
+ * ahead of the viewport; requesting an ad for each on mount meant only ~17% of
+ * loaded native ads were ever shown (AdMob show rate, 2026-10-13).
+ */
+function useSeenOnScreen(enabled: boolean): [React.RefObject<View>, boolean] {
+  const ref = useRef<View>(null);
+  const focused = useIsFocused();
+  const [seen, setSeen] = useState(false);
+
+  useEffect(() => {
+    if (!enabled || seen || !focused) return undefined;
+    const check = () =>
+      ref.current?.measureInWindow((_x, y, width, height) => {
+        const windowHeight = Dimensions.get('window').height;
+        // width is 0 (or undefined) until the view is laid out and attached.
+        if (width > 0 && y + height > 0 && y < windowHeight + PRELOAD_MARGIN) setSeen(true);
+      });
+    check();
+    const id = setInterval(check, VISIBILITY_POLL_MS);
+    return () => clearInterval(id);
+  }, [enabled, seen, focused]);
+
+  return [ref, seen];
+}
+
 /**
  * A single AdMob ad slot — a native ad rendered in our own card when a native
  * ad unit is configured for the platform, otherwise an anchored-adaptive
- * banner. Renders nothing when monetization is off, when the native module is
- * unavailable, or when the ad fails to fill.
+ * banner. The ad is requested only once the slot reaches the screen. Renders
+ * nothing when monetization is off, when the native module is unavailable, or
+ * when the ad fails to fill.
  */
 export function AdBanner() {
   const [failed, setFailed] = useState(false);
+  const enabled = MONETIZATION_ENABLED && !!ads && !failed;
+  const [ref, seen] = useSeenOnScreen(enabled);
 
-  if (!MONETIZATION_ENABLED || !ads || failed) return null;
+  if (!enabled || !ads) return null;
+  // collapsable={false} keeps this a real native view, so it can be measured.
+  if (!seen) return <View ref={ref} collapsable={false} style={s.sentinel} />;
   if (NATIVE_UNIT_ID && ads.NativeAd && ads.NativeAdView) return <NativeAdCard />;
 
   if (!BANNER_UNIT_ID || !ads.BannerAd || !ads.BannerAdSize) return null;
@@ -170,6 +208,7 @@ function NativeAdCard() {
 }
 
 const s = StyleSheet.create({
+  sentinel: { height: 1 },
   wrap: { alignItems: 'center', justifyContent: 'center', marginVertical: spacing.sm },
   card: {
     width: '100%',
