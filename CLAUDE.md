@@ -58,13 +58,24 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-10).** **iOS v1.0.13 (build 62) is Waiting for Review**, submitted
-2026-10-10 with **manual release**, so approval alone ships nothing: it will sit at "Pending
-Developer Release" until released by hand (phased release is off). Build 62 (EAS `337d8bca`, from
+**Store status (as of 2026-10-13).** **iOS v1.0.13 (build 62) is live.** It was submitted
+2026-10-10 with manual release, and PostHog shows real users updating to it from 2026-10-11 (19
+updates from 1.0.11 on 2026-10-12 alone, across a dozen countries), with no crash-loop pattern.
+Android **versionCode 30** is in Play Console's **Closed testing - Alpha**, fully rolled out to
+testers since 2026-10-10 06:00. Play's production gate read "12 testers opted in for 13 days
+continuously" on 2026-10-13 with "Apply for production" still disabled, so the earliest it can go
+live is **2026-10-14**. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+until it has a Play listing to link.
+
+**Unreleased on `fix/lazy-ad-load` (`4e8dc76`):** ad slots request an ad only once they reach the
+screen. AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws
+list requested an ad for every mounted slot. After it ships, compare the native show rate against
+that figure. PostHog's `ad_shown` fires when an ad loads, not on an impression.
+
+Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
-before it was submitted. The App Store listing is English (U.S.) only. Android **versionCode 30**
-(EAS `f81b4a37`, same commit) was built with auto-submit to **Alpha**; that it landed in Play
-Console has not been confirmed. Build 62 / versionCode 30 fix four things in build 61's reset
+before it was submitted. The App Store listing is English (U.S.) only. Android versionCode 30 is
+EAS `f81b4a37`, from the same commit. Build 62 / versionCode 30 fix four things in build 61's reset
 dialog and accent picker: Android back could close the dialog while the wipe carried on, a failed
 reset still reported success, the result toast showed behind the dialog, and a stored teal accent
 was left with no swatch selected (it now loads as green).
@@ -137,9 +148,9 @@ prompt, where the side menu's review item links) rather than a gated feature. Ke
 when a feature can't work the same on one platform, adapt it rather than hiding it there. (The
 review item was iOS-only through Android versionCode 23; from the next build Android shows "Rate
 on Google Play", which opens the Play listing because Play has no write-review deep link.) Google gates production access behind "12 testers opted in, for 14
-continuous days"; the account reached **12 opted-in testers on 2026-09-29**, so the earliest
-the button can go live is **2026-10-13**, and only if none of them opt out before then (dropping
-below 12 restarts the clock). Until then `submit.production.android.track` stays
+continuous days"; the account reached **12 opted-in testers on 2026-09-29**, and on 2026-10-13 Play Console
+counted 13 continuous days, so the earliest the button can go live is **2026-10-14**, and only if
+none of them opt out before then (dropping below 12 restarts the clock). Until then `submit.production.android.track` stays
 `alpha` — a `production` submit would be rejected. Promote the track only after Play Console's
 "Apply for production" button goes live.
 
