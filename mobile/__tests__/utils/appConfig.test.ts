@@ -25,4 +25,15 @@ describe('app.config.js', () => {
       );
     },
   );
+
+  // Without a url the native module disables itself silently, and a build that
+  // shipped that way could never be fixed over the air.
+  it('points EAS Update at this project and pins updates to the app version', () => {
+    const config = require('../../app.config.js')();
+
+    expect(config.updates.url).toBe(`https://u.expo.dev/${config.extra.eas.projectId}`);
+    expect(config.extra.eas.projectId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(config.runtimeVersion).toEqual({ policy: 'appVersion' });
+    expect(config.updates.fallbackToCacheTimeout).toBe(0);
+  });
 });

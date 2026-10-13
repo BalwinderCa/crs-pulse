@@ -281,6 +281,17 @@ module.exports = () => ({
     ],
   ],
   scheme: 'crspulse',
+  // EAS Update (OTA). An update only reaches binaries whose app version matches
+  // the one it was published from, so JavaScript never lands on native code it
+  // wasn't built against. Builds before 1.0.14 don't contain expo-updates and
+  // can't receive updates at all. The channel comes from eas.json.
+  runtimeVersion: { policy: 'appVersion' },
+  updates: {
+    url: `https://u.expo.dev/${projectId}`,
+    // Never hold the splash for the network: launch the bundle already on the
+    // device and apply a downloaded update on the next cold start.
+    fallbackToCacheTimeout: 0,
+  },
   extra: {
     eas: {
       ...(projectId ? { projectId } : {}),

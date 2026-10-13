@@ -1,6 +1,6 @@
 # CRS Pulse Privacy Policy
 
-**Effective date:** October 2, 2026  
+**Effective date:** October 13, 2026  
 **App:** CRS Pulse – Express Entry Calculator  
 **Contact:** contact@crspulse.com
 
@@ -40,6 +40,10 @@ Draw history is fetched directly from the official public JSON feed at `canada.c
 If you enable draw notifications, the app registers an anonymous Expo push token with our Cloudflare Worker so we can alert you when IRCC publishes a new draw. No CRS profile data is included — only the device token and platform (iOS/Android).
 
 You can disable notifications and revoke your token at any time in Settings.
+
+### App updates (Expo)
+
+From version 1.0.14, the app checks Expo's update service (`u.expo.dev`) when it starts, so we can deliver fixes without waiting for a store release. The request includes the app version, platform and a random ID for the installation that Expo uses to count devices. It never includes your calculator inputs, CRS score, timeline or any other profile data. Like any internet request, it reveals your device's IP address to Expo.
 
 ### PostHog (usage analytics, optional)
 
