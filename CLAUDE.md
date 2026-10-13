@@ -73,17 +73,27 @@ fixes can ship over the air.
 - **iOS build 63 must not be submitted.** It was built from `6e20864`, before `expo-updates` was
   added, and is in TestFlight (EAS `9cce28a4`, tag `ios-build-1.0.14`). Submit the build from tag
   `ios-build-1.0.14-b2` (run 38369941141, expected build 64) after opening it on a device.
+- iOS **build 64** (from `5c4117b`) is in TestFlight.
 - Android **versionCode 31** (EAS `1e20e7b5`, from `5c4117b`) was built with auto-submit to Alpha.
 - AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws list
   requested an ad for every mounted slot. After 1.0.14 ships, compare the native show rate against
   that figure. PostHog's `ad_shown` fires when an ad loads, not on an impression.
 
-**OTA updates (EAS Update), from 1.0.14.** `runtimeVersion` follows the app version, so publish
-with `eas update --channel production` from a checkout whose `version` matches the installed
-build; 1.0.13 and older contain no `expo-updates` and can never receive one. Only JavaScript and
-assets can go this way: anything touching native modules or `app.config.js` needs a store build.
-The app applies a downloaded update on the next cold start. No update has been published yet, so
-the path is unproven end to end.
+**OTA updates (EAS Update), from 1.0.14.** Publish with `npm run ota -- "what changed"` from
+`mobile/` (`--dry-run` bundles and checks without publishing). **Never run a bare `eas update`:**
+`EXPO_PUBLIC_*` values are inlined at bundle time, and a bundle made without `eas.json`'s
+production env has no ad units, PostHog key or push URL. The script bundles with that env plus the
+EAS production environment, clears Metro's cache (it caches transforms regardless of env values),
+checks both platform bundles, then publishes that exact bundle. `runtimeVersion` follows the app
+version, so an update reaches only installs whose version equals `version` in `app.config.js`;
+1.0.13 and older contain no `expo-updates` and can never receive one. Only JavaScript and assets
+can go this way: native modules or `app.config.js` changes need a store build. A device downloads
+an update on one launch and runs it from the next cold start.
+
+The first update (group `01dda199`, from `93cc307`, 2026-10-13) went to 1.0.14: the Draws
+"Last Year" tab became a calendar "This Year" (`2b51866`). Build 64 and versionCode 31 do not
+contain that change natively, so seeing "This Year" on a device proves the update arrived. That
+on-device check had not been done when this was written.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
