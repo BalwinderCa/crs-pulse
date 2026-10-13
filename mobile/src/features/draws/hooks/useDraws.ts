@@ -8,13 +8,13 @@ type Params = {
   category?: string;
 };
 
-const now = new Date();
-
-function applyFilter(draws: Draw[], filter?: DrawFilter): Draw[] {
+export function applyFilter(draws: Draw[], filter?: DrawFilter, now = new Date()): Draw[] {
   if (!filter || filter === 'all') return draws;
-  const cutoff = new Date(now);
-  if (filter === 'last_month') cutoff.setMonth(cutoff.getMonth() - 1);
-  if (filter === 'last_year')  cutoff.setFullYear(cutoff.getFullYear() - 1);
+  // 'this_year' is the calendar year (since January 1); 'last_month' is rolling.
+  const cutoff =
+    filter === 'this_year'
+      ? new Date(now.getFullYear(), 0, 1)
+      : new Date(now.getFullYear(), now.getMonth() - 1, now.getDate(), now.getHours(), now.getMinutes());
   return draws.filter(d => parseISO(d.date) >= cutoff);
 }
 

@@ -43,7 +43,7 @@ export const CRS_MAX = 1200;
 
 export const DRAW_FILTERS = [
   { label: 'Last Month', value: 'last_month' },
-  { label: 'Last Year', value: 'last_year' },
+  { label: 'This Year', value: 'this_year' },
   { label: 'All Time', value: 'all' },
 ] as const;
 

@@ -90,7 +90,7 @@ const fr: TranslationKeys = {
     noDrawsFound: 'Aucun tirage trouvé',
     noDrawsDesc: 'Essayez de changer le filtre ou revenez après la publication d\'un nouveau tirage.',
     filterLastMonth: 'Dernier mois',
-    filterLastYear: 'Dernière année',
+    filterThisYear: 'Cette année',
     filterAll: 'Tout le temps',
   },
 
@@ -931,7 +931,7 @@ const fr: TranslationKeys = {
 
   drawFilters: {
     lastMonth: 'Dernier mois',
-    lastYear: 'Dernière année',
+    thisYear: 'Cette année',
     all: 'Tout le temps',
   },
 

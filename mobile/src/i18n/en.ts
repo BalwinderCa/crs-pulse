@@ -84,7 +84,7 @@ const en = {
     noDrawsFound: 'No draws found',
     noDrawsDesc: 'Try changing the filter or check back after a new draw is published.',
     filterLastMonth: 'Last Month',
-    filterLastYear: 'Last Year',
+    filterThisYear: 'This Year',
     filterAll: 'All Time',
   },
 
@@ -927,7 +927,7 @@ const en = {
 
   drawFilters: {
     lastMonth: 'Last Month',
-    lastYear: 'Last Year',
+    thisYear: 'This Year',
     all: 'All Time',
   },
 

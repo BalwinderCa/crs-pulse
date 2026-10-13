@@ -42,7 +42,7 @@ export type Draw = {
   created_at: string;
 };
 
-export type DrawFilter = 'last_month' | 'last_year' | 'all';
+export type DrawFilter = 'last_month' | 'this_year' | 'all';
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 

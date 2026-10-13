@@ -51,7 +51,7 @@ export default function DrawsScreen() {
 
   const filterLabel = (value: string): string => {
     if (value === 'last_month') return t('draws.filterLastMonth');
-    if (value === 'last_year')  return t('draws.filterLastYear');
+    if (value === 'this_year')  return t('draws.filterThisYear');
     return t('draws.filterAll');
   };
 
