@@ -67,13 +67,15 @@ continuously" on 2026-10-13 with "Apply for production" still disabled, so the e
 live is **2026-10-14**. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
-**1.0.14 in flight (2026-10-13), not submitted for review.** Two changes: ad slots request an ad
+**iOS 1.0.14 (build 64) is Waiting for Review**, submitted 2026-10-13 with **manual release**
+(phased release off), so approval alone ships nothing. Two changes: ad slots request an ad
 only once they reach the screen (`4e8dc76`), and `expo-updates` (`5c4117b`) so later JavaScript
 fixes can ship over the air.
 - **iOS build 63 must not be submitted.** It was built from `6e20864`, before `expo-updates` was
   added, and is in TestFlight (EAS `9cce28a4`, tag `ios-build-1.0.14`). Submit the build from tag
   `ios-build-1.0.14-b2` (run 38369941141, expected build 64) after opening it on a device.
-- iOS **build 64** (from `5c4117b`) is in TestFlight.
+- iOS **build 64** (from `5c4117b`) was opened from TestFlight on a device with existing data
+  before it was submitted.
 - Android **versionCode 31** (EAS `1e20e7b5`, from `5c4117b`) was built with auto-submit to Alpha.
 - AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws list
   requested an ad for every mounted slot. After 1.0.14 ships, compare the native show rate against
@@ -92,8 +94,8 @@ an update on one launch and runs it from the next cold start.
 
 The first update (group `01dda199`, from `93cc307`, 2026-10-13) went to 1.0.14: the Draws
 "Last Year" tab became a calendar "This Year" (`2b51866`). Build 64 and versionCode 31 do not
-contain that change natively, so seeing "This Year" on a device proves the update arrived. That
-on-device check had not been done when this was written.
+contain that change natively, so seeing "This Year" on a device proves the update arrived; it
+was seen on build 64 from TestFlight the same day, on the second launch.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
