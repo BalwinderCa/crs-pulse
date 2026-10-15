@@ -1,8 +1,17 @@
 {
-  "updated": "2026-10-13",
-  "updatedFull": "October 13, 2026",
+  "updated": "2026-10-15",
+  "updatedFull": "October 15, 2026",
   "distributionAsOf": "October 12, 2026",
   "rounds": [
+    {
+      "number": "449",
+      "date": "2026-10-15",
+      "dateFull": "October 15, 2026",
+      "name": "Canadian Experience Class",
+      "label": "Canadian Experience Class",
+      "size": 2500,
+      "crs": 519
+    },
     {
       "number": "448",
       "date": "2026-10-13",
@@ -173,15 +182,6 @@
       "label": "Skilled Military Recruits",
       "size": 4,
       "crs": 368
-    },
-    {
-      "number": "429",
-      "date": "2026-07-22",
-      "dateFull": "July 22, 2026",
-      "name": "French-Language proficiency 2026-Version 2",
-      "label": "French-Language proficiency",
-      "size": 5000,
-      "crs": 399
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 229456,
   "ytd": {
     "year": 2026,
-    "rounds": 60,
-    "invitations": 135967,
+    "rounds": 61,
+    "invitations": 138467,
     "categories": 9
   }
 }
