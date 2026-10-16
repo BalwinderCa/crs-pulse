@@ -104,6 +104,10 @@ was seen on build 64 from TestFlight the same day, on the second launch.
 The second update (group `f4c04adb`, from `87176d8`, 2026-10-16) holds a late app open ad for the
 next resume and adds `ad_late`. It was published without a device test, so the first sign it
 arrived is `ad_shown` events with a `placement` property from 1.0.14 installs.
+The third update (group `f52d68ee`, from `b8c0ec2`, 2026-10-16) adds `push_opened` on notification
+taps. Also published without a device test; the first sign it arrived is `push_opened` events after
+the next draw push. Before it, draw #450's push (210 devices, 14:00 UTC) could only be measured by
+app opens: 25 users within 15 minutes, 38 within the hour, against a quiet-hour baseline of 2–6.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
