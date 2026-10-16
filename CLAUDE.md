@@ -58,9 +58,10 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-13).** **iOS v1.0.13 (build 62) is live.** It was submitted
-2026-10-10 with manual release, and PostHog shows real users updating to it from 2026-10-11 (19
-updates from 1.0.11 on 2026-10-12 alone, across a dozen countries), with no crash-loop pattern.
+**Store status (as of 2026-10-16).** **iOS v1.0.14 (build 64) is live** (see below). Before it,
+**iOS v1.0.13 (build 62)** was submitted 2026-10-10 with manual release, and PostHog shows real
+users updating to it from 2026-10-11 (19 updates from 1.0.11 on 2026-10-12 alone, across a dozen
+countries), with no crash-loop pattern.
 Android **versionCode 30** is in Play Console's **Closed testing - Alpha**, fully rolled out to
 testers since 2026-10-10 06:00. **Production access was applied for on 2026-10-16 at 16:39**
 (Play Console, developer account `balwinder98.ca`, ID 8937103506538220438, not Dastiyor), after all
@@ -68,8 +69,11 @@ three closed-test requirements showed complete. Google said it reviews in "seven
 emails the account owner. Until it's approved the Production track stays Inactive. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
-**iOS 1.0.14 (build 64) is Waiting for Review**, submitted 2026-10-13 with **manual release**
-(phased release off), so approval alone ships nothing. Two changes: ad slots request an ad
+**iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
+off), and on 2026-10-16 App Store Connect showed it as "Ready for Distribution". PostHog shows real
+(non-Cupertino) users on it from 2026-10-14 ~11:00 UTC: 11 users that day, 51 on 10-15, 81 on 10-16
+across 14 countries. Opens per user match 1.0.13's (1.9 vs 2.0), so there's no crash-loop pattern.
+Two changes: ad slots request an ad
 only once they reach the screen (`4e8dc76`), and `expo-updates` (`5c4117b`) so later JavaScript
 fixes can ship over the air.
 - **iOS build 63 must not be submitted.** It was built from `6e20864`, before `expo-updates` was
@@ -79,7 +83,7 @@ fixes can ship over the air.
   before it was submitted.
 - Android **versionCode 31** (EAS `1e20e7b5`, from `5c4117b`) was built with auto-submit to Alpha.
 - AdMob showed just 16.8% of loaded native ads in the week to 2026-10-13, because the Draws list
-  requested an ad for every mounted slot. After 1.0.14 ships, compare the native show rate against
+  requested an ad for every mounted slot. Now that 1.0.14 has shipped, compare the native show rate against
   that figure. PostHog's `ad_shown` fires when an ad loads, not on an impression.
 
 **OTA updates (EAS Update), from 1.0.14.** Publish with `npm run ota -- "what changed"` from
