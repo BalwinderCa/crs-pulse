@@ -1,8 +1,17 @@
 {
-  "updated": "2026-10-15",
-  "updatedFull": "October 15, 2026",
+  "updated": "2026-10-16",
+  "updatedFull": "October 16, 2026",
   "distributionAsOf": "October 12, 2026",
   "rounds": [
+    {
+      "number": "450",
+      "date": "2026-10-16",
+      "dateFull": "October 16, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 435
+    },
     {
       "number": "449",
       "date": "2026-10-15",
@@ -173,15 +182,6 @@
       "label": "Provincial Nominee Program",
       "size": 507,
       "crs": 768
-    },
-    {
-      "number": "430",
-      "date": "2026-07-23",
-      "dateFull": "July 23, 2026",
-      "name": "Skilled Military Recruits, 2026-Version 1",
-      "label": "Skilled Military Recruits",
-      "size": 4,
-      "crs": 368
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 229456,
   "ytd": {
     "year": 2026,
-    "rounds": 61,
-    "invitations": 138467,
+    "rounds": 62,
+    "invitations": 143467,
     "categories": 9
   }
 }
