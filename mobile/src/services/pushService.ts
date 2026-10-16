@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import { resolveEasProjectId } from '@/utils/easConfig';
+import { track } from '@/services/analyticsService';
 
 function getPushUrl(): string | null {
   const url = process.env.EXPO_PUBLIC_PUSH_URL?.replace(/\/$/, '');
@@ -142,12 +143,48 @@ function dispatch(type: unknown, handlers: PushHandlers): void {
   else if (type === 'processing_times') handlers.onProcessingTimes();
 }
 
+// expo-notifications' DEFAULT_ACTION_IDENTIFIER: the user tapped the alert itself.
+const DEFAULT_ACTION = 'expo.modules.notifications.actions.DEFAULT';
+const KNOWN_TYPES = ['new_draw', 'processing_times', 'app_update'] as const;
+
+type TapResponse = {
+  actionIdentifier?: string;
+  notification: { request: { identifier?: string; content: { data?: Record<string, unknown> | null } } };
+};
+
+/**
+ * Records a tap on a push as `push_opened`. Only the push type and the public
+ * draw number are sent. `seen` holds identifiers already counted, because on a
+ * cold start both the listener and getLastNotificationResponseAsync can
+ * deliver the same tap.
+ */
+function trackOpened(response: TapResponse, seen: Set<string>): void {
+  if (response.actionIdentifier && response.actionIdentifier !== DEFAULT_ACTION) return;
+  const id = response.notification.request.identifier;
+  if (id) {
+    if (seen.has(id)) return;
+    seen.add(id);
+  }
+  const data = response.notification.request.content.data ?? {};
+  const type = (KNOWN_TYPES as readonly unknown[]).includes(data.type)
+    ? (data.type as (typeof KNOWN_TYPES)[number])
+    : 'other';
+  const drawNumber = Number(data.draw_number);
+  if (type === 'new_draw' && Number.isInteger(drawNumber)) {
+    track('push_opened', { type, draw_number: drawNumber });
+  } else {
+    track('push_opened', { type });
+  }
+}
+
 export function setupPushListeners(handlers: PushHandlers): () => void {
+  const seen = new Set<string>();
   const foregroundSub = Notifications.addNotificationReceivedListener((notification) => {
     dispatch(notification.request.content.data?.type, handlers);
   });
 
   const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+    trackOpened(response, seen);
     dispatch(response.notification.request.content.data?.type, handlers);
   });
 
@@ -158,6 +195,7 @@ export function setupPushListeners(handlers: PushHandlers): () => void {
   Notifications.getLastNotificationResponseAsync()
     .then(async (response) => {
       if (cancelled || !response) return;
+      trackOpened(response, seen);
       dispatch(response.notification.request.content.data?.type, handlers);
       await Notifications.clearLastNotificationResponseAsync().catch(() => {});
     })

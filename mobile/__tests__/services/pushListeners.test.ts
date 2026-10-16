@@ -1,5 +1,8 @@
 import * as Notifications from 'expo-notifications';
 import { setupPushListeners } from '@/services/pushService';
+import { track } from '@/services/analyticsService';
+
+jest.mock('@/services/analyticsService', () => ({ track: jest.fn() }));
 
 type Listener = (payload: unknown) => void;
 let received: Listener | undefined;
@@ -74,5 +77,47 @@ describe('setupPushListeners routing', () => {
     setupPushListeners(handlers)();
     await flush();
     expect(handlers.onProcessingTimes).not.toHaveBeenCalled();
+  });
+
+  describe('push_opened', () => {
+    const tap = (data: Record<string, unknown>, identifier = 'n1', actionIdentifier?: string) => ({
+      ...(actionIdentifier ? { actionIdentifier } : {}),
+      notification: { request: { identifier, content: { data } } },
+    });
+
+    it('records a tapped draw push with its draw number', () => {
+      setupPushListeners(handlers);
+      response!(tap({ type: 'new_draw', draw_number: '450', cutoff: '435', category: 'French' }));
+      expect(track).toHaveBeenCalledTimes(1);
+      expect(track).toHaveBeenCalledWith('push_opened', { type: 'new_draw', draw_number: 450 });
+    });
+
+    it('records other push types without extra properties', () => {
+      setupPushListeners(handlers);
+      response!(tap({ type: 'processing_times' }, 'a'));
+      response!(tap({ type: 'mystery' }, 'b'));
+      expect(track).toHaveBeenNthCalledWith(1, 'push_opened', { type: 'processing_times' });
+      expect(track).toHaveBeenNthCalledWith(2, 'push_opened', { type: 'other' });
+    });
+
+    it('counts a cold-start tap once when the listener also delivers it', async () => {
+      lastResponse = tap({ type: 'new_draw', draw_number: '450' }, 'same');
+      setupPushListeners(handlers);
+      response!(tap({ type: 'new_draw', draw_number: '450' }, 'same'));
+      await flush();
+      expect(track).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores non-default actions such as a dismiss', () => {
+      setupPushListeners(handlers);
+      response!(tap({ type: 'new_draw' }, 'd', 'expo.modules.notifications.actions.DISMISS'));
+      expect(track).not.toHaveBeenCalled();
+    });
+
+    it('does not record foreground deliveries', () => {
+      setupPushListeners(handlers);
+      received!({ request: { content: { data: { type: 'new_draw' } } } });
+      expect(track).not.toHaveBeenCalled();
+    });
   });
 });

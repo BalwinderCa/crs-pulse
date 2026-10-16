@@ -68,6 +68,11 @@ type EventProperties = {
   ad_shown: { format: 'banner' | 'native' | 'app_open'; placement?: 'launch' | 'resume' };
   /** An app open ad that loaded after the splash cap; `load_ms` is its load time. */
   ad_late: { format: 'app_open'; load_ms: number };
+  /** A tapped push. `draw_number` (public IRCC data) is set for new_draw pushes only. */
+  push_opened: {
+    type: 'new_draw' | 'processing_times' | 'app_update' | 'other';
+    draw_number?: number;
+  };
 };
 
 export type AnalyticsEvent = keyof EventProperties;
