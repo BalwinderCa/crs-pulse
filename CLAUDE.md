@@ -101,6 +101,9 @@ The first update (group `01dda199`, from `93cc307`, 2026-10-13) went to 1.0.14: 
 "Last Year" tab became a calendar "This Year" (`2b51866`). Build 64 and versionCode 31 do not
 contain that change natively, so seeing "This Year" on a device proves the update arrived; it
 was seen on build 64 from TestFlight the same day, on the second launch.
+The second update (group `f4c04adb`, from `87176d8`, 2026-10-16) holds a late app open ad for the
+next resume and adds `ad_late`. It was published without a device test, so the first sign it
+arrived is `ad_shown` events with a `placement` property from 1.0.14 installs.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
