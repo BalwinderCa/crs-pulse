@@ -25,6 +25,11 @@ const mockCreateForAdRequest = jest.fn(() => ({
   show: mockAppOpenShow,
 }));
 
+const mockTrack = jest.fn();
+jest.mock('@/services/analyticsService', () => ({
+  track: (...a: unknown[]) => mockTrack(...a),
+}));
+
 let adListeners: Record<string, (() => void)[]> = {};
 const emit = (type: string) => (adListeners[type] ?? []).forEach((cb) => cb());
 const flush = () => new Promise((r) => setImmediate(r));
@@ -145,6 +150,7 @@ describe('adsService.showAppOpenAd — splash gating', () => {
 
     emit('loaded');
     expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
+    expect(mockTrack).toHaveBeenCalledWith('ad_shown', { format: 'app_open', placement: 'launch' });
 
     emit('closed');
     await expect(pending).resolves.toBe(true);
@@ -184,6 +190,101 @@ describe('adsService.showAppOpenAd — splash gating', () => {
     await expect(showAppOpenAd(3000)).resolves.toBe(false);
     expect(mockCreateForAdRequest).not.toHaveBeenCalled();
     (global as unknown as { __DEV__: boolean }).__DEV__ = dev;
+  });
+});
+
+// A request still in flight at the splash cap is kept: AdMob already counts it
+// as matched, so dropping it wastes the fill. It is shown on the next return
+// from the background — never mid-session, and never after 4 hours.
+describe('adsService.showAppOpenAd — late ad held for the next resume', () => {
+  let appStateHandler: ((state: string) => void) | null;
+  const removeSub = jest.fn();
+
+  const loadService = () => {
+    let svc: { showAppOpenAd: (ms: number) => Promise<boolean> } | undefined;
+    jest.isolateModules(() => {
+      svc = require('../../src/services/adsService');
+    });
+    return svc!;
+  };
+
+  // Splash cap fires, then the ad loads `loadMs` later.
+  const lateLoad = async (loadMs: number) => {
+    const { showAppOpenAd } = loadService();
+    const pending = showAppOpenAd(3000);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    jest.advanceTimersByTime(loadMs);
+    await expect(pending).resolves.toBe(false);
+    emit('loaded');
+  };
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+    adListeners = {};
+    appStateHandler = null;
+    (Platform as unknown as { OS: string }).OS = 'ios';
+    (AppState as unknown as { currentState: string }).currentState = 'active';
+    mockInitialize.mockResolvedValue(undefined);
+    mockAdsDefault.mockReturnValue({ initialize: mockInitialize });
+    jest.spyOn(AppState, 'addEventListener').mockImplementation(((_: string, cb: (s: string) => void) => {
+      appStateHandler = cb;
+      return { remove: removeSub };
+    }) as unknown as typeof AppState.addEventListener);
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('does not show a late ad straight away, and reports how late it was', async () => {
+    await lateLoad(4200);
+    expect(mockAppOpenShow).not.toHaveBeenCalled();
+    expect(mockTrack).toHaveBeenCalledWith('ad_late', { format: 'app_open', load_ms: 4200 });
+  });
+
+  it('shows the held ad once, when the user returns from the background', async () => {
+    await lateLoad(5000);
+    appStateHandler!('background');
+    appStateHandler!('active');
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
+    expect(mockTrack).toHaveBeenCalledWith('ad_shown', { format: 'app_open', placement: 'resume' });
+    expect(removeSub).toHaveBeenCalled();
+
+    appStateHandler!('background');
+    appStateHandler!('active');
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores inactive → active (ATT dialog, system sheets)', async () => {
+    await lateLoad(5000);
+    appStateHandler!('inactive');
+    appStateHandler!('active');
+    expect(mockAppOpenShow).not.toHaveBeenCalled();
+  });
+
+  it('drops a held ad older than 4 hours', async () => {
+    await lateLoad(5000);
+    jest.advanceTimersByTime(4 * 60 * 60 * 1000 + 1);
+    appStateHandler!('background');
+    appStateHandler!('active');
+    expect(mockAppOpenShow).not.toHaveBeenCalled();
+  });
+
+  it('keeps nothing when the late request errors instead', async () => {
+    const { showAppOpenAd } = loadService();
+    const pending = showAppOpenAd(3000);
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    jest.advanceTimersByTime(3000);
+    await expect(pending).resolves.toBe(false);
+    emit('error');
+    expect(appStateHandler).toBeNull();
+    expect(mockTrack).not.toHaveBeenCalledWith('ad_late', expect.anything());
   });
 });
 

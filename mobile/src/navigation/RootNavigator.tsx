@@ -97,7 +97,7 @@ export default function RootNavigator() {
 
   // Hide splash as soon as ready — don't gate on profile, as loadProfile()
   // always sets a non-null value and the null guard below handles the brief gap.
-  // When monetization is on, every 3rd launch holds the splash for one app-open
+  // When monetization is on, every 2nd launch holds the splash for one app-open
   // ad first (the only format Google permits on a launch screen), capped at
   // SPLASH_AD_TIMEOUT_MS. The other launches boot straight through.
   // The ATT prompt still comes after the splash: it is ignored unless the app is

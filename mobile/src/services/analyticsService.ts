@@ -64,7 +64,10 @@ type EventProperties = {
   push_enable_failed: { reason: PushRegisterFailure };
   milestone_added: undefined;
   checklist_item_checked: undefined;
-  ad_shown: { format: 'banner' | 'native' | 'app_open' };
+  /** `placement` is set for app open ads only: at the splash, or held over to a resume. */
+  ad_shown: { format: 'banner' | 'native' | 'app_open'; placement?: 'launch' | 'resume' };
+  /** An app open ad that loaded after the splash cap; `load_ms` is its load time. */
+  ad_late: { format: 'app_open'; load_ms: number };
 };
 
 export type AnalyticsEvent = keyof EventProperties;

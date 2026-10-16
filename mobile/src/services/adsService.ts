@@ -128,10 +128,50 @@ export async function takeAppOpenAdTurn(): Promise<boolean> {
 /** Absolute ceiling on a *displayed* ad — see showAppOpenAd. */
 const SHOW_CEILING_MS = 60_000;
 
+/** Google treats a loaded app open ad as stale after 4 hours; never show one older. */
+const LATE_AD_TTL_MS = 4 * 60 * 60 * 1000;
+
 function appOpenUnitId(mod: AdsModule): string {
   // Debug builds always serve Google's test unit, never a live one.
   if (__DEV__) return mod.TestIds?.APP_OPEN ?? '';
   return Platform.OS === 'ios' ? ADMOB_APP_OPEN_AD_UNIT.ios : ADMOB_APP_OPEN_AD_UNIT.android;
+}
+
+/**
+ * An app open ad that loaded after the splash had already given up on it. AdMob
+ * counts it as a matched request either way, so dropping it wastes the fill;
+ * instead it is held and shown the next time the user returns to the app.
+ */
+let lateAd: { ad: AppOpenAdHandle; loadedAt: number } | null = null;
+let resumeSub: { remove: () => void } | null = null;
+
+function holdLateAd(ad: AppOpenAdHandle, loadMs: number): void {
+  track('ad_late', { format: 'app_open', load_ms: Math.round(loadMs) });
+  lateAd = { ad, loadedAt: Date.now() };
+  if (resumeSub) return;
+  // Only a return from 'background' counts. 'inactive' → 'active' also happens
+  // when the ATT dialog or a system sheet closes, and an ad there would land on
+  // a user who never left the app.
+  let prev = AppState.currentState;
+  resumeSub = AppState.addEventListener('change', (state) => {
+    const from = prev;
+    prev = state;
+    if (state === 'active' && from === 'background') showLateAd();
+  });
+}
+
+function showLateAd(): void {
+  const held = lateAd;
+  lateAd = null;
+  resumeSub?.remove();
+  resumeSub = null;
+  if (!held || Date.now() - held.loadedAt > LATE_AD_TTL_MS) return;
+  try {
+    held.ad.show();
+    track('ad_shown', { format: 'app_open', placement: 'resume' });
+  } catch {
+    // A stale or already-used ad: nothing to show.
+  }
 }
 
 /**
@@ -142,7 +182,9 @@ function appOpenUnitId(mod: AdsModule): string {
  * Resolves `false` — immediately or at `timeoutMs` — whenever there is nothing
  * to show: no native module, no configured unit id, no fill, or a slow load.
  * The caller hides the splash the moment this resolves, so the timeout is the
- * hard cap on how long a user can be held on the logo.
+ * hard cap on how long a user can be held on the logo. A request still in
+ * flight at the cap keeps running: if it loads, the ad is held for the user's
+ * next return to the app (see holdLateAd) instead of being thrown away.
  */
 export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
   const mod = loadAdsModule();
@@ -158,19 +200,26 @@ export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
       if (settled) return;
       settled = true;
       clearTimeout(timer);
-      unsubscribe.forEach((off) => off());
       resolve(shown);
     };
 
     let timer = setTimeout(() => finish(false), timeoutMs);
     const unsubscribe: (() => void)[] = [];
+    const detach = () => unsubscribe.splice(0).forEach((off) => off());
 
     initSdk()
       .then(() => {
         if (settled) return; // timed out while the SDK was starting
         const ad = mod.AppOpenAd!.createForAdRequest(unitId);
+        const requestedAt = Date.now();
         unsubscribe.push(
           ad.addAdEventListener(AdEventType.LOADED, () => {
+            if (settled) {
+              // The splash already gave up on this request.
+              detach();
+              holdLateAd(ad, Date.now() - requestedAt);
+              return;
+            }
             // Past this point the ad owns the screen, so the load cap no longer
             // applies — only CLOSED (or an error) releases the splash. The much
             // longer ceiling is the backstop for an ad that shows but never
@@ -179,13 +228,19 @@ export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
             timer = setTimeout(() => finish(false), SHOW_CEILING_MS);
             try {
               ad.show();
-              track('ad_shown', { format: 'app_open' });
+              track('ad_shown', { format: 'app_open', placement: 'launch' });
             } catch {
               finish(false);
             }
           }),
-          ad.addAdEventListener(AdEventType.ERROR, () => finish(false)),
-          ad.addAdEventListener(AdEventType.CLOSED, () => finish(true)),
+          ad.addAdEventListener(AdEventType.ERROR, () => {
+            detach();
+            finish(false);
+          }),
+          ad.addAdEventListener(AdEventType.CLOSED, () => {
+            detach();
+            finish(true);
+          }),
         );
         ad.load();
       })
