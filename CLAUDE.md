@@ -62,9 +62,10 @@ eas submit                                      # Submit to app stores
 2026-10-10 with manual release, and PostHog shows real users updating to it from 2026-10-11 (19
 updates from 1.0.11 on 2026-10-12 alone, across a dozen countries), with no crash-loop pattern.
 Android **versionCode 30** is in Play Console's **Closed testing - Alpha**, fully rolled out to
-testers since 2026-10-10 06:00. Play's production gate read "12 testers opted in for 13 days
-continuously" on 2026-10-13 with "Apply for production" still disabled, so the earliest it can go
-live is **2026-10-14**. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+testers since 2026-10-10 06:00. **Production access was applied for on 2026-10-16 at 16:39**
+(Play Console, developer account `balwinder98.ca`, ID 8937103506538220438, not Dastiyor), after all
+three closed-test requirements showed complete. Google said it reviews in "seven days or less" and
+emails the account owner. Until it's approved the Production track stays Inactive. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **iOS 1.0.14 (build 64) is Waiting for Review**, submitted 2026-10-13 with **manual release**
@@ -175,9 +176,10 @@ review item was iOS-only through Android versionCode 23; from the next build And
 on Google Play", which opens the Play listing because Play has no write-review deep link.) Google gates production access behind "12 testers opted in, for 14
 continuous days"; the account reached **12 opted-in testers on 2026-09-29**, and on 2026-10-13 Play Console
 counted 13 continuous days, so the earliest the button can go live is **2026-10-14**, and only if
-none of them opt out before then (dropping below 12 restarts the clock). Until then `submit.production.android.track` stays
-`alpha` — a `production` submit would be rejected. Promote the track only after Play Console's
-"Apply for production" button goes live.
+none of them opt out before then (dropping below 12 restarts the clock). The gate cleared and the
+application went in on 2026-10-16 (see Store status). Until Google approves it, `submit.production.android.track` stays
+`alpha` — a `production` submit would be rejected. Once approved, switch it to `production` and
+promote the Alpha release.
 
 **Two EAS build failures from 1.0.9 (2026-09-27), both from adding PostHog on SDK 52:**
 
