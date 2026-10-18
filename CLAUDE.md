@@ -204,8 +204,8 @@ of iOS manual release; open the build on a device first).
 
 1. *Bundle JavaScript: `Unable to resolve module @posthog/core/surveys`.* That subpath only
    exists in `@posthog/core`'s package.json `"exports"`, which Metro on SDK 52 ignores.
-   `mobile/metro.config.js` maps `@posthog/core/*` to its CommonJS build rather than turning on
-   `unstable_enablePackageExports` for every dependency. Delete it after the SDK 53+ upgrade.
+   `mobile/metro.config.js` mapped `@posthog/core/*` to its CommonJS build. The SDK 54 upgrade
+   (1.0.15) removed that workaround, because Metro reads `"exports"` by default from SDK 53.
 2. *iOS `XCODE_BUILD_ERROR: switch must be exhaustive`* in `ExpoLocalization`. EAS's
    `macos-sequoia-15.6-xcode-26.0` image adds `Calendar.Identifier` cases that
    `expo-localization` 16.0.1 (SDK 52's latest) doesn't handle. It was removed, and PostHog gets
@@ -231,7 +231,12 @@ compliant. Those binaries ship prebuilt inside AARs (Hermes, React Native, Expo 
 linker flag fixes them — it needs an Expo SDK upgrade off 52 / RN 0.76.9. **Play accepted
 versionCode 21 to the alpha track anyway**, so this is not currently blocking closed testing. On
 the production track it shows as an error with a "Proceed anyway" option, which versionCode 31 used
-on 2026-10-17. The fix is Expo SDK 54+ (React Native 0.81+). Verify alignment with an ELF program-header check
+on 2026-10-17. **1.0.15 fixes it** by moving to Expo SDK 54 / React Native 0.81.5 / React 19
+(branch `upgrade/expo-sdk-54`): a local arm64 release build had 23 of 23 `.so` files 16 KB-aligned
+and passed `zipalign -c -P 16`. Check with `llvm-readelf -lW` (LOAD align `0x4000`) on each lib.
+Locally, Gradle needs JDK 17 (`/opt/homebrew/opt/openjdk@17`; Android Studio's JBR 25 is too new
+for Gradle 8.14) and more than the template's 512 MB metaspace, or KSP fails with
+`OutOfMemoryError: Metaspace`. Delete the generated `mobile/android/` afterwards. Verify alignment with an ELF program-header check
 before assuming a build is compliant.
 
 **Android credentials are entirely remote — nothing store-related needs to be on disk.**
