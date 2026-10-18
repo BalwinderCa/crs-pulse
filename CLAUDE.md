@@ -78,9 +78,17 @@ until it has a Play listing to link.
 
 **1.0.15 (Expo SDK 54, branch `upgrade/expo-sdk-54`).** Android **versionCode 32** (EAS
 `ae1fa546`, from `9f3b6d4`) was submitted to **Alpha** on 2026-10-18 with the new `alpha` submit
-profile, and was "in review" that night. No one has opened it on a device yet. The iOS build (tag
+profile, and was "in review" that night. No one has opened it on a device yet. The EAS iOS build (tag
 `ios-build-1.0.15`, run 39093481289) never started, because the EAS Free plan's iOS builds for
-October were used up. They reset on 2026-11-01. iOS 1.0.14 stays live until then.
+October were used up (they reset on 2026-11-01). **iOS build 68** was instead built locally on
+2026-10-18 with `eas build --local` from `9f3b6d4` and uploaded to **TestFlight only** (EAS submission
+`20ba1eb7`); it is not submitted for review. Its Info.plist matches EAS's build 64 (DTXcodeBuild
+17A324, SDK 23A339) and has `NSUserTrackingUsageDescription`. A local iOS build needs: Xcode 26.0
+at `/Applications/Xcode_26.0.app` selected via `DEVELOPER_DIR` (the default Xcode 26.6 is left
+alone), the Apple WWDR G3 intermediate certificate in the keychain (without it the distribution
+certificate "hasn't been imported successfully"), and the iOS 26.0 platform, which Xcode 26 no
+longer bundles (`xcodebuild -downloadPlatform iOS -architectureVariant arm64`, ~8 GB). Open build
+68 from TestFlight on a device before submitting it; iOS 1.0.14 stays live until then.
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
 off), and on 2026-10-16 App Store Connect showed it as "Ready for Distribution". PostHog shows real
