@@ -66,7 +66,14 @@ Android **versionCode 30** is in Play Console's **Closed testing - Alpha**, full
 testers since 2026-10-10 06:00. **Production access was applied for on 2026-10-16 at 16:39**
 (Play Console, developer account `balwinder98.ca`, ID 8937103506538220438, not Dastiyor), after all
 three closed-test requirements showed complete. Google said it reviews in "seven days or less" and
-emails the account owner. Until it's approved the Production track stays Inactive. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+emails the account owner. Until it's approved the Production track stays Inactive. **Production access was granted on 2026-10-17** (Play email at 17:39 UTC). The same
+evening versionCode 31 (1.0.14) was promoted from Alpha to Production (full rollout, the same 178
+countries/regions as Alpha) and sent for review together with a new store icon. Managed publishing
+is off, so it goes live automatically on approval. Play flagged **"Your app does not support 16 KB
+memory page sizes"** as an error and this release used "Proceed anyway" (see the 16 KB section);
+the next native release must fix it. The Play listing's 512×512 icon is uploaded separately in the
+store listing (it doesn't come from the AAB). It was the old teal-pulse leaf until 2026-10-17 and is
+now a 512 px copy of `mobile/assets/icon.png`. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
@@ -188,9 +195,10 @@ on Google Play", which opens the Play listing because Play has no write-review d
 continuous days"; the account reached **12 opted-in testers on 2026-09-29**, and on 2026-10-13 Play Console
 counted 13 continuous days, so the earliest the button can go live is **2026-10-14**, and only if
 none of them opt out before then (dropping below 12 restarts the clock). The gate cleared and the
-application went in on 2026-10-16 (see Store status). Until Google approves it, `submit.production.android.track` stays
-`alpha` — a `production` submit would be rejected. Once approved, switch it to `production` and
-promote the Alpha release.
+application went in on 2026-10-16 (see Store status) and was approved on 2026-10-17.
+`submit.production.android` now targets `production` with `releaseStatus: "draft"`, so an EAS
+submit lands as a draft that has to be rolled out by hand in Play Console (the Android counterpart
+of iOS manual release; open the build on a device first).
 
 **Two EAS build failures from 1.0.9 (2026-09-27), both from adding PostHog on SDK 52:**
 
@@ -221,8 +229,9 @@ support 16 KB memory pages (new apps since 2025-11-01, updates since 2026-05-01)
 arm64-v8a `.so` files in our AAB are 4 KB-aligned; only `libandroidx.graphics.path.so` is
 compliant. Those binaries ship prebuilt inside AARs (Hermes, React Native, Expo modules), so no
 linker flag fixes them — it needs an Expo SDK upgrade off 52 / RN 0.76.9. **Play accepted
-versionCode 21 to the alpha track anyway**, so this is not currently blocking closed testing, but
-expect it to surface on the production track. Verify alignment with an ELF program-header check
+versionCode 21 to the alpha track anyway**, so this is not currently blocking closed testing. On
+the production track it shows as an error with a "Proceed anyway" option, which versionCode 31 used
+on 2026-10-17. The fix is Expo SDK 54+ (React Native 0.81+). Verify alignment with an ELF program-header check
 before assuming a build is compliant.
 
 **Android credentials are entirely remote — nothing store-related needs to be on disk.**
