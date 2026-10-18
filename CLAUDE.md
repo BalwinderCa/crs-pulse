@@ -76,6 +76,12 @@ store listing (it doesn't come from the AAB). It was the old teal-pulse leaf unt
 now a 512 px copy of `mobile/assets/icon.png`. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
+**1.0.15 (Expo SDK 54, branch `upgrade/expo-sdk-54`).** Android **versionCode 32** (EAS
+`ae1fa546`, from `9f3b6d4`) was submitted to **Alpha** on 2026-10-18 with the new `alpha` submit
+profile, and was "in review" that night. No one has opened it on a device yet. The iOS build (tag
+`ios-build-1.0.15`, run 39093481289) never started, because the EAS Free plan's iOS builds for
+October were used up. They reset on 2026-11-01. iOS 1.0.14 stays live until then.
+
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
 off), and on 2026-10-16 App Store Connect showed it as "Ready for Distribution". PostHog shows real
 (non-Cupertino) users on it from 2026-10-14 ~11:00 UTC: 11 users that day, 51 on 10-15, 81 on 10-16
