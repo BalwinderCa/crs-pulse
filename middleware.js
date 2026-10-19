@@ -29,6 +29,7 @@ export const TWIN = {
   '/fsw-67-points': '/fsw-67-points.md',
   '/express-entry-draws': '/express-entry-draws.md',
   '/express-entry-process': '/express-entry-process.md',
+  '/express-entry-changes-2026': '/express-entry-changes-2026.md',
   '/about': '/about.md',
   '/privacy': '/privacy.md',
   '/terms': '/terms.md',
@@ -37,7 +38,7 @@ export const TWIN = {
 // Vercel statically parses this export, so the matcher has to be a literal — it cannot
 // be derived from TWIN. web/middleware.test.mjs asserts the two stay in step.
 export const config = {
-  matcher: ['/', '/crs-calculator', '/fsw-calculator', '/bc-pnp-calculator', '/sinp-calculator', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/about', '/privacy', '/terms'],
+  matcher: ['/', '/crs-calculator', '/fsw-calculator', '/bc-pnp-calculator', '/sinp-calculator', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/express-entry-changes-2026', '/about', '/privacy', '/terms'],
 };
 
 /**

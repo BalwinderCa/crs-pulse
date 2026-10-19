@@ -20,6 +20,7 @@ export const FR_PAGES = {
   '/fsw-67-points': '/fr/ptqf-67-points',
   '/express-entry-draws': '/fr/types-de-tirages',
   '/express-entry-process': '/fr/processus-entree-express',
+  '/express-entry-changes-2026': '/fr/changements-entree-express-2026',
   '/about': '/fr/a-propos',
   '/privacy': '/fr/confidentialite',
   '/terms': '/fr/conditions',

@@ -35,6 +35,7 @@ const ROUTES = [
   ['/fsw-67-points', 'fsw-67-points'],
   ['/express-entry-draws', 'express-entry-draws'],
   ['/express-entry-process', 'express-entry-process'],
+  ['/express-entry-changes-2026', 'express-entry-changes-2026'],
   ['/about', 'about'],
   ['/privacy', 'privacy'],
   ['/terms', 'terms'],

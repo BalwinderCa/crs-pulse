@@ -9,7 +9,7 @@
 //   /timeline     → in-browser application milestone log
 //   /features     → feature tour
 //   /guides + /crs-points, /improve-crs-score, /language-tests-clb, /fsw-67-points,
-//     /express-entry-draws, /express-entry-process → long-form guides (guides.mjs)
+//     /express-entry-draws, /express-entry-process, /express-entry-changes-2026 → long-form guides (guides.mjs)
 //   /about        → who publishes the site, data sources, contact
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md
@@ -2528,8 +2528,8 @@ const guideArticleLd = (g) => ({
   description: g.description,
   url: `${SITE}${g.path}`,
   mainEntityOfPage: `${SITE}${g.path}`,
-  datePublished: GUIDES_REVIEWED,
-  dateModified: GUIDES_REVIEWED,
+  datePublished: g.reviewed ?? GUIDES_REVIEWED,
+  dateModified: g.reviewed ?? GUIDES_REVIEWED,
   inLanguage: LOCALE,
   image: `${SITE}/img/og.png`,
   author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` },
@@ -2544,7 +2544,7 @@ function guidePage(g) {
   const crumbs = g.hub || g.about
     ? ''
     : `<nav class="guide-crumbs" aria-label="${T('Breadcrumb')}"><a href="/">${T('Home')}</a> / <a href="/guides">${T('Guides')}</a></nav>`;
-  const meta = g.hub || g.about ? '' : `<p class="guide-meta">${T('Last reviewed {date} against IRCC\'s published rules. Estimates only, not immigration advice.', { date: new Date(`${GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) })}</p>`;
+  const meta = g.hub || g.about ? '' : `<p class="guide-meta">${T('Last reviewed {date} against IRCC\'s published rules. Estimates only, not immigration advice.', { date: new Date(`${g.reviewed ?? GUIDES_REVIEWED}T12:00:00Z`).toLocaleDateString(LOCALE, { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }) })}</p>`;
   const related = (g.related || []).map((f) => byFile[f]).filter(Boolean);
   const relatedBlock = related.length
     ? `<section class="guide-related"><h2>${T('Related guides')}</h2><div class="guide-cards">${related.map((r) => `<a href="${r.path}">${guideLabel(r)}<small>${r.short}</small></a>`).join('')}</div></section>`
@@ -2559,7 +2559,7 @@ ${footerFull()}
 </div>`;
   return shell({ ...page(g.file), jsonld: g.hub || g.about ? null : guideJsonLd(g), body });
 }
-const guideMd = (g) => `${absLinks(g.md)}${g.hub || g.about ? '' : `\nLast reviewed ${GUIDES_REVIEWED} against IRCC's published rules.\n`}\n${MD_FOOTER}\n`;
+const guideMd = (g) => `${absLinks(g.md)}${g.hub || g.about ? '' : `\nLast reviewed ${g.reviewed ?? GUIDES_REVIEWED} against IRCC's published rules.\n`}\n${MD_FOOTER}\n`;
 
 // Client engine: calc functions verbatim from the design component.
 const calcScript = (ACTIVE) => `<script>
@@ -2836,7 +2836,7 @@ Language counts per ability, and transferability uses your lowest one, so one we
       [T('What can I do if my score is below the cutoff?'), T('Retaking a language test is often the quickest gain, because CLB 9 and above lifts both your core and your transferability points. French at NCLC 7 adds 25 or 50 points, another year of Canadian work experience adds more, and a provincial nomination adds 600. Category rounds such as French, healthcare or trades also have lower cutoffs if you qualify. The guide to improving your CRS score shows what each change is worth.')],
       [T('Do I need an ECA for education outside Canada?'), T('Yes. Education completed outside Canada earns CRS points only with an Educational Credential Assessment (ECA) showing it equals a completed Canadian credential, and the report must be less than 5 years old when you create your profile and when you apply. Until you have one, leave that education out of your score.')],
       [T('Which language tests can I enter?'), T('IELTS General Training, CELPIP-General and PTE Core for English, and TEF Canada and TCF Canada for French. The calculator converts each score to a CLB or NCLC level with IRCC’s tables, or you can enter CLB levels directly.')],
-      [T('Does a job offer add CRS points?'), T('No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025, so a job offer no longer changes your CRS score.')],
+      [T('Does a job offer add CRS points?'), T('Not until November 3, 2026. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025. From November 3, 2026, a qualifying job offer in a high-wage occupation earns new CRS points without an LMIA; IRCC has not yet published how many.')],
       [T('Does including my spouse lower my CRS score?'), T('It can. When your spouse or common-law partner is coming to Canada with you, your core factors are scored out of 460 instead of 500, and up to 40 points depend on your partner’s education, language and Canadian work experience. A partner with strong scores can make up the difference; otherwise you usually end up a few points lower. If your partner is a Canadian citizen or permanent resident, or is not coming with you, you are scored as single.')],
       [T('How is the French bonus calculated?'), T('French at NCLC 7 or higher in all four abilities adds 50 points if your English is at least CLB 5, or 25 points otherwise. The calculator works this out from the French test you enter.')],
       [T('What happens after I get my score?'), T('If you are eligible for at least one Express Entry program, you create a profile with IRCC and your score ranks you in the pool. A profile stays in the pool for 12 months; if you are not invited by then, it expires and you can create a new one. When a round you qualify for has a cutoff at or below your score, you get an invitation to apply, which is valid for 60 days. The Express Entry process guide walks through each step.')],
@@ -2945,6 +2945,7 @@ function calculatorPage(id) {
 ${pageHero(info.lead, info.accent, info.lede)}
 <section id="calc" class="calcbody" style="max-width:1080px;margin:0 auto;padding:28px 24px 40px;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:28px;align-items:start">
   <div>
+    ${id === 'crs' ? `<p class="calc-notice" style="font-size:14px;line-height:1.5;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin:0 0 18px"><b style="color:var(--text)">${T('The CRS changes on November 3, 2026.')}</b> ${T('IRCC is adding points for high-wage work and job offers, and dropping the LMIA requirement. This calculator uses the current rules until IRCC publishes the new points.')} <a class="link-accent" href="/express-entry-changes-2026">${T('What is changing')}</a></p>` : ''}
     <div style="margin-bottom:18px">
       <h2 id="calc-title" style="font-family:'Satoshi',sans-serif;font-size:24px;font-weight:900;letter-spacing:-.5px;margin:0 0 4px">${info.formTitle}</h2>
       <p id="calc-sub" style="font-size:14px;color:var(--text2);margin:0">${info.formSub}</p>

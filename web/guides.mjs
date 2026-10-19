@@ -158,8 +158,8 @@ export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL }) {
       L(`CLB 9 in all four abilities of your first official language is worth ${4 * FIRST_LANG_ROWS[4][1]} core points (${4 * FIRST_LANG_ROWS[4][2]} with a spouse). It also unlocks the top tier of skill transferability, which can add up to 50 more with a degree or foreign work experience.`,
         `Le NCLC 9 dans les quatre compétences de votre première langue officielle vaut ${4 * FIRST_LANG_ROWS[4][1]} points de base (${4 * FIRST_LANG_ROWS[4][2]} avec un conjoint). Il débloque aussi le palier supérieur de la transférabilité des compétences, qui peut ajouter jusqu’à 50 points avec un diplôme ou de l’expérience de travail à l’étranger.`)],
     [L('Does a job offer still give CRS points?', 'Une offre d’emploi donne-t-elle encore des points CRS ?'),
-      L('No. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025. A job offer can still matter for eligibility in some programs, but it no longer changes your CRS score.',
-        'Non. IRCC a retiré les 50 et 200 points pour l’emploi réservé le 25 mars 2025. Une offre d’emploi peut encore compter pour l’admissibilité à certains programmes, mais elle ne change plus votre score CRS.')],
+      L('Not until November 3, 2026. IRCC removed the 50 and 200 points for arranged employment on March 25, 2025. From November 3, 2026, a qualifying job offer in a high-wage occupation earns new CRS points, and no longer needs an LMIA. IRCC has not yet published how many.',
+        'Pas avant le 3 novembre 2026. IRCC a retiré les 50 et 200 points pour l’emploi réservé le 25 mars 2025. À partir du 3 novembre 2026, une offre d’emploi admissible dans une profession à salaire élevé donne de nouveaux points CRS, sans EIMT. IRCC n’a pas encore publié combien.')],
     [L(`What is a good CRS score in ${year}?`, `Qu’est-ce qu’un bon score CRS en ${year} ?`),
       L(`It depends on the round. In the latest round of each type, cutoffs ran from ${lowCut.crs} (${lowCut.label}, #${lowCut.number}) to ${highCut.crs} (${highCut.label}, #${highCut.number}). Category rounds only invite candidates who qualify for the category.`,
         `Cela dépend de la ronde. Dans la dernière ronde de chaque type, les scores minimaux allaient de ${lowCut.crs} (${T(lowCut.label)}, n° ${lowCut.number}) à ${highCut.crs} (${T(highCut.label)}, n° ${highCut.number}). Les rondes par catégorie n’invitent que les candidats admissibles à la catégorie.`)],
@@ -1134,6 +1134,113 @@ La norme de service d’IRCC est de traiter la plupart des demandes Entrée expr
 - IRCC, [Qui peut présenter une demande : Entrée express](${LINKS.eeEligibility}) (en anglais)
 - IRCC, [Preuve de fonds](${LINKS.funds}) (en anglais)
 - IRCC, [Examens linguistiques](${LINKS.langTests}) (en anglais)
+`),
+  });
+
+  // =================================================================== Nov 2026 CRS changes
+  // Announced 2026-10-16, in force 2026-11-03. Only what IRCC's news release states:
+  // it gives no point values, so neither does this page. When IRCC publishes the new
+  // grid, update crsCalculator.ts, the CRS tables above and this guide together.
+  const changesFaq = [
+    [L('When do the Express Entry changes take effect?', 'Quand les changements à Entrée express entrent-ils en vigueur ?'),
+      L('November 3, 2026. IRCC announced them on October 16, 2026.', 'Le 3 novembre 2026. IRCC les a annoncés le 16 octobre 2026.')],
+    [L('Do I need an LMIA for a job offer to count?', 'Ai-je besoin d’une EIMT pour que mon offre d’emploi compte ?'),
+      L('Not from November 3, 2026. A qualifying job offer no longer needs a labour market impact assessment to earn the new CRS points or to meet the job offer requirements of the Federal Skilled Worker and Federal Skilled Trades programs. IRCC still checks that offers are genuine.',
+        'Plus à partir du 3 novembre 2026. Une offre d’emploi admissible n’a plus besoin d’une étude d’impact sur le marché du travail pour donner les nouveaux points CRS ou pour satisfaire aux exigences d’offre d’emploi du Programme des travailleurs qualifiés (fédéral) et du Programme des travailleurs de métiers spécialisés (fédéral). IRCC vérifie toujours que les offres sont authentiques.')],
+    [L('Do I need to do anything if I am already in the pool?', 'Dois-je faire quelque chose si je suis déjà dans le bassin ?'),
+      L('IRCC will recalculate your score automatically, including points for eligible Canadian work experience. If you have a qualifying job offer, update your profile with its details before November 3, 2026 to get points for it.',
+        'IRCC recalculera votre score automatiquement, y compris les points pour l’expérience de travail canadienne admissible. Si vous avez une offre d’emploi admissible, ajoutez-en les détails à votre profil avant le 3 novembre 2026 pour obtenir les points.')],
+    [L('Will draws stop while scores are recalculated?', 'Les rondes s’arrêtent-elles pendant le recalcul des scores ?'),
+      L('Yes. IRCC says the recalculation may take up to two weeks and that rounds of invitations are paused while it runs.',
+        'Oui. IRCC indique que le recalcul peut prendre jusqu’à deux semaines et que les rondes d’invitations sont suspendues pendant ce temps.')],
+  ];
+  const changesFaqMd = changesFaq.map(([q, a]) => `### ${q}\n\n${a}`).join('\n\n');
+  const changesNews = `${IRCC}/news/2026/10/canada-refocusing-express-entry-on-top-talent-that-drives-economic-growth.html`;
+  guides.push({
+    file: 'express-entry-changes-2026', path: '/express-entry-changes-2026', priority: '0.8', reviewed: '2026-10-19',
+    title: L('Express Entry Changes on November 3, 2026: New CRS Points, No LMIA', 'Changements à Entrée express le 3 novembre 2026 : nouveaux points CRS, sans EIMT'),
+    label: L('Express Entry Changes, November 2026', 'Changements à Entrée express, novembre 2026'),
+    faq: changesFaq,
+    description: L('What IRCC announced on October 16, 2026: extra CRS points for high-wage work and job offers, no LMIA needed, automatic rescoring and a pause in draws.', 'Ce qu’IRCC a annoncé le 16 octobre 2026 : des points CRS supplémentaires pour le travail et les offres d’emploi bien rémunérés, plus besoin d’EIMT, un recalcul automatique et une pause des rondes.'),
+    llm: 'The Express Entry CRS changes in force November 3, 2026, as stated in IRCC\'s news release: high-wage occupation points, LMIA-free job offers, pool rescoring and the draw pause. No point values yet.',
+    short: L('What changes on November 3 and what to do now', 'Ce qui change le 3 novembre et quoi faire maintenant'),
+    related: ['crs-points', 'improve-crs-score', 'express-entry-draws'],
+    md: L(`# Express Entry changes on November 3, 2026
+
+On October 16, 2026, IRCC announced changes to the Express Entry **Comprehensive Ranking System (CRS)**. They take effect on **November 3, 2026**. This page sums up what IRCC has confirmed so far.
+
+> **Point values are not published yet.** IRCC's announcement does not say how many points the new factors are worth. Figures circulating online come from consultants, not IRCC. We will update this page and the [CRS calculator](/crs-calculator) when IRCC publishes the new grid. Until then, the calculator scores profiles under the current rules.
+
+## What is changing
+
+**More points for high-wage work.** Candidates will get additional CRS points for eligible Canadian work experience in a high-wage occupation, or for a qualifying job offer in a high-wage occupation.
+
+**No LMIA for job offers.** A qualifying job offer will no longer need a labour market impact assessment (LMIA) to earn the new points. The same applies to the job offer requirements of the Federal Skilled Worker and Federal Skilled Trades programs. IRCC will still check that offers are genuine and meet program requirements.
+
+## What counts as a high-wage occupation
+
+An occupation is high-wage when its **median wage is at least 1.3 times the median wage of the Canadian workforce**. The test uses what the occupation typically pays, not your own salary. IRCC's examples include engineers and electricians, and it says eligible jobs span health care, skilled trades, engineering, technology and education.
+
+IRCC will publish the list on its website, built from Job Bank, Labour Force Survey and Census wage data for the previous three years.
+
+## If you are already in the pool
+
+- **Your score will be recalculated automatically**, including points for eligible Canadian work experience.
+- **If you have a qualifying job offer, update your profile before November 3, 2026.** That is how the recalculation picks up the job offer points.
+- **Draws pause during the recalculation**, which IRCC says may take up to two weeks. Follow the [latest draws](/draws) for when they resume.
+
+## What to do now
+
+1. Check your work history and any job offer against your NOC code, and look up the occupation on IRCC's list once it is published.
+2. If you have a job offer, add its details to your Express Entry profile before November 3.
+3. Expect cutoffs to move once rounds restart: the whole pool is rescored at once.
+
+## Common questions
+
+${changesFaqMd}
+
+## Sources
+
+- IRCC, [Canada refocusing Express Entry on top talent that drives economic growth](${changesNews}), October 16, 2026
+- IRCC, [Comprehensive Ranking System criteria](${LINKS.crsGrid})
+`, `# Changements à Entrée express le 3 novembre 2026
+
+Le 16 octobre 2026, IRCC a annoncé des changements au **Système de classement global (SCG ou CRS)** d’Entrée express. Ils entrent en vigueur le **3 novembre 2026**. Cette page résume ce qu’IRCC a confirmé jusqu’ici.
+
+> **La valeur des points n’est pas encore publiée.** L’annonce d’IRCC ne dit pas combien de points valent les nouveaux facteurs. Les chiffres qui circulent en ligne viennent de consultants, pas d’IRCC. Nous mettrons à jour cette page et le [calculateur CRS](/crs-calculator) dès qu’IRCC publiera la nouvelle grille. D’ici là, le calculateur applique les règles actuelles.
+
+## Ce qui change
+
+**Plus de points pour le travail bien rémunéré.** Les candidats obtiendront des points CRS supplémentaires pour une expérience de travail canadienne admissible dans une profession à salaire élevé, ou pour une offre d’emploi admissible dans une telle profession.
+
+**Plus d’EIMT pour les offres d’emploi.** Une offre d’emploi admissible n’aura plus besoin d’une étude d’impact sur le marché du travail (EIMT) pour donner les nouveaux points. C’est aussi le cas pour les exigences d’offre d’emploi du Programme des travailleurs qualifiés (fédéral) et du Programme des travailleurs de métiers spécialisés (fédéral). IRCC vérifiera toujours que les offres sont authentiques et respectent les exigences des programmes.
+
+## Ce qu’est une profession à salaire élevé
+
+Une profession est à salaire élevé quand son **salaire médian atteint au moins 1,3 fois le salaire médian de la population active canadienne**. Le critère porte sur ce que la profession paie en général, pas sur votre propre salaire. IRCC cite les ingénieurs et les électriciens, et indique que les emplois admissibles touchent la santé, les métiers spécialisés, le génie, la technologie et l’éducation.
+
+IRCC publiera la liste sur son site, à partir des données salariales du Guichet-Emplois, de l’Enquête sur la population active et du Recensement des trois années précédentes.
+
+## Si vous êtes déjà dans le bassin
+
+- **Votre score sera recalculé automatiquement**, y compris les points pour l’expérience de travail canadienne admissible.
+- **Si vous avez une offre d’emploi admissible, mettez votre profil à jour avant le 3 novembre 2026.** C’est ainsi que le recalcul tiendra compte des points pour l’offre.
+- **Les rondes sont suspendues pendant le recalcul**, qui peut prendre jusqu’à deux semaines selon IRCC. Suivez les [derniers tirages](/draws) pour savoir quand elles reprennent.
+
+## Quoi faire maintenant
+
+1. Vérifiez vos antécédents de travail et votre offre d’emploi selon votre code CNP, et cherchez la profession dans la liste d’IRCC une fois publiée.
+2. Si vous avez une offre d’emploi, ajoutez-en les détails à votre profil Entrée express avant le 3 novembre.
+3. Attendez-vous à ce que les scores minimaux bougent à la reprise des rondes : tout le bassin est recalculé en même temps.
+
+## Questions fréquentes
+
+${changesFaqMd}
+
+## Sources
+
+- IRCC, [Canada refocusing Express Entry on top talent that drives economic growth](${changesNews}) (en anglais), 16 octobre 2026
+- IRCC, [Critères du Système de classement global](${LINKS.crsGrid}) (en anglais)
 `),
   });
 
