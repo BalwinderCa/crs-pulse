@@ -113,7 +113,9 @@ next resume and adds `ad_late`. It was published without a device test, so the f
 arrived is `ad_shown` events with a `placement` property from 1.0.14 installs.
 The third update (group `f52d68ee`, from `b8c0ec2`, 2026-10-16) adds `push_opened` on notification
 taps. Also published without a device test; the first sign it arrived is `push_opened` events after
-the next draw push. Before it, draw #450's push (210 devices, 14:00 UTC) could only be measured by
+the next draw push. The fourth update (group `73ca1585`, from `b8bed46`, 2026-10-19) changes the
+side-menu subtitle from "IRCC Tracker" to "Express Entry Tracker" after Play rejected the title
+"CRS Pulse - IRCC Tracker" under the Impersonation policy. Before the third update, draw #450's push (210 devices, 14:00 UTC) could only be measured by
 app opens: 25 users within 15 minutes, 38 within the hour, against a quiet-hour baseline of 2–6.
 
 Build 62 (EAS `337d8bca`, from
