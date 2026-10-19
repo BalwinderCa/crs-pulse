@@ -939,7 +939,7 @@ const en = {
 
 
   menu: {
-    subtitle: 'IRCC Tracker',
+    subtitle: 'Express Entry Tracker',
     general: 'General',
     about: 'About',
     support: 'Support',

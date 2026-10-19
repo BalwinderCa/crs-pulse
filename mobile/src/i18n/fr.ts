@@ -943,7 +943,7 @@ const fr: TranslationKeys = {
 
 
   menu: {
-    subtitle: 'Suivi IRCC',
+    subtitle: 'Suivi Entrée express',
     general: 'Général',
     about: 'À propos',
     support: 'Assistance',

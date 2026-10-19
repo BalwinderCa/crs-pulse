@@ -11,12 +11,18 @@ which stays false while no product exists in Play Console. Declare
 **In-app purchases: No** and **Contains ads: Yes**.
 
 ## App name (max 30 chars)
-CRS Pulse - IRCC Tracker
+CRS Pulse: CRS Score & Draws
+
+Never put "IRCC", "Government of Canada" or similar in the title or icon. On 2026-10-19 Play
+rejected "CRS Pulse - IRCC Tracker" under the Impersonation policy (Misleading Title). The title is
+set per listing language, so change every translation in Play Console (en-GB was the one flagged).
 
 ## Short description (max 80 chars)
-Calculate your CRS score, track IRCC draws, and get alerts for new cutoffs.
+Unofficial CRS calculator and Express Entry draw tracker, with new-draw alerts.
 
 ## Full description (max 4000 chars)
+
+CRS Pulse is an independent app and is not affiliated with, endorsed by, or sponsored by Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada.
 
 CRS Pulse is the all-in-one companion for Canadian Express Entry applicants. Calculate your score, get notified the instant a new draw is announced, and track your PR application from start to finish — completely private, with all your data stored on your device.
 
@@ -47,8 +53,6 @@ PRIVATE BY DESIGN
 • No account, no sign-up required
 
 CRS Pulse provides estimates only. Scores, draw data, and processing times are for informational purposes and are not a guarantee of eligibility, invitation, or outcome. Always confirm details with official sources before making decisions.
-
-CRS Pulse is an independent app and is not affiliated with, endorsed by, or sponsored by Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada.
 
 ## What's new (max 500 chars)
 
