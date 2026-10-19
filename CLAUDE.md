@@ -73,7 +73,10 @@ is off, so it goes live automatically on approval. Play flagged **"Your app does
 memory page sizes"** as an error and this release used "Proceed anyway" (see the 16 KB section);
 the next native release must fix it. The Play listing's 512×512 icon is uploaded separately in the
 store listing (it doesn't come from the AAB). It was the old teal-pulse leaf until 2026-10-17 and is
-now a 512 px copy of `mobile/assets/icon.png`. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+now a 512 px copy of `mobile/assets/icon.png`. **On 2026-10-19 Play rejected that submission**
+(Impersonation policy, "Misleading Title": "IRCC" in the title). The title was changed to
+"CRS Pulse: CRS Score & Draws" and the same 7 changes (production 1.0.14 + countries, Alpha 1.0.15
+rollout, name, short description, icon) were resubmitted the same day. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
