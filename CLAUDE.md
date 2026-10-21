@@ -76,7 +76,13 @@ store listing (it doesn't come from the AAB). It was the old teal-pulse leaf unt
 now a 512 px copy of `mobile/assets/icon.png`. **On 2026-10-19 Play rejected that submission**
 (Impersonation policy, "Misleading Title": "IRCC" in the title). The title was changed to
 "CRS Pulse: CRS Score & Draws" and the same 7 changes (production 1.0.14 + countries, Alpha 1.0.15
-rollout, name, short description, icon) were resubmitted the same day. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+rollout, name, short description, icon) were resubmitted the same day. **On 2026-10-20 Play
+rejected that title too** (same policy, en-GB "CRS Pulse: CRS Score & Draws"). An appeal ("I believe
+this is incorrect": CRS is a generic score term used in many live app titles, and the listing says
+"Unofficial") was submitted from Policy status the same day. Its form takes text only (1,000 chars);
+screenshots of the "ircc"/"crs calculator" Play searches go by email reply. Don't send other changes
+for review while it's pending. If it's denied, change the title to "CRS Pulse: Unofficial Tracker"
+in every listing language. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
