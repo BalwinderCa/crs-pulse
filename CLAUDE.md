@@ -81,8 +81,18 @@ rejected that title too** (same policy, en-GB "CRS Pulse: CRS Score & Draws"). A
 this is incorrect": CRS is a generic score term used in many live app titles, and the listing says
 "Unofficial") was submitted from Policy status the same day. Its form takes text only (1,000 chars);
 screenshots of the "ircc"/"crs calculator" Play searches go by email reply. Don't send other changes
-for review while it's pending. If it's denied, change the title to "CRS Pulse: Unofficial Tracker"
-in every listing language. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+for review while it's pending. Google denied it the same evening (ticket 3-7443000041476): it now
+treats "CRS" itself as "unclear affiliation with The Comprehensive Ranking System" and asked for
+a signed authorization from the rights holder. A CIPO search on 2026-10-21 found no mark for
+"Comprehensive Ranking System" and no government-owned "CRS" mark (37 "CRS" records, all
+private and unrelated). On 2026-10-21 a reply was emailed in that thread with three screenshots:
+there is no rights holder to authorize anything, the listing says it's unofficial, and it offers
+"(Unofficial)", a canada.ca link or a new icon. **"Express Entry" / "Entrée express" ARE IRCC
+official marks** (CIPO 0922882/0922881, s. 9(1)(n)(iii)), so never put them in a store title or
+product name; whether descriptive use elsewhere is fine (Play short description, in-app subtitle
+"Express Entry Tracker", website) is with a lawyer. If Google refuses again, drop "CRS" from the
+Play title (e.g. "Pulse: Unofficial Draw Tracker") and use a store icon with no "CRS" text and no
+maple leaf. The current icon has "CRS PULSE" on a red/white maple leaf. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
