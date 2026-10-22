@@ -102,8 +102,12 @@ October were used up (they reset on 2026-11-01). **iOS build 68** was instead bu
 at `/Applications/Xcode_26.0.app` selected via `DEVELOPER_DIR` (the default Xcode 26.6 is left
 alone), the Apple WWDR G3 intermediate certificate in the keychain (without it the distribution
 certificate "hasn't been imported successfully"), and the iOS 26.0 platform, which Xcode 26 no
-longer bundles (`xcodebuild -downloadPlatform iOS -architectureVariant arm64`, ~8 GB). Open build
-68 from TestFlight on a device before submitting it; iOS 1.0.14 stays live until then.
+longer bundles (`xcodebuild -downloadPlatform iOS -architectureVariant arm64`, ~8 GB).
+**Build 68 was submitted for App Store review on 2026-10-22** as version 1.0.15, after TestFlight
+showed 1 install, 9 sessions and 0 crashes. It's set to **manual release** (phased release off,
+existing rating kept), so once approved someone has to click "Release This Version" in App Store
+Connect; 1.0.14 stays live until then. What's New: "Under-the-hood upgrade for better performance
+and stability on the latest iOS versions, plus small fixes and improvements."
 
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
 off), and on 2026-10-16 App Store Connect showed it as "Ready for Distribution". PostHog shows real
