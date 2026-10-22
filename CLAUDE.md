@@ -76,6 +76,21 @@ store listing (it doesn't come from the AAB). It was the old teal-pulse leaf unt
 now a 512 px copy of `mobile/assets/icon.png`. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
+**Play rejected that production update under the Impersonation policy** ("unclear affiliation with
+The Comprehensive Ranking System (CRS)", citing the title "CRS Pulse: CRS Score & Draws"; appeal
+case 3-7443000041476). An appeal on 2026-10-20 (CIPO search showing no registered mark for
+"Comprehensive Ranking System" and no government-owned "CRS" record, other Play apps using "CRS",
+and the unofficial notices) was answered by asking for an authorization agreement, which can't
+exist. On 2026-10-21 support would only repeat: remove the misleading elements from the title, or
+distance the app from the entity in the title. The developer chose not to rename. On 2026-10-22
+the same 7 changes were sent for review again unchanged (production 1.0.14 + 177 countries/rest
+of world, Alpha 1.0.15, and the en-GB listing: title, short description "Unofficial CRS
+calculator and Express Entry draw tracker, with new-draw alerts.", icon). If it's rejected again,
+appeal from Play Console → Policy status → Appeal rather than replying to the support thread.
+The fallback, if appeals keep failing, is a Play-only title such as `CRS Pulse (Unofficial)`:
+the store title is a listing field, separate from the on-device app name, and needs no build.
+Google warns that repeated violations can suspend the app or the developer account.
+
 **1.0.15 (Expo SDK 54, branch `upgrade/expo-sdk-54`).** Android **versionCode 32** (EAS
 `ae1fa546`, from `9f3b6d4`) was submitted to **Alpha** on 2026-10-18 with the new `alpha` submit
 profile, and was "in review" that night. No one has opened it on a device yet. The EAS iOS build (tag
