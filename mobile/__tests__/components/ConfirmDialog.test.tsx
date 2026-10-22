@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Pressable } from 'react-native';
+import { Modal } from 'react-native';
 import { render, fireEvent, act } from '@testing-library/react-native';
 import { ConfirmDialog } from '../../src/components/common/ConfirmDialog';
 
@@ -21,7 +21,8 @@ function setup(onConfirm: () => void | Promise<void> = () => {}) {
   const back = () => utils.UNSAFE_getByType(Modal).props.onRequestClose();
   const pressCancelPaths = () => {
     fireEvent.press(utils.getByText('Cancel'));
-    fireEvent.press(utils.UNSAFE_getAllByType(Pressable)[0]!); // backdrop
+    // The backdrop is the first element labelled with the cancel text.
+    fireEvent.press(utils.getAllByLabelText('Cancel')[0]!);
     act(() => back());
   };
   return { ...utils, onCancel, back, pressCancelPaths };

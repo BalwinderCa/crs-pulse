@@ -84,6 +84,11 @@
         "track": "production",
         "releaseStatus": "draft"
       }
+    },
+    "alpha": {
+      "android": {
+        "track": "alpha"
+      }
     }
   }
 }

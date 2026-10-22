@@ -353,7 +353,7 @@ export function useAnalyticsData() {
       const t = parseISO(d.date).getTime();
       if (Number.isNaN(t) || t < yearAgo) continue;
       const m = parseISO(d.date).getMonth();
-      if (!Number.isNaN(m)) byMonth[m] += 1;
+      if (!Number.isNaN(m)) byMonth[m] = (byMonth[m] ?? 0) + 1;
     }
     const activeMonths = byMonth.map((v, i) => ({ v, i })).filter((x) => x.v > 0);
     const busiestMonth = activeMonths.length ? mfmt(activeMonths.reduce((a, b) => (b.v > a.v ? b : a)).i) : '—';

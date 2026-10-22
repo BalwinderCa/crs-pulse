@@ -86,7 +86,7 @@ const PRELOAD_MARGIN = 200;
  * ahead of the viewport; requesting an ad for each on mount meant only ~17% of
  * loaded native ads were ever shown (AdMob show rate, 2026-10-13).
  */
-function useSeenOnScreen(enabled: boolean): [React.RefObject<View>, boolean] {
+function useSeenOnScreen(enabled: boolean): [React.RefObject<View | null>, boolean] {
   const ref = useRef<View>(null);
   const focused = useIsFocused();
   const [seen, setSeen] = useState(false);

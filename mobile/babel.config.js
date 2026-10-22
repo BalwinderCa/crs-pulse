@@ -22,7 +22,7 @@ module.exports = function (api) {
           },
         },
       ],
-      'react-native-reanimated/plugin',
+      // Reanimated 4's worklets plugin is added by babel-preset-expo (SDK 54+).
     ],
   };
 };

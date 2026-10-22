@@ -95,6 +95,39 @@ Play title (e.g. "Pulse: Unofficial Draw Tracker") and use a store icon with no 
 maple leaf. The current icon has "CRS PULSE" on a red/white maple leaf. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
+**Play rejected that production update under the Impersonation policy** ("unclear affiliation with
+The Comprehensive Ranking System (CRS)", citing the title "CRS Pulse: CRS Score & Draws"; appeal
+case 3-7443000041476). An appeal on 2026-10-20 (CIPO search showing no registered mark for
+"Comprehensive Ranking System" and no government-owned "CRS" record, other Play apps using "CRS",
+and the unofficial notices) was answered by asking for an authorization agreement, which can't
+exist. On 2026-10-21 support would only repeat: remove the misleading elements from the title, or
+distance the app from the entity in the title. The developer chose not to rename. On 2026-10-22
+the same 7 changes were sent for review again unchanged (production 1.0.14 + 177 countries/rest
+of world, Alpha 1.0.15, and the en-GB listing: title, short description "Unofficial CRS
+calculator and Express Entry draw tracker, with new-draw alerts.", icon). If it's rejected again,
+appeal from Play Console → Policy status → Appeal rather than replying to the support thread.
+The fallback, if appeals keep failing, is a Play-only title such as `CRS Pulse (Unofficial)`:
+the store title is a listing field, separate from the on-device app name, and needs no build.
+Google warns that repeated violations can suspend the app or the developer account.
+
+**1.0.15 (Expo SDK 54, branch `upgrade/expo-sdk-54`).** Android **versionCode 32** (EAS
+`ae1fa546`, from `9f3b6d4`) was submitted to **Alpha** on 2026-10-18 with the new `alpha` submit
+profile, and was "in review" that night. No one has opened it on a device yet. The EAS iOS build (tag
+`ios-build-1.0.15`, run 39093481289) never started, because the EAS Free plan's iOS builds for
+October were used up (they reset on 2026-11-01). **iOS build 68** was instead built locally on
+2026-10-18 with `eas build --local` from `9f3b6d4` and uploaded to **TestFlight only** (EAS submission
+`20ba1eb7`); it is not submitted for review. Its Info.plist matches EAS's build 64 (DTXcodeBuild
+17A324, SDK 23A339) and has `NSUserTrackingUsageDescription`. A local iOS build needs: Xcode 26.0
+at `/Applications/Xcode_26.0.app` selected via `DEVELOPER_DIR` (the default Xcode 26.6 is left
+alone), the Apple WWDR G3 intermediate certificate in the keychain (without it the distribution
+certificate "hasn't been imported successfully"), and the iOS 26.0 platform, which Xcode 26 no
+longer bundles (`xcodebuild -downloadPlatform iOS -architectureVariant arm64`, ~8 GB).
+**Build 68 was submitted for App Store review on 2026-10-22** as version 1.0.15, after TestFlight
+showed 1 install, 9 sessions and 0 crashes. It's set to **manual release** (phased release off,
+existing rating kept), so once approved someone has to click "Release This Version" in App Store
+Connect; 1.0.14 stays live until then. What's New: "Under-the-hood upgrade for better performance
+and stability on the latest iOS versions, plus small fixes and improvements."
+
 **iOS 1.0.14 (build 64) is live.** It was submitted 2026-10-13 with manual release (phased release
 off), and on 2026-10-16 App Store Connect showed it as "Ready for Distribution". PostHog shows real
 (non-Cupertino) users on it from 2026-10-14 ~11:00 UTC: 11 users that day, 51 on 10-15, 81 on 10-16
@@ -225,8 +258,8 @@ of iOS manual release; open the build on a device first).
 
 1. *Bundle JavaScript: `Unable to resolve module @posthog/core/surveys`.* That subpath only
    exists in `@posthog/core`'s package.json `"exports"`, which Metro on SDK 52 ignores.
-   `mobile/metro.config.js` maps `@posthog/core/*` to its CommonJS build rather than turning on
-   `unstable_enablePackageExports` for every dependency. Delete it after the SDK 53+ upgrade.
+   `mobile/metro.config.js` mapped `@posthog/core/*` to its CommonJS build. The SDK 54 upgrade
+   (1.0.15) removed that workaround, because Metro reads `"exports"` by default from SDK 53.
 2. *iOS `XCODE_BUILD_ERROR: switch must be exhaustive`* in `ExpoLocalization`. EAS's
    `macos-sequoia-15.6-xcode-26.0` image adds `Calendar.Identifier` cases that
    `expo-localization` 16.0.1 (SDK 52's latest) doesn't handle. It was removed, and PostHog gets
@@ -252,7 +285,12 @@ compliant. Those binaries ship prebuilt inside AARs (Hermes, React Native, Expo 
 linker flag fixes them — it needs an Expo SDK upgrade off 52 / RN 0.76.9. **Play accepted
 versionCode 21 to the alpha track anyway**, so this is not currently blocking closed testing. On
 the production track it shows as an error with a "Proceed anyway" option, which versionCode 31 used
-on 2026-10-17. The fix is Expo SDK 54+ (React Native 0.81+). Verify alignment with an ELF program-header check
+on 2026-10-17. **1.0.15 fixes it** by moving to Expo SDK 54 / React Native 0.81.5 / React 19
+(branch `upgrade/expo-sdk-54`): a local arm64 release build had 23 of 23 `.so` files 16 KB-aligned
+and passed `zipalign -c -P 16`. Check with `llvm-readelf -lW` (LOAD align `0x4000`) on each lib.
+Locally, Gradle needs JDK 17 (`/opt/homebrew/opt/openjdk@17`; Android Studio's JBR 25 is too new
+for Gradle 8.14) and more than the template's 512 MB metaspace, or KSP fails with
+`OutOfMemoryError: Metaspace`. Delete the generated `mobile/android/` afterwards. Verify alignment with an ELF program-header check
 before assuming a build is compliant.
 
 **Android credentials are entirely remote — nothing store-related needs to be on disk.**
