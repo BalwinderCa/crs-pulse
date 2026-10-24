@@ -43,6 +43,7 @@ const OUT = resolve(here, 'public', LANG === 'fr' ? 'fr' : '');
 const ASSETS = resolve(here, 'assets');
 
 const APP_STORE_URL = 'https://apps.apple.com/app/crs-pulse-ircc-tracker/id6784619403';
+const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.crspulse.app';
 const CONTACT = 'contact@crspulse.com';
 const SITE = 'https://www.crspulse.com';
 const BUILT = new Date().toISOString().slice(0, 10);
@@ -53,6 +54,33 @@ const LATEST = FEED.rounds[0];
 const YEAR = String(LATEST.date).slice(0, 4);
 const fmtN = (n) => Number(n).toLocaleString(LOCALE);
 const SHORT_DATE = new Date(`${LATEST.date}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+// IRCC publishes a free-text drawName; these give each one a short chip label and a
+// colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
+// so an unrecognised category is never mislabelled — it just falls back to "Other".
+const DRAW_CATEGORIES = [
+  [/provincial nominee/i, 'PNP', '#7C5BD0'],
+  [/canadian experience/i, 'CEC', '#0E8A63'],
+  [/french/i, 'French', '#D3342B'],
+  [/health|social service|physician|nurs/i, 'Healthcare', '#2E6FD4'],
+  [/stem|science|technolog|engineer|math/i, 'STEM', '#4A8ADB'],
+  [/transport/i, 'Transport', '#C07A0A'],
+  [/senior manager|executive/i, 'Managers', '#C24E87'],
+  [/military|armed forces/i, 'Military', '#6B7A8D'],
+  [/trade/i, 'Trades', '#B07310'],
+  [/education|teacher/i, 'Education', '#1F8AA8'],
+  [/agri/i, 'Agriculture', '#1B8F63'],
+  [/federal skilled worker|no program specified|general/i, 'General', '#5B7392'],
+];
+
+// The three newest rounds as "#450 French 435 (Oct 16)", for the /draws snippet. Google
+// already answers "latest ircc draw" with the newest round, so the snippet leads with
+// what that answer leaves out: the rounds before it.
+const dayMonth = (iso) => new Date(`${iso}T12:00:00Z`).toLocaleDateString(LOCALE, { month: 'short', day: 'numeric', timeZone: 'UTC' });
+const RECENT_ROUNDS = FEED.rounds.slice(0, 3).map((r) => {
+  const chip = DRAW_CATEGORIES.find(([re]) => re.test(r.name ?? r.label))?.[1] ?? 'Other';
+  return `#${r.number} ${T(chip)} ${r.crs} (${dayMonth(r.date)})`;
+}).join(', ');
 
 // Every public page, in nav order. Single source of truth for <title>/<meta description>,
 // the markdown twin agents get via `Accept: text/markdown`, sitemap.xml and llms.txt.
@@ -91,8 +119,8 @@ const PAGES = [
   },
   {
     file: 'draws', path: '/draws', priority: '0.9',
-    title: T('Latest IRCC Draw #{n}: CRS {crs} ({date}) | Express Entry {year}', { n: LATEST.number, crs: LATEST.crs, date: SHORT_DATE, year: YEAR }),
-    description: T('IRCC Express Entry draw #{n} on {date}: {label}, {size} invitations, minimum CRS {crs}. Updated as each new round is posted, with every past cutoff and trend.', { n: LATEST.number, date: SHORT_DATE, label: T(LATEST.label), crs: LATEST.crs, size: fmtN(LATEST.size) }),
+    title: T('Latest IRCC Draw #{n}: CRS {crs} ({date}) + All {year} Cutoffs', { n: LATEST.number, crs: LATEST.crs, date: SHORT_DATE, year: YEAR }),
+    description: T('Latest rounds: {recent}. Every {year} Express Entry cutoff by category, the trend, and a free alert for the next draw.', { recent: RECENT_ROUNDS, year: YEAR }),
     llm: 'Round-by-round draw table (number, date, category, invitations, cutoff), pool distribution and trend notes.',
   },
   {
@@ -123,7 +151,7 @@ const PAGES = [
     file: 'features', path: '/features', priority: '0.7',
     title: T('Express Entry App: Draw Alerts, PR Tracker & Checklists'),
     description: T('Everything CRS Pulse does: CRS scoring, live IRCC draws, push alerts, an application tracker, checklists, timeline, and personal analytics \u2014 free.'),
-    llm: 'What the iPhone app does at each stage: tracker, checklists, timeline, alerts, analytics.',
+    llm: 'What the app does at each stage: tracker, checklists, timeline, alerts, analytics.',
   },
   {
     file: 'privacy', path: '/privacy', priority: '0.5',
@@ -148,6 +176,9 @@ const addHeadingIds = (html) =>
 
 const APPLE = (s = 20) =>
   `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8.86-.07 1.68-.75 3.04-.83 1.65-.13 2.9.65 3.71 1.94-1.94 1.16-1.64 3.66.32 4.86-.38 1.08-.9 2.15-1.65 3.2zm-3.62-14.6c-.05-1.7 1.4-3.1 3.14-3.18.28 1.88-1.65 3.4-3.14 3.18z"/></svg>`;
+
+const PLAY = (s = 20) =>
+  `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="currentColor" aria-hidden="true"><path d="M4.2 2.6c-.3.3-.5.8-.5 1.4v16c0 .6.2 1.1.5 1.4l.1.1 9-9v-.2l-9-9z"/><path d="M16.3 15.6l-3-3v-.2l3-3 .1.1 3.6 2c1 .6 1 1.5 0 2.1l-3.6 2z" opacity=".8"/><path d="M16.4 15.5L13.3 12.4l-9.1 9c.3.4.9.4 1.6 0l10.6-5.9" opacity=".65"/><path d="M16.4 9.3L5.8 3.3c-.7-.4-1.3-.3-1.6 0l9.1 9.1 3.1-3.1z" opacity=".9"/></svg>`;
 
 const appBtn = () =>
   `<a class="btn btn-dark" href="${APP_STORE_URL}" style="gap:9px">${APPLE(19)}<span style="display:flex;flex-direction:column;line-height:1.15;text-align:left"><span style="font-size:10px;opacity:.75;font-weight:500">Download on the</span><span style="font-size:15px;font-weight:700">App Store</span></span></a>`;
@@ -585,6 +616,7 @@ const THEME_SCRIPT = `<script>
 function toggleTheme(){var r=document.documentElement,n=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('crspulse-theme',n)}catch(e){}setThemeIcons(n)}
 function setThemeIcons(t){var i=t==='dark'?${JSON.stringify(icon('sun', 17))}:${JSON.stringify(icon('moon', 16))};document.querySelectorAll('[data-theme-icon]').forEach(function(el){el.innerHTML=i})}
 setThemeIcons(document.documentElement.getAttribute('data-theme')||'light');
+if(/Android/i.test(navigator.userAgent))document.querySelectorAll('[data-app-link]').forEach(function(a){a.href=${JSON.stringify(PLAY_URL)};var g=a.querySelector('svg');if(g)g.outerHTML=${JSON.stringify(PLAY(15))}});
 document.addEventListener('click',function(e){document.querySelectorAll('details.menu[open]').forEach(function(m){if(!m.contains(e.target))m.removeAttribute('open')})});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')document.querySelectorAll('details.menu[open]').forEach(function(m){m.removeAttribute('open');m.querySelector('summary').focus()})});
 </script>`;
@@ -745,7 +777,7 @@ function nav(active, cta) {
   const resDrop = dropdown('res-menu', T('Resources'), RESOURCES.some(([, , key]) => key === active), RESOURCES, false);
   // The practical CTA (run the calculator) on content pages, the App Store on the app pages.
   const ctaBtn = cta === 'app'
-    ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}">${APPLE(15)}<span>${T('Get the app')}</span></a>`
+    ? `<a class="btn btn-accent headcta" href="${APP_STORE_URL}" data-app-link>${APPLE(15)}<span>${T('Get the app')}</span></a>`
     : `<a class="btn btn-accent headcta" href="/crs-calculator">${T('Calculate CRS')}</a>`;
   const latest = DRAWS[0];
   const live = `<a class="livechip" href="/draws" title="${T('Latest Express Entry draw: round #{no}, {label}, {date}', { no: latest.no, label: latest.label, date: latest.date })}"><span class="livedot" aria-hidden="true"></span><span>#${latest.no}</span><span class="livesep" aria-hidden="true"></span><span>CRS <b>${latest.cutoff}</b></span></a>`;
@@ -841,6 +873,7 @@ const footerFull = () => `
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13.5px">
           <a class="foot-link" href="/about">${T('About')}</a>
           <a class="foot-link" href="${APP_STORE_URL}">${T('iPhone app')}</a>
+          <a class="foot-link" href="${PLAY_URL}">${T('Android app')}</a>
           <a class="foot-link" href="/privacy">${T('Privacy policy')}</a>
           <a class="foot-link" href="/terms">${T('Terms of use')}</a>
           <a class="foot-link" href="mailto:${CONTACT}">${T('Contact')}</a>
@@ -937,23 +970,6 @@ const CALC_CARDS = [
   ['compass', '200', T('BC PNP SIRS'), T('Skills Immigration Registration System, 200-point scale.')],
   ['pin', '110 · 60', T('Saskatchewan SINP'), T('International Skilled Worker EOI points assessment.')],
 ];
-// IRCC publishes a free-text drawName; these give each one a short chip label and a
-// colour. The long label rendered next to a draw is always IRCC's own (cleaned) name,
-// so an unrecognised category is never mislabelled — it just falls back to "Other".
-const DRAW_CATEGORIES = [
-  [/provincial nominee/i, 'PNP', '#7C5BD0'],
-  [/canadian experience/i, 'CEC', '#0E8A63'],
-  [/french/i, 'French', '#D3342B'],
-  [/health|social service|physician|nurs/i, 'Healthcare', '#2E6FD4'],
-  [/stem|science|technolog|engineer|math/i, 'STEM', '#4A8ADB'],
-  [/transport/i, 'Transport', '#C07A0A'],
-  [/senior manager|executive/i, 'Managers', '#C24E87'],
-  [/military|armed forces/i, 'Military', '#6B7A8D'],
-  [/trade/i, 'Trades', '#B07310'],
-  [/education|teacher/i, 'Education', '#1F8AA8'],
-  [/agri/i, 'Agriculture', '#1B8F63'],
-  [/federal skilled worker|no program specified|general/i, 'General', '#5B7392'],
-];
 const categorise = (name) =>
   DRAW_CATEGORIES.find(([re]) => re.test(name))?.slice(1) ?? ['Other', '#5B7392'];
 
@@ -986,7 +1002,7 @@ const FAQ = [
   [T('What is a CRS score?'), T('The Comprehensive Ranking System score is the number IRCC uses to rank candidates in the Express Entry pool, out of 1,200. Every round of invitations has a cutoff; candidates at or above it are invited to apply for permanent residence.')],
   [T('How is my CRS score calculated?'), T('From core human capital (age, education, official-language ability and Canadian work experience), spouse factors, skill transferability, and additional points such as a provincial nomination (+600), Canadian study, French ability or a sibling in Canada. CRS Pulse implements that published grid, along with the FSW 67-point, BC PNP SIRS and Saskatchewan SINP grids. IRCC’s own tool is authoritative, so confirm your final score there before you act on it.')],
   [T('Does CRS Pulse use official IRCC draw data?'), T('Yes. The app reads rounds of invitations from IRCC’s public JSON feed, and each draw links to its official IRCC round page. This website mirrors the same feed and refreshes when the site is rebuilt; the app is always live.')],
-  [T('Can I track my Express Entry application?'), T('Yes, in the iPhone app. Log milestones such as ITA, AOR, biometrics, medical and passport request on a timeline, work through the document checklist for your program, and see an estimated decision window based on IRCC’s published processing times. The tracker is in the app, not on this website.')],
+  [T('Can I track my Express Entry application?'), T('Yes, in the app for iPhone and Android. Log milestones such as ITA, AOR, biometrics, medical and passport request on a timeline, work through the document checklist for your program, and see an estimated decision window based on IRCC’s published processing times. The tracker is in the app, not on this website.')],
   [T('Is CRS Pulse free?'), T('Yes. Every calculator, live draws, draw history, analytics and the application tracker are free, with no account. The app is supported by small banner ads — there are no in-app purchases and no subscriptions.')],
   [T('What happens to my personal data?'), T('Your age, education, language scores and work history are stored only on your device. There is no account to create. The app sends anonymous usage analytics (which screens are used, never your scores or profile). If you enable draw alerts, only an anonymous push token is stored on the notification service — never your immigration data. The app does show Google AdMob banner ads, which use a device advertising identifier; on iPhone it asks permission first, and declining still leaves the app fully usable.')],
   [T('How do draw alerts work?'), T('A background service checks for new rounds every 15 minutes. When IRCC publishes a draw, you get a push notification — usually within about 15 minutes — with the category, cutoff score and number of invitations. You can turn alerts on or off any time.')],
@@ -1004,7 +1020,7 @@ const pageHero = (lead, accent, lede) => `
 </section></div>`;
 const MAPLE = `<svg class="dg-leaf" viewBox="0 0 512 512" fill="currentColor" aria-hidden="true"><path d="M256 16l-38 72c-4 8-12 7-20 3l-28-14 18 96c4 18-8 18-14 10l-40-46-7 23c-1 4-6 7-10 6l-51-11 13 49c3 11 5 15-3 18l-19 8 88 71c4 3 6 8 4 13l-8 25c31-4 58-9 89-12 3 0 7 3 7 6l-4 99h18l-4-99c0-3 4-6 7-6 31 3 58 8 89 12l-8-25c-2-5 0-10 4-13l88-71-19-8c-8-3-6-7-3-18l13-49-51 11c-4 1-9-2-10-6l-7-23-40 46c-6 8-18 8-14-10l18-96-28 14c-8 4-16 5-20-3z"/></svg>`;
 const s5End = (title = T('Check your CRS score tonight.')) => `
-<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section></div>`;
+<div class="wrap"><section class="s5-end" data-r="0"><h2>${title}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn s5-white" href="${PLAY_URL}">${PLAY(18)} Google Play</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section></div>`;
 
 // ------------------------------------------------------------------ home components
 // Real captures of the shipping iOS build in a CSS-drawn frame. Every screenshot on this
@@ -1374,7 +1390,7 @@ function home() {
 
   const heroCopy = `<div><h1 class="split">${T('Your Express Entry journey, <em>in one app.</em>')}</h1>
       <p data-r="500" class="s5-sub">${T('Your CRS on IRCC’s official grid, every draw within minutes, your file tracked to the decision.')}</p>
-      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} ${T('Download for iPhone')}</a><a class="s5-btn s5-soft" href="/crs-calculator">${T('Calculate my CRS')}</a></div></div>`;
+      <div data-r="650" style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-red" href="${APP_STORE_URL}">${APPLE(18)} ${T('Download for iPhone')}</a><a class="s5-btn s5-red" href="${PLAY_URL}">${PLAY(18)} ${T('Get it on Android')}</a><a class="s5-btn s5-soft" href="/crs-calculator">${T('Calculate my CRS')}</a></div></div>`;
   const hero = `<div class="dg-hero">${MAPLE}<div class="wrap">
   <section class="s5-hero">
     ${heroCopy}
@@ -1405,7 +1421,7 @@ ${hero}
     <div class="s5-snap">${[['CRS', T('Express Entry'), '1,200', T('The Comprehensive Ranking System IRCC uses to rank every profile in the pool.'), CALC_ROUTES.crs], ['FSW', T('67-point grid'), '100', T('Federal Skilled Worker eligibility: six selection factors, 67 to qualify.'), CALC_ROUTES.fsw], ['BC PNP', T('SIRS'), '200', T('British Columbia’s Skills Immigration Registration System score.'), CALC_ROUTES.bc], ['SINP', T('EOI'), '110', T('Saskatchewan’s International Skilled Worker points assessment.'), CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
   ${priv}
   <section class="s5-faq" id="faq"><h2 data-r="0">${T('Questions people ask.')}</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
-  <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section>
+  <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn s5-white" href="${PLAY_URL}">${PLAY(18)} Google Play</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section>
 </div>
 </main>
 ${footerFull()}`;
@@ -2507,7 +2523,7 @@ const crsCalc = new Function(`${CRS_CALC_SRC}\nreturn crsCalc;`)();
 // ------------------------------------------------------------------ GUIDES
 // Long-form pages from guides.mjs. They join PAGES (sitemap, llms.txt, 404, twins)
 // after the feature tour and before the legal pages.
-const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL });
+const GUIDES = buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL, PLAY_URL });
 const GUIDE_PAGES = [GUIDES.hub, ...GUIDES.guides, GUIDES.about];
 PAGES.splice(PAGES.findIndex((p) => p.file === 'privacy'), 0, ...GUIDE_PAGES);
 const guideLabel = (g) => g.label ?? g.title.replace(/\s*:.*$/, '');
@@ -3019,7 +3035,7 @@ Unofficial. Not affiliated with, endorsed by, or connected to IRCC or the Govern
 All scores, predictions and timelines are estimates for guidance only and are not immigration
 advice. Verify with the official IRCC tools at canada.ca before making decisions.
 
-Contact: ${CONTACT} · iOS app: ${APP_STORE_URL}`;
+Contact: ${CONTACT} · iOS app: ${APP_STORE_URL} · Android app: ${PLAY_URL}`;
 
 const mdHead = (file) => {
   const p = page(file);
@@ -3036,7 +3052,7 @@ const CALC_META = [
 ];
 
 const homeMd = () => `${mdHead('index')}
-CRS Pulse is a free iPhone app and browser toolkit for people in (or heading for) the
+CRS Pulse is a free iPhone and Android app and browser toolkit for people in (or heading for) the
 Canadian Express Entry pool. It scores a profile against the official IRCC and provincial
 point grids, tracks every round of invitations, and follows a PR application from profile
 to landing. Everything you enter stays on the device, and there is no account to create.
@@ -3044,6 +3060,7 @@ The app carries Google AdMob banner ads; nothing else tracks you.
 
 - Website: ${SITE}/
 - iOS App Store: ${APP_STORE_URL}
+- Google Play: ${PLAY_URL}
 - Agent guidance: ${SITE}/llms.txt
 
 ## Calculators
@@ -3218,7 +3235,7 @@ const llmsTxt = () => `# CRS Pulse
 
 > Free Canadian Express Entry toolkit: the official CRS formula plus the FSW 67-point,
 > BC PNP SIRS and Saskatchewan SINP grids, live IRCC rounds of invitations with push
-> alerts, and a PR application tracker. iPhone app plus in-browser calculators.
+> alerts, and a PR application tracker. iPhone and Android app plus in-browser calculators.
 
 CRS Pulse is an independent product. It is not affiliated with, endorsed by, or connected
 to IRCC or the Government of Canada, and nothing it produces is immigration advice.
@@ -3273,6 +3290,7 @@ ${PAGES.map((p) => `- [${p.title}](${SITE}${mdPath(p)}): ${p.llm}`).join('\n')}
 
 ## Optional
 
+- [CRS Pulse on Google Play](${PLAY_URL}): the same app for Android.
 - [CRS Pulse on the App Store](${APP_STORE_URL}): the iPhone app, with push alerts and the
   application tracker that the website does not carry.
 - [Contact](mailto:${CONTACT}): questions, corrections, or bug reports.
@@ -3395,7 +3413,7 @@ const homeJsonLd = () => ({
       description: page('index').description,
       applicationCategory: 'UtilitiesApplication',
       applicationSubCategory: 'Immigration calculator',
-      operatingSystem: 'iOS 16+',
+      operatingSystem: 'iOS 16+, Android 7+',
       installUrl: APP_STORE_URL,
       downloadUrl: APP_STORE_URL,
       inLanguage: ['en', 'fr'],
@@ -3403,7 +3421,7 @@ const homeJsonLd = () => ({
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'CAD', availability: 'https://schema.org/InStock', url: APP_STORE_URL },
       featureList: FEATURES_SMALL.map(([, title, desc]) => `${title}: ${plain(desc)}`),
       publisher: { '@id': `${SITE}/#org` },
-      sameAs: [APP_STORE_URL],
+      sameAs: [APP_STORE_URL, PLAY_URL],
     },
     {
       '@type': 'Organization',
@@ -3413,7 +3431,7 @@ const homeJsonLd = () => ({
       logo: `${SITE}/img/logo.svg`,
       email: CONTACT,
       description: 'Independent publisher of CRS Pulse, an Express Entry CRS calculator and IRCC draw tracker. Not affiliated with IRCC or the Government of Canada.',
-      sameAs: [APP_STORE_URL],
+      sameAs: [APP_STORE_URL, PLAY_URL],
     },
     {
       '@type': 'WebSite',

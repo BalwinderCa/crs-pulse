@@ -76,7 +76,7 @@ const BASE = {
   hasProvincialNomination: false, hasSiblingInCanada: false, hasTradeCert: false, frenchNCLC7: false,
 };
 
-export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL }) {
+export function buildGuides({ crsCalc, FEED, SITE, CONTACT, APP_STORE_URL, PLAY_URL }) {
   const score = (over) => crsCalc({ ...BASE, ...over }).total;
   const breakdown = (over) => crsCalc({ ...BASE, ...over }).rows;
   const rows = FEED.rounds;
@@ -1318,7 +1318,7 @@ Scores, predictions and timelines on CRS Pulse are estimates for guidance only. 
 
 ## Contact and corrections
 
-Email **[${CONTACT}](mailto:${CONTACT})** with questions, corrections or bug reports. For a correction, include the page address and, if you can, a link to the official source. The iPhone app is on the [App Store](${APP_STORE_URL}).
+Email **[${CONTACT}](mailto:${CONTACT})** with questions, corrections or bug reports. For a correction, include the page address and, if you can, a link to the official source. The app is on the [App Store](${APP_STORE_URL}) and [Google Play](${PLAY_URL}).
 `, `# À propos de CRS Pulse
 
 CRS Pulse est une boîte à outils gratuite pour les personnes qui demandent à immigrer au Canada par Entrée express. Elle comprend une appli iPhone et ce site, avec des calculateurs pour le score CRS, la grille de 67 points du PTQF, le SIRS du BC PNP et le SINP de la Saskatchewan, les résultats des tirages d’IRCC en direct, les délais de traitement, des listes de documents et des guides.
@@ -1350,7 +1350,7 @@ Les scores, prédictions et chronologies de CRS Pulse sont des estimations, à t
 
 ## Contact et corrections
 
-Écrivez à **[${CONTACT}](mailto:${CONTACT})** pour une question, une correction ou un bogue. Pour une correction, indiquez l’adresse de la page et, si possible, un lien vers la source officielle. L’appli iPhone est sur l’[App Store](${APP_STORE_URL}).
+Écrivez à **[${CONTACT}](mailto:${CONTACT})** pour une question, une correction ou un bogue. Pour une correction, indiquez l’adresse de la page et, si possible, un lien vers la source officielle. L’appli est sur l’[App Store](${APP_STORE_URL}) et [Google Play](${PLAY_URL}).
 `),
   };
 
