@@ -58,7 +58,22 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
-**Store status (as of 2026-10-16).** **iOS v1.0.14 (build 64) is live** (see below). Before it,
+**Store status (as of 2026-10-23): both stores are live.**
+- **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
+  released by hand, and the public App Store lookup shows 1.0.15 from 2026-10-24 04:26 UTC. App
+  Store Connect shows it as "Ready for Distribution". CRS Pulse is on its own App Store Connect
+  team: if the app list shows only Dastiyor, switch teams from your name in the top right.
+- **Android is live in Production.** Play published submission 20 (the unchanged 2026-10-22
+  resubmission: production 1.0.14 / versionCode 31, Alpha 1.0.15 / versionCode 32, and the en-GB
+  listing titled "CRS Pulse: CRS Score & Draws") on 2026-10-23. The title was accepted as is.
+  Submissions 18 and 19 were the two Impersonation rejections. Policy status no longer lists an
+  Impersonation issue. It still lists the targetSdk 36, Billing 8.0.0 and 16 KB requirements for
+  future updates, and only the 16 KB one applies to the production build (1.0.14). **Next: promote
+  1.0.15 (versionCode 32) to Production**, which fixes the 16 KB issue. Open it on a device first.
+
+The history below records how both stores got there.
+
+**Earlier (as of 2026-10-16).** **iOS v1.0.14 (build 64) is live** (see below). Before it,
 **iOS v1.0.13 (build 62)** was submitted 2026-10-10 with manual release, and PostHog shows real
 users updating to it from 2026-10-11 (19 updates from 1.0.11 on 2026-10-12 alone, across a dozen
 countries), with no crash-loop pattern.
