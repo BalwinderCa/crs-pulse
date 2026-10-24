@@ -205,7 +205,10 @@ The third update (group `f52d68ee`, from `b8c0ec2`, 2026-10-16) adds `push_opene
 taps. Also published without a device test; the first sign it arrived is `push_opened` events after
 the next draw push. The fourth update (group `73ca1585`, from `b8bed46`, 2026-10-19) changes the
 side-menu subtitle from "IRCC Tracker" to "Express Entry Tracker" after Play rejected the title
-"CRS Pulse - IRCC Tracker" under the Impersonation policy. Before the third update, draw #450's push (210 devices, 14:00 UTC) could only be measured by
+"CRS Pulse - IRCC Tracker" under the Impersonation policy. The first update for 1.0.15 (group `c2a97902`, from
+`7620b51`, 2026-10-24) asks for a store rating after three good moments (a CRS score appearing,
+a draw push opened, a milestone added), at least two days after the first, and only right after a
+milestone. Before it, only a completed checklist asked, and iOS had one rating. Before the third update, draw #450's push (210 devices, 14:00 UTC) could only be measured by
 app opens: 25 users within 15 minutes, 38 within the hour, against a quiet-hour baseline of 2–6.
 
 Build 62 (EAS `337d8bca`, from
