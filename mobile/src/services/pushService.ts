@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import { resolveEasProjectId } from '@/utils/easConfig';
+import { recordPositiveMoment } from '@/services/reviewPrompt';
 import { track } from '@/services/analyticsService';
 
 function getPushUrl(): string | null {
@@ -172,6 +173,8 @@ function trackOpened(response: TapResponse, seen: Set<string>): void {
   const drawNumber = Number(data.draw_number);
   if (type === 'new_draw' && Number.isInteger(drawNumber)) {
     track('push_opened', { type, draw_number: drawNumber });
+    // Counted but never asked here: the app is still opening from the tap.
+    void recordPositiveMoment({ ask: false });
   } else {
     track('push_opened', { type });
   }

@@ -93,6 +93,7 @@ export const STORAGE_KEYS = {
   NOTIFICATIONS_SEEN_DRAW: 'crs_pulse.notifications_seen_draw',
   NOTIFICATIONS_SEEN_PROCESSING: 'crs_pulse.notifications_seen_processing',
   REVIEW_PROMPTED: 'crs_pulse.review_prompted',
+  REVIEW_MOMENTS: 'crs_pulse.review_moments',
   APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
 } as const;
 

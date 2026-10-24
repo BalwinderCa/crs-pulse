@@ -43,8 +43,9 @@ export default function DocumentChecklistScreen() {
       const next = { ...prev, [id]: !prev[id] };
       AsyncStorage.setItem(storageKey, JSON.stringify(next)).catch(() => {});
       if (next[id]) track('checklist_item_checked');
-      // Every document for this program is now ready — the one moment in the app
-      // we ask for a store review. Firing on the toggle rather than on `allDone`
+      // Every document for this program is now ready, so we ask for a store review
+      // straight away (other good moments go through recordPositiveMoment). Firing
+      // on the toggle rather than on `allDone`
       // keeps it to the tap that completes the list, not every later visit.
       if (Object.values(next).filter(Boolean).length === totalItems) void maybeAskForReview();
       return next;

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { track } from '@/services/analyticsService';
+import { recordPositiveMoment } from '@/services/reviewPrompt';
 
 export type MilestoneType =
   | 'ITA'
@@ -80,6 +81,7 @@ export const useTimelineStore = create<TimelineStore>((set, get) => ({
     set({ milestones: updated });
     track('milestone_added');
     try { await AsyncStorage.setItem(KEY, JSON.stringify(updated)); } catch {}
+    void recordPositiveMoment();
   },
 
   update: async (id, m) => {

@@ -8,7 +8,11 @@ jest.mock('expo-store-review', () => ({
   requestReview: (...a: unknown[]) => mockRequestReview(...a),
 }));
 
-import { maybeAskForReview } from '../../src/services/reviewPrompt';
+import {
+  maybeAskForReview,
+  recordPositiveMoment,
+  REVIEW_MIN_AGE_MS,
+} from '../../src/services/reviewPrompt';
 
 describe('reviewPrompt.maybeAskForReview — asks at most once', () => {
   beforeEach(async () => {
@@ -48,5 +52,64 @@ describe('reviewPrompt.maybeAskForReview — asks at most once', () => {
     mockRequestReview.mockRejectedValue(new Error('SKStoreReviewController failed'));
 
     await expect(maybeAskForReview()).resolves.toBeUndefined();
+  });
+});
+
+describe('reviewPrompt.recordPositiveMoment — asks on the third good moment, two days in', () => {
+  const T0 = 1_760_000_000_000;
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    await AsyncStorage.clear();
+    mockIsAvailable.mockResolvedValue(true);
+    mockRequestReview.mockResolvedValue(undefined);
+  });
+
+  it('does not ask before the third moment, even when the install is old', async () => {
+    await recordPositiveMoment({}, T0);
+    await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS * 5);
+
+    expect(mockRequestReview).not.toHaveBeenCalled();
+  });
+
+  it('does not ask on the third moment within two days of the first', async () => {
+    await recordPositiveMoment({}, T0);
+    await recordPositiveMoment({}, T0 + 1000);
+    await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS - 1);
+
+    expect(mockRequestReview).not.toHaveBeenCalled();
+  });
+
+  it('asks on the next allowed moment once both conditions hold, and only once', async () => {
+    await recordPositiveMoment({}, T0);
+    await recordPositiveMoment({}, T0 + 1000);
+    await recordPositiveMoment({}, T0 + 2000);
+    await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS);
+    await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS * 2);
+
+    expect(mockRequestReview).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts ask:false moments without asking, then asks at the next allowed one', async () => {
+    await recordPositiveMoment({ ask: false }, T0);
+    await recordPositiveMoment({ ask: false }, T0 + REVIEW_MIN_AGE_MS);
+    await recordPositiveMoment({ ask: false }, T0 + REVIEW_MIN_AGE_MS);
+    expect(mockRequestReview).not.toHaveBeenCalled();
+
+    await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS);
+    expect(mockRequestReview).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops counting once a review has been asked for elsewhere', async () => {
+    await maybeAskForReview();
+    for (let i = 0; i < 5; i++) await recordPositiveMoment({}, T0 + REVIEW_MIN_AGE_MS * (i + 1));
+
+    expect(mockRequestReview).toHaveBeenCalledTimes(1);
+  });
+
+  it('recovers from a corrupt stored counter instead of throwing', async () => {
+    await AsyncStorage.setItem('crs_pulse.review_moments', '{not json');
+
+    await expect(recordPositiveMoment({}, T0)).resolves.toBeUndefined();
   });
 });

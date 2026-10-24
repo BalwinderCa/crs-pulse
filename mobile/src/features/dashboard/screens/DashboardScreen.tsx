@@ -21,6 +21,7 @@ import { isCrsScoreReady } from '@/utils/crsScoreReady';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { track } from '@/services/analyticsService';
+import { recordPositiveMoment } from '@/services/reviewPrompt';
 
 const EDU_OPTIONS_EN = [
   { key: 'lessThanSecondary', value: 'less_than_secondary' },
@@ -385,7 +386,11 @@ export default function DashboardScreen() {
   // every edit afterwards and not revisits with a score already on file.
   const hadScore = useRef(scoreReady);
   useEffect(() => {
-    if (scoreReady && !hadScore.current) track('crs_calculated');
+    if (scoreReady && !hadScore.current) {
+      track('crs_calculated');
+      // Counted but never asked here: the user is mid-way through typing scores.
+      void recordPositiveMoment({ ask: false });
+    }
     hadScore.current = scoreReady;
   }, [scoreReady]);
 
