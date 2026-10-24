@@ -76,6 +76,18 @@ eas submit                                      # Submit to app stores
   error, only a missing-deobfuscation-file warning. Managed publishing is off, so it goes live on
   approval. No person had opened it on an Android device; Google's pre-launch devices
   (OnePlus8Pro, Android 11) ran it on 2026-10-18 for up to 20 minutes each, with no errors.
+- **Play screenshots now match the App Store (sent 2026-10-23).** The phone, 7-inch and 10-inch
+  tablet slots of the en-GB default listing each hold the 8 goldie Pixel screenshots
+  (`mobile/goldie/out/screenshots/pixel-10-pro/en-US/`, 1080×1920) in the App Store's order:
+  draws-1, crs-2, home, timeline, calculators, analytics, crs-1, draws-2. They replace the dark
+  June 2026 set. The AI asset declaration is "Don't label assets", since these are real app
+  screens in a device frame. Sending them restarted the 1.0.15 review: Play shows a "restart
+  your review?" prompt whenever new changes go in while a review is in progress, so 1.0.15 and
+  the screenshots are one review. A multi-file upload lands in completion order, so upload one
+  file at a time to keep the order. **Play app preview:** Play accepts only a YouTube URL. The
+  Android preview is `mobile/goldie/out/previews/pixel-10-pro/en-US/preview.mp4` (51 s,
+  1080×2400). It isn't on YouTube yet. Add the link after this review clears, because adding it
+  now would restart the review again.
 
 The history below records how both stores got there.
 
