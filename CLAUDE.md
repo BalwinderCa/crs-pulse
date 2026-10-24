@@ -68,8 +68,14 @@ eas submit                                      # Submit to app stores
   listing titled "CRS Pulse: CRS Score & Draws") on 2026-10-23. The title was accepted as is.
   Submissions 18 and 19 were the two Impersonation rejections. Policy status no longer lists an
   Impersonation issue. It still lists the targetSdk 36, Billing 8.0.0 and 16 KB requirements for
-  future updates, and only the 16 KB one applies to the production build (1.0.14). **Next: promote
-  1.0.15 (versionCode 32) to Production**, which fixes the 16 KB issue. Open it on a device first.
+  future updates, and only the 16 KB one applies to the production build (1.0.14).
+- **1.0.15 (versionCode 32) was promoted from Alpha to Production and sent for review on
+  2026-10-23**, at a full rollout in all targeted countries (3 active installs at the time).
+  Release notes (en-GB): "Under-the-hood upgrade for better performance and stability on the
+  latest Android versions, plus small fixes and improvements." The release check showed no 16 KB
+  error, only a missing-deobfuscation-file warning. Managed publishing is off, so it goes live on
+  approval. No person had opened it on an Android device; Google's pre-launch devices
+  (OnePlus8Pro, Android 11) ran it on 2026-10-18 for up to 20 minutes each, with no errors.
 
 The history below records how both stores got there.
 
