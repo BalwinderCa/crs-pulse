@@ -88,6 +88,11 @@ eas submit                                      # Submit to app stores
   Android preview is `mobile/goldie/out/previews/pixel-10-pro/en-US/preview.mp4` (51 s,
   1080×2400). It isn't on YouTube yet. Add the link after this review clears, because adding it
   now would restart the review again.
+- **Play title changed to "CRS Pulse: Score & Draws" (sent 2026-10-23).** It drops the second
+  "CRS" from the title Play had just accepted. That restarted the review once more, so one Play
+  review now holds five changes: Production 1.0.15 full rollout, the new app name, and the phone,
+  7-inch and 10-inch screenshots. The App Store name ("CRS Pulse - IRCC Tracker") and the
+  on-device app name are unchanged.
 
 The history below records how both stores got there.
 
