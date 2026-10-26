@@ -1,8 +1,17 @@
 {
-  "updated": "2026-10-16",
-  "updatedFull": "October 16, 2026",
-  "distributionAsOf": "October 12, 2026",
+  "updated": "2026-10-26",
+  "updatedFull": "October 26, 2026",
+  "distributionAsOf": "October 25, 2026",
   "rounds": [
+    {
+      "number": "451",
+      "date": "2026-10-26",
+      "dateFull": "October 26, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 792,
+      "crs": 761
+    },
     {
       "number": "450",
       "date": "2026-10-16",
@@ -173,52 +182,43 @@
       "label": "Canadian Experience Class",
       "size": 3000,
       "crs": 516
-    },
-    {
-      "number": "431",
-      "date": "2026-08-04",
-      "dateFull": "August 4, 2026",
-      "name": "Provincial Nominee Program",
-      "label": "Provincial Nominee Program",
-      "size": 507,
-      "crs": 768
     }
   ],
   "pool": [
     {
       "label": "601–1200",
-      "count": 749
+      "count": 787
     },
     {
       "label": "501–600",
-      "count": 21638
+      "count": 20535
     },
     {
       "label": "451–500",
-      "count": 71612
+      "count": 71112
     },
     {
       "label": "401–450",
-      "count": 63528
+      "count": 63505
     },
     {
       "label": "351–400",
-      "count": 47167
+      "count": 47911
     },
     {
       "label": "301–350",
-      "count": 17123
+      "count": 17247
     },
     {
       "label": "0–300",
-      "count": 7639
+      "count": 7627
     }
   ],
-  "poolTotal": 229456,
+  "poolTotal": 228724,
   "ytd": {
     "year": 2026,
-    "rounds": 62,
-    "invitations": 143467,
+    "rounds": 63,
+    "invitations": 144259,
     "categories": 9
   }
 }
