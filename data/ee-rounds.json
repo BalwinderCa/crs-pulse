@@ -1,8 +1,17 @@
 {
-  "updated": "2026-10-26",
-  "updatedFull": "October 26, 2026",
+  "updated": "2026-10-27",
+  "updatedFull": "October 27, 2026",
   "distributionAsOf": "October 25, 2026",
   "rounds": [
+    {
+      "number": "452",
+      "date": "2026-10-27",
+      "dateFull": "October 27, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 5000,
+      "crs": 407
+    },
     {
       "number": "451",
       "date": "2026-10-26",
@@ -173,15 +182,6 @@
       "label": "French-Language proficiency",
       "size": 5000,
       "crs": 391
-    },
-    {
-      "number": "432",
-      "date": "2026-08-05",
-      "dateFull": "August 5, 2026",
-      "name": "Canadian Experience Class",
-      "label": "Canadian Experience Class",
-      "size": 3000,
-      "crs": 516
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 228724,
   "ytd": {
     "year": 2026,
-    "rounds": 63,
-    "invitations": 144259,
+    "rounds": 64,
+    "invitations": 149259,
     "categories": 9
   }
 }
