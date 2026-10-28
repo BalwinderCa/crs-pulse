@@ -49,7 +49,9 @@ test('French pages link to French pages', () => {
 test('the French sitemap lists every French page', () => {
   const xml = read('sitemap-fr.xml');
   const locs = new Set([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
-  for (const path of ALL) assert.ok(locs.has(`${SITE}${toFr(path)}`), `sitemap-fr.xml lacks ${toFr(path)}`);
+  // Per-round draw pages (/draws/<n>) are noindex, so they stay out of both sitemaps.
+  for (const path of ALL.filter((p) => !/^\/draws\/\d+$/.test(p))) assert.ok(locs.has(`${SITE}${toFr(path)}`), `sitemap-fr.xml lacks ${toFr(path)}`);
+  assert.ok(![...locs].some((u) => /\/fr\/tirages\/\d+$/.test(u)), 'a noindex per-round page is in sitemap-fr.xml');
   assert.match(read('robots.txt'), /^Sitemap: https:\/\/www\.crspulse\.com\/sitemap-fr\.xml$/m);
 });
 

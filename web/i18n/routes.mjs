@@ -21,6 +21,7 @@ export const FR_PAGES = {
   '/express-entry-draws': '/fr/types-de-tirages',
   '/express-entry-process': '/fr/processus-entree-express',
   '/express-entry-changes-2026': '/fr/changements-entree-express-2026',
+  '/express-entry-2026-review': '/fr/bilan-entree-express-2026',
   '/about': '/fr/a-propos',
   '/privacy': '/fr/confidentialite',
   '/terms': '/fr/conditions',

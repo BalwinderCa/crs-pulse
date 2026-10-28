@@ -36,6 +36,7 @@ const ROUTES = [
   ['/express-entry-draws', 'express-entry-draws'],
   ['/express-entry-process', 'express-entry-process'],
   ['/express-entry-changes-2026', 'express-entry-changes-2026'],
+  ['/express-entry-2026-review', 'express-entry-2026-review'],
   ['/about', 'about'],
   ['/privacy', 'privacy'],
   ['/terms', 'terms'],
@@ -99,11 +100,12 @@ test('sitemap.xml lists every route with a lastmod', () => {
   assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>/);
   assert.match(xml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/);
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
-  // The named routes first, then the generated draw history (/draws/<round|type>).
+  // The named routes first, then the per-type draw history (/draws/<type>).
+  // Per-round pages (/draws/<n>) are noindex and stay out.
   assert.deepEqual(locs.slice(0, ROUTES.length), ROUTES.map(([path]) => `${SITE}${path}`));
   const extra = locs.slice(ROUTES.length);
-  assert.ok(extra.length > 100, 'expected the per-draw pages in the sitemap');
-  assert.ok(extra.every((u) => /^https:\/\/www\.crspulse\.com\/draws\/[a-z0-9-]+$/.test(u)), 'unexpected extra sitemap URL');
+  assert.ok(extra.length >= 5, 'expected the per-type draw pages in the sitemap');
+  assert.ok(extra.every((u) => /^https:\/\/www\.crspulse\.com\/draws\/[a-z-]+$/.test(u)), 'unexpected extra sitemap URL');
   assert.equal([...xml.matchAll(/<lastmod>(\d{4}-\d{2}-\d{2})<\/lastmod>/g)].length, locs.length);
   // Unescaped ampersands are the classic way a sitemap stops parsing.
   assert.doesNotMatch(xml, /&(?!amp;|lt;|gt;|quot;|apos;)/);
@@ -179,7 +181,12 @@ test('every draw page in the sitemap is built, canonical, and linked pages exist
     assert.match(html, new RegExp(`<link rel="canonical" href="${SITE}${path}">`));
     assert.doesNotMatch(html, /type="text\/markdown"/, `${path} advertises a markdown twin it does not have`);
     assert.equal((html.match(/<h1[\s>]/g) || []).length, 1, `${path} needs exactly one h1`);
+    assert.match(html, /<meta name="robots" content="index, follow">/, `${path} should be indexable`);
   }
+  // Per-round pages are built but kept out of the index (thin, templated).
+  const rounds = [...built].filter((p) => /^\/draws\/\d+$/.test(p));
+  assert.ok(rounds.length > 100, 'expected the per-round pages to still be built');
+  for (const p of rounds) assert.match(read(`${p.slice(1)}.html`), /<meta name="robots" content="noindex, follow">/, `${p} should be noindex`);
   // Every /draws/<x> link anywhere on the site points at a page that exists.
   const pages = ['draws.html', ...[...built].map((p) => `${p.slice(1)}.html`)];
   for (const f of pages) {

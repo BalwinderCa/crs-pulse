@@ -9,7 +9,8 @@
 //   /timeline     → in-browser application milestone log
 //   /features     → feature tour
 //   /guides + /crs-points, /improve-crs-score, /language-tests-clb, /fsw-67-points,
-//     /express-entry-draws, /express-entry-process, /express-entry-changes-2026 → long-form guides (guides.mjs)
+//     /express-entry-draws, /express-entry-process, /express-entry-changes-2026,
+//     /express-entry-2026-review → long-form guides (guides.mjs, review2026.mjs)
 //   /about        → who publishes the site, data sources, contact
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md
@@ -1196,6 +1197,7 @@ ${[500, 700, 900].map((w) => `@font-face{font-family:'Satoshi';src:url('/fonts/s
 @media (prefers-reduced-motion: no-preference){ .s5-track{ animation:s5mq 60s linear infinite; } .s5-marquee:hover .s5-track{ animation-play-state:paused; } }
 .s5-d{ display:flex; align-items:baseline; gap:12px; white-space:nowrap; } .s5-d b{ font-size:32px; font-weight:900; letter-spacing:-.03em; color:var(--text); } .s5-d span{ color:var(--text2); font-size:15px; }
 @keyframes s5mq{ to{ transform:translateX(-50%); } }
+.s5-guides{ padding:60px 0 20px; } .s5-guides h2{ font-size:clamp(30px,3.4vw,46px); line-height:1.05; margin:0; } .s5-gsub{ color:var(--text2); max-width:60ch; margin:12px 0 6px; } .s5-gall{ margin-top:16px; font-weight:600; }
 .s5-calcs{ padding:120px 0 40px; } .s5-calcs h2{ font-size:clamp(34px,4vw,56px); line-height:1; max-width:15ch; }
 .s5-snap{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(260px,1fr); gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; padding:34px 0 10px; scrollbar-width:none; }
 /* the four grids: one row on desktop, 2x2 on tablets, a swipeable row with a peek on phones */
@@ -1419,6 +1421,9 @@ ${hero}
 <div class="wrap">
   <section class="s5-calcs"><h2 data-r="0">${T('Four point grids, right in your browser.')}</h2>
     <div class="s5-snap">${[['CRS', T('Express Entry'), '1,200', T('The Comprehensive Ranking System IRCC uses to rank every profile in the pool.'), CALC_ROUTES.crs], ['FSW', T('67-point grid'), '100', T('Federal Skilled Worker eligibility: six selection factors, 67 to qualify.'), CALC_ROUTES.fsw], ['BC PNP', T('SIRS'), '200', T('British Columbia’s Skills Immigration Registration System score.'), CALC_ROUTES.bc], ['SINP', T('EOI'), '110', T('Saskatchewan’s International Skilled Worker points assessment.'), CALC_ROUTES.sinp]].map(([a, b, mx, d, h], i) => `<a href="${h}" data-r="${i * 90}"><b style="font-size:20px">${a}</b><span style="opacity:.75">${b}</span><p>${d}</p><span class="s5-max">${mx}</span></a>`).join('')}</div></section>
+  <section class="s5-guides"><h2 data-r="0">${T('Guides and analysis.')}</h2><p class="s5-gsub" data-r="80">${T('Plain-language explainers and draw analysis, written from IRCC’s published rules and round results.')}</p>
+    <div class="guide-cards">${[...GUIDES.guides].sort((x, y) => (y.reviewed ?? '').localeCompare(x.reviewed ?? '')).map((g, i) => `<a href="${g.path}" data-r="${(i % 3) * 60}">${guideLabel(g)}<small>${g.short}</small></a>`).join('')}</div>
+    <p class="s5-gall"><a class="link-accent" href="/guides">${T('All guides')} →</a></p></section>
   ${priv}
   <section class="s5-faq" id="faq"><h2 data-r="0">${T('Questions people ask.')}</h2>${FAQ.map(([q, a], i) => `<details data-r="${(i % 2) * 80}"><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
   <section class="s5-end" data-r="0"><h2>${T('Check your CRS score tonight.')}</h2><div style="display:flex;gap:12px;flex-wrap:wrap"><a class="s5-btn s5-white" href="${APP_STORE_URL}">${APPLE(18)} App Store</a><a class="s5-btn s5-white" href="${PLAY_URL}">${PLAY(18)} Google Play</a><a class="s5-btn" style="background:rgba(255,255,255,.14);color:#fff" href="/crs-calculator">${T('CRS calculator')}</a></div></section>
@@ -1777,7 +1782,7 @@ const draw3Crumbs = (path, name) => ({
   ],
 });
 
-function drawDocPage({ path, title, description, md, meta, jsonld, extra = '' }) {
+function drawDocPage({ path, title, description, md, meta, jsonld, extra = '', noindex = false }) {
   const html = addHeadingIds(marked.parse(md));
   const [h1, ...rest] = html.split(/(?<=<\/h1>)/);
   const body = `${nav('draws', 'calc')}
@@ -1785,9 +1790,13 @@ function drawDocPage({ path, title, description, md, meta, jsonld, extra = '' })
 <main class="doc"><article class="doc-card"><nav class="guide-crumbs" aria-label="${T('Breadcrumb')}"><a href="/">${T('Home')}</a> / <a href="/draws">${T('Draws')}</a></nav>${h1}<p class="guide-meta">${meta}</p>${rest.join('')}${extra}</article></main>
 ${footerFull()}
 </div>`;
-  return shell({ title, description, path, jsonld, body, twin: false });
+  return shell({ title, description, path, jsonld, noindex, body, twin: false });
 }
 
+// One page per round, built from the same template. They stay up for visitors and
+// links but are noindex and out of the sitemap: hundreds of near-identical pages
+// read as thin content to Google (AdSense rejected the site for it on 2026-10-27).
+// The per-type history pages (/draws/<type>) carry the same data and stay indexed.
 function drawPage(r) {
   const i = HISTORY.indexOf(r);
   const newer = HISTORY.slice(0, i).reverse().find((x) => DRAW_PAGE_NOS.has(x.number));
@@ -1809,6 +1818,7 @@ function drawPage(r) {
       ],
     },
     extra: pager,
+    noindex: true,
   });
 }
 
@@ -1826,7 +1836,6 @@ function catPage(c) {
 }
 const DRAW_SITEMAP = [
   ...DRAW_CATS.map((c) => ({ path: `/draws/${c.slug}`, lastmod: c.rounds[0].date, freq: 'weekly', priority: '0.7' })),
-  ...DRAW_PAGE_ROUNDS.map((r) => ({ path: `/draws/${r.number}`, lastmod: r.date, freq: 'yearly', priority: '0.5' })),
 ];
 
 // ------------------------------------------------------------------ RESOURCES
@@ -2548,7 +2557,7 @@ const guideArticleLd = (g) => ({
   dateModified: g.reviewed ?? GUIDES_REVIEWED,
   inLanguage: LOCALE,
   image: `${SITE}/img/og.png`,
-  author: { '@type': 'Organization', name: 'CRS Pulse', url: `${SITE}/about` },
+  author: { '@type': 'Person', name: 'Balwinder Singh', jobTitle: 'Software developer', address: { '@type': 'PostalAddress', addressLocality: 'Saskatoon', addressRegion: 'SK', addressCountry: 'CA' }, url: `${SITE}/about` },
   publisher: { '@type': 'Organization', name: 'CRS Pulse', logo: { '@type': 'ImageObject', url: `${SITE}/img/logo.svg` } },
 });
 

@@ -1,5 +1,6 @@
 import { TESTS, CLB_LEVELS } from './clb.mjs';
 import { LANG, LOCALE, T } from './i18n.mjs';
+import { buildReview2026 } from './review2026.mjs';
 
 // Long-form guides and the About page. Each entry renders to an HTML page (through
 // build.mjs's guide shell) and doubles as that page's markdown twin.
@@ -1244,6 +1245,8 @@ ${changesFaqMd}
 `),
   });
 
+  guides.push(buildReview2026({ IRCC_ROUNDS: LINKS.eeRounds }));
+
   // =================================================================== hub
   const hub = {
     file: 'guides', path: '/guides', priority: '0.8',
@@ -1293,7 +1296,9 @@ CRS Pulse is a free toolkit for people applying to immigrate to Canada through E
 
 ## Who makes it
 
-CRS Pulse is built and maintained by an independent developer. It is **not** affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or any other part of the Government of Canada, and it is not a law firm or a licensed immigration consultancy.
+CRS Pulse is built and maintained by **Balwinder Singh**, a software developer in Saskatoon, Saskatchewan. Balwinder went through Express Entry and found the information spread across many pages: the score grid in one place, the draw results in another, processing times in a third. CRS Pulse puts them side by side and keeps them current.
+
+It is an independent project. It is **not** affiliated with, endorsed by, or connected to Immigration, Refugees and Citizenship Canada (IRCC) or any other part of the Government of Canada, and it is not a law firm or a licensed immigration consultancy.
 
 ## Where the data comes from
 
@@ -1325,7 +1330,9 @@ CRS Pulse est une boîte à outils gratuite pour les personnes qui demandent à 
 
 ## Qui le fait
 
-CRS Pulse est conçu et maintenu par un développeur indépendant. Il n’est **pas** affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni à aucune autre partie du gouvernement du Canada, ni approuvé par eux, et ce n’est ni un cabinet d’avocats ni un cabinet de consultants en immigration autorisés.
+CRS Pulse est conçu et maintenu par **Balwinder Singh**, développeur de logiciels à Saskatoon, en Saskatchewan. Balwinder est passé par Entrée express et a trouvé l’information dispersée sur de nombreuses pages : la grille de points à un endroit, les résultats des tirages à un autre, les délais de traitement à un troisième. CRS Pulse les réunit et les tient à jour.
+
+C’est un projet indépendant. Il n’est **pas** affilié à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ni à aucune autre partie du gouvernement du Canada, ni approuvé par eux, et ce n’est ni un cabinet d’avocats ni un cabinet de consultants en immigration autorisés.
 
 ## D’où viennent les données
 
