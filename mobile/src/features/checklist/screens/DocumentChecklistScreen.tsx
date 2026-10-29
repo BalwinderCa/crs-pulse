@@ -47,7 +47,7 @@ export default function DocumentChecklistScreen() {
       // straight away (other good moments go through recordPositiveMoment). Firing
       // on the toggle rather than on `allDone`
       // keeps it to the tap that completes the list, not every later visit.
-      if (Object.values(next).filter(Boolean).length === totalItems) void maybeAskForReview();
+      if (Object.values(next).filter(Boolean).length === totalItems) void maybeAskForReview('checklist');
       return next;
     });
   };

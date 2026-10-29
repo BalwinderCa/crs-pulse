@@ -57,6 +57,8 @@ export const ANALYTICS_AUTOCAPTURE: PostHogAutocaptureOptions = {
  * adding it here, which keeps profile data (scores, inputs, milestone or
  * checklist contents) from slipping in as an ad-hoc property.
  */
+export type ReviewTrigger = 'checklist' | 'moments';
+
 type EventProperties = {
   crs_calculated: undefined;
   push_enabled: undefined;
@@ -73,6 +75,11 @@ type EventProperties = {
     type: 'new_draw' | 'processing_times' | 'app_update' | 'other';
     draw_number?: number;
   };
+  /**
+   * The native rating sheet was requested: on a finished checklist, or on the
+   * third good moment. The OS may still choose not to show it.
+   */
+  review_requested: { trigger: ReviewTrigger };
 };
 
 export type AnalyticsEvent = keyof EventProperties;

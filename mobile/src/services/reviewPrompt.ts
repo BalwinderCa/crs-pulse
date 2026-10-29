@@ -1,6 +1,7 @@
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
+import { track, type ReviewTrigger } from '@/services/analyticsService';
 
 /**
  * Asks the OS to show its native "rate this app" sheet — once per install, and
@@ -14,7 +15,7 @@ import { STORAGE_KEYS } from '@/constants';
  * Everything here fails silently. A review prompt is never worth interrupting
  * the flow it fired from.
  */
-export async function maybeAskForReview(): Promise<void> {
+export async function maybeAskForReview(trigger: ReviewTrigger): Promise<void> {
   try {
     if (await AsyncStorage.getItem(STORAGE_KEYS.REVIEW_PROMPTED)) return;
     if (!(await StoreReview.isAvailableAsync())) return;
@@ -22,6 +23,7 @@ export async function maybeAskForReview(): Promise<void> {
     // us whether it actually showed anything, and re-asking is the worse bug.
     await AsyncStorage.setItem(STORAGE_KEYS.REVIEW_PROMPTED, '1');
     await StoreReview.requestReview();
+    track('review_requested', { trigger });
   } catch {}
 }
 
@@ -59,7 +61,7 @@ export async function recordPositiveMoment(
       moments.count >= REVIEW_MOMENTS_NEEDED &&
       now - moments.firstAt >= REVIEW_MIN_AGE_MS
     ) {
-      await maybeAskForReview();
+      await maybeAskForReview('moments');
     }
   } catch {}
 }
