@@ -220,6 +220,8 @@ The first update for 1.0.15 (group `c2a97902`, from
 `7620b51`, 2026-10-24) asks for a store rating after three good moments (a CRS score appearing,
 a draw push opened, a milestone added), at least two days after the first, and only right after a
 milestone. Before it, only a completed checklist asked, and iOS had one rating.
+The second 1.0.15 update (group `cfd1a0cb`, from `c068b46`, 2026-10-29) adds `review_requested`
+(`trigger`: `checklist` or `moments`), so the first sign it arrived is that event in PostHog.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
