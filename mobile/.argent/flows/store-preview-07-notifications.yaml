@@ -5,6 +5,9 @@ steps:
   - tap: { text: Close menu }
   - wait: 700
   - await: { idle: true }
-  - tap: { text: Notifications }
-  - wait: 1200
+  - echo: The header bell. Its label "Notifications" also matches a row on the
+  - echo: Profile screen, so tap the bell by position (top right of the header).
+  - tap: { x: 0.931, y: 0.087 }
+  - await: { visible: { text: New Draw Alerts } }
   - await: { idle: true }
+  - wait: 2000

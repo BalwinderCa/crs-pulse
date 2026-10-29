@@ -1,7 +1,7 @@
+executionPrerequisite: >-
+  App open on the Home hub, settled (store-05-home ran last).
 steps:
   - echo: Open on the Home hub - score, tracker and latest draws.
-  - launch: com.crspulse.app
   - await: { visible: { text: Recent Draws } }
-  - wait: 1000
   - await: { idle: true }
-  - wait: 1200
+  - wait: 2200

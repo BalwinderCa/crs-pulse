@@ -3,6 +3,8 @@ executionPrerequisite: >-
 steps:
   - echo: The side menu - checklists, processing times, FAQ and support.
   - tap: { text: Open menu }
-  - wait: 1000
+  - echo: Let the drawer finish sliding in before the shot holds.
+  - wait: 1200
+  - await: { visible: { text: Check Processing Times } }
   - await: { idle: true }
-  - wait: 1000
+  - wait: 1800

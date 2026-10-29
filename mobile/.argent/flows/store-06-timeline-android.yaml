@@ -7,7 +7,7 @@
 # in a config, so the two platforms use separate configs - see
 # goldie.config.ts (iPhone) and goldie.android.config.ts (Play).
 #
-# Dates are absolute, chosen so that on the September 8, 2026 capture day they
+# Dates are absolute, chosen so that on the October 29, 2026 capture day they
 # read 105 / 95 / 95 / 45 / 30 days ago. Re-running much later shifts those
 # labels; regenerate the dates if the strip is ever rebuilt.
 steps:
@@ -17,25 +17,24 @@ steps:
   - await: { idle: true }
   - tap: { text: Timeline }
   - await: { visible: { text: No milestones yet } }
-  - echo: "Milestone 1/5 - ITA, 105 days ago (May 26, 2026)."
+  - echo: "Milestone 1/5 - ITA, 105 days ago (July 16, 2026)."
   - tap: { text: Add Your First Milestone }
   - await: { visible: { text: Save } }
   - await: { visible: { text: DATE } }
   - tap: { x: 0.5, y: 0.276 }
   - await: { visible: { text: "Previous month" } }
-  - echo: Picker opens on the current month; step back 4.
-  - tap: { text: "Previous month" }
+  - echo: Picker opens on the current month; step back 3.
   - tap: { text: "Previous month" }
   - tap: { text: "Previous month" }
   - tap: { text: "Previous month" }
   - await: { idle: true }
-  - tap: { text: "26 May 2026" }
+  - tap: { text: "16 July 2026" }
   - await: { idle: true }
   - tap: { text: OK }
   - await: { idle: true }
   - tap: { text: Save }
   - await: { idle: true }
-  - echo: "Milestone 2/5 - Application Submitted, 95 days ago (June 5, 2026)."
+  - echo: "Milestone 2/5 - Application Submitted, 95 days ago (July 26, 2026)."
   - tap: { text: Add Milestone }
   - await: { visible: { text: Save } }
   - echo: TYPE defaults to ITA; open the picker and choose this milestone.
@@ -55,13 +54,13 @@ steps:
   - tap: { text: "Previous month" }
   - tap: { text: "Previous month" }
   - await: { idle: true }
-  - tap: { text: "05 June 2026" }
+  - tap: { text: "26 July 2026" }
   - await: { idle: true }
   - tap: { text: OK }
   - await: { idle: true }
   - tap: { text: Save }
   - await: { idle: true }
-  - echo: "Milestone 3/5 - AOR Received, 95 days ago (June 5, 2026)."
+  - echo: "Milestone 3/5 - AOR Received, 95 days ago (July 26, 2026)."
   - tap: { text: Add Milestone }
   - await: { visible: { text: Save } }
   - echo: TYPE defaults to ITA; open the picker and choose this milestone.
@@ -81,13 +80,13 @@ steps:
   - tap: { text: "Previous month" }
   - tap: { text: "Previous month" }
   - await: { idle: true }
-  - tap: { text: "05 June 2026" }
+  - tap: { text: "26 July 2026" }
   - await: { idle: true }
   - tap: { text: OK }
   - await: { idle: true }
   - tap: { text: Save }
   - await: { idle: true }
-  - echo: "Milestone 4/5 - Biometrics Completed, 45 days ago (July 25, 2026)."
+  - echo: "Milestone 4/5 - Biometrics Completed, 45 days ago (September 14, 2026)."
   - tap: { text: Add Milestone }
   - await: { visible: { text: Save } }
   - echo: TYPE defaults to ITA; open the picker and choose this milestone.
@@ -102,17 +101,16 @@ steps:
   - await: { visible: { text: DATE } }
   - tap: { x: 0.5, y: 0.276 }
   - await: { visible: { text: "Previous month" } }
-  - echo: Picker opens on the current month; step back 2.
-  - tap: { text: "Previous month" }
+  - echo: Picker opens on the current month; step back 1.
   - tap: { text: "Previous month" }
   - await: { idle: true }
-  - tap: { text: "25 July 2026" }
+  - tap: { text: "14 September 2026" }
   - await: { idle: true }
   - tap: { text: OK }
   - await: { idle: true }
   - tap: { text: Save }
   - await: { idle: true }
-  - echo: "Milestone 5/5 - Medical Passed, 30 days ago (August 9, 2026)."
+  - echo: "Milestone 5/5 - Medical Passed, 30 days ago (September 29, 2026)."
   - tap: { text: Add Milestone }
   - await: { visible: { text: Save } }
   - echo: TYPE defaults to ITA; open the picker and choose this milestone.
@@ -135,7 +133,7 @@ steps:
   - echo: Picker opens on the current month; step back 1.
   - tap: { text: "Previous month" }
   - await: { idle: true }
-  - tap: { text: "09 August 2026" }
+  - tap: { text: "29 September 2026" }
   - await: { idle: true }
   - tap: { text: OK }
   - await: { idle: true }
