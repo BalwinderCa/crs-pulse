@@ -1,4 +1,4 @@
-# CRS calculator showing a real score. A fresh install has age/education/marital
+# CRS calculator showing a real score (519 with the work experience below). A fresh install has age/education/marital
 # defaults but language scores at 0, so only education and language are set here.
 steps:
   - echo: goldie clears app data once per device, not per flow, so onboarding is
@@ -60,4 +60,17 @@ steps:
   - tap: { text: Increase Writing }
   - tap: { text: Increase Writing }
   - tap: { text: Increase Writing }
+  - await: { idle: true }
+  - echo: Work experience lifts the demo score from 391 to 519, above recent
+  - echo: cutoffs (~505), so Analytics shows good odds. 2 years Canadian, 1-2 foreign.
+  - tool: gesture-swipe
+    args: { fromX: 0.5, fromY: 0.75, toX: 0.5, toY: 0.35, durationMs: 700 }
+  - await: { idle: true }
+  - tap: { text: Work Experience }
+  - await: { visible: { text: CANADIAN WORK EXPERIENCE } }
+  - await: { idle: true }
+  - echo: The Canadian work stepper has no field label, so its button reads "Increase".
+  - tap: { text: Increase }
+  - tap: { text: Increase }
+  - tap: { text: "1–2 years" }
   - await: { idle: true }
