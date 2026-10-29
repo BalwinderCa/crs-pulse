@@ -92,7 +92,14 @@ eas submit                                      # Submit to app stores
   "CRS" from the title Play had just accepted. That restarted the review once more, so one Play
   review now holds five changes: Production 1.0.15 full rollout, the new app name, and the phone,
   7-inch and 10-inch screenshots. The App Store name ("CRS Pulse - IRCC Tracker") and the
-  on-device app name are unchanged.
+  on-device app name are unchanged. That review cleared: 1.0.15 was live on Play by 2026-10-26.
+- **Screenshot pairs were uploaded in the wrong order on both stores.** The 2026-10-23 order
+  (draws-1, crs-2, …, crs-1, draws-2) splits the two-tile spreads; they must go 01-draws-1,
+  02-draws-2, 03…06, 07-crs-1, 08-crs-2 (file order). Play was reordered in all three slots on
+  2026-10-29. **The App Store still has the wrong order**; fix it with the 1.0.16 submission.
+- **Play preview video added (sent 2026-10-29):** https://www.youtube.com/watch?v=-R2q-HJ-dEk
+  (Unlisted, personal "Balwinder Singh" channel), re-recorded from 1.0.15 with a 519 demo score.
+  Sent in one review with the screenshot reorder and the fr-CA / fr-FR listings (6 changes).
 
 The history below records how both stores got there.
 
