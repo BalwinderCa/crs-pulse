@@ -96,7 +96,9 @@ eas submit                                      # Submit to app stores
 - **Screenshot pairs were uploaded in the wrong order on both stores.** The 2026-10-23 order
   (draws-1, crs-2, …, crs-1, draws-2) splits the two-tile spreads; they must go 01-draws-1,
   02-draws-2, 03…06, 07-crs-1, 08-crs-2 (file order). Play was reordered in all three slots on
-  2026-10-29. **The App Store still has the wrong order**; fix it with the 1.0.16 submission.
+  2026-10-29. The App Store's live 1.0.15 keeps the wrong order (a live version's screenshots
+  are locked); the 1.0.16 draft's iPhone 6.9" set was reordered the same day, and the 6.5",
+  6.1" and French (Canada) slots inherit it, so the fix ships with 1.0.16.
 - **Play preview video added (sent 2026-10-29):** https://www.youtube.com/watch?v=-R2q-HJ-dEk
   (Unlisted, personal "Balwinder Singh" channel), re-recorded from 1.0.15 with a 519 demo score.
   Sent in one review with the screenshot reorder and the fr-CA / fr-FR listings (6 changes).
