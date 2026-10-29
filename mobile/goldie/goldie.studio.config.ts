@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 // STUDIO/MANIFEST ONLY - lists both devices so the studio shows the App Store
 // and Play strips together. Do NOT capture with this config: the timeline
 // scene names the iOS flow, which cannot drive Android date pickers.
@@ -23,17 +24,18 @@
 // effect). Delete it to hand control back to this config, or copy its values
 // up into theme.* here if you want to keep the look.
 
-const APP_ROOT = "/Users/balwindersingh/crs-pulse/mobile";
+// The app root is this file's parent folder, so the config keeps working if the repo moves.
+const APP_ROOT = fileURLToPath(new URL("..", import.meta.url)).replace(/\/$/, "");
 
 const config = {
   appRoot: APP_ROOT,
   // Release simulator build (EAS `preview-simulator` profile — the local
   // Xcode 26.6 build fails on RN 0.76's vendored fmt).
-  appPath: "/Users/balwindersingh/crs-pulse/mobile/goldie/.builds/CRSPulse.app",
+  appPath: `${APP_ROOT}/goldie/.builds/CRSPulse.app`,
   bundleId: "com.crspulse.app",
 
   android: {
-    appPath: "/Users/balwindersingh/crs-pulse/mobile/goldie/.builds/crspulse-preview.apk",
+    appPath: `${APP_ROOT}/goldie/.builds/crspulse-preview.apk`,
     applicationId: "com.crspulse.app",
   },
 
