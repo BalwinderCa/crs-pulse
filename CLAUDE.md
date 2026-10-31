@@ -102,6 +102,16 @@ eas submit                                      # Submit to app stores
 - **Play preview video added (sent 2026-10-29):** https://www.youtube.com/watch?v=-R2q-HJ-dEk
   (Unlisted, personal "Balwinder Singh" channel), re-recorded from 1.0.15 with a 519 demo score.
   Sent in one review with the screenshot reorder and the fr-CA / fr-FR listings (6 changes).
+- **That review was rejected on 2026-10-31 (Misleading Claims policy, "Missing Source Link for
+  Government Information").** Only the fr-CA full description was cited, but the rejection sent
+  all 6 changes back. Any listing that shows government information needs working links to the
+  official sources and an easy-to-see "doesn't represent a government entity" disclaimer.
+  The same day, the fr-CA, fr-FR and en-GB full descriptions got a disclaimer at the top and an
+  official-sources section (7 links: IRCC rounds, CRS criteria, FSW, processing times, levels
+  plan, welcomebc.ca, saskatchewan.ca). The text is in `docs/STORE_LISTING_FR.md` and
+  `docs/PLAY_STORE_LISTING.md`. All 7 changes were resubmitted together on 2026-10-31. Keep
+  those source links in every listing language, and in the App Store text when it changes.
+  canada.ca blocks curl, so check its links from a browser.
 
 The history below records how both stores got there.
 

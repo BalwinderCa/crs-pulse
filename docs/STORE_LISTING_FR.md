@@ -35,9 +35,9 @@ Suivez chaque tirage Entrée express dès sa publication, calculez votre score C
 immigration,ircc,canada,calculateur,pnp,points,ptqf,nclc,rp,résidence,permanente,sirs,eoi,tef,tcf
 ```
 
-## Full description (2,111/4,000, both stores)
+## Full description (3,611/4,000, both stores)
 ```
-CRS Pulse est une application indépendante. Elle n’est ni affiliée à Immigration, Réfugiés et Citoyenneté Canada (IRCC) ou au gouvernement du Canada, ni approuvée ou commanditée par eux.
+AVIS : CRS Pulse est une application indépendante et non officielle. Elle ne représente aucun organisme gouvernemental. Elle n’est ni affiliée à Immigration, Réfugiés et Citoyenneté Canada (IRCC), au gouvernement du Canada ou à un gouvernement provincial, ni approuvée ou commanditée par eux. Les sources officielles de ses données sont indiquées ci-dessous.
 
 CRS Pulse accompagne les candidats à Entrée express du début à la fin. Calculez votre score, soyez averti dès qu’un nouveau tirage est annoncé et suivez votre demande de résidence permanente étape par étape, en toute confidentialité : vos données restent sur votre appareil.
 
@@ -68,6 +68,16 @@ CONFIDENTIALITÉ D’ABORD
 • Aucun compte, aucune inscription
 
 Appli offerte en français et en anglais, en thème clair ou sombre.
+
+SOURCES OFFICIELLES
+Les renseignements gouvernementaux affichés dans l’appli proviennent de ces pages publiques :
+• Rondes d’invitations Entrée express (IRCC) : https://www.canada.ca/fr/immigration-refugies-citoyennete/organisation/mandat/politiques-directives-operationnelles-ententes-accords/instructions-ministerielles/entree-express-rondes.html
+• Critères du Système de classement global (CRS) : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note/criteries-scg.html
+• Programme des travailleurs qualifiés (fédéral) : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/qui-presenter-demande/travailleurs-qualifies-federal.html
+• Délais de traitement d’IRCC : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-delais-traitement.html
+• Niveaux d’immigration du Canada : https://www.canada.ca/fr/immigration-refugies-citoyennete/organisation/systeme-immigration/niveaux.html
+• BC PNP (Colombie-Britannique, en anglais) : https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents
+• SINP (Saskatchewan, en anglais) : https://www.saskatchewan.ca/residents/moving-to-saskatchewan/live-in-saskatchewan/by-immigrating/saskatchewan-immigrant-nominee-program
 
 CRS Pulse fournit des estimations seulement. Les scores, les données de tirages et les délais de traitement sont donnés à titre indicatif et ne garantissent ni l’admissibilité, ni une invitation, ni un résultat. Vérifiez toujours auprès des sources officielles avant de prendre une décision.
 ```
