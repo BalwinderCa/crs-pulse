@@ -10,7 +10,8 @@
 //   /features     → feature tour
 //   /guides + /crs-points, /improve-crs-score, /language-tests-clb, /fsw-67-points,
 //     /express-entry-draws, /express-entry-process, /express-entry-changes-2026,
-//     /express-entry-2026-review → long-form guides (guides.mjs, review2026.mjs)
+//     /express-entry-2026-review, /express-entry-pool → long-form guides (guides.mjs,
+//     review2026.mjs, eePool.mjs)
 //   /about        → who publishes the site, data sources, contact
 //   /privacy      → rendered from docs/PRIVACY_POLICY.md
 //   /terms        → rendered from docs/TERMS_OF_USE.md

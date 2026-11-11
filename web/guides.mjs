@@ -1,6 +1,7 @@
 import { TESTS, CLB_LEVELS } from './clb.mjs';
 import { LANG, LOCALE, T } from './i18n.mjs';
 import { buildReview2026 } from './review2026.mjs';
+import { buildEePool } from './eePool.mjs';
 
 // Long-form guides and the About page. Each entry renders to an HTML page (through
 // build.mjs's guide shell) and doubles as that page's markdown twin.
@@ -1246,6 +1247,7 @@ ${changesFaqMd}
   });
 
   guides.push(buildReview2026({ IRCC_ROUNDS: LINKS.eeRounds }));
+  guides.push(buildEePool({ IRCC_ROUNDS: LINKS.eeRounds, IRCC_CHANGES: changesNews }));
 
   // =================================================================== hub
   const hub = {
