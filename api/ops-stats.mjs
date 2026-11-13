@@ -1,6 +1,7 @@
 // App stats for the ops dashboard, from PostHog HogQL (project 632382). Aggregates only:
 // no person IDs, IPs or cities ever leave this function. Days are UTC.
 import { isAuthed, privateHeaders } from './_ops-auth.mjs';
+import { admobStats, configured as admobConfigured } from './_admob.mjs';
 
 const PROJECT = '632382';
 const CACHE_MS = 10 * 60 * 1000;
@@ -116,8 +117,19 @@ export default async function handler(req, res) {
   if (cache && now - cache.at < CACHE_MS) return res.status(200).json(cache.data);
   try {
     const names = Object.keys(QUERIES);
-    const rows = await Promise.all(names.map((n) => hogql(key, QUERIES[n])));
-    const data = { generatedAt: new Date(now).toISOString(), ...shape(Object.fromEntries(names.map((n, i) => [n, rows[i]]))) };
+    // AdMob runs alongside PostHog; if it fails, the PostHog half still renders.
+    const [rows, admob] = await Promise.all([
+      Promise.all(names.map((n) => hogql(key, QUERIES[n]))),
+      admobConfigured()
+        ? admobStats().then((data) => ({ data }), (err) => { console.error(err); return { error: 'AdMob query failed' }; })
+        : Promise.resolve({ error: 'AdMob not connected' }),
+    ]);
+    const data = {
+      generatedAt: new Date(now).toISOString(),
+      ...shape(Object.fromEntries(names.map((n, i) => [n, rows[i]]))),
+      admob: admob.data ?? null,
+      admobError: admob.error ?? null,
+    };
     cache = { at: now, data };
     return res.status(200).json(data);
   } catch (err) {

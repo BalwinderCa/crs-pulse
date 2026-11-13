@@ -522,7 +522,14 @@ and rerunning the setup script (new `OPS_SESSION_KEY`) forgets every device at o
 `node scripts/ops-setup.mjs` run in your own terminal (it prints the authenticator key), then
 redeploy. The page is unlinked, out of the sitemap, `noindex`, and loads no analytics or ads.
 Stats are cached 10 min per warm function instance to stay under PostHog's query rate limit.
-AdMob figures aren't on it; that needs the AdMob API with OAuth.
+**AdMob earnings** (CRS Pulse apps only; the unrelated "Revenue Analytics for AdMob" app on the
+same account is shown separately) come from the AdMob API Network report (`api/_admob.mjs`), in
+AdMob's Pacific-time days. The API takes OAuth user credentials only, no service accounts: an
+OAuth client of type "Desktop app" in Google Cloud project `crspulseapp` (AdMob API enabled,
+consent screen *In production* so the refresh token doesn't expire after 7 days as it does in
+Testing), connected with `node scripts/admob-setup.mjs <client_secret.json>`, which stores
+`ADMOB_CLIENT_ID`, `ADMOB_CLIENT_SECRET`, `ADMOB_REFRESH_TOKEN` and `ADMOB_PUBLISHER_ID`. If
+AdMob fails, the PostHog half still renders.
 
 **AdSense on the website (review requested 2026-10-02).** crspulse.com was added, verified by
 meta tag and submitted for review that day, and the AdSense site status is "Getting ready". A

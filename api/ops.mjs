@@ -45,6 +45,7 @@ th{color:var(--ink3);font-weight:500}td.num,th.num{text-align:right;font-variant
 .err{color:var(--bad);font-size:13px;min-height:1.2em}
 .login label.check{display:flex;gap:8px;align-items:center;color:var(--ink2)}.login label.check input{width:16px;height:16px;padding:0}
 .actions{display:flex;gap:8px}
+h2.sec{font-size:16px;margin:28px 0 2px}.sec-sub{margin-bottom:12px}code{font-size:12px}
 `;
 
 const page = (nonce, body, script) => `<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -94,16 +95,16 @@ const cls=p>0?'up':p<0?'down':'';return '<span class="d"><span class="'+cls+'">'
 const kpi=(l,v,d)=>'<div class="card kpi"><div class="l">'+l+'</div><div class="v">'+v+'</div>'+(d||'')+'</div>';
 
 function ticks(max){const raw=max/4,m=Math.pow(10,Math.floor(Math.log10(raw||1))),s=[1,2,5,10].map(x=>x*m).find(x=>x>=raw)||m;
-const top=Math.max(s,Math.ceil(max/s)*s);const out=[];for(let v=0;v<=top;v+=s)out.push(v);return out}
+const top=Math.max(s,Math.ceil(max/s)*s);const out=[];for(let i=0;i*s<=top+1e-9;i++)out.push(i*s);return out}
 
 // Columns over days: one series, or two stacked with a 2px surface gap.
-function columns(rows,keys,labels){const W=400,H=210,L=30,B=22,T=8,pw=W-L-8,ph=H-B-T;
-const tot=rows.map(r=>keys.reduce((a,k)=>a+r[k],0)),tk=ticks(Math.max(1,...tot)),top=tk[tk.length-1],bw=pw/rows.length;
-let g=tk.map(v=>{const y=T+ph-v/top*ph;return '<line class="grid-l" x1="'+L+'" x2="'+(W-8)+'" y1="'+y+'" y2="'+y+'"/><text class="axis" x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end">'+v+'</text>'}).join('');
+function columns(rows,keys,labels,fv,wide){fv=fv||fmt;const W=wide?1000:400,H=wide?240:210,L=wide?44:30,B=22,T=8,pw=W-L-8,ph=H-B-T;
+const tot=rows.map(r=>keys.reduce((a,k)=>a+r[k],0)),tk=ticks(Math.max(fv===fmt?1:0.05,...tot)),top=tk[tk.length-1],bw=pw/rows.length;
+let g=tk.map(v=>{const y=T+ph-v/top*ph;return '<line class="grid-l" x1="'+L+'" x2="'+(W-8)+'" y1="'+y+'" y2="'+y+'"/><text class="axis" x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end">'+(fv===fmt?+v.toFixed(2):'$'+v.toFixed(2))+'</text>'}).join('');
 rows.forEach((r,i)=>{let base=T+ph;const x=L+i*bw+bw*.18,w=bw*.64;
 keys.forEach((k,j)=>{const h=r[k]/top*ph;if(h<=0)return;const gap=j>0?2:0;const y=base-h;
 g+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0,h-gap).toFixed(1)+'" rx="'+(j===keys.length-1||keys.length===1?3:0)+'" fill="var(--s'+(j+1)+')"/>';base=y;});
-g+='<rect x="'+(L+i*bw)+'" y="'+T+'" width="'+bw+'" height="'+ph+'" fill="transparent" data-tip="'+esc(day(r.d)+' · '+keys.map((k,j)=>labels[j]+' '+fmt(r[k])).join(' · '))+'"/>';
+g+='<rect x="'+(L+i*bw)+'" y="'+T+'" width="'+bw+'" height="'+ph+'" fill="transparent" data-tip="'+esc(day(r.d)+' · '+keys.map((k,j)=>labels[j]+' '+fv(r[k])).join(' · '))+'"/>';
 if(i%7===0)g+='<text class="axis" x="'+(L+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+day(r.d)+'</text>'});
 const leg=keys.length>1?'<div class="legend">'+labels.map((l,j)=>'<span><i style="background:var(--s'+(j+1)+')"></i>'+l+'</span>').join('')+'</div>':'';
 return leg+'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(labels.join(', '))+' per day">'+g+'</svg>'}
@@ -129,11 +130,29 @@ return '<div class="bars">'+top.map(i=>'<div class="k" title="'+esc(i.key)+'">'+
 const card=(t,s,body,cls)=>'<section class="card'+(cls?' '+cls:'')+'"><h2>'+t+'</h2><div class="sub">'+s+'</div>'+body+'</section>';
 const dur=s=>s<60?s+' s':Math.floor(s/60)+' min '+(s%60?s%60+' s':'');
 
+const money=(v,c)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:c||'CAD',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+function admobSection(a,err){
+if(!a)return '<h2 class="sec">AdMob revenue</h2><div class="card msg" style="margin-bottom:12px">'+esc(err||'AdMob not connected')+'. Run <code>node scripts/admob-setup.mjs</code> to connect it.</div>';
+const m=v=>money(v,a.currency);
+const label=k=>k.replace(/_/g,' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
+const tbl=(rows,first,lab)=>'<table><thead><tr><th>'+first+'</th><th class="num">Earnings</th><th class="num">Impr.</th><th class="num">eCPM</th><th class="num">Match</th><th class="num">Clicks</th></tr></thead><tbody>'+
+rows.map(r=>'<tr><td>'+esc(lab(r.key))+'</td><td class="num">'+m(r.earnings)+'</td><td class="num">'+fmt(r.impressions)+'</td><td class="num">'+m(r.ecpm)+'</td><td class="num">'+Math.round(r.matchRate*100)+'%</td><td class="num">'+fmt(r.clicks)+'</td></tr>').join('')+'</tbody></table>';
+const best=a.days.reduce((b,x)=>x.ios+x.android>b.ios+b.android?x:b,a.days[0]);
+const d7=a.prev7.earnings?delta(a.last7.earnings,a.prev7.earnings).replace('('+fmt(a.prev7.earnings)+')','('+m(a.prev7.earnings)+')'):'<span class="d">no prior week</span>';
+return '<h2 class="sec">AdMob revenue</h2><div class="sub sec-sub">CRS Pulse apps only, estimated, '+esc(a.currency)+'. Days follow AdMob\\'s time zone ('+esc(a.timeZone)+'), not UTC like the usage charts.</div>'+
+'<div class="kpis">'+kpi('Today so far',m(a.today.earnings),'<span class="d">'+fmt(a.today.impressions)+' impressions</span>')+
+kpi('Yesterday',m(a.yesterday.earnings),'<span class="d">'+fmt(a.yesterday.impressions)+' impressions · '+fmt(a.yesterday.clicks)+' clicks</span>')+
+kpi('Last 7 days',m(a.last7.earnings),d7)+
+kpi('This month so far',m(a.monthToDate.earnings),'<span class="d">eCPM '+m(a.monthToDate.ecpm)+'</span>')+
+kpi('Last month',m(a.lastMonth.earnings),'<span class="d">'+fmt(a.lastMonth.impressions)+' impressions</span>')+'</div>'+
+'<div class="grid">'+card('Earnings per day','Last 30 days by platform · best day '+day(best.d)+' ('+m(best.ios+best.android)+')',columns(a.days,['ios','android'],['iOS','Android'],m,true),'wide')+
+card('By ad format','Last 7 days',tbl(a.formats,'Format',label))+
+card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account earned '+m(a.other7.earnings)+', not counted above':''),tbl(a.apps,'App',k=>k))+'</div>';}
 function render(d){const s=d.summary,r=d.retention,ss=d.sessions,pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
-$('#meta').textContent='Last 7 days (UTC days, today partial). Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})+' · Excludes Apple review and Play pre-launch devices.';
+$('#meta').textContent='Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})+' · Excludes Apple review and Play pre-launch devices.';
 const evs='<table><thead><tr><th>Event</th><th class="num">Count</th><th class="num">Users</th></tr></thead><tbody>'+
 d.events.map(e=>'<tr><td>'+esc(e.key)+'</td><td class="num">'+fmt(e.n)+'</td><td class="num">'+fmt(e.users)+'</td></tr>').join('')+'</tbody></table>';
-$('#app').innerHTML='<div class="kpis">'+
+$('#app').innerHTML='<h2 class="sec" style="margin-top:0">App usage</h2><div class="sub sec-sub">PostHog, UTC days.</div><div class="kpis">'+
 kpi('Active users',fmt(s.users_7),delta(s.users_7,s.users_prev))+
 kpi('App opens',fmt(s.opens_7),delta(s.opens_7,s.opens_prev))+
 kpi('Installs',fmt(s.installs_7),delta(s.installs_7,s.installs_prev))+
@@ -144,6 +163,7 @@ card('Installs per day','First launch after install',columns(d.daily,['installs'
 card('Ads loaded per day','ad_shown fires on load, not on an impression',columns(d.daily,['ads_native','ads_app_open'],['Native','App open']))+
 card('Milestones added per day','The action most tied to coming back',columns(d.daily,['milestones'],['Milestones']))+
 card('Pushes opened per day','Taps on any push; spikes follow a new-draw push',columns(d.daily,['push_opened'],['Push opens']))+'</div>'+
+admobSection(d.admob,d.admobError)+'<h2 class="sec">Engagement</h2><div class="sub sec-sub">PostHog, last 7 days.</div>'+
 '<div class="grid">'+card('Screens','Users who viewed each screen, 7 days',hbars(d.screen,12,'users'))+
 card('Custom events','7 days',evs)+'</div>'+
 '<div class="grid">'+card('Countries','Users, 7 days',hbars(d.country,10,'users'))+
