@@ -100,3 +100,6 @@ mobile/Crs\ Pulse
 .claude/
 .vercel
 .env*
+
+# Google OAuth client files (scripts/admob-setup.mjs input). Never commit.
+client_secret*.json
