@@ -2,7 +2,7 @@
 // signed in. The shell holds no data; its script fetches /api/ops-stats, which checks the
 // session cookie itself. Not linked from the site, not in the sitemap, noindex.
 import { randomBytes } from 'node:crypto';
-import { isAuthed, privateHeaders } from './_ops-auth.mjs';
+import { isAuthed, isTrustedDevice, privateHeaders } from './_ops-auth.mjs';
 
 const CSS = `
 :root{color-scheme:light;--bg:#f4f4f2;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--ink3:#7a7975;--line:#e4e3df;
@@ -43,6 +43,8 @@ th{color:var(--ink3);font-weight:500}td.num,th.num{text-align:right;font-variant
 .login input{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .login button{background:var(--ink);color:var(--surface);border-color:var(--ink);padding:10px}
 .err{color:var(--bad);font-size:13px;min-height:1.2em}
+.login label.check{display:flex;gap:8px;align-items:center;color:var(--ink2)}.login label.check input{width:16px;height:16px;padding:0}
+.actions{display:flex;gap:8px}
 `;
 
 const page = (nonce, body, script) => `<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -54,17 +56,27 @@ const LOGIN_JS = `
 const f=document.getElementById('f'),e=document.getElementById('e'),b=f.querySelector('button');
 f.addEventListener('submit',async ev=>{ev.preventDefault();e.textContent='';b.disabled=true;b.textContent='Checking…';
 try{const r=await fetch('/api/ops-login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',
-body:JSON.stringify({passphrase:f.passphrase.value,code:f.code.value})});
-if(r.ok){location.reload();return}e.textContent=r.status===401?'Passphrase or code is wrong.':'Login is not available right now.';}
+body:JSON.stringify({passphrase:f.passphrase?f.passphrase.value:undefined,code:f.code.value,remember:!!(f.remember&&f.remember.checked)})});
+if(r.ok){location.reload();return}const j=await r.json().catch(()=>({}));
+if(r.status===401&&j.passphraseNeeded&&!f.passphrase){location.reload();return}
+e.textContent=r.status===401?(f.passphrase?'Passphrase or code is wrong.':'That code is wrong.'):'Login is not available right now.';}
 catch{e.textContent='Network error.'}f.code.value='';b.disabled=false;b.textContent='Sign in';f.code.focus();});`;
 
-const LOGIN = `<main class="login"><h1>Pulse HQ</h1><div class="sub">CRS Pulse app stats. Private.</div>
+const CODE_FIELD = (autofocus) => `<label>Authenticator code<input name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code" required${autofocus ? ' autofocus' : ''}></label>`;
+
+// Full login: passphrase + code, with the option to remember this browser for 90 days.
+const LOGIN_FULL = `<main class="login"><h1>Pulse HQ</h1><div class="sub">CRS Pulse app stats. Private.</div>
 <form id="f" autocomplete="on"><label>Passphrase<input name="passphrase" type="password" autocomplete="current-password" required autofocus></label>
-<label>Authenticator code<input name="code" inputmode="numeric" pattern="[0-9 ]{6,7}" maxlength="7" autocomplete="one-time-code" required></label>
+${CODE_FIELD(false)}<label class="check"><input type="checkbox" name="remember" checked> Remember this device for 90 days (code only next time)</label>
+<div class="err" id="e" role="alert"></div><button type="submit">Sign in</button></form></main>`;
+
+// Remembered device: the code alone.
+const LOGIN_CODE = `<main class="login"><h1>Pulse HQ</h1><div class="sub">This device is remembered. Enter your authenticator code.</div>
+<form id="f" autocomplete="on">${CODE_FIELD(true)}
 <div class="err" id="e" role="alert"></div><button type="submit">Sign in</button></form></main>`;
 
 const DASH = `<div class="wrap"><header><div><h1>Pulse HQ</h1><div class="sub" id="meta">Loading PostHog stats…</div></div>
-<div><button id="out">Sign out</button></div></header><main id="app"><div class="msg">Loading…</div></main></div><div id="tip" role="tooltip"></div>`;
+<div class="actions"><button id="forget" title="Ask for the passphrase again next time on this browser">Forget this device</button><button id="out">Sign out</button></div></header><main id="app"><div class="msg">Loading…</div></main></div><div id="tip" role="tooltip"></div>`;
 
 const DASH_JS = `
 const $=s=>document.querySelector(s),fmt=n=>Number(n).toLocaleString('en-CA');
@@ -73,7 +85,8 @@ const tip=$('#tip');
 document.addEventListener('mousemove',ev=>{const t=ev.target.closest('[data-tip]');if(!t){tip.style.opacity=0;return}
 tip.textContent=t.dataset.tip;tip.style.opacity=1;const w=tip.offsetWidth;
 tip.style.left=Math.min(innerWidth-w-8,ev.clientX+12)+'px';tip.style.top=(ev.clientY-34)+'px';});
-$('#out').onclick=async()=>{await fetch('/api/ops-logout',{method:'POST',credentials:'same-origin'});location.reload()};
+const out=forget=>fetch('/api/ops-logout',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({forget})}).then(()=>location.reload());
+$('#out').onclick=()=>out(false);$('#forget').onclick=()=>out(true);
 const day=d=>new Date(d+'T00:00:00Z').toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:'UTC'});
 
 function delta(cur,prev){if(!prev)return'<span class="d">no prior week</span>';const p=Math.round((cur-prev)/prev*100);
@@ -154,5 +167,6 @@ export default function handler(req, res) {
   );
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const authed = isAuthed(req);
-  res.status(200).send(authed ? page(nonce, DASH, DASH_JS) : page(nonce, LOGIN, LOGIN_JS));
+  const login = isTrustedDevice(req) ? LOGIN_CODE : LOGIN_FULL;
+  res.status(200).send(authed ? page(nonce, DASH, DASH_JS) : page(nonce, login, LOGIN_JS));
 }

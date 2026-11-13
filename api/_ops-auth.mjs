@@ -1,6 +1,6 @@
-// Login for the private ops dashboard (/pulse-hq). Two factors, both checked on every
-// login: a passphrase (scrypt hash in OPS_PASS_HASH) and a Google Authenticator code
-// (TOTP, RFC 6238: SHA-1, 6 digits, 30 s, ±1 step, secret in OPS_TOTP_SECRET).
+// Login for the private ops dashboard (/pulse-hq). Two factors: a passphrase (scrypt hash
+// in OPS_PASS_HASH) and a Google Authenticator code (TOTP, RFC 6238: SHA-1, 6 digits, 30 s,
+// ±1 step, secret in OPS_TOTP_SECRET). A remembered device (DEVICE_COOKIE) needs only the code.
 // The passphrase is what makes a stateless function safe: a 6-digit code alone can be
 // brute-forced in about an hour of scripted requests, because nothing here keeps a counter.
 // A good login gets an HMAC-signed session cookie (OPS_SESSION_KEY) valid for 12 hours.
@@ -8,6 +8,12 @@ import { createHmac, scryptSync, timingSafeEqual } from 'node:crypto';
 
 export const COOKIE = '__Host-ops';
 export const SESSION_MS = 12 * 60 * 60 * 1000;
+// "Remember this device": after one full login, this browser may sign in with the code
+// alone for 90 days. A stranger guessing codes still has no device cookie, so they still
+// need the passphrase. Signed with OPS_SESSION_KEY, so rerunning scripts/ops-setup.mjs
+// (which replaces that key) forgets every device at once.
+export const DEVICE_COOKIE = '__Host-ops-device';
+export const DEVICE_MS = 90 * 24 * 60 * 60 * 1000;
 
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
 
@@ -68,21 +74,28 @@ export function verifyPassphrase(pass, stored) {
 
 const sign = (key, payload) => createHmac('sha256', key).update(payload).digest('base64url');
 
-export function makeSession(key, nowMs = Date.now()) {
-  const payload = `v1.${nowMs + SESSION_MS}`;
+// Token: `<kind>.<expiry ms>.<HMAC of "<kind>.<expiry>">`. The kind is signed too, so a
+// session token can't be replayed as a device token or the other way round.
+export function makeToken(key, kind, ttlMs, nowMs = Date.now()) {
+  const payload = `${kind}.${nowMs + ttlMs}`;
   return `${payload}.${sign(key, payload)}`;
 }
 
-export function validSession(token, key, nowMs = Date.now()) {
+export function validToken(token, key, kind, nowMs = Date.now()) {
   if (!token || !key) return false;
   const parts = token.split('.');
-  if (parts.length !== 3 || parts[0] !== 'v1') return false;
+  if (parts.length !== 3 || parts[0] !== kind) return false;
   const payload = `${parts[0]}.${parts[1]}`;
   const want = Buffer.from(sign(key, payload));
   const got = Buffer.from(parts[2]);
   if (want.length !== got.length || !timingSafeEqual(want, got)) return false;
   return Number(parts[1]) > nowMs;
 }
+
+export const makeSession = (key, nowMs) => makeToken(key, 'v1', SESSION_MS, nowMs);
+export const validSession = (token, key, nowMs) => validToken(token, key, 'v1', nowMs);
+export const makeDevice = (key, nowMs) => makeToken(key, 'd1', DEVICE_MS, nowMs);
+export const validDevice = (token, key, nowMs) => validToken(token, key, 'd1', nowMs);
 
 export function readCookie(header, name) {
   for (const part of String(header ?? '').split(';')) {
@@ -94,6 +107,11 @@ export function readCookie(header, name) {
 
 export const isAuthed = (req) =>
   validSession(readCookie(req.headers.cookie, COOKIE), process.env.OPS_SESSION_KEY);
+export const isTrustedDevice = (req) =>
+  validDevice(readCookie(req.headers.cookie, DEVICE_COOKIE), process.env.OPS_SESSION_KEY);
+
+export const cookie = (name, value, maxAgeMs) =>
+  `${name}=${value}; Path=/; Max-Age=${Math.floor(maxAgeMs / 1000)}; HttpOnly; Secure; SameSite=Strict`;
 
 /** Every ops response is private, uncached and kept out of search. */
 export function privateHeaders(res) {

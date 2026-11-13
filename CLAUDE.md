@@ -514,7 +514,10 @@ KPIs vs the prior week, 30-day daily charts, screens, events, countries, version
 served by zero-dependency Vercel functions in the root `api/` (`.vercelignore` allowlists it;
 `vercel.json` rewrites `/pulse-hq` → `/api/ops`). Login needs a passphrase **and** a Google
 Authenticator code every time; the passphrase is what stops brute force, because the functions
-keep no attempt counter. Sessions last 12 h. Env vars (Production): `OPS_PASS_HASH`,
+keep no attempt counter. Sessions last 12 h. "Remember this device" (ticked by default)
+sets a signed 90-day device cookie after a full login, and that browser then asks for the code
+only; a stranger without the cookie still needs the passphrase. "Forget this device" clears it,
+and rerunning the setup script (new `OPS_SESSION_KEY`) forgets every device at once. Env vars (Production): `OPS_PASS_HASH`,
 `OPS_TOTP_SECRET`, `OPS_SESSION_KEY`, `POSTHOG_PERSONAL_API_KEY`. Set or rotate them with
 `node scripts/ops-setup.mjs` run in your own terminal (it prints the authenticator key), then
 redeploy. The page is unlinked, out of the sitemap, `noindex`, and loads no analytics or ads.
