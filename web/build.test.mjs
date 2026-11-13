@@ -147,7 +147,12 @@ test('404 page is a recoverable site map, not a dead end', () => {
 // never fires for a path that exists on disk, and a redirect would pre-empt the
 // middleware and give up the same-URL property.
 test('vercel.json leaves negotiation to the middleware', () => {
-  assert.ok(!vercel.rewrites, 'rewrites never fire for paths that exist on disk');
+  // The only rewrites allowed are plain paths into serverless functions (the private
+  // /pulse-hq dashboard); none may match on headers or point at a static page.
+  for (const r of vercel.rewrites || []) {
+    assert.ok(r.destination.startsWith('/api/'), `rewrite ${r.source} must target a function`);
+    assert.ok(!r.has && !r.missing, `rewrite ${r.source} must not negotiate on headers`);
+  }
   const stale = (vercel.redirects || []).filter(acceptRule);
   assert.deepEqual(stale, [], 'Accept-based redirects would pre-empt the middleware');
 });

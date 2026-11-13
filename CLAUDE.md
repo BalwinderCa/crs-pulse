@@ -509,6 +509,18 @@ Optional: `EXPO_PUBLIC_POSTHOG_KEY`/`_HOST` (analytics; off when unset and in de
 with `mask_all_text`, so calculator results never land in click events. It also loads Vercel Web
 Analytics. Both are disclosed in the privacy policy's Website section.
 
+**Private ops dashboard: `crspulse.com/pulse-hq`** (2026-11-13). PostHog app stats (7-day
+KPIs vs the prior week, 30-day daily charts, screens, events, countries, versions, retention),
+served by zero-dependency Vercel functions in the root `api/` (`.vercelignore` allowlists it;
+`vercel.json` rewrites `/pulse-hq` → `/api/ops`). Login needs a passphrase **and** a Google
+Authenticator code every time; the passphrase is what stops brute force, because the functions
+keep no attempt counter. Sessions last 12 h. Env vars (Production): `OPS_PASS_HASH`,
+`OPS_TOTP_SECRET`, `OPS_SESSION_KEY`, `POSTHOG_PERSONAL_API_KEY`. Set or rotate them with
+`node scripts/ops-setup.mjs` run in your own terminal (it prints the authenticator key), then
+redeploy. The page is unlinked, out of the sitemap, `noindex`, and loads no analytics or ads.
+Stats are cached 10 min per warm function instance to stay under PostHog's query rate limit.
+AdMob figures aren't on it; that needs the AdMob API with OAuth.
+
 **AdSense on the website (review requested 2026-10-02).** crspulse.com was added, verified by
 meta tag and submitted for review that day, and the AdSense site status is "Getting ready". A
 Google CMP consent message with three choices (consent / do not consent / manage options) was

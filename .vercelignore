@@ -8,6 +8,8 @@
 !/docs
 !/data
 !/middleware.js
+# Serverless functions for the private ops dashboard (/pulse-hq).
+!/api
 !/vercel.json
 # The two app data files the site's checklists and processing-times pages import.
 !/mobile

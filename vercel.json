@@ -59,5 +59,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/pulse-hq",
+      "destination": "/api/ops"
+    }
   ]
 }
