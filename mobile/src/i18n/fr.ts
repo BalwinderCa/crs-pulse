@@ -148,9 +148,7 @@ const fr: TranslationKeys = {
     // [REVIEW] rewarded-ad offer in Settings
     adFreeTitle: '3 jours sans publicité',
     adFreeOffer: 'Regardez une courte vidéo publicitaire et toutes les autres publicités de CRS Pulse sont désactivées pendant 3 jours.',
-    adFreeTag: 'OFFRE',
     adFreeWatch: 'Regarder une courte vidéo',
-    adFreeOptional: 'Facultatif. Ne pas la regarder ne change rien.',
     adFreeLoading: 'Chargement…',
     adFreeActive: 'Publicités désactivées',
     adFreeActiveUntil: 'Aucune publicité jusqu’au {{date}}. Vous pourrez en regarder une autre ensuite.',

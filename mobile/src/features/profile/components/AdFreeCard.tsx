@@ -7,7 +7,7 @@ import { MONETIZATION_ENABLED } from '@/constants';
 import { Button } from '@/components/common/Button';
 import { rewardedAdAvailable, showRewardedAd } from '@/services/adsService';
 import { isAdFree, useAdFreeStore } from '@/store/adFreeStore';
-import { borderRadius, palette, spacing, typography } from '@/theme';
+import { borderRadius, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 
@@ -50,24 +50,12 @@ export function AdFreeCard() {
   };
 
   return (
-    <View
-      style={[s.offer, { backgroundColor: accent + '14', borderColor: accent + '55' }]}
-      accessibilityRole="summary"
-    >
+    <View style={[s.card, { backgroundColor: accent + '14', borderColor: accent + '55' }]}>
       <View style={s.head}>
-        <View style={[s.iconCircle, { backgroundColor: accent }]}>
-          <Ionicons name={active ? 'checkmark' : 'play'} size={22} color={palette.white} />
-        </View>
-        <View style={s.headText}>
-          {!active && (
-            <View style={[s.tag, { backgroundColor: accent + '26' }]}>
-              <Text style={[s.tagText, { color: accent }]}>{t('profile.adFreeTag')}</Text>
-            </View>
-          )}
-          <Text style={[s.title, { color: colors.textPrimary }]}>
-            {active ? t('profile.adFreeActive') : t('profile.adFreeTitle')}
-          </Text>
-        </View>
+        <Ionicons name={active ? 'checkmark-circle' : 'play-circle-outline'} size={20} color={accent} />
+        <Text style={[s.title, { color: colors.textPrimary }]}>
+          {active ? t('profile.adFreeActive') : t('profile.adFreeTitle')}
+        </Text>
       </View>
       <Text style={[s.hint, { color: colors.textSecondary }]}>
         {active
@@ -75,30 +63,21 @@ export function AdFreeCard() {
           : t('profile.adFreeOffer')}
       </Text>
       {!active && (
-        <>
-          <Button ph-label="profile-ad-free-watch"
-            title={busy ? t('profile.adFreeLoading') : t('profile.adFreeWatch')}
-            variant="primary"
-            icon={<Ionicons name="play-circle" size={18} color={palette.white} />}
-            loading={busy}
-            onPress={() => { void watch(); }}
-            fullWidth
-          />
-          <Text style={[s.note, { color: colors.textMuted }]}>{t('profile.adFreeOptional')}</Text>
-        </>
+        <Button ph-label="profile-ad-free-watch"
+          title={busy ? t('profile.adFreeLoading') : t('profile.adFreeWatch')}
+          variant="primary"
+          loading={busy}
+          onPress={() => { void watch(); }}
+          fullWidth
+        />
       )}
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  offer:      { borderWidth: 1, borderRadius: borderRadius.lg, padding: spacing.base, gap: spacing.md, marginBottom: spacing.sm },
-  head:       { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  iconCircle: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  headText:   { flex: 1, gap: 4, alignItems: 'flex-start' },
-  tag:        { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
-  tagText:    { fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8 },
-  title:      { fontSize: typography.xl, fontWeight: typography.black, letterSpacing: -0.3 },
-  hint:       { fontSize: typography.sm, lineHeight: 20 },
-  note:       { fontSize: typography.xs, textAlign: 'center' },
+  card:  { borderWidth: 1, borderRadius: borderRadius.md, padding: spacing.base, gap: spacing.sm, marginBottom: spacing.sm },
+  head:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  title: { fontSize: typography.base, fontWeight: typography.bold },
+  hint:  { fontSize: typography.sm, lineHeight: 20 },
 });

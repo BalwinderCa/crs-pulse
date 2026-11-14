@@ -138,9 +138,6 @@ export default function ProfileScreen() {
 
   return (
     <ScreenWrapper scrollable keyboardAvoiding header={<AppHeader title={t('profile.title')} />}>
-      {/* ── Offer: 3 days without ads (rewarded ad; hidden when not offered) ── */}
-      <AdFreeCard />
-
       {/* ── CRS Score Hero ── */}
       <Card style={styles.section}>
         <Text style={styles.sectionTitle}>{t('profile.crsScore')}</Text>
@@ -194,6 +191,9 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
       </Card>
+
+      {/* ── 3 days without ads (rewarded ad; hidden when not offered) ── */}
+      <AdFreeCard />
 
       {/* ── Appearance ── */}
       <Card style={styles.section}>
