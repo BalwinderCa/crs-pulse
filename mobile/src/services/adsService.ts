@@ -1,6 +1,6 @@
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ADMOB_APP_OPEN_AD_UNIT, STORAGE_KEYS } from '@/constants';
+import { ADMOB_APP_OPEN_AD_UNIT, ADMOB_REWARDED_AD_UNIT, STORAGE_KEYS } from '@/constants';
 import { track } from '@/services/analyticsService';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler.
@@ -16,7 +16,9 @@ interface AdsModule {
   default: () => { initialize: () => Promise<unknown> };
   AppOpenAd?: { createForAdRequest: (unitId: string) => AppOpenAdHandle };
   AdEventType?: { LOADED: string; ERROR: string; CLOSED: string };
-  TestIds?: { APP_OPEN?: string };
+  RewardedAd?: { createForAdRequest: (unitId: string) => AppOpenAdHandle };
+  RewardedAdEventType?: { LOADED: string; EARNED_REWARD: string };
+  TestIds?: { APP_OPEN?: string; REWARDED?: string };
 }
 
 /**
@@ -245,5 +247,85 @@ export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
         ad.load();
       })
       .catch(() => finish(false));
+  });
+}
+
+// ─── Rewarded ad (Settings: "3 days without ads") ───────────────────────────
+
+/** Load cap for the rewarded ad: past this the user is told none is available. */
+const REWARDED_LOAD_TIMEOUT_MS = 15_000;
+
+function rewardedUnitId(mod: AdsModule): string {
+  const live = Platform.OS === 'ios' ? ADMOB_REWARDED_AD_UNIT.ios : ADMOB_REWARDED_AD_UNIT.android;
+  // Debug builds serve Google's test unit, but only where a live unit is set,
+  // so an unconfigured platform hides the offer in dev exactly as in release.
+  if (!live) return '';
+  return __DEV__ ? mod.TestIds?.REWARDED ?? '' : live;
+}
+
+/** True when this build can offer the rewarded ad at all (module + unit id). */
+export function rewardedAdAvailable(): boolean {
+  const mod = loadAdsModule();
+  return !!(mod?.RewardedAd && mod.RewardedAdEventType && mod.AdEventType && rewardedUnitId(mod));
+}
+
+export type RewardedResult = 'earned' | 'dismissed' | 'unavailable';
+
+/**
+ * Loads and shows one rewarded ad, resolving once it is over:
+ * `earned` (watched to the end, so the reward is due), `dismissed` (closed
+ * early) or `unavailable` (no module, no unit, no fill, error or slow load).
+ * Never rejects, and resolves exactly once.
+ */
+export function showRewardedAd(): Promise<RewardedResult> {
+  const mod = loadAdsModule();
+  const unitId = mod ? rewardedUnitId(mod) : '';
+  if (!mod?.RewardedAd || !mod.RewardedAdEventType || !mod.AdEventType || !unitId) {
+    track('rewarded_ad', { result: 'unavailable' });
+    return Promise.resolve('unavailable');
+  }
+  const { AdEventType, RewardedAdEventType } = mod;
+
+  return new Promise<RewardedResult>((resolve) => {
+    let settled = false;
+    let earned = false;
+    let shown = false;
+    const unsubscribe: (() => void)[] = [];
+    const finish = (result: RewardedResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      unsubscribe.splice(0).forEach((off) => off());
+      track('rewarded_ad', { result });
+      resolve(result);
+    };
+    // Only the load is capped; once the ad is on screen, CLOSED ends it.
+    const timer = setTimeout(() => { if (!shown) finish('unavailable'); }, REWARDED_LOAD_TIMEOUT_MS);
+
+    initSdk()
+      .then(() => {
+        if (settled) return;
+        const ad = mod.RewardedAd!.createForAdRequest(unitId);
+        unsubscribe.push(
+          ad.addAdEventListener(RewardedAdEventType.LOADED, () => {
+            if (settled) return;
+            shown = true;
+            clearTimeout(timer);
+            try {
+              ad.show();
+              track('ad_shown', { format: 'rewarded' });
+            } catch {
+              finish('unavailable');
+            }
+          }),
+          ad.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+            earned = true;
+          }),
+          ad.addAdEventListener(AdEventType.ERROR, () => finish(earned ? 'earned' : 'unavailable')),
+          ad.addAdEventListener(AdEventType.CLOSED, () => finish(earned ? 'earned' : 'dismissed')),
+        );
+        ad.load();
+      })
+      .catch(() => finish('unavailable'));
   });
 }

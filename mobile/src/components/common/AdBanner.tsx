@@ -10,6 +10,7 @@ import {
 import { borderRadius, palette, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { track } from '@/services/analyticsService';
+import { isAdFree, useAdFreeStore } from '@/store/adFreeStore';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler
 // (the project's tsconfig pulls no node types).
@@ -111,12 +112,14 @@ function useSeenOnScreen(enabled: boolean): [React.RefObject<View | null>, boole
  * A single AdMob ad slot — a native ad rendered in our own card when a native
  * ad unit is configured for the platform, otherwise an anchored-adaptive
  * banner. The ad is requested only once the slot reaches the screen. Renders
- * nothing when monetization is off, when the native module is unavailable, or
- * when the ad fails to fill.
+ * nothing when monetization is off, when the native module is unavailable,
+ * when the ad fails to fill, or while the user has earned ad-free time.
  */
 export function AdBanner() {
   const [failed, setFailed] = useState(false);
-  const enabled = MONETIZATION_ENABLED && !!ads && !failed;
+  // Off while a rewarded ad's "3 days without ads" reward is running.
+  const adFree = useAdFreeStore((st) => isAdFree(st.until));
+  const enabled = MONETIZATION_ENABLED && !!ads && !failed && !adFree;
   const [ref, seen] = useSeenOnScreen(enabled);
 
   if (!enabled || !ads) return null;

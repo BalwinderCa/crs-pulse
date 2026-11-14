@@ -22,6 +22,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { summarizeProfile } from '../utils/profileSummary';
+import { AdFreeCard } from '../components/AdFreeCard';
 
 // Accent choices. Each keeps roughly the default red's contrast on both the
 // light and dark card surfaces, since the accent is used for text as well as fills.
@@ -190,6 +191,9 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
         </TouchableOpacity>
       </Card>
+
+      {/* ── 3 days without ads (rewarded ad; hidden when not offered) ── */}
+      <AdFreeCard />
 
       {/* ── Appearance ── */}
       <Card style={styles.section}>

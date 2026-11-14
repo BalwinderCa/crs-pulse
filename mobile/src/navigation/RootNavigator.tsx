@@ -24,6 +24,7 @@ import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScr
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
 import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService';
+import { useAdFreeStore } from '@/store/adFreeStore';
 import { trackScreen } from '@/services/analyticsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
@@ -105,7 +106,9 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!ready) return;
     void (async () => {
-      if (MONETIZATION_ENABLED && (await takeAppOpenAdTurn())) {
+      // An earned ad-free period skips the launch ad without using up a turn.
+      const adFree = await useAdFreeStore.getState().load();
+      if (MONETIZATION_ENABLED && !adFree && (await takeAppOpenAdTurn())) {
         await showAppOpenAd(SPLASH_AD_TIMEOUT_MS);
       }
       await ExpoSplash.hideAsync().catch(() => {});

@@ -145,6 +145,16 @@ const fr: TranslationKeys = {
     resetSuccess: 'Toutes les données ont été réinitialisées.',
     resetFailed: 'Échec de la réinitialisation',
     resetFailedMsg: 'Veuillez réessayer.',
+    // [REVIEW] rewarded-ad offer in Settings
+    adFreeTitle: '3 jours sans publicité',
+    adFreeOffer: 'Regardez une courte vidéo publicitaire et toutes les autres publicités de CRS Pulse sont désactivées pendant 3 jours.',
+    adFreeWatch: 'Regarder la vidéo',
+    adFreeLoading: 'Chargement…',
+    adFreeActive: 'Publicités désactivées',
+    adFreeActiveUntil: 'Aucune publicité jusqu’au {{date}}. Vous pourrez en regarder une autre ensuite.',
+    adFreeEarned: 'Publicités désactivées jusqu’au {{date}}',
+    adFreeDismissed: 'La vidéo a été fermée avant la fin : les publicités restent actives.',
+    adFreeUnavailable: 'Aucune publicité disponible pour le moment. Réessayez plus tard.',
     // Marital labels
     single: 'Célibataire',
     married: 'Marié(e) / UDC',

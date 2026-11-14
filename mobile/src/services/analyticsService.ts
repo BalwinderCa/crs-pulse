@@ -67,7 +67,12 @@ type EventProperties = {
   milestone_added: undefined;
   checklist_item_checked: undefined;
   /** `placement` is set for app open ads only: at the splash, or held over to a resume. */
-  ad_shown: { format: 'banner' | 'native' | 'app_open'; placement?: 'launch' | 'resume' };
+  ad_shown: { format: 'banner' | 'native' | 'app_open' | 'rewarded'; placement?: 'launch' | 'resume' };
+  /**
+   * The Settings "3 days without ads" offer ran: `earned` (watched to the end,
+   * ads now off), `dismissed` (closed early) or `unavailable` (no fill/error).
+   */
+  rewarded_ad: { result: 'earned' | 'dismissed' | 'unavailable' };
   /** An app open ad that loaded after the splash cap; `load_ms` is its load time. */
   ad_late: { format: 'app_open'; load_ms: number };
   /** A tapped push. `draw_number` (public IRCC data) is set for new_draw pushes only. */

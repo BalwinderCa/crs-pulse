@@ -95,6 +95,8 @@ export const STORAGE_KEYS = {
   REVIEW_PROMPTED: 'crs_pulse.review_prompted',
   REVIEW_MOMENTS: 'crs_pulse.review_moments',
   APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
+  /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
+  AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
 } as const;
 
 /**
@@ -134,6 +136,20 @@ export const ADMOB_NATIVE_AD_UNIT = {
   android: process.env.EXPO_PUBLIC_ADMOB_NATIVE_ANDROID || '',
   ios: process.env.EXPO_PUBLIC_ADMOB_NATIVE_IOS || '',
 } as const;
+
+/**
+ * AdMob *rewarded* ad-unit IDs, for the opt-in "3 days without ads" offer in
+ * Settings. AdMob requires a real in-app reward for a rewarded ad (a plain
+ * "watch to support us" button is against its policy), so watching one turns
+ * every other ad off for AD_FREE_MS. Empty = the offer is hidden.
+ */
+export const ADMOB_REWARDED_AD_UNIT = {
+  android: process.env.EXPO_PUBLIC_ADMOB_REWARDED_ANDROID || '',
+  ios: process.env.EXPO_PUBLIC_ADMOB_REWARDED_IOS || '',
+} as const;
+
+/** How long one watched rewarded ad keeps the app ad-free. */
+export const AD_FREE_MS = 3 * 24 * 60 * 60 * 1000;
 
 /**
  * AdMob *app open* ad-unit IDs — the ONLY ad format Google permits on a launch

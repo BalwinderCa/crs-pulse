@@ -553,6 +553,16 @@ privacy policy's "Google AdSense (website ads)" section promises it.
 
 ### Monetisation: ads only, no IAP
 
+**Rewarded ad in Settings: "3 days without ads"** (`AdFreeCard`, `showRewardedAd()`, `adFreeStore`).
+Watching one rewarded video to the end turns every other ad off for 3 days (`AD_FREE_MS`): list
+slots render nothing and the launch ad is skipped without using a turn. It doesn't stack; Settings
+offers another only after the period ends. **AdMob's rewarded-ad policy forbids a plain "watch to
+support us" button** (its own example of misleading copy): there must be a real in-app reward, stated
+before the ad, and declining must cost nothing, so keep the copy to describing the reward. The card
+is hidden unless `EXPO_PUBLIC_ADMOB_REWARDED_IOS`/`_ANDROID` are set (eas.json production env).
+`rewarded_ad` (`result`: `earned`, `dismissed`, `unavailable`) and `ad_shown` with format `rewarded`
+measure it. "Reset All Data" keeps an earned period, like the launch counter.
+
 **The app has no in-app purchase.** Everything, including the analytics "Your Plan" tab, is free; revenue comes from AdMob alone. `react-native-iap` was removed on 2026-09-08 because Google Play began rejecting uploads that bundle Play Billing < 8.0.0, and react-native-iap 12.x pins 7.0.0. Moving to a Billing-8 release (14.0.0+) would have required `react-native-nitro-modules`, Kotlin 2.1 and compileSdk 36 — an Expo SDK upgrade — so with the purchase never having been sold (Android had 0 installs, and the product was Play-only so it never loaded on iOS) the purchase path was dropped instead.
 
 Removed with it: `premiumStore`, `iapService`, the `paywall` feature, `UpgradeBanner`, the header PRO badge, and the locked "Your Plan" preview. Ads never gated on entitlement — `AdBanner` checks `MONETIZATION_ENABLED` and ad availability only — so ad behaviour is unchanged. **Do not reintroduce `react-native-iap` without first checking the Play Billing minimum**, which Google raises periodically.
