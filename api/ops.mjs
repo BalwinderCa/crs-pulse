@@ -13,18 +13,33 @@ const CSS = `
 --s1:#3987e5;--s2:#d95926;--good:#3fbf6f;--bad:#e66767}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1120px;margin:0 auto;padding:24px 16px 48px}
-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.shell{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:20px;padding:24px 14px;border-right:1px solid var(--line);background:var(--surface)}
+.brand{font-weight:650;font-size:17px;padding:0 10px;display:flex;flex-direction:column}.brand span{font-weight:400;font-size:12px;color:var(--ink3)}
+.side nav{display:flex;flex-direction:column;gap:4px}
+.side nav a{display:grid;grid-template-columns:10px 1fr;column-gap:10px;align-items:center;padding:9px 10px;border-radius:8px;color:var(--ink2);text-decoration:none;font-size:14px}
+.side nav a small{grid-column:2;font-size:11px;color:var(--ink3)}
+.side nav a:hover{background:var(--bg)}.side nav a[aria-current="page"]{background:var(--bg);color:var(--ink);font-weight:600}
+.side nav a:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.dot{width:10px;height:10px;border-radius:3px;grid-row:1/3}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px}.side-foot button{width:100%;font-size:13px}
+.main{max-width:1120px;width:100%;margin:0 auto;padding:24px 20px 48px;min-width:0}
+header{margin-bottom:20px}
+@media (max-width:760px){.shell{grid-template-columns:minmax(0,1fr)}
+.side{position:sticky;height:auto;flex-direction:row;align-items:center;gap:8px;padding:10px 16px;border-right:0;border-bottom:1px solid var(--line);z-index:5;flex-wrap:wrap}
+.brand{display:none}.side nav{flex-direction:row;flex:1}.side nav a{grid-template-columns:10px auto;padding:7px 10px}.side nav a small{display:none}.dot{grid-row:auto}
+.side-foot{margin:0;flex-direction:row}.side-foot button{width:auto;font-size:12px;padding:5px 8px}.side-foot #forget{display:none}
+.main{padding:16px 16px 40px}}
 h1{font-size:20px;margin:0;letter-spacing:-.01em}h2{font-size:14px;font-weight:600;margin:0 0 2px}
 .sub{color:var(--ink3);font-size:13px}
 button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:12px;margin-bottom:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0;overflow-x:auto}
 .kpi .v{font-size:28px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:4px}
 .kpi .l{color:var(--ink2);font-size:13px}.kpi .d{font-size:12px;color:var(--ink3);font-variant-numeric:tabular-nums}
 .up{color:var(--good)}.down{color:var(--bad)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px;margin-bottom:12px}
 .wide{grid-column:1/-1}
 svg{display:block;width:100%;height:auto;overflow:visible}
 .axis{fill:var(--ink3);font-size:11px;font-variant-numeric:tabular-nums}.grid-l{stroke:var(--line);stroke-width:1}
@@ -44,7 +59,7 @@ th{color:var(--ink3);font-weight:500}td.num,th.num{text-align:right;font-variant
 .login button{background:var(--ink);color:var(--surface);border-color:var(--ink);padding:10px}
 .err{color:var(--bad);font-size:13px;min-height:1.2em}
 .login label.check{display:flex;gap:8px;align-items:center;color:var(--ink2)}.login label.check input{width:16px;height:16px;padding:0}
-.actions{display:flex;gap:8px}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 h2.sec{font-size:16px;margin:28px 0 2px}.sec-sub{margin-bottom:12px}code{font-size:12px}
 `;
 
@@ -76,8 +91,12 @@ const LOGIN_CODE = `<main class="login"><h1>Pulse HQ</h1><div class="sub">This d
 <form id="f" autocomplete="on">${CODE_FIELD(true)}
 <div class="err" id="e" role="alert"></div><button type="submit">Sign in</button></form></main>`;
 
-const DASH = `<div class="wrap"><header><div><h1>Pulse HQ</h1><div class="sub" id="meta">Loading PostHog stats…</div></div>
-<div class="actions"><button id="forget" title="Ask for the passphrase again next time on this browser">Forget this device</button><button id="out">Sign out</button></div></header><main id="app"><div class="msg">Loading…</div></main></div><div id="tip" role="tooltip"></div>`;
+const DASH = `<div class="shell"><aside class="side"><div class="brand">Pulse HQ<span>CRS Pulse</span></div>
+<nav aria-label="Dashboards"><a href="#posthog" data-view="posthog"><span class="dot" style="background:var(--s1)"></span>App usage<small>PostHog</small></a>
+<a href="#admob" data-view="admob"><span class="dot" style="background:var(--s2)"></span>Revenue<small>AdMob</small></a></nav>
+<div class="side-foot"><button id="forget" title="Ask for the passphrase again next time on this browser">Forget this device</button><button id="out">Sign out</button></div></aside>
+<div class="main"><header><h1 id="title">App usage</h1><div class="sub" id="meta">Loading…</div></header><main id="app"><div class="msg">Loading…</div></main></div></div>
+<div id="tip" role="tooltip"></div>`;
 
 const DASH_JS = `
 const $=s=>document.querySelector(s),fmt=n=>Number(n).toLocaleString('en-CA');
@@ -132,27 +151,27 @@ const dur=s=>s<60?s+' s':Math.floor(s/60)+' min '+(s%60?s%60+' s':'');
 
 const money=(v,c)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:c||'CAD',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
 function admobSection(a,err){
-if(!a)return '<h2 class="sec">AdMob revenue</h2><div class="card msg" style="margin-bottom:12px">'+esc(err||'AdMob not connected')+'. Run <code>node scripts/admob-setup.mjs</code> to connect it.</div>';
+if(!a)return '<div class="card msg" style="margin-bottom:12px">'+esc(err||'AdMob not connected')+'. Run <code>node scripts/admob-setup.mjs</code> to connect it.</div>';
 const m=v=>money(v,a.currency);
 const label=k=>k.replace(/_/g,' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
 const tbl=(rows,first,lab)=>'<table><thead><tr><th>'+first+'</th><th class="num">Earnings</th><th class="num">Impr.</th><th class="num">eCPM</th><th class="num">Match</th><th class="num">Clicks</th></tr></thead><tbody>'+
 rows.map(r=>'<tr><td>'+esc(lab(r.key))+'</td><td class="num">'+m(r.earnings)+'</td><td class="num">'+fmt(r.impressions)+'</td><td class="num">'+m(r.ecpm)+'</td><td class="num">'+Math.round(r.matchRate*100)+'%</td><td class="num">'+fmt(r.clicks)+'</td></tr>').join('')+'</tbody></table>';
 const best=a.days.reduce((b,x)=>x.ios+x.android>b.ios+b.android?x:b,a.days[0]);
 const d7=a.prev7.earnings?delta(a.last7.earnings,a.prev7.earnings).replace('('+fmt(a.prev7.earnings)+')','('+m(a.prev7.earnings)+')'):'<span class="d">no prior week</span>';
-return '<h2 class="sec">AdMob revenue</h2><div class="sub sec-sub">CRS Pulse apps only, estimated, '+esc(a.currency)+'. Days follow AdMob\\'s time zone ('+esc(a.timeZone)+'), not UTC like the usage charts.</div>'+
+return '<div class="sub sec-sub">CRS Pulse apps only · estimated · '+esc(a.currency)+' · days in '+esc(a.timeZone)+'</div>'+
 '<div class="kpis">'+kpi('Today so far',m(a.today.earnings),'<span class="d">'+fmt(a.today.impressions)+' impressions</span>')+
 kpi('Yesterday',m(a.yesterday.earnings),'<span class="d">'+fmt(a.yesterday.impressions)+' impressions · '+fmt(a.yesterday.clicks)+' clicks</span>')+
 kpi('Last 7 days',m(a.last7.earnings),d7)+
 kpi('This month so far',m(a.monthToDate.earnings),'<span class="d">eCPM '+m(a.monthToDate.ecpm)+'</span>')+
 kpi('Last month',m(a.lastMonth.earnings),'<span class="d">'+fmt(a.lastMonth.impressions)+' impressions</span>')+'</div>'+
-'<div class="grid">'+card('Earnings per day','Last 30 days by platform · best day '+day(best.d)+' ('+m(best.ios+best.android)+')',columns(a.days,['ios','android'],['iOS','Android'],m,true),'wide')+
+'<div class="grid">'+card('Earnings per day','Last 30 days by platform · best day '+day(best.d)+' ('+m(best.ios+best.android)+')',columns(a.days,['ios','android'],['iOS','Android'],m,true),'wide')+'</div><div class="grid two">'+
 card('By ad format','Last 7 days',tbl(a.formats,'Format',label))+
 card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account earned '+m(a.other7.earnings)+', not counted above':''),tbl(a.apps,'App',k=>k))+'</div>';}
 function render(d){const s=d.summary,r=d.retention,ss=d.sessions,pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
-$('#meta').textContent='Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'})+' · Excludes Apple review and Play pre-launch devices.';
+const upd='Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'});
 const evs='<table><thead><tr><th>Event</th><th class="num">Count</th><th class="num">Users</th></tr></thead><tbody>'+
 d.events.map(e=>'<tr><td>'+esc(e.key)+'</td><td class="num">'+fmt(e.n)+'</td><td class="num">'+fmt(e.users)+'</td></tr>').join('')+'</tbody></table>';
-$('#app').innerHTML='<h2 class="sec" style="margin-top:0">App usage</h2><div class="sub sec-sub">PostHog, UTC days.</div><div class="kpis">'+
+views.posthog={title:'App usage',meta:'PostHog · UTC days · excludes Apple review and Play pre-launch devices · '+upd,html:'<div class="kpis">'+
 kpi('Active users',fmt(s.users_7),delta(s.users_7,s.users_prev))+
 kpi('App opens',fmt(s.opens_7),delta(s.opens_7,s.opens_prev))+
 kpi('Installs',fmt(s.installs_7),delta(s.installs_7,s.installs_prev))+
@@ -163,7 +182,7 @@ card('Installs per day','First launch after install',columns(d.daily,['installs'
 card('Ads loaded per day','ad_shown fires on load, not on an impression',columns(d.daily,['ads_native','ads_app_open'],['Native','App open']))+
 card('Milestones added per day','The action most tied to coming back',columns(d.daily,['milestones'],['Milestones']))+
 card('Pushes opened per day','Taps on any push; spikes follow a new-draw push',columns(d.daily,['push_opened'],['Push opens']))+'</div>'+
-admobSection(d.admob,d.admobError)+'<h2 class="sec">Engagement</h2><div class="sub sec-sub">PostHog, last 7 days.</div>'+
+'<h2 class="sec">Engagement</h2><div class="sub sec-sub">PostHog, last 7 days.</div>'+
 '<div class="grid">'+card('Screens','Users who viewed each screen, 7 days',hbars(d.screen,12,'users'))+
 card('Custom events','7 days',evs)+'</div>'+
 '<div class="grid">'+card('Countries','Users, 7 days',hbars(d.country,10,'users'))+
@@ -172,7 +191,16 @@ card('App version','Version each user was last seen on',hbars(d.version,6,'users
 '<div class="grid">'+card('Days active in the week','How many of the last 7 days each user opened the app',hbars(d.daysActive.map(x=>({key:x.key+(x.key==='1'?' day':' days'),n:x.n})),7,'users'))+
 card('New-install retention','Installed 8–30 days ago ('+fmt(r.cohort)+' users)','<div class="kpis" style="margin-top:12px">'+
 kpi('Back in week 1',pct(r.week1,r.cohort),'<span class="d">'+fmt(r.week1)+' users, days 1–7</span>')+
-kpi('Active after day 7',pct(r.later,r.cohort),'<span class="d">'+fmt(r.later)+' users</span>')+'</div>')+'</div>';}
+kpi('Active after day 7',pct(r.later,r.cohort),'<span class="d">'+fmt(r.later)+' users</span>')+'</div>')+'</div>'};
+views.admob={title:'Revenue',meta:'AdMob · '+(d.admob?'Pacific-time days · ':'')+upd,html:admobSection(d.admob,d.admobError)};
+show();}
+const views={};
+const current=()=>location.hash==='#admob'?'admob':'posthog';
+function show(){const k=current(),v=views[k];
+document.querySelectorAll('.side nav a').forEach(a=>a.dataset.view===k?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+$('#title').textContent=v?v.title:(k==='admob'?'Revenue':'App usage');document.title=(v?v.title:'Pulse HQ')+' · Pulse HQ';
+if(v){$('#meta').textContent=v.meta;$('#app').innerHTML=v.html;}}
+addEventListener('hashchange',()=>{show();scrollTo(0,0)});show();
 
 fetch('/api/ops-stats',{credentials:'same-origin'}).then(async r=>{if(r.status===401){location.reload();return}
 if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);render(await r.json())})
