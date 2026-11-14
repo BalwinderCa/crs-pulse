@@ -109,7 +109,8 @@ export default function DrawsScreen() {
           renderItem={({ item, index }) => (
             <>
               <DrawCard draw={item} />
-              {(index + 1) % 5 === 0 && <AdBanner />}
+              {/* An ad after every 4th draw (Notifications keeps every 5th). */}
+              {(index + 1) % 4 === 0 && <AdBanner />}
             </>
           )}
           contentContainerStyle={listContentStyle}
