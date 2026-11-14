@@ -6,11 +6,11 @@ import { isAuthed, isTrustedDevice, privateHeaders } from './_ops-auth.mjs';
 
 const CSS = `
 :root{color-scheme:light;--bg:#f4f4f2;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--ink3:#7a7975;--line:#e4e3df;
---s1:#2a78d6;--s2:#eb6834;--good:#0a7a3a;--bad:#c2312f;--focus:#2a78d6}
+--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--good:#0a7a3a;--bad:#c2312f;--focus:#2a78d6}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#111110;--surface:#1a1a19;--ink:#f0efec;
---ink2:#c3c2b7;--ink3:#8f8e86;--line:#2c2c2a;--s1:#3987e5;--s2:#d95926;--good:#3fbf6f;--bad:#e66767}}
+--ink2:#c3c2b7;--ink3:#8f8e86;--line:#2c2c2a;--s1:#3987e5;--s2:#d95926;--s3:#199e70;--good:#3fbf6f;--bad:#e66767}}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#111110;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--ink3:#8f8e86;--line:#2c2c2a;
---s1:#3987e5;--s2:#d95926;--good:#3fbf6f;--bad:#e66767}
+--s1:#3987e5;--s2:#d95926;--s3:#199e70;--good:#3fbf6f;--bad:#e66767}
 *{box-sizing:border-box}html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .shell{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}
@@ -95,7 +95,8 @@ const LOGIN_CODE = `<main class="login"><h1>Pulse HQ</h1><div class="sub">This d
 
 const DASH = `<div class="shell"><aside class="side"><div class="brand">Pulse HQ<span>CRS Pulse</span></div>
 <nav aria-label="Dashboards"><a href="#posthog" data-view="posthog"><span class="dot" style="background:var(--s1)"></span>App usage<small>PostHog</small></a>
-<a href="#admob" data-view="admob"><span class="dot" style="background:var(--s2)"></span>Revenue<small>AdMob</small></a></nav>
+<a href="#admob" data-view="admob"><span class="dot" style="background:var(--s2)"></span>Revenue<small>AdMob</small></a>
+<a href="#rewarded" data-view="rewarded"><span class="dot" style="background:var(--s3)"></span>Rewarded ad<small>3 days without ads</small></a></nav>
 <div class="side-foot"><button id="forget" title="Ask for the passphrase again next time on this browser">Forget this device</button><button id="out">Sign out</button></div></aside>
 <div class="main"><header><h1 id="title">App usage</h1><div class="sub" id="meta">Loading…</div></header><main id="app"><div class="msg">Loading…</div></main></div></div>
 <div id="tip" role="tooltip"></div>`;
@@ -189,6 +190,26 @@ card('Top countries','Last 30 days',a.countries?tbl(a.countries,'Country',k=>k,1
 '<div class="grid two">'+card('By ad format','Last 7 days',tbl(a.formats,'Format',label))+
 card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account earned '+m(a.other7.earnings)+', not counted above':''),tbl(a.apps,'App',k=>k))+'</div>'+
 '<div class="grid">'+daily+'</div>';}
+// Settings rewarded ad ("3 days without ads"): PostHog taps/outcomes plus AdMob earnings.
+function rewardedSection(a,r,days){
+if(!r)return '';
+const m=v=>money(v,a?a.currency:'CAD'),pcOf=(x,y)=>y?pc(x/y):'–';
+const fmt7=a&&a.formats?a.formats.find(f=>f.key==='REWARDED'):null;
+const units=a&&a.adUnits?a.adUnits.filter(u=>/rewarded/i.test(u.key)):[];
+const u30=units.reduce((t,u)=>({earnings:t.earnings+u.earnings,impressions:t.impressions+u.impressions}),{earnings:0,impressions:0});
+const byDay=Object.fromEntries(r.daily.map(x=>[x.d,x]));
+const rows=days.map(d=>byDay[d]||{d,earned:0,dismissed:0,unavailable:0});
+const since=r.first_at?'First tap '+new Date(r.first_at.replace(' ','T')+'Z').toLocaleDateString('en-CA',{month:'short',day:'numeric'}):'No taps yet: the offer reached 1.0.15 phones with the Nov 13 update';
+return '<div class="sub sec-sub">Settings: “3 days without ads” · '+esc(since)+' · '+fmt(r.settings_users_7)+' users opened Settings on 1.0.15 this week</div>'+
+'<div class="kpis">'+kpi('Watch ad taps',fmt(r.taps_7),'<span class="d">7 days · '+fmt(r.tap_users_7)+' users · '+fmt(r.taps_all)+' since launch</span>')+
+kpi('Watched to the end',fmt(r.earned_7),'<span class="d">'+pcOf(r.earned_7,r.earned_7+r.dismissed_7)+' of ads that played · '+fmt(r.earned_all)+' since launch</span>')+
+kpi('Closed early',fmt(r.dismissed_7),'<span class="d">7 days · '+fmt(r.dismissed_all)+' since launch</span>')+
+kpi('No ad available',fmt(r.unavailable_7),'<span class="d">'+pcOf(r.unavailable_7,r.taps_7)+' of taps · '+fmt(r.unavailable_all)+' since launch</span>')+
+kpi('Ad-free right now',fmt(r.ad_free_now),'<span class="d">users who earned it in the last 3 days</span>')+'</div>'+
+'<div class="kpis">'+kpi('Rewarded earnings, 7 days',fmt7?m(fmt7.earnings):m(0),'<span class="d">'+(fmt7?fmt(fmt7.impressions)+' impressions · eCPM '+m(fmt7.ecpm):'no rewarded impressions yet')+' (AdMob)</span>')+
+kpi('Rewarded earnings, 30 days',m(u30.earnings),'<span class="d">'+fmt(u30.impressions)+' impressions · eCPM '+(u30.impressions?m(u30.earnings/u30.impressions*1000):'–')+'</span>')+
+kpi('Earnings per completed watch',r.earned_7&&fmt7?m(fmt7.earnings/r.earned_7):'–','<span class="d">7 days, AdMob ÷ PostHog</span>')+'</div>'+
+'<div class="grid">'+card('Rewarded ad results per day','Last 30 days, PostHog (UTC days)',columns(rows,['earned','dismissed','unavailable'],['Watched to end','Closed early','No ad available'],{wide:true}),'wide')+'</div>';}
 function render(d){const s=d.summary,r=d.retention,ss=d.sessions,pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
 const upd='Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'});
 const evs='<table><thead><tr><th>Event</th><th class="num">Count</th><th class="num">Users</th></tr></thead><tbody>'+
@@ -215,12 +236,13 @@ card('New-install retention','Installed 8–30 days ago ('+fmt(r.cohort)+' users
 kpi('Back in week 1',pct(r.week1,r.cohort),'<span class="d">'+fmt(r.week1)+' users, days 1–7</span>')+
 kpi('Active after day 7',pct(r.later,r.cohort),'<span class="d">'+fmt(r.later)+' users</span>')+'</div>')+'</div>'};
 views.admob={title:'Revenue',meta:'AdMob · '+(d.admob?'Pacific-time days · ':'')+upd,html:admobSection(d.admob,d.admobError,s.users_7)};
+views.rewarded={title:'Rewarded ad',meta:'PostHog taps and results (UTC days) · AdMob earnings (Pacific days) · '+upd,html:rewardedSection(d.admob,d.rewarded,d.daily.map(x=>x.d))};
 show();}
 const views={};
-const current=()=>location.hash==='#admob'?'admob':'posthog';
+const current=()=>({'#admob':'admob','#rewarded':'rewarded'})[location.hash]||'posthog';
 function show(){const k=current(),v=views[k];
 document.querySelectorAll('.side nav a').forEach(a=>a.dataset.view===k?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
-$('#title').textContent=v?v.title:(k==='admob'?'Revenue':'App usage');document.title=(v?v.title:'Pulse HQ')+' · Pulse HQ';
+$('#title').textContent=v?v.title:({admob:'Revenue',rewarded:'Rewarded ad'})[k]||'App usage';document.title=(v?v.title:'Pulse HQ')+' · Pulse HQ';
 if(v){$('#meta').textContent=v.meta;$('#app').innerHTML=v.html;}}
 addEventListener('hashchange',()=>{show();scrollTo(0,0)});show();
 

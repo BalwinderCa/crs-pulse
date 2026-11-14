@@ -73,6 +73,34 @@ export const QUERIES = {
               FROM events WHERE ${APP} AND timestamp >= ${DAY0} - INTERVAL 31 DAY)
         WHERE t IS NOT NULL AND t >= ${DAY0} - INTERVAL 30 DAY AND t < ${DAY0} - INTERVAL 8 DAY
         GROUP BY person_id)`,
+
+  // The Settings "3 days without ads" rewarded ad (from the 2026-11-13 OTA): one rewarded_ad
+  // event per tap on Watch ad, with result earned / dismissed / unavailable.
+  rewardedDaily: `SELECT toString(toDate(timestamp)) d,
+      countIf(properties.result = 'earned') earned,
+      countIf(properties.result = 'dismissed') dismissed,
+      countIf(properties.result = 'unavailable') unavailable
+    FROM events WHERE ${APP} AND ${LAST30} AND event = 'rewarded_ad' GROUP BY d ORDER BY d`,
+
+  rewardedSummary: `SELECT
+      count() taps_all,
+      countIf(properties.result = 'earned') earned_all,
+      countIf(properties.result = 'dismissed') dismissed_all,
+      countIf(properties.result = 'unavailable') unavailable_all,
+      count(DISTINCT if(properties.result = 'earned', person_id, NULL)) earned_users_all,
+      countIf(${THIS7}) taps_7,
+      countIf(${THIS7} AND properties.result = 'earned') earned_7,
+      countIf(${THIS7} AND properties.result = 'dismissed') dismissed_7,
+      countIf(${THIS7} AND properties.result = 'unavailable') unavailable_7,
+      count(DISTINCT if(${THIS7}, person_id, NULL)) tap_users_7,
+      count(DISTINCT if(properties.result = 'earned' AND timestamp >= now() - INTERVAL 3 DAY, person_id, NULL)) ad_free_now,
+      toString(min(timestamp)) first_at
+    FROM events WHERE ${APP} AND event = 'rewarded_ad' AND timestamp >= '2026-11-13'`,
+
+  // Who could see the offer: Settings viewers on 1.0.15 (the update only reaches 1.0.15).
+  settingsReach: `SELECT count(DISTINCT person_id) users_7 FROM events
+    WHERE ${APP} AND ${THIS7} AND event = '$screen' AND properties.$screen_name = 'Settings'
+      AND properties.$app_version = '1.0.15'`,
 };
 
 async function hogql(key, query) {
@@ -104,6 +132,11 @@ export function shape(raw) {
     daysActive: by('days_active').sort((a, b) => Number(a.key) - Number(b.key)),
     sessions: Object.fromEntries(Object.entries(raw.sessions[0] ?? {}).map(([k, v]) => [k, Number(v)])),
     retention: Object.fromEntries(Object.entries(raw.retention[0] ?? {}).map(([k, v]) => [k, Number(v)])),
+    rewarded: {
+      daily: raw.rewardedDaily.map((r) => ({ d: r.d, earned: Number(r.earned), dismissed: Number(r.dismissed), unavailable: Number(r.unavailable) })),
+      ...Object.fromEntries(Object.entries(raw.rewardedSummary[0] ?? {}).map(([k, v]) => [k, k === 'first_at' ? (Number(raw.rewardedSummary[0]?.taps_all) ? v : null) : Number(v)])),
+      settings_users_7: Number(raw.settingsReach[0]?.users_7 ?? 0),
+    },
   };
 }
 

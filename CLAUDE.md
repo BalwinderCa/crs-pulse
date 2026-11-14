@@ -539,7 +539,10 @@ OAuth client of type "Desktop app" in Google Cloud project `crspulseapp` (AdMob 
 consent screen *In production* so the refresh token doesn't expire after 7 days as it does in
 Testing), connected with `node scripts/admob-setup.mjs <client_secret.json>`, which stores
 `ADMOB_CLIENT_ID`, `ADMOB_CLIENT_SECRET`, `ADMOB_REFRESH_TOKEN` and `ADMOB_PUBLISHER_ID`. If
-AdMob fails, the PostHog half still renders.
+AdMob fails, the PostHog half still renders. A third sidebar view, **Rewarded ad** (`#rewarded`), shows the
+Settings rewarded offer: `rewarded_ad` taps and results from PostHog (7 days and since 2026-11-13,
+users ad-free now = earned in the last 3 days, Settings viewers on 1.0.15 as reach) beside the AdMob
+`REWARDED` format and rewarded ad units' earnings.
 
 **AdSense on the website (review requested 2026-10-02).** crspulse.com was added, verified by
 meta tag and submitted for review that day, and the AdSense site status is "Getting ready". A
