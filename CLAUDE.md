@@ -242,6 +242,11 @@ ad ("3 days without ads") and moves native-ad padding inside `NativeAdView`, whi
 native ad validator issue "Advertiser assets outside native ad view" (the badge and button had
 overflowed the card in every native slot). Tested in the iOS simulator with test ads, not on a
 device; the first sign it arrived is `rewarded_ad` events in PostHog.
+The fifth 1.0.15 update (group `e56ba10c`, from `f1a51ef`, 2026-11-13) restyles that Settings card:
+accent-tinted background and border, a filled "Watch a short ad" button. It's the last planned
+1.0.15 update: **1.0.16 was bumped in `e05a24c` (2026-11-13)**, so from here an update reaches only
+installs whose version matches `app.config.js`; a fix for 1.0.15 installs would have to be published
+from a 1.0.15 checkout. iOS build tag `ios-build-1.0.16` (GitHub run 43539420765).
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
