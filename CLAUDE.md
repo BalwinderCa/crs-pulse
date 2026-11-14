@@ -234,8 +234,8 @@ The second 1.0.15 update (group `cfd1a0cb`, from `c068b46`, 2026-10-29) adds `re
 (`trigger`: `checklist` or `moments`), so the first sign it arrived is that event in PostHog.
 The third 1.0.15 update (group `703f73dc`, from `5759aca`, 2026-11-13) puts a Draws-list native ad
 after every 4th draw instead of every 5th (Notifications stays at 5). Published without a device
-test; the first sign it arrived is Draws `ad_shown` events climbing from about 0.2 to 0.25 per
-draw row scrolled, and AdMob native requests rising.
+test; the first sign it arrived is native `ad_shown` on the Draws screen rising per Draws
+screen view (PostHog can't see rows scrolled), and AdMob native requests rising.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
