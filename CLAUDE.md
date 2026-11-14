@@ -237,6 +237,11 @@ after every 4th draw instead of every 5th (Notifications stays at 5). Published 
 test; the first sign it arrived is native `ad_shown` on the Draws screen rising per Draws
 screen view (PostHog can't see rows scrolled; baseline 1.25 on 1.0.15, Oct 31–Nov 13: 480 ads / 384
 views), and AdMob native requests rising.
+The fourth 1.0.15 update (group `8c6ee762`, from `06669bb`, 2026-11-13) adds the Settings rewarded
+ad ("3 days without ads") and moves native-ad padding inside `NativeAdView`, which fixed Google's
+native ad validator issue "Advertiser assets outside native ad view" (the badge and button had
+overflowed the card in every native slot). Tested in the iOS simulator with test ads, not on a
+device; the first sign it arrived is `rewarded_ad` events in PostHog.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
