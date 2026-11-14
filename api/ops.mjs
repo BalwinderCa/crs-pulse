@@ -59,6 +59,8 @@ th{color:var(--ink3);font-weight:500}td.num,th.num{text-align:right;font-variant
 .login button{background:var(--ink);color:var(--surface);border-color:var(--ink);padding:10px}
 .err{color:var(--bad);font-size:13px;min-height:1.2em}
 .login label.check{display:flex;gap:8px;align-items:center;color:var(--ink2)}.login label.check input{width:16px;height:16px;padding:0}
+details.card summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}details.card summary::-webkit-details-marker{display:none}
+details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[open] summary h2::before{content:'▾ '}
 .grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 h2.sec{font-size:16px;margin:28px 0 2px}.sec-sub{margin-bottom:12px}code{font-size:12px}
 `;
@@ -116,17 +118,19 @@ const kpi=(l,v,d)=>'<div class="card kpi"><div class="l">'+l+'</div><div class="
 function ticks(max){const raw=max/4,m=Math.pow(10,Math.floor(Math.log10(raw||1))),s=[1,2,5,10].map(x=>x*m).find(x=>x>=raw)||m;
 const top=Math.max(s,Math.ceil(max/s)*s);const out=[];for(let i=0;i*s<=top+1e-9;i++)out.push(i*s);return out}
 
-// Columns over days: one series, or two stacked with a 2px surface gap.
-function columns(rows,keys,labels,fv,wide){fv=fv||fmt;const W=wide?1000:400,H=wide?240:210,L=wide?44:30,B=22,T=8,pw=W-L-8,ph=H-B-T;
-const tot=rows.map(r=>keys.reduce((a,k)=>a+r[k],0)),tk=ticks(Math.max(fv===fmt?1:0.05,...tot)),top=tk[tk.length-1],bw=pw/rows.length;
-let g=tk.map(v=>{const y=T+ph-v/top*ph;return '<line class="grid-l" x1="'+L+'" x2="'+(W-8)+'" y1="'+y+'" y2="'+y+'"/><text class="axis" x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end">'+(fv===fmt?+v.toFixed(2):'$'+v.toFixed(2))+'</text>'}).join('');
+// Columns over days (or months via o.lab): one series, or stacked with a 2px surface gap.
+// o: {fv: value formatter, money: dollar axis, wide: full-width viewBox, lab: x label}
+function columns(rows,keys,labels,o){o=o||{};const fv=o.fv||fmt,lab=o.lab||day,money=!!o.money,W=o.wide?1000:400,H=o.wide?240:210,L=o.wide?48:36,B=22,T=8,pw=W-L-8,ph=H-B-T;
+const tot=rows.map(r=>keys.reduce((a,k)=>a+r[k],0)),tk=ticks(Math.max(money?0.05:1,...tot)),top=tk[tk.length-1],bw=pw/rows.length,every=rows.length<=12?1:7;
+const tl=v=>money?'$'+v.toFixed(v>=10?0:2):+v.toFixed(2);
+let g=tk.map(v=>{const y=T+ph-v/top*ph;return '<line class="grid-l" x1="'+L+'" x2="'+(W-8)+'" y1="'+y+'" y2="'+y+'"/><text class="axis" x="'+(L-6)+'" y="'+(y+4)+'" text-anchor="end">'+tl(v)+'</text>'}).join('');
 rows.forEach((r,i)=>{let base=T+ph;const x=L+i*bw+bw*.18,w=bw*.64;
 keys.forEach((k,j)=>{const h=r[k]/top*ph;if(h<=0)return;const gap=j>0?2:0;const y=base-h;
 g+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+Math.max(0,h-gap).toFixed(1)+'" rx="'+(j===keys.length-1||keys.length===1?3:0)+'" fill="var(--s'+(j+1)+')"/>';base=y;});
-g+='<rect x="'+(L+i*bw)+'" y="'+T+'" width="'+bw+'" height="'+ph+'" fill="transparent" data-tip="'+esc(day(r.d)+' · '+keys.map((k,j)=>labels[j]+' '+fv(r[k])).join(' · '))+'"/>';
-if(i%7===0)g+='<text class="axis" x="'+(L+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+day(r.d)+'</text>'});
+g+='<rect x="'+(L+i*bw)+'" y="'+T+'" width="'+bw+'" height="'+ph+'" fill="transparent" data-tip="'+esc(lab(r.d)+' · '+keys.map((k,j)=>labels[j]+' '+fv(r[k])).join(' · '))+'"/>';
+if(i%every===0)g+='<text class="axis" x="'+(L+i*bw+bw/2)+'" y="'+(H-6)+'" text-anchor="middle">'+lab(r.d)+'</text>'});
 const leg=keys.length>1?'<div class="legend">'+labels.map((l,j)=>'<span><i style="background:var(--s'+(j+1)+')"></i>'+l+'</span>').join('')+'</div>':'';
-return leg+'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(labels.join(', '))+' per day">'+g+'</svg>'}
+return leg+'<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(labels.join(', '))+'">'+g+'</svg>'}
 
 // Daily users as a 2px line with point hover.
 function line(rows,key,label){const W=1000,H=240,L=36,B=24,T=10,pw=W-L-12,ph=H-B-T;
@@ -150,23 +154,41 @@ const card=(t,s,body,cls)=>'<section class="card'+(cls?' '+cls:'')+'"><h2>'+t+'<
 const dur=s=>s<60?s+' s':Math.floor(s/60)+' min '+(s%60?s%60+' s':'');
 
 const money=(v,c)=>new Intl.NumberFormat('en-CA',{style:'currency',currency:c||'CAD',minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
-function admobSection(a,err){
+const pc=v=>(v*100).toFixed(v>0&&v<0.1?1:0)+'%';
+const monthLab=k=>new Date(k+'-01T00:00:00Z').toLocaleDateString('en-CA',{month:'short',year:'2-digit',timeZone:'UTC'});
+function admobSection(a,err,users7){
 if(!a)return '<div class="card msg" style="margin-bottom:12px">'+esc(err||'AdMob not connected')+'. Run <code>node scripts/admob-setup.mjs</code> to connect it.</div>';
-const m=v=>money(v,a.currency);
+const m=v=>money(v,a.currency),na='<div class="msg">Not available right now.</div>';
 const label=k=>k.replace(/_/g,' ').toLowerCase().replace(/^./,c=>c.toUpperCase());
-const tbl=(rows,first,lab)=>'<table><thead><tr><th>'+first+'</th><th class="num">Earnings</th><th class="num">Impr.</th><th class="num">eCPM</th><th class="num">Match</th><th class="num">Clicks</th></tr></thead><tbody>'+
-rows.map(r=>'<tr><td>'+esc(lab(r.key))+'</td><td class="num">'+m(r.earnings)+'</td><td class="num">'+fmt(r.impressions)+'</td><td class="num">'+m(r.ecpm)+'</td><td class="num">'+Math.round(r.matchRate*100)+'%</td><td class="num">'+fmt(r.clicks)+'</td></tr>').join('')+'</tbody></table>';
-const best=a.days.reduce((b,x)=>x.ios+x.android>b.ios+b.android?x:b,a.days[0]);
+const tbl=(rows,first,lab,limit,share)=>{const tot=share?rows.reduce((x,r)=>x+r.earnings,0):0;
+return '<table><thead><tr><th>'+first+'</th><th class="num">Earnings</th>'+(share?'<th class="num">Share</th>':'')+'<th class="num">Impr.</th><th class="num">eCPM</th><th class="num">Match</th><th class="num">Show</th><th class="num">Clicks</th></tr></thead><tbody>'+
+rows.slice(0,limit||99).map(r=>'<tr><td>'+esc(lab(r.key))+'</td><td class="num">'+m(r.earnings)+'</td>'+(share?'<td class="num">'+(tot?pc(r.earnings/tot):'–')+'</td>':'')+'<td class="num">'+fmt(r.impressions)+'</td><td class="num">'+m(r.ecpm)+'</td><td class="num">'+pc(r.matchRate)+'</td><td class="num">'+pc(r.showRate)+'</td><td class="num">'+fmt(r.clicks)+'</td></tr>').join('')+'</tbody></table>'};
+const best=a.days.reduce((b,x)=>x.earnings>b.earnings?x:b,a.days[0]);
 const d7=a.prev7.earnings?delta(a.last7.earnings,a.prev7.earnings).replace('('+fmt(a.prev7.earnings)+')','('+m(a.prev7.earnings)+')'):'<span class="d">no prior week</span>';
+const daily='<details class="card wide"><summary><h2>Daily detail</h2><span class="sub">Every day of the last 30, newest first</span></summary><table><thead><tr><th>Day</th><th class="num">Earnings</th><th class="num">iOS</th><th class="num">Android</th><th class="num">Requests</th><th class="num">Impr.</th><th class="num">Match</th><th class="num">Show</th><th class="num">eCPM</th><th class="num">Clicks</th></tr></thead><tbody>'+
+a.days.slice().reverse().map(x=>'<tr><td>'+day(x.d)+'</td><td class="num">'+m(x.earnings)+'</td><td class="num">'+m(x.ios)+'</td><td class="num">'+m(x.android)+'</td><td class="num">'+fmt(x.requests)+'</td><td class="num">'+fmt(x.impressions)+'</td><td class="num">'+(x.requests?pc(x.matched/x.requests):'–')+'</td><td class="num">'+(x.matched?pc(x.impressions/x.matched):'–')+'</td><td class="num">'+m(x.ecpm)+'</td><td class="num">'+fmt(x.clicks)+'</td></tr>').join('')+'</tbody></table></details>';
+const l7=a.last7;
 return '<div class="sub sec-sub">CRS Pulse apps only · estimated · '+esc(a.currency)+' · days in '+esc(a.timeZone)+'</div>'+
 '<div class="kpis">'+kpi('Today so far',m(a.today.earnings),'<span class="d">'+fmt(a.today.impressions)+' impressions</span>')+
 kpi('Yesterday',m(a.yesterday.earnings),'<span class="d">'+fmt(a.yesterday.impressions)+' impressions · '+fmt(a.yesterday.clicks)+' clicks</span>')+
-kpi('Last 7 days',m(a.last7.earnings),d7)+
-kpi('This month so far',m(a.monthToDate.earnings),'<span class="d">eCPM '+m(a.monthToDate.ecpm)+'</span>')+
+kpi('Last 7 days',m(l7.earnings),d7)+
+kpi('This month so far',m(a.monthToDate.earnings),'<span class="d">last 30 days '+m(a.last30.earnings)+'</span>')+
 kpi('Last month',m(a.lastMonth.earnings),'<span class="d">'+fmt(a.lastMonth.impressions)+' impressions</span>')+'</div>'+
-'<div class="grid">'+card('Earnings per day','Last 30 days by platform · best day '+day(best.d)+' ('+m(best.ios+best.android)+')',columns(a.days,['ios','android'],['iOS','Android'],m,true),'wide')+'</div><div class="grid two">'+
-card('By ad format','Last 7 days',tbl(a.formats,'Format',label))+
-card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account earned '+m(a.other7.earnings)+', not counted above':''),tbl(a.apps,'App',k=>k))+'</div>';}
+'<h2 class="sec">Last 7 days</h2><div class="sub sec-sub">How well each ad request turns into money</div>'+
+'<div class="kpis">'+kpi('eCPM',m(l7.ecpm),'<span class="d">earnings per 1,000 impressions</span>')+
+kpi('Match rate',pc(l7.matchRate),'<span class="d">'+fmt(l7.matched)+' of '+fmt(l7.requests)+' requests filled</span>')+
+kpi('Show rate',pc(l7.showRate),'<span class="d">'+fmt(l7.impressions)+' of '+fmt(l7.matched)+' filled ads seen</span>')+
+kpi('Click rate',pc(l7.ctr),'<span class="d">'+fmt(l7.clicks)+' clicks</span>')+
+kpi('Per 100 users',users7?m(l7.earnings/users7*100):'–','<span class="d">'+(users7?fmt(users7)+' active users (PostHog)':'no PostHog users')+'</span>')+'</div>'+
+'<div class="grid">'+card('Earnings per day','Last 30 days by platform · best day '+day(best.d)+' ('+m(best.earnings)+')',columns(a.days,['ios','android'],['iOS','Android'],{fv:m,money:true,wide:true}),'wide')+'</div>'+
+'<div class="grid two">'+card('Impressions per day','Last 30 days',columns(a.days,['impressions'],['Impressions']))+
+card('eCPM per day','Earnings per 1,000 impressions; small days swing a lot',columns(a.days,['ecpm'],['eCPM'],{fv:m,money:true}))+'</div>'+
+'<div class="grid two">'+card('Earnings by month','Last 6 months, this month so far',a.months?columns(a.months.map(x=>({d:x.key,earnings:x.earnings})),['earnings'],['Earnings'],{fv:m,money:true,lab:monthLab}):na)+
+card('Top countries','Last 30 days',a.countries?tbl(a.countries,'Country',k=>k,10,true):na)+'</div>'+
+'<div class="grid">'+card('Ad units','Last 30 days',a.adUnits?tbl(a.adUnits,'Ad unit',k=>k,20,true):na,'wide')+'</div>'+
+'<div class="grid two">'+card('By ad format','Last 7 days',tbl(a.formats,'Format',label))+
+card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account earned '+m(a.other7.earnings)+', not counted above':''),tbl(a.apps,'App',k=>k))+'</div>'+
+'<div class="grid">'+daily+'</div>';}
 function render(d){const s=d.summary,r=d.retention,ss=d.sessions,pct=(a,b)=>b?Math.round(a/b*100)+'%':'–';
 const upd='Updated '+new Date(d.generatedAt).toLocaleString('en-CA',{dateStyle:'medium',timeStyle:'short'});
 const evs='<table><thead><tr><th>Event</th><th class="num">Count</th><th class="num">Users</th></tr></thead><tbody>'+
@@ -192,7 +214,7 @@ card('App version','Version each user was last seen on',hbars(d.version,6,'users
 card('New-install retention','Installed 8–30 days ago ('+fmt(r.cohort)+' users)','<div class="kpis" style="margin-top:12px">'+
 kpi('Back in week 1',pct(r.week1,r.cohort),'<span class="d">'+fmt(r.week1)+' users, days 1–7</span>')+
 kpi('Active after day 7',pct(r.later,r.cohort),'<span class="d">'+fmt(r.later)+' users</span>')+'</div>')+'</div>'};
-views.admob={title:'Revenue',meta:'AdMob · '+(d.admob?'Pacific-time days · ':'')+upd,html:admobSection(d.admob,d.admobError)};
+views.admob={title:'Revenue',meta:'AdMob · '+(d.admob?'Pacific-time days · ':'')+upd,html:admobSection(d.admob,d.admobError,s.users_7)};
 show();}
 const views={};
 const current=()=>location.hash==='#admob'?'admob':'posthog';
