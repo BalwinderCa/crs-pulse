@@ -58,6 +58,19 @@ eas build --profile production --platform all
 eas submit                                      # Submit to app stores
 ```
 
+**1.0.16 (2026-11-13).** iOS **build 69** (EAS, GitHub run 43539420765, from `e05a24c`) was attached
+to the 1.0.16 draft and **submitted for review the same evening with manual release** ("Waiting for
+Review"). Nobody had opened build 69 from TestFlight before submitting, so **open it on a device
+before clicking "Release This Version"**. What's New (en): "New: watch one short video in Settings to
+turn off all other ads for 3 days. Ads in the draws list now also sit neatly inside their card. Plus
+small fixes and improvements." fr-CA got its own What's New and, being new App Store text, the
+7-link SOURCES OFFICIELLES block at the end of its description. Apple's newer age-rating
+questionnaire had to be finished first (Social Media: No; under-13 social media: No, since Yes
+requires social media + UGC + age assurance). The global rating stays 4+, but **Brazil now shows 12**
+(it was "All"). Android **versionCode 33** (EAS `3d3638ab`) built from `7596b69`; it still needs
+`eas submit --platform android --profile alpha --id 3d3638ab-5f83-4b85-ab97-e8313fe46db3`, then
+promotion to Production from Play Console.
+
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
   released by hand, and the public App Store lookup shows 1.0.15 from 2026-10-24 04:26 UTC. App
