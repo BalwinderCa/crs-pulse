@@ -177,6 +177,11 @@ function NativeAdCard() {
         nativeAd={ad}
         style={[s.card, { backgroundColor: colors.surfaceCard, borderColor: colors.border }]}
       >
+        {/* Padding lives on this inner view, not on NativeAdView: padding on the
+            native view shifted its children right without shrinking them, so the
+            badge and button overflowed the ad's bounds (AdMob validator:
+            "Advertiser assets outside native ad view"). */}
+        <View style={s.inner}>
         <View style={s.row}>
           {ad.icon ? (
             <Asset assetType={assetTypes.ICON ?? 'icon'}>
@@ -205,6 +210,7 @@ function NativeAdCard() {
             <Text style={s.cta}>{ad.callToAction}</Text>
           </Asset>
         ) : null}
+        </View>
       </AdView>
     </View>
   );
@@ -217,9 +223,9 @@ const s = StyleSheet.create({
     width: '100%',
     borderRadius: borderRadius.md,
     borderWidth: 0.3,
-    padding: spacing.md,
-    gap: spacing.sm,
+    overflow: 'hidden',
   },
+  inner: { padding: spacing.md, gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   icon: { width: 40, height: 40, borderRadius: borderRadius.sm },
   copy: { flex: 1 },
