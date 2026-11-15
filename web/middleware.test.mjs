@@ -2,7 +2,7 @@
 // in web/ covers it; the middleware itself has to sit at the repo root for Vercel.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { qualityOf, chooseVariant, config } from '../middleware.js';
+import middleware, { qualityOf, chooseVariant, config, adminRoute } from '../middleware.js';
 
 const BROWSER = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8';
 
@@ -47,4 +47,20 @@ test('the matcher covers every public page and nothing else', () => {
   assert.deepEqual(config.matcher, ['/', '/crs-calculator', '/fsw-calculator', '/bc-pnp-calculator', '/sinp-calculator', '/draws', '/analytics', '/checklists', '/processing-times', '/timeline', '/features', '/guides', '/crs-points', '/improve-crs-score', '/language-tests-clb', '/fsw-67-points', '/express-entry-draws', '/express-entry-process', '/express-entry-changes-2026', '/express-entry-2026-review', '/about', '/privacy', '/terms']);
   // Matching a .md path would make the middleware fetch itself.
   assert.ok(!config.matcher.some((m) => m.endsWith('.md')));
+});
+
+// admin.crspulse.com: its root is the ops dashboard, every other page goes back to the site.
+test('admin host: / rewrites to the ops function', async () => {
+  const r = await middleware(new Request('https://admin.crspulse.com/', { headers: { accept: 'text/html' } }));
+  assert.equal(r.headers.get('x-middleware-rewrite'), 'https://admin.crspulse.com/api/ops');
+});
+
+test('admin host: other pages redirect to www.crspulse.com with path and query', async () => {
+  const r = await middleware(new Request('https://admin.crspulse.com/draws?x=1'));
+  assert.equal(r.status, 308);
+  assert.equal(r.headers.get('location'), 'https://www.crspulse.com/draws?x=1');
+});
+
+test('main host is untouched by the admin route', () => {
+  assert.equal(adminRoute(new URL('https://crspulse.com/')), undefined);
 });

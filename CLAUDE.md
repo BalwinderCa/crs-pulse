@@ -548,10 +548,10 @@ Optional: `EXPO_PUBLIC_POSTHOG_KEY`/`_HOST` (analytics; off when unset and in de
 with `mask_all_text`, so calculator results never land in click events. It also loads Vercel Web
 Analytics. Both are disclosed in the privacy policy's Website section.
 
-**Private ops dashboard: `crspulse.com/pulse-hq`** (2026-11-13). PostHog app stats (7-day
+**Private ops dashboard: `admin.crspulse.com`** (2026-11-13 at `crspulse.com/pulse-hq`, which still works; redesigned 2026-11-14 after the Creliq "Revenue Analytics Dashboard" Dribbble shot. **The admin host is not live yet:** add it to the Vercel project, CNAME it in Cloudflare DNS, deploy, check `/` shows the login, then redirect `/pulse-hq` there). PostHog app stats (7-day
 KPIs vs the prior week, 30-day daily charts, screens, events, countries, versions, retention),
 served by zero-dependency Vercel functions in the root `api/` (`.vercelignore` allowlists it;
-`vercel.json` rewrites `/pulse-hq` → `/api/ops`). Login needs a passphrase **and** a Google
+`middleware.js` rewrites the admin host's `/` to `/api/ops` and sends its other pages back to crspulse.com; the admin host must be added to the Vercel project with a CNAME in Cloudflare DNS). Login needs a passphrase **and** a Google
 Authenticator code every time; the passphrase is what stops brute force, because the functions
 keep no attempt counter. Sessions last 12 h. "Remember this device" (ticked by default)
 sets a signed 90-day device cookie after a full login, and that browser then asks for the code

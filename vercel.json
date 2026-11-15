@@ -8,6 +8,12 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/:path((?!api/).+)",
+      "has": [{ "type": "host", "value": "admin.crspulse.com" }],
+      "destination": "https://www.crspulse.com/:path",
+      "permanent": true
+    },
+    {
       "source": "/calculators",
       "destination": "/crs-calculator",
       "permanent": true

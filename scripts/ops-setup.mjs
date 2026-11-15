@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// One-time (or rotation) setup for the private dashboard at crspulse.com/pulse-hq.
+// One-time (or rotation) setup for the private dashboard at admin.crspulse.com (and crspulse.com/pulse-hq).
 //
 //   node scripts/ops-setup.mjs
 //

@@ -80,8 +80,24 @@ export function chooseVariant(accept) {
 
 const VARY = 'Accept, Accept-Encoding';
 
+// The private ops dashboard lives on its own host. Its root is the dashboard (the same
+// function crspulse.com/pulse-hq used to reach); any other site page on that host goes
+// back to crspulse.com, so the marketing site never shows up under admin.
+export const ADMIN_HOST = 'admin.crspulse.com';
+
+export function adminRoute(url) {
+  if (url.hostname !== ADMIN_HOST) return undefined;
+  if (url.pathname === '/') {
+    // What @vercel/functions' rewrite() sets; the root has no package.json to import it from.
+    return new Response(null, { headers: { 'x-middleware-rewrite': new URL('/api/ops', url).toString() } });
+  }
+  return Response.redirect(`https://www.crspulse.com${url.pathname}${url.search}`, 308);
+}
+
 export default async function middleware(request) {
   try {
+    const admin = adminRoute(new URL(request.url));
+    if (admin) return admin;
     return await negotiate(request);
   } catch {
     // Never let a malformed header turn a working page into a 500: fall through to the

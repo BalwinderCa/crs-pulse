@@ -1,4 +1,4 @@
-// Login for the private ops dashboard (/pulse-hq). Two factors: a passphrase (scrypt hash
+// Login for the private ops dashboard (admin.crspulse.com). Two factors: a passphrase (scrypt hash
 // in OPS_PASS_HASH) and a Google Authenticator code (TOTP, RFC 6238: SHA-1, 6 digits, 30 s,
 // ±1 step, secret in OPS_TOTP_SECRET). A remembered device (DEVICE_COOKIE) needs only the code.
 // The passphrase is what makes a stateless function safe: a 6-digit code alone can be
