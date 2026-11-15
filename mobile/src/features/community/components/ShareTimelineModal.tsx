@@ -11,7 +11,7 @@ import { useTimelineStore } from '@/store/timelineStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { PROGRAMS, programFromTypeId, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
 import { useShareStore } from '../shareStore';
-import { CommunityRow, useProgramLabel } from './TimelineCards';
+import { PersonCard, useProgramLabel } from './TimelineCards';
 
 /**
  * Share my timeline: pick a display name, the program and whether months show,
@@ -70,7 +70,7 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
             keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Text style={[s.label, { color: c.textMuted }]}>{t('community.previewLabel')}</Text>
             {canShare ? (
-              <View style={[s.previewBox, { borderColor: c.border }]}><CommunityRow timeline={preview} /></View>
+              <PersonCard timeline={preview} />
             ) : (
               <View style={[s.empty, { borderColor: c.border }]}>
                 <Ionicons name="time-outline" size={22} color={c.textMuted} />
@@ -158,7 +158,6 @@ const s = StyleSheet.create({
   privacy: { borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base, gap: spacing.sm },
   privRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   privTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
-  previewBox: { borderTopWidth: StyleSheet.hairlineWidth },
   empty: { borderWidth: 1, borderStyle: 'dashed', borderRadius: borderRadius.md, padding: spacing.base, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   emptyTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
   stop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xl, paddingVertical: spacing.md },
