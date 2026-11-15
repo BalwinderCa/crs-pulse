@@ -67,9 +67,11 @@ small fixes and improvements." fr-CA got its own What's New and, being new App S
 7-link SOURCES OFFICIELLES block at the end of its description. Apple's newer age-rating
 questionnaire had to be finished first (Social Media: No; under-13 social media: No, since Yes
 requires social media + UGC + age assurance). The global rating stays 4+, but **Brazil now shows 12**
-(it was "All"). Android **versionCode 33** (EAS `3d3638ab`) built from `7596b69`; it still needs
-`eas submit --platform android --profile alpha --id 3d3638ab-5f83-4b85-ab97-e8313fe46db3`, then
-promotion to Production from Play Console.
+(it was "All"). Android **versionCode 33** (EAS `3d3638ab`, built from `7596b69`) was submitted to
+Alpha on 2026-11-14 (EAS submission `ee43b23a`), and the same day a Production release (full rollout,
+release notes in en-GB, fr-CA, fr-FR matching the iOS What's New) was added and sent for review with it,
+restarting the Alpha review so both are one review. Managed publishing is off, so it goes live on
+approval. Only warning: no deobfuscation file (as with 1.0.15). Nobody has opened it on an Android device.
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
