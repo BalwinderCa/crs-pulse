@@ -194,7 +194,7 @@ card('By app','Last 7 days'+(a.other7.earnings?' · other apps on the account ea
 function rewardedSection(a,r,days){
 if(!r)return '';
 const m=v=>money(v,a?a.currency:'CAD'),pcOf=(x,y)=>y?pc(x/y):'–';
-const fmt7=a&&a.formats?a.formats.find(f=>f.key==='REWARDED'):null;
+const fmt7=a&&a.formats?a.formats.find(f=>String(f.key).toUpperCase()==='REWARDED'):null;
 const units=a&&a.adUnits?a.adUnits.filter(u=>/rewarded/i.test(u.key)):[];
 const u30=units.reduce((t,u)=>({earnings:t.earnings+u.earnings,impressions:t.impressions+u.impressions}),{earnings:0,impressions:0});
 const byDay=Object.fromEntries(r.daily.map(x=>[x.d,x]));
