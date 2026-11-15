@@ -7,9 +7,14 @@ limits are noted; all fields below are within them.
 
 ## App Name  (max 30)
 ```
-CRS Pulse: Express Entry
+IRCC Tracker: Score & Draws
 ```
-_Alternate (29):_ `CRS Pulse — Express Entry PR`
+_Live until 1.0.17: `CRS Pulse - IRCC Tracker`. Chosen 2026-11-14 for 1.0.17 (27 chars); precedent on the
+App Store: "IRCC Tracker: Express Entry" and "IRCC Tracker - Moose". iOS only: Play rejected "IRCC" in its
+title, so Play stays "CRS Pulse: Score & Draws". Never use "Express Entry" in a name (IRCC official mark).
+The on-device name stays "CRS Pulse"._
+_French (Canada) localization (29):_ `Suivi IRCC : score et tirages` [REVIEW]
+_Once the name holds "IRCC", drop `ircc` from Keywords (Apple already indexes the name) and use the room._
 
 ## Subtitle  (max 30)
 ```

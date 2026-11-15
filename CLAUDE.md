@@ -106,7 +106,8 @@ approval. Only warning: no deobfuscation file (as with 1.0.15). Nobody has opene
 - **Play title changed to "CRS Pulse: Score & Draws" (sent 2026-10-23).** It drops the second
   "CRS" from the title Play had just accepted. That restarted the review once more, so one Play
   review now holds five changes: Production 1.0.15 full rollout, the new app name, and the phone,
-  7-inch and 10-inch screenshots. The App Store name ("CRS Pulse - IRCC Tracker") and the
+  7-inch and 10-inch screenshots. The App Store name ("CRS Pulse - IRCC Tracker"; **to become "IRCC Tracker: Score & Draws" with 1.0.17**,
+  decided 2026-11-14, iOS only, see `mobile/store/app-store-metadata.md`) and the
   on-device app name are unchanged. That review cleared: 1.0.15 was live on Play by 2026-10-26.
 - **Screenshot pairs were uploaded in the wrong order on both stores.** The 2026-10-23 order
   (draws-1, crs-2, …, crs-1, draws-2) splits the two-tile spreads; they must go 01-draws-1,
