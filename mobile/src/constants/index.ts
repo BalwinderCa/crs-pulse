@@ -137,18 +137,7 @@ export const ADMOB_NATIVE_AD_UNIT = {
   ios: process.env.EXPO_PUBLIC_ADMOB_NATIVE_IOS || '',
 } as const;
 
-/**
- * AdMob *rewarded* ad-unit IDs, for the opt-in "3 days without ads" offer in
- * Settings. AdMob requires a real in-app reward for a rewarded ad (a plain
- * "watch to support us" button is against its policy), so watching one turns
- * every other ad off for AD_FREE_MS. Empty = the offer is hidden.
- */
-export const ADMOB_REWARDED_AD_UNIT = {
-  android: process.env.EXPO_PUBLIC_ADMOB_REWARDED_ANDROID || '',
-  ios: process.env.EXPO_PUBLIC_ADMOB_REWARDED_IOS || '',
-} as const;
-
-/** How long one watched rewarded ad keeps the app ad-free. */
+/** How long one watched rewarded ad kept the app ad-free (the offer was removed on 2026-11-14; periods already earned still run out). */
 export const AD_FREE_MS = 3 * 24 * 60 * 60 * 1000;
 
 /**
