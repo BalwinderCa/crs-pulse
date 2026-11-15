@@ -97,6 +97,8 @@ export const STORAGE_KEYS = {
   APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
   /** Set once the user tapped "I'm interested" on the Timeline Community tab. */
   COMMUNITY_INTEREST: 'crs_pulse.community_interest',
+  /** Community share settings (alias, program, months on/off). Dev preview only until Community goes live. */
+  COMMUNITY_SHARE: 'crs_pulse.community_share',
   /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
   AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
 } as const;

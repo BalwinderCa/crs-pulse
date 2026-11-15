@@ -1,7 +1,7 @@
 import React from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { CommunityTab } from '../../src/features/timeline/components/CommunityTab';
+import { CommunityWaitlist as CommunityTab } from '../../src/features/timeline/components/CommunityTab';
 import { track } from '@/services/analyticsService';
 import { STORAGE_KEYS } from '@/constants';
 
