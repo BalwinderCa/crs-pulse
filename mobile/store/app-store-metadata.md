@@ -13,7 +13,8 @@ _Live until 1.0.17: `CRS Pulse - IRCC Tracker`. Chosen 2026-11-14 for 1.0.17 (27
 App Store: "IRCC Tracker: Express Entry" and "IRCC Tracker - Moose". iOS only: Play rejected "IRCC" in its
 title, so Play stays "CRS Pulse: Score & Draws". Never use "Express Entry" in a name (IRCC official mark).
 The on-device name stays "CRS Pulse"._
-_French (Canada) localization (29):_ `Suivi IRCC : score et tirages` [REVIEW]
+_French (Canada) localization (29):_ `Suivi IRCC : score et tirages` [REVIEW] (was `CRS Pulse : score et tirages`)
+_Both entered and saved in App Store Connect on 2026-11-15 in the new 1.0.17 version (Prepare for Submission); Apple reviews them with the 1.0.17 build. Subtitles unchanged: `CRS score & IRCC draw alerts` / `Score CRS et alertes de tirage`._
 _Once the name holds "IRCC", drop `ircc` from Keywords (Apple already indexes the name) and use the room._
 _Plan (2026-11-15): only if Apple approves this name with 1.0.17, rename inside the app by OTA (header
 logo, side menu, text). Decide then whether Android shows it too (Play rejected "IRCC" in its title).
