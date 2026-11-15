@@ -23,6 +23,7 @@ import FswCalculatorScreen from '@/features/fsw/screens/FswCalculatorScreen';
 import BcSirsCalculatorScreen from '@/features/bcpnp/screens/BcSirsCalculatorScreen';
 import NotificationsScreen from '@/features/notifications/screens/NotificationsScreen';
 import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScreen';
+import CommunityTimelineScreen from '@/features/community/screens/CommunityTimelineScreen';
 import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService';
 import { useAdFreeStore } from '@/store/adFreeStore';
 import { trackScreen } from '@/services/analyticsService';
@@ -150,6 +151,7 @@ export default function RootNavigator() {
         <Stack.Screen name="BcSirsCalculator" component={BcSirsCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ProcessingTimes" component={ProcessingTimesScreen} options={{ animation: 'slide_from_right' }} />
+        <Stack.Screen name="CommunityTimeline" component={CommunityTimelineScreen} options={{ animation: 'slide_from_right' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

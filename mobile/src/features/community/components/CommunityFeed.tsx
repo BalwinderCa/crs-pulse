@@ -1,73 +1,59 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { palette, spacing, typography, borderRadius } from '@/theme';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { useTimelineStore } from '@/store/timelineStore';
-import { PROGRAMS, toSharedSteps, typicalPace, type ProgramId, type SharedTimeline } from '../model';
-import { SAMPLE_TIMELINES } from '../sampleTimelines';
-import { useShareStore } from '../shareStore';
-import { SharedTimelineCard, useProgramLabel } from './TimelineCards';
+import { useApplicationStore } from '@/store/applicationStore';
+import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
+import type { RootStackParamList } from '@/types';
+import { PROGRAMS, programFromTypeId, type ProgramId } from '../model';
+import { MY_TIMELINE_ID, useCommunity } from '../useCommunity';
+import { CommunityRow, useProgramLabel } from './TimelineCards';
 import { ShareTimelineModal } from './ShareTimelineModal';
-import { TimelineDetailModal } from './TimelineDetailModal';
 
 /**
- * The Community feed: the user's own shared card (or an invitation to share),
- * a program filter, the typical pace for that program, and everyone's cards.
- * Until there is a server it lists SAMPLE_TIMELINES, and shows only in dev.
+ * The Community list: program filter, the user's own row (share or edit),
+ * then one plain row per shared timeline. Tapping a row opens its page.
  */
 export function CommunityFeed() {
   const c = useColors();
   const accent = useAccentColor();
   const { t } = useTranslation();
   const programLabel = useProgramLabel();
-  const milestones = useTimelineStore((st) => st.milestones);
-  const { settings, load } = useShareStore();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const typeId = useApplicationStore((st) => st.application?.typeId);
+  const { mine, mySteps, others, settings } = useCommunity();
   const [filter, setFilter] = useState<ProgramId | 'all'>('all');
   const [sharing, setSharing] = useState(false);
-  const [open, setOpen] = useState<SharedTimeline | null>(null);
 
-  useEffect(() => { void load(); }, [load]);
   useEffect(() => { if (settings) setFilter((f) => (f === 'all' ? settings.program : f)); }, [settings]);
 
-  const mine: SharedTimeline | null = useMemo(() => {
-    if (!settings) return null;
-    const steps = toSharedSteps(milestones, settings.showMonths);
-    return steps.length ? { id: 'mine', alias: settings.alias, program: settings.program, steps, updatedDaysAgo: 0, isMine: true } : null;
-  }, [settings, milestones]);
+  const open = (id: string) => navigation.navigate('CommunityTimeline', { id });
+  const programs = PROGRAMS.filter((p) => others.some((o) => o.program === p.id));
+  const shown = others.filter((o) => filter === 'all' || o.program === filter);
+  const count = shown.length + (mine && (filter === 'all' || mine.program === filter) ? 1 : 0);
 
-  const programsShown = PROGRAMS.filter((p) => SAMPLE_TIMELINES.some((tl) => tl.program === p.id) || p.id === mine?.program);
-  const others = SAMPLE_TIMELINES.filter((tl) => filter === 'all' || tl.program === filter);
-  const pace = typicalPace(others);
-
-  // One quiet line: the median day for the stops people care most about.
-  const paceLine = pace
-    .filter((p) => p.stop === 'aor' || p.stop === 'ppr' || p.stop === 'decision')
-    .map((p) => `${t(`community.stops.${p.stop}`)} ${t('community.dayN', { n: p.day })}`)
-    .join('  ·  ');
+  // The user's own row.
+  const myNow = mySteps[mySteps.length - 1];
+  const myProgram = settings?.program ?? programFromTypeId(typeId);
+  const myTitle = myNow ? t(MILESTONE_META[myNow.type].labelKey) : t('community.yourTimeline');
+  const mySub = !myNow
+    ? t('community.addMilestonesFirst')
+    : `${programLabel(myProgram)} · ${mine ? t('community.sharedAs', { name: mine.alias || t('community.anonymous') }) : t('community.notShared')}`;
 
   return (
     <View style={s.wrap}>
-      {mine ? (
-        <SharedTimelineCard timeline={mine} onPress={() => setOpen(mine)} />
-      ) : (
-        <TouchableOpacity ph-label="community-share-open" onPress={() => setSharing(true)} activeOpacity={0.85}
-          style={[s.cta, { backgroundColor: accent + '14', borderColor: accent + '55' }]} accessibilityRole="button">
-          <Ionicons name="share-social" size={18} color={accent} />
-          <Text style={[s.ctaTitle, { color: c.textPrimary }]}>{t('community.shareCtaButton')}</Text>
-          <Ionicons name="chevron-forward" size={16} color={accent} />
-        </TouchableOpacity>
-      )}
-
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.chips}>
-        {(['all', ...programsShown.map((p) => p.id)] as (ProgramId | 'all')[]).map((id) => {
+        {(['all', ...programs.map((p) => p.id)] as (ProgramId | 'all')[]).map((id) => {
           const on = filter === id;
           return (
             <TouchableOpacity key={id} ph-label={`community-filter-${id}`} onPress={() => setFilter(id)}
-              style={[s.chip, { borderColor: on ? accent : c.border, backgroundColor: on ? accent : 'transparent' }]}>
-              <Text style={[s.chipTxt, { color: on ? palette.white : c.textSecondary }]}>
+              accessibilityRole="button" accessibilityState={{ selected: on }}
+              style={[s.chip, on ? { backgroundColor: c.textPrimary, borderColor: c.textPrimary } : { borderColor: c.border }]}>
+              <Text style={[s.chipTxt, { color: on ? c.surfacePrimary : c.textSecondary }]}>
                 {id === 'all' ? t('community.filterAll') : programLabel(id)}
               </Text>
             </TouchableOpacity>
@@ -75,33 +61,50 @@ export function CommunityFeed() {
         })}
       </ScrollView>
 
-      {!!paceLine && (
-        <Text style={[s.pace, { color: c.textMuted }]} numberOfLines={2}>
-          <Text style={{ fontWeight: typography.semibold, color: c.textSecondary }}>{t('community.paceTitle')}</Text>
-          {'  '}{paceLine}
-        </Text>
-      )}
+      <TouchableOpacity
+        ph-label="community-my-row"
+        activeOpacity={0.7}
+        onPress={() => (mine ? open(MY_TIMELINE_ID) : setSharing(true))}
+        style={[s.me, { borderColor: c.border }]}
+        accessibilityRole="button"
+      >
+        <View style={[s.youDot, { backgroundColor: accent }]}>
+          <Text style={s.youDotTxt}>{t('community.youShort')}</Text>
+        </View>
+        <View style={s.flex}>
+          <Text style={[s.rowTitle, { color: c.textPrimary }]} numberOfLines={1}>{myTitle}</Text>
+          <Text style={[s.rowSub, { color: c.textMuted }]} numberOfLines={1}>{mySub}</Text>
+        </View>
+        <Text style={[s.link, { color: accent }]}>{mine ? t('community.edit') : t('community.share')}</Text>
+      </TouchableOpacity>
 
-      {others.length === 0 ? (
+      <Text style={[s.caption, { color: c.textMuted }]}>{t('community.peopleSharing', { count })}</Text>
+
+      {shown.length === 0 ? (
         <Text style={[s.empty, { color: c.textMuted }]}>{t('community.empty')}</Text>
       ) : (
-        others.map((tl) => <SharedTimelineCard key={tl.id} timeline={tl} onPress={() => setOpen(tl)} />)
+        shown.map((tl) => <CommunityRow key={tl.id} timeline={tl} onPress={() => open(tl.id)} />)
       )}
 
       <ShareTimelineModal visible={sharing} onClose={() => setSharing(false)} />
-      <TimelineDetailModal timeline={open} onClose={() => setOpen(null)} onEdit={mine && open?.isMine ? () => { setOpen(null); setSharing(true); } : undefined} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: { gap: spacing.sm, paddingTop: spacing.sm },
-  cta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: borderRadius.md, borderWidth: 1,
-         paddingHorizontal: spacing.base, paddingVertical: spacing.md },
-  ctaTitle: { flex: 1, fontSize: typography.base, fontWeight: typography.semibold },
+  wrap: { paddingTop: spacing.sm },
+  flex: { flex: 1, minWidth: 0 },
   chips: { gap: spacing.sm, paddingVertical: spacing.xs },
-  chip: { paddingHorizontal: spacing.md, paddingVertical: 5, borderRadius: borderRadius.full, borderWidth: 1 },
-  chipTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
-  pace: { fontSize: typography.xs, lineHeight: 17, marginBottom: spacing.xs },
+  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: borderRadius.full, borderWidth: 1 },
+  chipTxt: { fontSize: typography.sm, fontWeight: typography.semibold },
+  me: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: 14, marginTop: spacing.md,
+        borderTopWidth: StyleSheet.hairlineWidth, borderBottomWidth: StyleSheet.hairlineWidth },
+  youDot: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  youDotTxt: { color: '#FFFFFF', fontSize: typography.xs, fontWeight: typography.bold },
+  link: { fontSize: typography.sm, fontWeight: typography.semibold },
+  caption: { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.6, textTransform: 'uppercase',
+             marginTop: spacing.lg, marginBottom: spacing.xs },
+  rowTitle: { fontSize: typography.base, fontWeight: typography.semibold },
+  rowSub: { fontSize: typography.sm, marginTop: 3 },
   empty: { fontSize: typography.sm, textAlign: 'center', paddingVertical: spacing.lg },
 });

@@ -1,8 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { palette, spacing, typography, borderRadius } from '@/theme';
+import { spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
@@ -13,113 +12,40 @@ export function useProgramLabel() {
   return (id: ProgramId) => PROGRAMS.find((p) => p.id === id)?.code || t('community.programOther');
 }
 
-/** Six stops from ITA to decision; the ones reached are filled, the current one ringed. */
-export function StopTrack({ reached, showLabels = false }: { reached: number; showLabels?: boolean }) {
-  const c = useColors();
-  const accent = useAccentColor();
-  const { t } = useTranslation();
-  return (
-    <View>
-      <View style={s.track}>
-        {STOPS.map((stop, i) => {
-          const done = i <= reached;
-          const current = i === reached;
-          return (
-            <React.Fragment key={stop}>
-              {i > 0 && <View style={[s.trackLine, { backgroundColor: i <= reached ? accent : c.border }]} />}
-              <View
-                style={[
-                  s.trackDot,
-                  { backgroundColor: done ? accent : c.surfaceSecondary, borderColor: done ? accent : c.border },
-                  current && { width: 14, height: 14, borderRadius: 7, borderWidth: 3, borderColor: accent + '55' },
-                ]}
-              />
-            </React.Fragment>
-          );
-        })}
-      </View>
-      {showLabels && (
-        <View style={s.trackLabels}>
-          {STOPS.map((stop, i) => (
-            <Text key={stop} style={[s.trackLabel, { color: i <= reached ? c.textSecondary : c.textMuted }]} numberOfLines={1}>
-              {t(`community.stops.${stop}`)}
-            </Text>
-          ))}
-        </View>
-      )}
-    </View>
-  );
-}
-
-export function Avatar({ alias, size = 40 }: { alias: string; size?: number }) {
-  const accent = useAccentColor();
-  const { t } = useTranslation();
-  const anon = !alias || alias === t('community.anonymous');
-  return (
-    <View style={[s.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: accent + '1F' }]}>
-      {anon
-        ? <Ionicons name="person" size={size * 0.45} color={accent} />
-        : <Text style={[s.avatarTxt, { color: accent, fontSize: size * 0.42 }]}>{alias.trim()[0]!.toUpperCase()}</Text>}
-    </View>
-  );
-}
-
-/** One shared timeline in the feed: who, program and current step, the day, and a thin track. */
-export function SharedTimelineCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
+/** One shared timeline as a plain list row: name and day, program and step, a thin progress bar. */
+export function CommunityRow({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
   const accent = useAccentColor();
   const { t } = useTranslation();
   const programLabel = useProgramLabel();
   const now = currentStep(timeline);
-  const alias = timeline.alias || t('community.anonymous');
-
+  const pct = `${Math.round(((reachedIndex(timeline) + 1) / STOPS.length) * 100)}%` as const;
   return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      disabled={!onPress}
-      onPress={onPress}
-      style={[s.card, { backgroundColor: c.surfaceCard, borderColor: timeline.isMine ? accent : c.border }, timeline.isMine && { borderWidth: 1 }]}
-      accessibilityRole={onPress ? 'button' : undefined}
-    >
-      <View style={s.cardTop}>
-        <Avatar alias={alias} size={36} />
-        <View style={s.cardWho}>
-          <View style={s.nameRow}>
-            <Text style={[s.alias, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-            {timeline.isMine && (
-              <View style={[s.youBadge, { backgroundColor: accent }]}>
-                <Text style={s.youTxt}>{t('community.you')}</Text>
-              </View>
-            )}
-          </View>
-          <Text style={[s.sub, { color: c.textMuted }]} numberOfLines={1}>
-            {programLabel(timeline.program)}{now ? ` · ${t(MILESTONE_META[now.type].labelKey)}` : ''}
-          </Text>
-        </View>
-        {now && <Text style={[s.day, { color: accent }]}>{t('community.dayN', { n: now.day })}</Text>}
+    <TouchableOpacity ph-label="community-row" activeOpacity={0.7} onPress={onPress} disabled={!onPress}
+      style={[s.row, { borderBottomColor: c.border }]} accessibilityRole={onPress ? 'button' : undefined}>
+      <View style={s.line1}>
+        <Text style={[s.rowTitle, s.flex, { color: c.textPrimary }]} numberOfLines={1}>
+          {timeline.alias || t('community.anonymous')}
+        </Text>
+        {now && <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>}
       </View>
-      <StopTrack reached={reachedIndex(timeline)} />
+      <Text style={[s.rowSub, { color: c.textMuted }]} numberOfLines={1}>
+        {programLabel(timeline.program)}{now ? ` · ${t(MILESTONE_META[now.type].labelKey)}` : ''}
+      </Text>
+      <View style={[s.bar, { backgroundColor: c.border }]}>
+        <View style={[s.barFill, { backgroundColor: accent, width: pct }]} />
+      </View>
     </TouchableOpacity>
   );
 }
 
 const s = StyleSheet.create({
-  track: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 4 },
-  trackDot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1 },
-  trackLine: { flex: 1, height: 2, borderRadius: 1 },
-  trackLabels: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 },
-  trackLabel: { fontSize: 10, width: 54, textAlign: 'center', marginHorizontal: -16 },
-
-  avatar: { alignItems: 'center', justifyContent: 'center' },
-  avatarTxt: { fontWeight: typography.bold },
-
-  card: { borderRadius: borderRadius.md, borderWidth: 0.3, paddingHorizontal: spacing.base, paddingVertical: spacing.md, gap: spacing.md },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  cardWho: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  alias: { fontSize: typography.base, fontWeight: typography.semibold, flexShrink: 1 },
-  youBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: borderRadius.full },
-  youTxt: { color: palette.white, fontSize: 10, fontWeight: typography.bold, letterSpacing: 0.5 },
-  sub: { fontSize: typography.xs, marginTop: 2 },
-  day: { fontSize: typography.base, fontWeight: typography.bold, fontVariant: ['tabular-nums'] },
+  flex: { flex: 1, minWidth: 0 },
+  row: { paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth },
+  line1: { flexDirection: 'row', alignItems: 'baseline', gap: spacing.md },
+  rowTitle: { fontSize: typography.base, fontWeight: typography.semibold },
+  rowSub: { fontSize: typography.sm, marginTop: 3 },
+  day: { fontSize: typography.base, fontWeight: typography.semibold, fontVariant: ['tabular-nums'] },
+  bar: { height: 3, borderRadius: 2, marginTop: 10, overflow: 'hidden' },
+  barFill: { height: 3, borderRadius: 2 },
 });

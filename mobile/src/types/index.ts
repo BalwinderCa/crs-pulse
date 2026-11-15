@@ -106,6 +106,8 @@ export type RootStackParamList = {
   BcSirsCalculator: undefined;
   Notifications: undefined;
   ProcessingTimes: undefined;
+  /** One shared Community timeline; `id` is `mine` for the user's own. */
+  CommunityTimeline: { id: string };
 };
 
 export type MainTabParamList = {
