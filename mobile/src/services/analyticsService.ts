@@ -68,10 +68,6 @@ type EventProperties = {
   checklist_item_checked: undefined;
   /** `placement` is set for app open ads only: at the splash, or held over to a resume. */
   ad_shown: { format: 'banner' | 'native' | 'app_open'; placement?: 'launch' | 'resume' };
-  /**
-   * The Settings "3 days without ads" offer ran: `earned` (watched to the end,
-   * ads now off), `dismissed` (closed early) or `unavailable` (no fill/error).
-   */
   /** An app open ad that loaded after the splash cap; `load_ms` is its load time. */
   ad_late: { format: 'app_open'; load_ms: number };
   /** A tapped push. `draw_number` (public IRCC data) is set for new_draw pushes only. */
@@ -84,6 +80,8 @@ type EventProperties = {
    * third good moment. The OS may still choose not to show it.
    */
   review_requested: { trigger: ReviewTrigger };
+  /** "I'm interested" on the Timeline Community tab (waitlist for shared timelines). Once per install. */
+  community_interest: undefined;
 };
 
 export type AnalyticsEvent = keyof EventProperties;

@@ -174,6 +174,17 @@ const en = {
 
   timeline: {
     title: 'Timeline',
+    tabMine: 'My timeline',
+    tabCommunity: 'Community',
+    communitySoon: 'Coming soon',
+    communityTitle: 'See how others are moving',
+    communityBody: 'Compare your journey with people on the same path: how long others waited from ITA to AOR, biometrics, passport request and landing. Share your own timeline anonymously, only if you want to.',
+    communityPreview: 'Example of a shared timeline',
+    communityDay0: 'Day 0',
+    communityDayN: 'Day {{days}}',
+    communityJoin: "I'm interested",
+    communityJoined: "You're on the list. Thanks!",
+    communityFoot: 'Tapping tells us you want this. We send nothing from your own timeline.',
     noMilestonesYet: 'No milestones yet',
     noMilestonesDesc: 'Track your immigration journey — log key dates like your ITA, AOR, biometrics, medical, and passport request.',
     forExample: 'FOR EXAMPLE',

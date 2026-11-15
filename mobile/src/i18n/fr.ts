@@ -180,6 +180,18 @@ const fr: TranslationKeys = {
 
   timeline: {
     title: 'Chronologie',
+    // [REVIEW] Timeline tabs + Community waitlist
+    tabMine: 'Ma chronologie',
+    tabCommunity: 'Communauté',
+    communitySoon: 'Bientôt',
+    communityTitle: 'Voyez où en sont les autres',
+    communityBody: 'Comparez votre parcours avec celui de personnes sur la même voie : combien de temps d’autres ont attendu entre l’ITA, l’AR, la biométrie, la demande de passeport et l’arrivée. Partagez votre propre chronologie de façon anonyme, seulement si vous le souhaitez.',
+    communityPreview: 'Exemple de chronologie partagée',
+    communityDay0: 'Jour 0',
+    communityDayN: 'Jour {{days}}',
+    communityJoin: 'Ça m’intéresse',
+    communityJoined: 'Vous êtes sur la liste. Merci !',
+    communityFoot: 'Ce bouton nous indique votre intérêt. Rien de votre propre chronologie n’est envoyé.',
     noMilestonesYet: 'Aucun jalon pour l\'instant',
     noMilestonesDesc: 'Suivez votre parcours d\'immigration — enregistrez les dates importantes comme votre ITA, ARD, biométrie, visite médicale et demande de passeport.',
     forExample: 'PAR EXEMPLE',

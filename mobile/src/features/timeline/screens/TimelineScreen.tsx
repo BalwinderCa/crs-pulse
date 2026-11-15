@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { CommunityTab } from '../components/CommunityTab';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
@@ -410,6 +411,11 @@ export default function TimelineScreen() {
   const { milestones, load, remove } = useTimelineStore();
   // null = closed, undefined = add mode, Milestone = edit mode
   const [modalMilestone, setModalMilestone] = useState<Milestone | null | undefined>(null);
+  const [tab, setTab] = useState<'mine' | 'community'>('mine');
+  const TABS: { key: 'mine' | 'community'; label: string }[] = [
+    { key: 'mine', label: t('timeline.tabMine') },
+    { key: 'community', label: t('timeline.tabCommunity') },
+  ];
 
   useEffect(() => { load(); }, [load]);
 
@@ -423,7 +429,31 @@ export default function TimelineScreen() {
         <AppHeader title={t('timeline.title')} />
       </View>
 
-      {milestones.length === 0 ? (
+      {/* My timeline | Community */}
+      <View style={[s.segOuter, contentFrameStyle]}>
+        <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
+          {TABS.map((tb) => {
+            const active = tab === tb.key;
+            return (
+              <TouchableOpacity ph-label={`timeline-tab-${tb.key}`}
+                key={tb.key}
+                style={[s.segBtn, active && { backgroundColor: accent }]}
+                onPress={() => setTab(tb.key)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
+              >
+                <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{tb.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      {tab === 'community' ? (
+        <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
+          <CommunityTab />
+        </ScrollView>
+      ) : milestones.length === 0 ? (
         <ScrollView contentContainerStyle={s.empty} showsVerticalScrollIndicator={false}>
           <View style={[s.emptyIcon, { backgroundColor: accent + '18' }]}>
             <Ionicons name="time-outline" size={36} color={accent} />
@@ -500,7 +530,13 @@ const s = StyleSheet.create({
   header:      { paddingHorizontal: spacing.base, borderBottomWidth: StyleSheet.hairlineWidth },
   addBtnTxt:   { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
-  list:        { paddingHorizontal: spacing.base, paddingTop: spacing.lg },
+  list:        { paddingHorizontal: spacing.base, paddingTop: spacing.sm },
+  segOuter:    { paddingHorizontal: spacing.base, paddingTop: spacing.md },
+  segWrap:     { flexDirection: 'row', borderRadius: borderRadius.md, padding: spacing.xs,
+                 gap: spacing.xs, borderWidth: 0.3 },
+  segBtn:      { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 40,
+                 paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
+  segText:     { fontSize: typography.sm, fontWeight: typography.bold },
   modalKeyboard: { flex: 1 },
   timelineRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: 4 },
   lineCol:     { alignItems: 'center', width: 16 },

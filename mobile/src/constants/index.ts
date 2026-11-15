@@ -95,6 +95,8 @@ export const STORAGE_KEYS = {
   REVIEW_PROMPTED: 'crs_pulse.review_prompted',
   REVIEW_MOMENTS: 'crs_pulse.review_moments',
   APP_OPEN_LAUNCHES: 'crs_pulse.app_open_launches',
+  /** Set once the user tapped "I'm interested" on the Timeline Community tab. */
+  COMMUNITY_INTEREST: 'crs_pulse.community_interest',
   /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
   AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
 } as const;
