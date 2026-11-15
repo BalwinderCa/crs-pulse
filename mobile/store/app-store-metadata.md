@@ -15,6 +15,10 @@ title, so Play stays "CRS Pulse: Score & Draws". Never use "Express Entry" in a 
 The on-device name stays "CRS Pulse"._
 _French (Canada) localization (29):_ `Suivi IRCC : score et tirages` [REVIEW]
 _Once the name holds "IRCC", drop `ircc` from Keywords (Apple already indexes the name) and use the room._
+_Plan (2026-11-15): only if Apple approves this name with 1.0.17, rename inside the app by OTA (header
+logo, side menu, text). Decide then whether Android shows it too (Play rejected "IRCC" in its title).
+The home-screen name (`app.config.js` name / CFBundleDisplayName) needs a store build, so it would follow in
+the build after that._
 
 ## Subtitle  (max 30)
 ```
