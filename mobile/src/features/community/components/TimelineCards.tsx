@@ -64,18 +64,14 @@ export function Avatar({ alias, size = 40 }: { alias: string; size?: number }) {
   );
 }
 
-/** One shared timeline in the feed: who, which program, where they are, and the track. */
+/** One shared timeline in the feed: who, program and current step, the day, and a thin track. */
 export function SharedTimelineCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
   const accent = useAccentColor();
   const { t } = useTranslation();
   const programLabel = useProgramLabel();
   const now = currentStep(timeline);
-  const meta = now ? MILESTONE_META[now.type] : undefined;
   const alias = timeline.alias || t('community.anonymous');
-  const updated = timeline.updatedDaysAgo === 0
-    ? t('community.updatedToday')
-    : t('community.updatedDaysAgo', { n: timeline.updatedDaysAgo });
 
   return (
     <TouchableOpacity
@@ -86,7 +82,7 @@ export function SharedTimelineCard({ timeline, onPress }: { timeline: SharedTime
       accessibilityRole={onPress ? 'button' : undefined}
     >
       <View style={s.cardTop}>
-        <Avatar alias={alias} />
+        <Avatar alias={alias} size={36} />
         <View style={s.cardWho}>
           <View style={s.nameRow}>
             <Text style={[s.alias, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
@@ -96,22 +92,13 @@ export function SharedTimelineCard({ timeline, onPress }: { timeline: SharedTime
               </View>
             )}
           </View>
-          <Text style={[s.sub, { color: c.textMuted }]}>{programLabel(timeline.program)} · {updated}</Text>
+          <Text style={[s.sub, { color: c.textMuted }]} numberOfLines={1}>
+            {programLabel(timeline.program)}{now ? ` · ${t(MILESTONE_META[now.type].labelKey)}` : ''}
+          </Text>
         </View>
-        {onPress && <Ionicons name="chevron-forward" size={16} color={c.textMuted} />}
+        {now && <Text style={[s.day, { color: accent }]}>{t('community.dayN', { n: now.day })}</Text>}
       </View>
-
-      {now && meta && (
-        <View style={[s.nowRow, { backgroundColor: meta.color + '14' }]}>
-          <View style={[s.nowIcon, { backgroundColor: meta.color + '24' }]}>
-            <Ionicons name={meta.icon} size={16} color={meta.color} />
-          </View>
-          <Text style={[s.nowLabel, { color: c.textPrimary }]} numberOfLines={1}>{t(meta.labelKey)}</Text>
-          <Text style={[s.nowDay, { color: meta.color }]}>{t('community.dayN', { n: now.day })}</Text>
-        </View>
-      )}
-
-      <StopTrack reached={reachedIndex(timeline)} showLabels />
+      <StopTrack reached={reachedIndex(timeline)} />
     </TouchableOpacity>
   );
 }
@@ -126,7 +113,7 @@ const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
 
-  card: { borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base, gap: spacing.md },
+  card: { borderRadius: borderRadius.md, borderWidth: 0.3, paddingHorizontal: spacing.base, paddingVertical: spacing.md, gap: spacing.md },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   cardWho: { flex: 1 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
@@ -134,8 +121,5 @@ const s = StyleSheet.create({
   youBadge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: borderRadius.full },
   youTxt: { color: palette.white, fontSize: 10, fontWeight: typography.bold, letterSpacing: 0.5 },
   sub: { fontSize: typography.xs, marginTop: 2 },
-  nowRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: borderRadius.md, padding: spacing.sm },
-  nowIcon: { width: 28, height: 28, borderRadius: borderRadius.sm, alignItems: 'center', justifyContent: 'center' },
-  nowLabel: { flex: 1, fontSize: typography.sm, fontWeight: typography.semibold },
-  nowDay: { fontSize: typography.sm, fontWeight: typography.bold, fontVariant: ['tabular-nums'] },
+  day: { fontSize: typography.base, fontWeight: typography.bold, fontVariant: ['tabular-nums'] },
 });

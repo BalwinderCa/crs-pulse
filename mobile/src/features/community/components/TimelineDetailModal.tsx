@@ -12,7 +12,7 @@ import { reachedIndex, type SharedTimeline } from '../model';
 import { Avatar, StopTrack, useProgramLabel } from './TimelineCards';
 
 /** A shared timeline in full: every step, its day, and the gap since the step before. */
-export function TimelineDetailModal({ timeline, onClose }: { timeline: SharedTimeline | null; onClose: () => void }) {
+export function TimelineDetailModal({ timeline, onClose, onEdit }: { timeline: SharedTimeline | null; onClose: () => void; onEdit?: (() => void) | undefined }) {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
@@ -24,7 +24,13 @@ export function TimelineDetailModal({ timeline, onClose }: { timeline: SharedTim
     <Modal visible={!!timeline} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.flex, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
         <View style={[s.bar, { borderBottomColor: c.border }]}>
-          <Text style={[s.barTitle, { color: c.textPrimary }]}>{t('community.detailTitle')}</Text>
+          {onEdit ? (
+            <TouchableOpacity ph-label="community-share-edit" onPress={onEdit} style={[s.barBtn, { borderColor: accent }]}>
+              <Text style={[s.barBtnTxt, { color: accent, fontWeight: typography.bold }]}>{t('community.edit')}</Text>
+            </TouchableOpacity>
+          ) : (
+            <Text style={[s.barTitle, { color: c.textPrimary }]}>{t('community.detailTitle')}</Text>
+          )}
           <TouchableOpacity ph-label="community-detail-close" onPress={onClose} style={[s.barBtn, { borderColor: c.border }]}>
             <Text style={[s.barBtnTxt, { color: c.textMuted }]}>{t('community.close')}</Text>
           </TouchableOpacity>

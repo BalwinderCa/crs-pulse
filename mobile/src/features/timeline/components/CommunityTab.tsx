@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -29,31 +29,11 @@ const PREVIEW: { icon: React.ComponentProps<typeof Ionicons>['name']; color: str
 ];
 
 /**
- * Community tab: the feed once COMMUNITY_LIVE, the waitlist until then. Dev
- * builds get a small switch to look at either.
+ * Community tab: the feed once COMMUNITY_LIVE, the waitlist until then.
+ * Dev builds show the feed so it can be worked on.
  */
 export function CommunityTab() {
-  const c = useColors();
-  const accent = useAccentColor();
-  const [preview, setPreview] = useState<'waitlist' | 'live'>('live');
-  if (COMMUNITY_LIVE) return <CommunityFeed />;
-  if (!__DEV__) return <CommunityWaitlist />;
-  return (
-    <View>
-      <View style={[s.dev, { borderColor: c.border }]}>
-        <Text style={[s.devTxt, { color: c.textMuted }]}>DEV PREVIEW</Text>
-        {(['waitlist', 'live'] as const).map((k) => (
-          <TouchableOpacity key={k} onPress={() => setPreview(k)}
-            style={[s.devBtn, preview === k && { backgroundColor: accent }]}>
-            <Text style={[s.devTxt, { color: preview === k ? palette.white : c.textSecondary }]}>
-              {k === 'live' ? 'Feed' : 'Waitlist (users see this)'}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      {preview === 'live' ? <CommunityFeed /> : <CommunityWaitlist />}
-    </View>
-  );
+  return COMMUNITY_LIVE || __DEV__ ? <CommunityFeed /> : <CommunityWaitlist />;
 }
 
 export function CommunityWaitlist() {
@@ -123,9 +103,6 @@ export function CommunityWaitlist() {
 }
 
 const s = StyleSheet.create({
-  dev: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs, borderWidth: 1, borderStyle: 'dashed', borderRadius: borderRadius.md, padding: 4, marginTop: spacing.sm },
-  devBtn: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.sm },
-  devTxt: { fontSize: 10, fontWeight: typography.bold, letterSpacing: 0.5, paddingHorizontal: 4 },
   wrap: { paddingTop: spacing.sm },
   card: { borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.lg, gap: spacing.md, alignItems: 'stretch' },
   badge: { alignSelf: 'center', paddingHorizontal: spacing.md, paddingVertical: 4, borderRadius: borderRadius.full },
