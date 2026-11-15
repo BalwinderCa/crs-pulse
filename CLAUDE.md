@@ -60,7 +60,7 @@ eas submit                                      # Submit to app stores
 
 **1.0.16 (2026-11-13).** iOS **build 69** (EAS, GitHub run 43539420765, from `e05a24c`) was attached
 to the 1.0.16 draft and **submitted for review the same evening with manual release** ("Waiting for
-Review"). Nobody had opened build 69 from TestFlight before submitting, so **open it on a device
+Review"). **Apple approved it by 2026-11-14** (Pending Developer Release). Nobody had opened build 69 from TestFlight before submitting, so **open it on a device
 before clicking "Release This Version"**. What's New (en): "New: watch one short video in Settings to
 turn off all other ads for 3 days. Ads in the draws list now also sit neatly inside their card. Plus
 small fixes and improvements." fr-CA got its own What's New and, being new App Store text, the
