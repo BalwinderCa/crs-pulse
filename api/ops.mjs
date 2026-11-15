@@ -1,4 +1,4 @@
-// admin.crspulse.com (once its domain is live) and crspulse.com/pulse-hq: the login
+// admin.crspulse.com (crspulse.com/pulse-hq redirects here): the login
 // form, or the dashboard shell once signed in. The shell holds no data; its script fetches
 // /api/ops-stats, which checks the session cookie itself. Not linked from the site, not in
 // the sitemap, noindex. Look: the Creliq "Revenue Analytics Dashboard" Dribbble shot

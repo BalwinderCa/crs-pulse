@@ -8,6 +8,11 @@
   "trailingSlash": false,
   "redirects": [
     {
+      "source": "/pulse-hq",
+      "destination": "https://admin.crspulse.com/",
+      "permanent": false
+    },
+    {
       "source": "/:path((?!api/).+)",
       "has": [{ "type": "host", "value": "admin.crspulse.com" }],
       "destination": "https://www.crspulse.com/:path",
@@ -64,12 +69,6 @@
           "value": "text/markdown; charset=utf-8"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/pulse-hq",
-      "destination": "/api/ops"
     }
   ]
 }

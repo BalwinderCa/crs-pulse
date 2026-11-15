@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Connects the /pulse-hq dashboard to the AdMob API (read-only). Run once, in your own
+// Connects the admin.crspulse.com dashboard to the AdMob API (read-only). Run once, in your own
 // terminal, from the repo root:
 //
 //   node scripts/admob-setup.mjs ~/Downloads/client_secret_XXXX.json
