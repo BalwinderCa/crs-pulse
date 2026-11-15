@@ -72,6 +72,10 @@ Alpha on 2026-11-14 (EAS submission `ee43b23a`), and the same day a Production r
 release notes in en-GB, fr-CA, fr-FR matching the iOS What's New) was added and sent for review with it,
 restarting the Alpha review so both are one review. Managed publishing is off, so it goes live on
 approval. Only warning: no deobfuscation file (as with 1.0.15). Nobody has opened it on an Android device.
+**Both are live:** Play published 1.0.16 on 2026-11-14, and iOS 1.0.16 was released (App Store lookup:
+2026-11-15 00:38 UTC). The text-free 512 px Play icon (`mobile/store/play-icon-512.png`, uploaded as
+`icon-leaf-only-512.png`, AI declaration "Don't label assets") went for review on 2026-11-15 as 3
+changes (en-GB, fr-CA, fr-FR listings).
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
