@@ -559,10 +559,8 @@ OAuth client of type "Desktop app" in Google Cloud project `crspulseapp` (AdMob 
 consent screen *In production* so the refresh token doesn't expire after 7 days as it does in
 Testing), connected with `node scripts/admob-setup.mjs <client_secret.json>`, which stores
 `ADMOB_CLIENT_ID`, `ADMOB_CLIENT_SECRET`, `ADMOB_REFRESH_TOKEN` and `ADMOB_PUBLISHER_ID`. If
-AdMob fails, the PostHog half still renders. A third sidebar view, **Rewarded ad** (`#rewarded`), shows the
-Settings rewarded offer: `rewarded_ad` taps and results from PostHog (7 days and since 2026-11-13,
-users ad-free now = earned in the last 3 days, Settings viewers on 1.0.15 as reach) beside the AdMob
-`REWARDED` format and rewarded ad units' earnings.
+AdMob fails, the PostHog half still renders. (A third view, **Rewarded ad**, was removed with the
+Settings offer on 2026-11-14.)
 
 **AdSense on the website (review requested 2026-10-02).** crspulse.com was added, verified by
 meta tag and submitted for review that day, and the AdSense site status is "Getting ready". A
@@ -581,15 +579,15 @@ privacy policy's "Google AdSense (website ads)" section promises it.
 
 ### Monetisation: ads only, no IAP
 
-**Rewarded ad in Settings: "3 days without ads"** (`AdFreeCard`, `showRewardedAd()`, `adFreeStore`).
-Watching one rewarded video to the end turns every other ad off for 3 days (`AD_FREE_MS`): list
-slots render nothing and the launch ad is skipped without using a turn. It doesn't stack; Settings
-offers another only after the period ends. **AdMob's rewarded-ad policy forbids a plain "watch to
-support us" button** (its own example of misleading copy): there must be a real in-app reward, stated
-before the ad, and declining must cost nothing, so keep the copy to describing the reward. The card
-is hidden unless `EXPO_PUBLIC_ADMOB_REWARDED_IOS`/`_ANDROID` are set (eas.json production env).
-`rewarded_ad` (`result`: `earned`, `dismissed`, `unavailable`) and `ad_shown` with format `rewarded`
-measure it. "Reset All Data" keeps an earned period, like the launch counter.
+**Rewarded ad in Settings ("3 days without ads"): removed 2026-11-14.** It shipped in the fourth
+and fifth 1.0.15 updates and natively in 1.0.16 (iOS build 69, Android versionCode 33). One user
+watched it (CA$0.0165, eCPM ~CA$16.50) before the user decided to drop it. The card,
+`showRewardedAd()`, the rewarded unit IDs (eas.json) and the dashboard view are gone. `adFreeStore`
+and the `isAdFree` checks in `AdBanner`/`RootNavigator` stay so a period already earned runs out;
+they can be deleted once no install can hold one. The AdMob rewarded ad units
+(`…/6970259027` Android, `…/6192218187` iOS) still exist in AdMob, unused. If it ever comes back:
+**AdMob's rewarded-ad policy forbids a plain "watch to support us" button**; there must be a real
+in-app reward, stated before the ad, and declining must cost nothing.
 
 **The app has no in-app purchase.** Everything, including the analytics "Your Plan" tab, is free; revenue comes from AdMob alone. `react-native-iap` was removed on 2026-09-08 because Google Play began rejecting uploads that bundle Play Billing < 8.0.0, and react-native-iap 12.x pins 7.0.0. Moving to a Billing-8 release (14.0.0+) would have required `react-native-nitro-modules`, Kotlin 2.1 and compileSdk 36 — an Expo SDK upgrade — so with the purchase never having been sold (Android had 0 installs, and the product was Play-only so it never loaded on iOS) the purchase path was dropped instead.
 
