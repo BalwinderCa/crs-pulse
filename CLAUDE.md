@@ -263,6 +263,10 @@ accent-tinted background and border, a filled "Watch a short ad" button. It's th
 1.0.15 update: **1.0.16 was bumped in `e05a24c` (2026-11-13)**, so from here an update reaches only
 installs whose version matches `app.config.js`; a fix for 1.0.15 installs would have to be published
 from a 1.0.15 checkout. iOS build tag `ios-build-1.0.16` (GitHub run 43539420765).
+The offer was then **removed on 2026-11-14 by two updates**: group `5cfd172a` (runtime 1.0.16, from
+`a50b7ad` on main) and group `d62ffbd2` (runtime 1.0.15, commit `cdfec78` on branch
+`ota-1.0.15-remove-offer`, which is `f1a51ef` plus the removal). Neither was tested on a device; the
+first sign they arrived is `rewarded_ad` events stopping.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
