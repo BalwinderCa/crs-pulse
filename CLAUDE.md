@@ -164,7 +164,7 @@ official marks** (CIPO 0922882/0922881, s. 9(1)(n)(iii)), so never put them in a
 product name; whether descriptive use elsewhere is fine (Play short description, in-app subtitle
 "Express Entry Tracker", website) is with a lawyer. If Google refuses again, drop "CRS" from the
 Play title (e.g. "Pulse: Unofficial Draw Tracker") and use a store icon with no "CRS" text and no
-maple leaf. The current icon has "CRS PULSE" on a red/white maple leaf. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
+maple leaf. The icon had "CRS PULSE" under a white maple leaf on red until `bd02472` (2026-11-14), which dropped the text (leaf only) from `icon.png`, `logo.png` and the favicons; it ships with the next store build (it can't go over the air), and the Play listing's 512 px icon has to be re-uploaded by hand. In AdMob the Android app stays on limited ad serving ("Setup incomplete")
 until it has a Play listing to link.
 
 **Play rejected that production update under the Impersonation policy** ("unclear affiliation with
