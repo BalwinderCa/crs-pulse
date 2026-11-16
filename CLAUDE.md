@@ -77,6 +77,11 @@ approval. Only warning: no deobfuscation file (as with 1.0.15). Nobody has opene
 `icon-leaf-only-512.png`, AI declaration "Don't label assets") went for review on 2026-11-15 as 3
 changes (en-GB, fr-CA, fr-FR listings).
 
+**1.0.17 (bumped 2026-11-16 in `4fde343`).** Leaf-only icon, the App Store name "IRCC Tracker: Score &
+Draws", and no Community: release builds hide the Timeline tabs and Share card (`communityVisible()`),
+and Community is planned for 1.0.18. iOS tag `ios-build-1.0.17` (run 43800658249, from `71de9c2`).
+The Android build hadn't been started. From this bump, OTAs from main reach only 1.0.17 installs.
+
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
   released by hand, and the public App Store lookup shows 1.0.15 from 2026-10-24 04:26 UTC. App
