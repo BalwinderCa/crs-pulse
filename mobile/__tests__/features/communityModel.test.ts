@@ -1,6 +1,6 @@
 import type { Milestone } from '@/store/timelineStore';
 import {
-  programFromTypeId, reachedIndex, toSharedSteps, typicalPace, type SharedTimeline,
+  communityVisible, programFromTypeId, reachedIndex, sharedAorMonth, toSharedSteps, typicalPace, type SharedTimeline,
 } from '@/features/community/model';
 
 const m = (type: Milestone['type'], date: string, extra: Partial<Milestone> = {}): Milestone =>
@@ -23,6 +23,17 @@ describe('community model', () => {
   it('adds the month only when the user allows it', () => {
     const steps = toSharedSteps([m('ITA', '2026-03-01'), m('AOR Received', '2026-04-10')], true, today);
     expect(steps.map((s) => s.month)).toEqual(['2026-03', '2026-04']);
+  });
+
+  it('shares the AOR month only, never the day, and never a future AOR', () => {
+    expect(sharedAorMonth([m('ITA', '2026-03-01'), m('AOR Received', '2026-04-10')], today)).toBe('2026-04');
+    expect(sharedAorMonth([m('AOR Received', '2026-12-01')], today)).toBeUndefined();
+    expect(sharedAorMonth([m('ITA', '2026-03-01')], today)).toBeUndefined();
+  });
+
+  it('stays hidden in release builds until Community goes live', () => {
+    expect(communityVisible(false)).toBe(false);
+    expect(communityVisible(true)).toBe(true);
   });
 
   it('returns nothing when there is nothing to share', () => {

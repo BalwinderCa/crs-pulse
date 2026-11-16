@@ -1,11 +1,12 @@
-import type { SharedTimeline } from './model';
+import { addDays, differenceInCalendarDays, format } from 'date-fns';
+import type { ProgramId, SharedStep, SharedTimeline } from './model';
 
 /**
  * Made-up shared timelines for the dev preview of the Community feed, until a
  * server holds real ones. Aliases are invented; the paces are plausible but
  * are not IRCC data.
  */
-export const SAMPLE_TIMELINES: SharedTimeline[] = [
+const HAND_WRITTEN: SharedTimeline[] = [
   {
     id: 's1', alias: 'MapleBound', program: 'cec', updatedDaysAgo: 1,
     steps: [
@@ -68,3 +69,71 @@ export const SAMPLE_TIMELINES: SharedTimeline[] = [
     ],
   },
 ];
+
+// More made-up timelines, so the paged list and its filters have enough to
+// work with. Seeded, so every run produces the same set.
+const ALIASES = [
+  'NorthernLights', 'PoutineFan', 'OttawaBound', 'WinnipegWaits', 'DevInVancouver', 'HalifaxHopeful',
+  'MontrealMaple', 'ReginaRoad', 'LakeLouise', 'EdmontonEng', 'QuebecQuest', 'YukonYearner',
+  'TimHortonsNext', 'SaskatoonSoon', 'VictoriaVibes', 'KitchenerCoder', 'MapleNurse', 'BanffBound',
+];
+const GAPS: [SharedStep['type'], number, number][] = [
+  ['Application Submitted', 10, 50],
+  ['AOR Received', 1, 5],
+  ['Biometrics Completed', 7, 20],
+  ['Medical Passed', 5, 30],
+  ['Passport Requested', 90, 170],
+  ['Passport Submitted', 3, 15],
+  ['Portal 1', 2, 10],
+  ['Final Decision', 2, 12],
+];
+const PROGRAM_POOL: ProgramId[] = ['cec', 'cec', 'cec', 'fsw', 'fsw', 'pnp_ee', 'pnp_ee', 'fst'];
+
+function rng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generate(count: number): SharedTimeline[] {
+  const rand = rng(20261115);
+  const int = (lo: number, hi: number) => lo + Math.floor(rand() * (hi - lo + 1));
+  const today = new Date(2026, 10, 15);
+  return Array.from({ length: count }, (_, i) => {
+    const ita = addDays(new Date(2025, 9, 1), int(0, 400));
+    const showMonths = rand() < 0.6;
+    const dates: { type: SharedStep['type']; date: Date }[] = [{ type: 'ITA', date: ita }];
+    for (const [type, lo, hi] of GAPS) {
+      const next = addDays(dates[dates.length - 1]!.date, int(lo, hi));
+      if (next > today) break;
+      dates.push({ type, date: next });
+    }
+    const last = dates[dates.length - 1]!.date;
+    const steps = dates.map(({ type, date }) => {
+      const step: SharedStep = { type, day: differenceInCalendarDays(date, ita) };
+      if (showMonths) step.month = format(date, 'yyyy-MM');
+      return step;
+    });
+    const aor = dates.find((d) => d.type === 'AOR Received');
+    return {
+      ...(aor ? { aorMonth: format(aor.date, 'yyyy-MM') } : {}),
+      id: `g${i + 1}`,
+      alias: rand() < 0.4 ? 'Anonymous applicant' : ALIASES[int(0, ALIASES.length - 1)]!,
+      program: PROGRAM_POOL[int(0, PROGRAM_POOL.length - 1)]!,
+      updatedDaysAgo: Math.min(differenceInCalendarDays(today, last), int(0, 30)),
+      steps,
+    };
+  });
+}
+
+// Hand-written ones without months get a plausible AOR month for the filter.
+const HAND_AOR: Record<string, string> = { s2: '2026-07', s5: '2026-04', s7: '2026-06', s8: '2026-09' };
+const withAor = (t: SharedTimeline): SharedTimeline => {
+  const m = t.steps.find((st) => st.type === 'AOR Received')?.month ?? HAND_AOR[t.id];
+  return m ? { ...t, aorMonth: m } : t;
+};
+
+export const SAMPLE_TIMELINES: SharedTimeline[] = [...HAND_WRITTEN.map(withAor), ...generate(72)];

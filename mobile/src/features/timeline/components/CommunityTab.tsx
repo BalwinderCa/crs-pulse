@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { palette, spacing, typography, borderRadius } from '@/theme';
@@ -9,7 +9,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { Button } from '@/components/common/Button';
 import { STORAGE_KEYS } from '@/constants';
 import { track } from '@/services/analyticsService';
-import { COMMUNITY_LIVE } from '@/features/community/model';
+import { communityVisible } from '@/features/community/model';
 import { CommunityFeed } from '@/features/community/components/CommunityFeed';
 
 /**
@@ -29,11 +29,17 @@ const PREVIEW: { icon: React.ComponentProps<typeof Ionicons>['name']; color: str
 ];
 
 /**
- * Community tab: the feed once COMMUNITY_LIVE, the waitlist until then.
+ * Community tab: the feed whenever Community is visible (dev, or once live). The
+ * waitlist is kept for a staged launch but no release build reaches it today.
  * Dev builds show the feed so it can be worked on.
  */
-export function CommunityTab() {
-  return COMMUNITY_LIVE || __DEV__ ? <CommunityFeed /> : <CommunityWaitlist />;
+export function CommunityTab({ contentContainerStyle }: { contentContainerStyle?: StyleProp<ViewStyle> }) {
+  if (communityVisible()) return <CommunityFeed contentContainerStyle={contentContainerStyle} />;
+  return (
+    <ScrollView contentContainerStyle={contentContainerStyle} showsVerticalScrollIndicator={false}>
+      <CommunityWaitlist />
+    </ScrollView>
+  );
 }
 
 export function CommunityWaitlist() {

@@ -199,6 +199,7 @@ const fr: TranslationKeys = {
     notShared: 'pas encore partagée',
     youShort: 'Vous',
     share: 'Partager',
+    shareWithCommunity: 'Partager avec la communauté', // [REVIEW]
     peopleSharing_one: '{{count}} personne partage',
     peopleSharing_other: '{{count}} personnes partagent',
     days: 'jours',
@@ -210,6 +211,20 @@ const fr: TranslationKeys = {
     dayN: 'Jour {{n}}',
     plusDays: '+{{n}} jours',
     edit: 'Modifier',
+    filterProgram: 'Programme', // [REVIEW]
+    filterAorMonth: 'Mois de l’AR', // [REVIEW]
+    filterStage: 'Étape', // [REVIEW]
+    filterSort: 'Trier par', // [REVIEW]
+    any: 'Tous', // [REVIEW]
+    myMonth: 'Mon mois', // [REVIEW]
+    aorIn: 'AR {{month}}', // [REVIEW]
+    sortRecent: 'Mis à jour récemment', // [REVIEW]
+    sortLongest: 'Attente la plus longue', // [REVIEW]
+    sortFurthest: 'Les plus avancés', // [REVIEW]
+    clearFilters: 'Effacer', // [REVIEW]
+    emptyFiltered: 'Aucun parcours ne correspond à ces filtres.', // [REVIEW]
+    loadError: 'Impossible de charger les parcours.', // [REVIEW]
+    retry: 'Réessayer', // [REVIEW]
     filterAll: 'Tous',
     empty: 'Aucune chronologie partagée pour ce programme pour l’instant.',
     shareTitle: 'Partager ma chronologie',
@@ -221,9 +236,9 @@ const fr: TranslationKeys = {
     aliasHint: 'Facultatif. Laissez vide pour rester anonyme, et n’utilisez pas votre vrai nom.',
     programLabel: 'Programme',
     monthsLabel: 'Afficher le mois et l’année',
-    monthsHint: 'Désactivé : seuls les jours depuis votre première étape sont affichés.',
+    monthsHint: 'Désactivé : seuls les jours depuis votre première étape et le mois de votre AR sont affichés.', // [REVIEW]
     sharedLabel: 'Ce qui est partagé',
-    sharedYes: 'Vos types d’étapes et le nombre de jours entre elles, mis à jour quand vous en ajoutez',
+    sharedYes: 'Vos types d’étapes, le nombre de jours entre elles et le mois de votre AR (jamais le jour), mis à jour quand vous en ajoutez', // [REVIEW]
     sharedNo: 'Jamais partagé : notes, étapes personnalisées, dates exactes, votre profil ou score CRS',
     noMilestones: 'Ajoutez d’abord au moins une étape dans Ma chronologie. Les étapes futures ne sont pas partagées.',
     stopSharing: 'Arrêter le partage',

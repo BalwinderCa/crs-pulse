@@ -17,6 +17,10 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { CommunityTab } from '../components/CommunityTab';
+import { MyShareCard } from '@/features/community/components/MyShareCard';
+import { communityVisible } from '@/features/community/model';
+
+const SHOW_COMMUNITY = communityVisible();
 import { MILESTONE_META, MILESTONE_TYPES } from '../milestoneMeta';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -387,7 +391,7 @@ export default function TimelineScreen() {
 
   useEffect(() => { load(); }, [load]);
 
-  const listStyle = [s.list, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
+  const listStyle = [s.list, !SHOW_COMMUNITY && s.listNoTabs, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
@@ -398,7 +402,7 @@ export default function TimelineScreen() {
       </View>
 
       {/* My timeline | Community */}
-      <View style={[s.segOuter, contentFrameStyle]}>
+      {SHOW_COMMUNITY && <View style={[s.segOuter, contentFrameStyle]}>
         <View style={[s.segWrap, { backgroundColor: c.surfaceSecondary, borderColor: c.border }]}>
           {TABS.map((tb) => {
             const active = tab === tb.key;
@@ -415,12 +419,10 @@ export default function TimelineScreen() {
             );
           })}
         </View>
-      </View>
+      </View>}
 
-      {tab === 'community' ? (
-        <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
-          <CommunityTab />
-        </ScrollView>
+      {SHOW_COMMUNITY && tab === 'community' ? (
+        <CommunityTab contentContainerStyle={listStyle} />
       ) : milestones.length === 0 ? (
         <ScrollView contentContainerStyle={s.empty} showsVerticalScrollIndicator={false}>
           <View style={[s.emptyIcon, { backgroundColor: accent + '18' }]}>
@@ -463,6 +465,11 @@ export default function TimelineScreen() {
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
+          {SHOW_COMMUNITY && (
+            <View style={s.shareCard}>
+              <MyShareCard />
+            </View>
+          )}
           {milestones.map((item) => (
             <View key={item.id} style={s.cardCol}>
               <MilestoneCard item={item} onEdit={() => setModalMilestone(item)} onDelete={() => remove(item.id)} />
@@ -493,12 +500,14 @@ export default function TimelineScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
+  shareCard: { marginBottom: spacing.md },
   safe: { flex: 1 },
 
   header:      { paddingHorizontal: spacing.base, borderBottomWidth: StyleSheet.hairlineWidth },
   addBtnTxt:   { color: '#fff', fontSize: typography.sm, fontWeight: typography.bold },
 
   list:        { paddingHorizontal: spacing.base, paddingTop: spacing.sm },
+  listNoTabs:  { paddingTop: spacing.lg },
   segOuter:    { paddingHorizontal: spacing.base, paddingTop: spacing.md },
   segWrap:     { flexDirection: 'row', borderRadius: borderRadius.md, padding: spacing.xs,
                  gap: spacing.xs, borderWidth: 0.3 },

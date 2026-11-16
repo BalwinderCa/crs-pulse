@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { useTimelineStore } from '@/store/timelineStore';
-import { toSharedSteps, type SharedTimeline } from './model';
+import { sharedAorMonth, toSharedSteps, type SharedTimeline } from './model';
 import { SAMPLE_TIMELINES } from './sampleTimelines';
 import { useShareStore } from './shareStore';
 
@@ -21,9 +21,11 @@ export function useCommunity() {
   const mine: SharedTimeline | null = useMemo(() => {
     if (!settings) return null;
     const steps = toSharedSteps(milestones, settings.showMonths);
-    return steps.length
-      ? { id: MY_TIMELINE_ID, alias: settings.alias, program: settings.program, steps, updatedDaysAgo: 0, isMine: true }
-      : null;
+    if (!steps.length) return null;
+    const mineTl: SharedTimeline = { id: MY_TIMELINE_ID, alias: settings.alias, program: settings.program, steps, updatedDaysAgo: 0, isMine: true };
+    const aorMonth = sharedAorMonth(milestones);
+    if (aorMonth) mineTl.aorMonth = aorMonth;
+    return mineTl;
   }, [settings, milestones]);
 
   return { mine, mySteps, others: SAMPLE_TIMELINES, settings };

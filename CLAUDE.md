@@ -588,27 +588,39 @@ privacy policy's "Google AdSense (website ads)" section promises it.
 
 ### Community timelines (built, not live)
 
-Timeline has two tabs, **My timeline** and **Community** (`features/timeline/components/CommunityTab.tsx`).
-Release builds show only a waitlist ("I'm interested", one anonymous `community_interest` event per
-install) until `COMMUNITY_LIVE` in `features/community/model.ts` is set to true; dev builds always show
-the feed. The feed uses design "2 · Cards", chosen 2026-11-15 from the design canvas
-https://claude.ai/artifact/NCoEvLxpQkU6rCT288xtbe (six layout options plus the earlier concepts):
-a solid accent "You" card (current step and day, Share/Edit), program filter pills, and one white
-card per person (initial avatar, stage-coloured pill, big day count). Tapping a card pushes the
-`CommunityTimeline` stack screen: profile card with a stage-tinted "Day N" tile and days to a typical
-decision, each step as a card (icon, gap, day; latest outlined in the accent, next expected one
-dashed), "Compared with you", and Report (Edit sharing on your own). Share my timeline
-(`ShareTimelineModal`) takes an optional display name, program (pre-filled from the tracked
-application) and a months on/off switch, with a live card preview.
+Dev builds show Timeline with two tabs, **My timeline** and **Community**
+(`features/timeline/components/CommunityTab.tsx`). **Release builds show neither tab** (decided
+2026-11-15: 1.0.17 ships without them): `communityVisible()` in `features/community/model.ts` is
+`COMMUNITY_LIVE || __DEV__`, and gates the tabs, the Share card and the feed. The waitlist
+("I'm interested", one anonymous `community_interest` event per install) is still in the code but no
+release build reaches it. The design is "2 · Cards", chosen 2026-11-15 from the design canvas
+https://claude.ai/artifact/NCoEvLxpQkU6rCT288xtbe (six layout options plus the earlier concepts).
+**My timeline** starts with the user's "You" card (`MyShareCard`: a light accent tint, current step
+and day, and a full-width "Share with community" button, "Edit" once shared). **Community** is a paged
+`FlatList` (20 per page, pull to refresh) under one row of filter chips that open bottom sheets
+(`FilterSheet`): My month (your program + AOR month), Program, AOR month, Stage, and Sort (recently
+updated, longest waiting, furthest along). There is no "N people sharing" count. Each person is a
+white card (initial avatar, stage-coloured pill, big day count). The list reads through
+`fetchCommunityPage(filters, cursor)` in `features/community/communityApi.ts`, shaped like the planned
+`GET /community?program=&aor=&stage=&sort=&cursor=&limit=` route (use a keyset cursor on
+`(updated_at, id)`); today it pages through `SAMPLE_TIMELINES` (8 hand-written + 72 seeded, all made
+up). Tapping a card pushes the `CommunityTimeline` stack screen: profile card with a stage-tinted
+"Day N" tile and days to a typical decision, each step as a card (icon, gap, day; latest outlined in
+the accent, next expected one dashed), "Compared with you", and Report (Edit sharing on your own).
+Share my timeline (`ShareTimelineModal`) takes an optional display name, program (pre-filled from the
+tracked application) and a months on/off switch, with a live card preview.
 
 **Privacy by construction:** a shared timeline holds only milestone types and day offsets from the
-first step, plus month/year if allowed (`toSharedSteps`). Notes, custom milestones, exact dates and
+first step, the AOR month (always, decided 2026-11-15, so "My month" can find people; month only,
+never the day, `sharedAorMonth`), plus every step's month/year if allowed (`toSharedSteps`). Notes, custom milestones, exact dates and
 future-dated steps are never included; tests in `__tests__/features/communityModel.test.ts` check
 it. Your card is rebuilt from the live timeline, so it always shows where you have reached.
 
 **Not done before going live:** there is no server. Other people's timelines are
 `sampleTimelines.ts` (made up), so "typical pace" and "~N days to a typical decision" are medians of
-fake data, and Report only shows a toast. Going live needs storage and list/publish/delete routes
+fake data, and Report only shows a toast. The timeline page and "typical pace" still read
+`SAMPLE_TIMELINES` directly; with a server they need a get-one route and a summary route, because a
+paged list no longer holds every timeline. Going live needs storage and list/publish/delete routes
 (planned: the Cloudflare Worker with D1, a random anonymous device ID, rate limits), a display-name
 filter, working Report/block (Apple requires them for user content), privacy policy and App Store /
 Play privacy label updates, then `COMMUNITY_LIVE = true`.

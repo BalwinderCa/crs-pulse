@@ -6,12 +6,21 @@ import type { Milestone, MilestoneType } from '@/store/timelineStore';
  * milestones become one, and the "typical pace" figures the feed shows.
  *
  * Privacy by construction: a shared timeline holds only milestone *types* and
- * day offsets from its first step (plus, if the user allows it, the month and
- * year of each step). Notes, custom milestones and exact dates never go in.
+ * day offsets from its first step, plus the month of the AOR (always, so
+ * people can find others from the same month), plus, if the user allows it,
+ * the month and year of each step. Notes, custom milestones and exact dates
+ * never go in.
  */
 
 /** Go live with a server behind it. Until then real users see the waitlist. */
 export const COMMUNITY_LIVE = false;
+
+/**
+ * Whether Community shows at all: the Timeline tabs, the Share card and the
+ * feed. Release builds keep the plain timeline until COMMUNITY_LIVE; dev
+ * builds show it so the work can continue.
+ */
+export const communityVisible = (isDev: boolean = __DEV__): boolean => COMMUNITY_LIVE || isDev;
 
 export type ProgramId = 'cec' | 'fsw' | 'fst' | 'pnp_ee' | 'pnp' | 'aip' | 'other';
 
@@ -54,6 +63,8 @@ export type SharedTimeline = {
   steps: SharedStep[];
   /** Days since the owner last updated it. */
   updatedDaysAgo: number;
+  /** "2026-08": the month of the AOR, always shared once there is one. Never the day. */
+  aorMonth?: string;
   isMine?: boolean;
 };
 
@@ -109,6 +120,16 @@ export function toSharedSteps(milestones: Milestone[], showMonths: boolean, toda
     if (showMonths) step.month = format(m.date, 'yyyy-MM');
     return step;
   });
+}
+
+/** The month ("2026-08") of the user's AOR, if it has happened. Never the day. */
+export function sharedAorMonth(milestones: Milestone[], today: Date = new Date()): string | undefined {
+  const aor = milestones
+    .filter((m) => m.type === 'AOR Received')
+    .map((m) => parseISO(m.date))
+    .filter((d) => isValid(d) && differenceInCalendarDays(today, d) >= 0)
+    .sort((a, b) => a.getTime() - b.getTime())[0];
+  return aor ? format(aor, 'yyyy-MM') : undefined;
 }
 
 /** Median of the first day each stop was reached, over the timelines that reached it. */

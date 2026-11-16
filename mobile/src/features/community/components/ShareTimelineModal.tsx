@@ -9,7 +9,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { Toggle } from '@/components/common/Toggle';
 import { useTimelineStore } from '@/store/timelineStore';
 import { useApplicationStore } from '@/store/applicationStore';
-import { PROGRAMS, programFromTypeId, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
+import { PROGRAMS, programFromTypeId, sharedAorMonth, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
 import { useShareStore } from '../shareStore';
 import { PersonCard, useProgramLabel } from './TimelineCards';
 
@@ -40,7 +40,10 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
   }, [visible, settings, typeId]);
 
   const steps = useMemo(() => toSharedSteps(milestones, showMonths), [milestones, showMonths]);
-  const preview: SharedTimeline = { id: 'mine', alias: alias.trim(), program, steps, updatedDaysAgo: 0, isMine: true };
+  const aorMonth = useMemo(() => sharedAorMonth(milestones), [milestones]);
+  const preview: SharedTimeline = {
+    id: 'mine', alias: alias.trim(), program, steps, updatedDaysAgo: 0, isMine: true, ...(aorMonth ? { aorMonth } : {}),
+  };
   const canShare = steps.length > 0;
 
   const save = async () => {
