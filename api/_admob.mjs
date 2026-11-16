@@ -9,7 +9,13 @@ export const configured = (env = process.env) =>
 
 // Only these apps count as CRS Pulse. The account also holds an unrelated app
 // ("Revenue Analytics for AdMob"), which is reported separately as "other".
-export const isCrsPulse = (label) => /crs pulse/i.test(label ?? '');
+// Matched by AdMob app ID first (mobile/eas.json): AdMob takes a linked app's name from its store
+// listing, and from 1.0.17 the iOS App Store name is "IRCC Tracker: Score & Draws".
+const CRS_PULSE_APP_IDS = new Set([
+  'ca-app-pub-4874088724567128~5782196285', // Android
+  'ca-app-pub-4874088724567128~5855067683', // iOS
+]);
+export const isCrsPulse = (row) => CRS_PULSE_APP_IDS.has(row?.appId) || /crs pulse/i.test(row?.app ?? '');
 
 async function accessToken(env) {
   const r = await fetch('https://oauth2.googleapis.com/token', {
@@ -88,6 +94,7 @@ export function parseReport(items) {
     return {
       date: `${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}`,
       app: d.APP?.displayLabel ?? d.APP?.value ?? 'Unknown',
+      appId: d.APP?.value ?? '',
       format: d.FORMAT?.value ?? 'UNKNOWN',
       country: d.COUNTRY?.displayLabel ?? d.COUNTRY?.value ?? 'Unknown',
       adUnit: d.AD_UNIT?.displayLabel ?? d.AD_UNIT?.value ?? 'Unknown',
@@ -122,7 +129,7 @@ export function summarize(report, nowMs) {
   const tz = report.timeZone;
   const today = iso(ymd(nowMs, tz));
   const day = (n) => iso(ymd(nowMs, tz, n));
-  const crs = report.rows.filter((r) => isCrsPulse(r.app));
+  const crs = report.rows.filter((r) => isCrsPulse(r));
   const inRange = (rows, from, to) => rows.filter((r) => r.date >= from && r.date <= to);
   const monthStart = `${today.slice(0, 7)}-01`;
   const [y, m] = today.split('-').map(Number);
@@ -166,14 +173,14 @@ export function summarize(report, nowMs) {
     days,
     formats,
     apps,
-    other7: round2(totals(inRange(report.rows.filter((r) => !isCrsPulse(r.app)), day(-6), today))),
+    other7: round2(totals(inRange(report.rows.filter((r) => !isCrsPulse(r)), day(-6), today))),
     last30: round2(totals(inRange(crs, day(-29), today))),
   };
 }
 
 /** CRS Pulse rows of a breakdown report, totalled per `key`, biggest earner first. */
 export function breakdown(report, key) {
-  const crs = report.rows.filter((r) => isCrsPulse(r.app));
+  const crs = report.rows.filter((r) => isCrsPulse(r));
   return [...new Set(crs.map((r) => r[key]))]
     .map((k) => ({ key: k, ...round2(totals(crs.filter((r) => r[key] === k))) }))
     .sort((a, b) => b.earnings - a.earnings || b.impressions - a.impressions);
