@@ -80,7 +80,11 @@ changes (en-GB, fr-CA, fr-FR listings).
 **1.0.17 (bumped 2026-11-16 in `4fde343`).** Leaf-only icon, the App Store name "IRCC Tracker: Score &
 Draws", and no Community: release builds hide the Timeline tabs and Share card (`communityVisible()`),
 and Community is planned for 1.0.18. iOS tag `ios-build-1.0.17` (run 43800658249, from `71de9c2`).
-The Android build hadn't been started. From this bump, OTAs from main reach only 1.0.17 installs.
+iOS **build 70** was opened on a device, then **submitted for review on 2026-11-16 with automatic
+release** (Waiting for Review), carrying the new names (en + fr-CA), keywords without `ircc`, What's
+New, and review notes that say the rewarded ad is gone. Android **versionCode 34** (EAS `d53138d1`,
+from `7cf0621`, which also swaps Android's adaptive icon to the veined leaf) auto-submits to Alpha.
+Android keeps its name. From this bump, OTAs from main reach only 1.0.17 installs.
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
