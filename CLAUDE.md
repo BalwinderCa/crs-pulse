@@ -86,7 +86,10 @@ New, and review notes that say the rewarded ad is gone. Android **versionCode 34
 from `7cf0621`, which also swaps Android's adaptive icon to the veined leaf) reached Alpha the same
 night, and a **Production release (full rollout, notes in en-GB, fr-CA, fr-FR) was sent for review with
 it on 2026-11-16**, restarting the review that had been open since 2026-11-15. Only warning: no
-deobfuscation file. Managed publishing is off, so it goes live on approval. **Trader status**
+deobfuscation file. **Play published it (submission 30, Production + Alpha, full rollout) on 2026-11-15
+23:06 Pacific (2026-11-16 07:06 UTC). Apple approved iOS build 70 on 2026-11-16 (18:37 UTC) and it was
+live by 19:04 UTC, so 1.0.17 is live on both stores.** Play's Policy status still lists the targetSdk 36
+and Billing 8.0.0 issues (enforced 2026-08-30); they didn't stop this update. **Trader status**
 (EU Digital Services Act) must be declared in Play Console (Account details → Declare status) by
 February 2027, or the developer profile and apps are removed from Play; it hadn't been declared.
 Android keeps its name. From this bump, OTAs from main reach only 1.0.17 installs.
