@@ -20,8 +20,10 @@ import { CommunityTab } from '../components/CommunityTab';
 import { MyShareCard } from '@/features/community/components/MyShareCard';
 import { communityVisible } from '@/features/community/model';
 
-const SHOW_COMMUNITY = communityVisible();
 import { MILESTONE_META, MILESTONE_TYPES } from '../milestoneMeta';
+
+// Community (tabs, Share card) only in dev until it goes live.
+const SHOW_COMMUNITY = communityVisible();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
