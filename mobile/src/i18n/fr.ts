@@ -16,7 +16,7 @@ const fr: TranslationKeys = {
     next: 'Suivant',
     getStarted: 'Commencer',
     languageBtn: 'English',
-    slide0Title: 'Bienvenue dans CRS Pulse',
+    slide0Title: 'Bienvenue dans $t(common.appName)',
     slide0Body: 'Votre compagnon IRCC gratuit. Suivez les tirages, connaissez votre score et planifiez votre chemin vers la résidence permanente canadienne.',
     slide1Title: 'Suivi des tirages en direct',
     slide1Body: 'Les résultats officiels des tirages IRCC dès leur publication — avec des alertes pour ne jamais manquer un tour d\'invitations.',
@@ -692,7 +692,8 @@ const fr: TranslationKeys = {
     decrease: 'Diminuer',
     increase: 'Augmenter',
     appName: 'CRS Pulse',
-    version: 'CRS Pulse v{{version}}',
+    appNameIos: 'Suivi IRCC', // [REVIEW]
+    version: '$t(common.appName) v{{version}}',
   },
 
   education: {
@@ -944,7 +945,7 @@ const fr: TranslationKeys = {
   },
 
   sideMenu: {
-    shareTitle: 'CRS Pulse',
+    shareTitle: '$t(common.appName)',
     contactEmail: 'support@crspulse.com',
     contactUrl: 'mailto:support@crspulse.com?subject=CRS%20Pulse',
     closeMenu: 'Fermer le menu',
@@ -1021,6 +1022,7 @@ const fr: TranslationKeys = {
 
   menu: {
     subtitle: 'Suivi Entrée express',
+    subtitleIos: 'Score et tirages', // [REVIEW]
     general: 'Général',
     about: 'À propos',
     support: 'Assistance',
@@ -1038,7 +1040,7 @@ const fr: TranslationKeys = {
     reviewPlayStore: 'Évaluer sur Google Play',
     contactIntro: 'Une question, un commentaire ou un problème ? Nous répondons généralement en quelques jours.',
     emailUs: 'Écrivez-nous',
-    shareMessage: 'Découvrez CRS Pulse — calculateur CRS et suivi des tirages Entrée express gratuit pour l’immigration au Canada !',
+    shareMessage: 'Découvrez $t(common.appName) — calculateur CRS et suivi des tirages Entrée express gratuit pour l’immigration au Canada !',
     aboutBody: `Bonjour ! Je suis Balwinder Singh, créateur de CRS Pulse — un outil de suivi IRCC gratuit et précis, conçu pour les futurs Canadiens comme vous.
 
 Après avoir constaté à quel point le processus d’immigration peut être stressant et déroutant, j’ai créé CRS Pulse pour offrir aux candidats un outil clair et en temps réel afin de comprendre leur position dans le bassin. L’application récupère les données de tirage en direct directement d’IRCC et calcule votre score CRS à partir de la grille CRS actuelle d’IRCC (dernière mise à jour le 2025-08-21). Vérifiez toujours votre score avec l’outil CRS officiel d’IRCC avant de prendre des décisions.

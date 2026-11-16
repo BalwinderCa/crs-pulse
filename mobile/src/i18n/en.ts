@@ -12,7 +12,7 @@ const en = {
     next: 'Next',
     getStarted: 'Get Started',
     languageBtn: 'Français',
-    slide0Title: 'Welcome to CRS Pulse',
+    slide0Title: 'Welcome to $t(common.appName)',
     slide0Body: 'Your free IRCC Companion. Track draws, know your score, and plan your path to Canadian permanent residency.',
     slide1Title: 'Live Draw Tracking',
     slide1Body: 'Official IRCC draw results the moment they are published — with push alerts so you never miss a round of invitations.',
@@ -682,7 +682,9 @@ const en = {
     decrease: 'Decrease',
     increase: 'Increase',
     appName: 'CRS Pulse',
-    version: 'CRS Pulse v{{version}}',
+    // iOS shows the App Store name in the app instead (see i18n/index.ts).
+    appNameIos: 'IRCC Tracker',
+    version: '$t(common.appName) v{{version}}',
   },
 
   education: {
@@ -938,7 +940,7 @@ const en = {
   },
 
   sideMenu: {
-    shareTitle: 'CRS Pulse',
+    shareTitle: '$t(common.appName)',
     contactEmail: 'support@crspulse.com',
     contactUrl: 'mailto:support@crspulse.com?subject=CRS%20Pulse',
     closeMenu: 'Close menu',
@@ -1015,6 +1017,7 @@ const en = {
 
   menu: {
     subtitle: 'Express Entry Tracker',
+    subtitleIos: 'Score & Draws',
     general: 'General',
     about: 'About',
     support: 'Support',
@@ -1031,7 +1034,7 @@ const en = {
     reviewPlayStore: 'Rate on Google Play',
     contactIntro: 'Questions, feedback, or something not working? We usually reply within a couple of days.',
     emailUs: 'Email us',
-    shareMessage: 'Check out CRS Pulse — free Express Entry CRS calculator & draw tracker for Canada immigration!',
+    shareMessage: 'Check out $t(common.appName) — free Express Entry CRS calculator & draw tracker for Canada immigration!',
     aboutBody: `Hi there! I'm Balwinder Singh, creator of CRS Pulse — a free, accurate IRCC Tracker built for aspiring Canadians like you.
 
 After seeing how stressful and confusing the immigration process can be, I built CRS Pulse to give applicants a clear, real-time tool to understand their standing in the pool. The app pulls live draw data directly from IRCC and calculates your CRS score using the current IRCC CRS grid (last updated 2025-08-21). Always verify your score with the official IRCC CRS tool before making decisions.
