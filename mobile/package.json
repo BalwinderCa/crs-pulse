@@ -1,6 +1,6 @@
 {
   "name": "crs-pulse",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
