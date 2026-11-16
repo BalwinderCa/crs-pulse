@@ -16,7 +16,7 @@ export function Logo({ size = 20 }: Props) {
   return (
     <View style={s.row} accessibilityRole="text" accessibilityLabel={t('common.appName')}>
       <Image source={MARK} style={{ width: mark, height: mark, borderRadius: Math.round(mark * 0.26), marginRight: Math.round(size * 0.4) }} accessibilityIgnoresInvertColors />
-      <Text style={[s.word, { fontSize: size, color: RED }]}>{t('common.appName')}</Text>
+      <Text style={[s.word, { fontSize: size, color: RED }]} numberOfLines={1}>{t('common.appName')}</Text>
     </View>
   );
 }

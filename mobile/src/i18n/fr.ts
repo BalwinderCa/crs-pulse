@@ -16,7 +16,7 @@ const fr: TranslationKeys = {
     next: 'Suivant',
     getStarted: 'Commencer',
     languageBtn: 'English',
-    slide0Title: 'Bienvenue dans $t(common.appName)',
+    slide0Title: 'Bienvenue dans $t(common.appName)', // [REVIEW] iOS: « Bienvenue dans Suivi IRCC »
     slide0Body: 'Votre compagnon IRCC gratuit. Suivez les tirages, connaissez votre score et planifiez votre chemin vers la résidence permanente canadienne.',
     slide1Title: 'Suivi des tirages en direct',
     slide1Body: 'Les résultats officiels des tirages IRCC dès leur publication — avec des alertes pour ne jamais manquer un tour d\'invitations.',
