@@ -83,7 +83,12 @@ and Community is planned for 1.0.18. iOS tag `ios-build-1.0.17` (run 43800658249
 iOS **build 70** was opened on a device, then **submitted for review on 2026-11-16 with automatic
 release** (Waiting for Review), carrying the new names (en + fr-CA), keywords without `ircc`, What's
 New, and review notes that say the rewarded ad is gone. Android **versionCode 34** (EAS `d53138d1`,
-from `7cf0621`, which also swaps Android's adaptive icon to the veined leaf) auto-submits to Alpha.
+from `7cf0621`, which also swaps Android's adaptive icon to the veined leaf) reached Alpha the same
+night, and a **Production release (full rollout, notes in en-GB, fr-CA, fr-FR) was sent for review with
+it on 2026-11-16**, restarting the review that had been open since 2026-11-15. Only warning: no
+deobfuscation file. Managed publishing is off, so it goes live on approval. **Trader status**
+(EU Digital Services Act) must be declared in Play Console (Account details → Declare status) by
+February 2027, or the developer profile and apps are removed from Play; it hadn't been declared.
 Android keeps its name. From this bump, OTAs from main reach only 1.0.17 installs.
 
 **Store status (as of 2026-10-23): both stores are live.**
