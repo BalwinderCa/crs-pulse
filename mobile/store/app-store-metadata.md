@@ -15,7 +15,7 @@ title, so Play stays "CRS Pulse: Score & Draws". Never use "Express Entry" in a 
 The on-device name stays "CRS Pulse"._
 _French (Canada) localization (29):_ `Suivi IRCC : score et tirages` [REVIEW] (was `CRS Pulse : score et tirages`)
 _Both entered and saved in App Store Connect on 2026-11-15 in the new 1.0.17 version (Prepare for Submission); Apple reviews them with the 1.0.17 build. Subtitles unchanged: `CRS score & IRCC draw alerts` / `Score CRS et alertes de tirage`._
-_Once the name holds "IRCC", drop `ircc` from Keywords (Apple already indexes the name) and use the room._
+_Done 2026-11-16 in the 1.0.17 version: `ircc` dropped from Keywords (the name holds "IRCC"), `cec` added. fr-CA keywords also dropped `ircc` (now `immigration,canada,calculateur,pnp,points,ptqf,nclc,rp,résidence,permanente,sirs,eoi,tef,tcf`). What's New en: "A fresh new app icon. Plus small fixes and improvements." fr-CA: "Une toute nouvelle icône d'application. Et quelques petites corrections et améliorations."_
 _Plan (2026-11-15): only if Apple approves this name with 1.0.17, rename inside the app by OTA (header
 logo, side menu, text). Decide then whether Android shows it too (Play rejected "IRCC" in its title).
 The home-screen name (`app.config.js` name / CFBundleDisplayName) needs a store build, so it would follow in
@@ -33,7 +33,7 @@ Track every Express Entry draw the moment it lands, calculate your CRS score, an
 
 ## Keywords  (max 100, comma-separated, no spaces)
 ```
-immigration,ircc,canada,calculator,pnp,score,fsw,noc,clb,pr,visa,sirs,eoi,points,bcpnp,sinp,celpip
+immigration,canada,calculator,pnp,score,fsw,noc,clb,pr,visa,sirs,eoi,points,bcpnp,sinp,celpip,cec
 ```
 _Don't repeat words already in the name/subtitle (express, entry, crs, draw) — Apple indexes those separately._
 
