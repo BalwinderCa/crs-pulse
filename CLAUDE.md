@@ -285,6 +285,13 @@ The offer was then **removed on 2026-11-14 by two updates**: group `5cfd172a` (r
 `a50b7ad` on main) and group `d62ffbd2` (runtime 1.0.15, commit `cdfec78` on branch
 `ota-1.0.15-remove-offer`, which is `f1a51ef` plus the removal). Neither was tested on a device; the
 first sign they arrived is `rewarded_ad` events stopping.
+The first 1.0.17 update (group `0673e0e1`, from `e463025`, 2026-11-16, after Apple approved the App Store
+name) shows the in-app name "IRCC Tracker" (fr: "Suivi IRCC") **on iOS only**: header wordmark, side-menu
+title and subtitle ("Score & Draws"), onboarding welcome, version line and share text, via
+`common.appName` / `menu.subtitle` overridden in `src/i18n/index.ts`. Android keeps "CRS Pulse", and
+disclaimers and legal text keep "CRS Pulse" as the publisher on both. The home-screen name
+(`CFBundleDisplayName`) is still "CRS Pulse" and needs a store build. Published without a device test;
+the first sign it arrived is the header reading "IRCC Tracker" on build 70 from the second cold start.
 
 Build 62 (EAS `337d8bca`, from
 `16d0391`, tag `ios-build-1.0.13-b62`) was opened from TestFlight on a device with existing data
