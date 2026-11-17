@@ -79,7 +79,7 @@ changes (en-GB, fr-CA, fr-FR listings).
 
 **1.0.17 (bumped 2026-11-16 in `4fde343`).** Leaf-only icon, the App Store name "IRCC Tracker: Score &
 Draws", and no Community: release builds hide the Timeline tabs and Share card (`communityVisible()`),
-and Community is planned for 1.0.18. iOS tag `ios-build-1.0.17` (run 43800658249, from `71de9c2`).
+and Community was then planned for 1.0.18 (now 1.0.19). iOS tag `ios-build-1.0.17` (run 43800658249, from `71de9c2`).
 iOS **build 70** was opened on a device, then **submitted for review on 2026-11-16 with automatic
 release** (Waiting for Review), carrying the new names (en + fr-CA), keywords without `ircc`, What's
 New, and review notes that say the rewarded ad is gone. Android **versionCode 34** (EAS `d53138d1`,
@@ -96,6 +96,18 @@ February 2027, or the developer profile and apps are removed from Play; it hadn'
 fr-FR "Suivi CRS : score et tirages". The developer chose it knowing Play rejected "CRS" titles twice in
 October; it drops the "Pulse" brand. If rejected, appeal from Policy status, or go back to "CRS Pulse: Score
 & Draws". The Android in-app name stays "CRS Pulse" until Play accepts the title. From this bump, OTAs from main reach only 1.0.17 installs.
+
+**1.0.18 (bumped 2026-11-16 in `c986dda`): iOS only, no Community (Community moves to 1.0.19).** It
+changes the iOS home-screen name to "IRCC Tracker" (`CFBundleDisplayName`; Android's launcher label stays
+"CRS Pulse") and exists to carry new App Store text and screenshots, which Apple locks on a live version:
+through 1.0.17 the description still said "CRS Pulse" with no source links, and the screenshots showed the
+old "CRS Pulse" header and September draws. The new English and French descriptions are in
+`mobile/store/app-store-metadata.md` and `docs/STORE_LISTING_FR.md` (product name "IRCC Tracker" / "Suivi
+IRCC", "CRS Pulse" only as publisher, disclaimer first, 7 source links). The 8 screenshots were re-shot
+with goldie from a local Release simulator build (`mobile/goldie/out/screenshots/iphone-6.9/en-US/` and
+`app-store-6.5/`, both git-ignored). iOS tag `ios-build-1.0.18` (run 44025919186). **No Android 1.0.18
+build exists yet**, and nothing may be sent to Play while the title review is pending; until Android has a
+1.0.18 build, OTAs from main reach no Android install (publish Android fixes from a 1.0.17 checkout).
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
