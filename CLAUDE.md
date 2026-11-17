@@ -105,7 +105,11 @@ old "CRS Pulse" header and September draws. The new English and French descripti
 `mobile/store/app-store-metadata.md` and `docs/STORE_LISTING_FR.md` (product name "IRCC Tracker" / "Suivi
 IRCC", "CRS Pulse" only as publisher, disclaimer first, 7 source links). The 8 screenshots were re-shot
 with goldie from a local Release simulator build (`mobile/goldie/out/screenshots/iphone-6.9/en-US/` and
-`app-store-6.5/`, both git-ignored). iOS tag `ios-build-1.0.18` (run 44025919186). **No Android 1.0.18
+`app-store-6.5/`, both git-ignored). iOS tag `ios-build-1.0.18` (run 44025919186) produced **build 71**. On 2026-11-17 the 1.0.18 version was
+created in App Store Connect and filled in but **not submitted**: en + fr-CA description and What's New, review
+notes, the 8 screenshots and a re-recorded 25 s app preview in the "iPhone with Dynamic Island (large display)"
+slot (every other size and fr-CA inherit it), build 71 attached, **manual release**. Open build 71 from
+TestFlight on a device, then click "Add for Review". Promotional Text is empty in both languages. **No Android 1.0.18
 build exists yet**, and nothing may be sent to Play while the title review is pending; until Android has a
 1.0.18 build, OTAs from main reach no Android install (publish Android fixes from a 1.0.17 checkout).
 
