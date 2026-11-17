@@ -10,10 +10,11 @@ devices see. Never put "Entrée express" or "Express Entry" in a title (IRCC off
   text, support/marketing URL `https://www.crspulse.com/fr`) and to App Information (name,
   subtitle). It goes live only when 1.0.16 is submitted with a new build.
 
-## Name (Play title and App Store name, 28/30)
+## Name (Play title, 28/30)
 ```
-CRS Pulse : score et tirages
+Suivi CRS : score et tirages
 ```
+_Play fr-CA/fr-FR, sent for review 2026-11-16 (was `CRS Pulse : score et tirages`). The App Store fr-CA name is `Suivi IRCC : score et tirages` from 1.0.17._
 
 ## App Store subtitle (30/30)
 ```

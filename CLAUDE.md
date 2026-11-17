@@ -92,7 +92,10 @@ live by 19:04 UTC, so 1.0.17 is live on both stores.** Play's Policy status stil
 and Billing 8.0.0 issues (enforced 2026-08-30); they didn't stop this update. **Trader status**
 (EU Digital Services Act) must be declared in Play Console (Account details → Declare status) by
 February 2027, or the developer profile and apps are removed from Play; it hadn't been declared.
-Android keeps its name. From this bump, OTAs from main reach only 1.0.17 installs.
+**Play title change sent for review on 2026-11-16** (3 changes): en-GB "CRS Tracker: Score & Draws", fr-CA and
+fr-FR "Suivi CRS : score et tirages". The developer chose it knowing Play rejected "CRS" titles twice in
+October; it drops the "Pulse" brand. If rejected, appeal from Policy status, or go back to "CRS Pulse: Score
+& Draws". The Android in-app name stays "CRS Pulse" until Play accepts the title. From this bump, OTAs from main reach only 1.0.17 installs.
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was

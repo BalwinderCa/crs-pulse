@@ -11,7 +11,12 @@ which stays false while no product exists in Play Console. Declare
 **In-app purchases: No** and **Contains ads: Yes**.
 
 ## App name (max 30 chars)
-CRS Pulse: CRS Score & Draws
+CRS Tracker: Score & Draws
+
+_Sent for review 2026-11-16 (all three listings, user's choice against the risk): "CRS Tracker: Score & Draws" /
+fr-CA and fr-FR "Suivi CRS : score et tirages". It drops the "Pulse" brand, so the title is "CRS" plus a generic
+word; Play rejected "CRS" titles twice in October 2026 (Impersonation, case 3-7443000041476). If rejected, appeal from
+Policy status and fall back to "CRS Pulse: Score & Draws" (live before this)._
 
 Never put "IRCC", "Government of Canada" or similar in the title or icon. On 2026-10-19 Play
 rejected "CRS Pulse - IRCC Tracker" under the Impersonation policy (Misleading Title). The title is
