@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 //   ... then `frame`, `manifest`, `verify`.
 //
 // NOTE ON STATE: goldie reinstalls the app with cleared data before every
-// flow, so each flow starts at the 4-slide onboarding with an empty profile.
+// flow, so each flow starts at the 2-slide onboarding with an empty profile.
 // Every flow therefore dismisses onboarding first, and the scenes that need a
 // CRS score fill the language inputs — a fresh install keeps language scores
 // at 0, which is exactly what holds isCrsScoreReady false and puts the lock
@@ -55,8 +55,8 @@ const config = {
   },
 
   store: {
-    name: "CRS Pulse",
-    subtitle: { "en-US": "Express Entry CRS & draw alerts" },
+    name: "IRCC Tracker: Score & Draws",
+    subtitle: { "en-US": "CRS score & IRCC draw alerts" },
     developer: "Balwinder Singh",
     category: "Reference",
     rating: 4.8,
@@ -65,7 +65,7 @@ const config = {
     price: "Free",
     description: {
       "en-US":
-        "CRS Pulse is a free companion for anyone applying for Canadian permanent residence through Express Entry.\n\nCalculate your CRS score with the official IRCC formula, check the FSW 67-point grid, BC PNP SIRS and Saskatchewan EOI, and see every IRCC draw the moment it is published — with push alerts so you never miss one.\n\nTrack your application end to end: milestone timeline, IRCC processing-time estimates, and per-program document checklists.\n\nNo account, no sign-up, no in-app purchases. Everything stays on your device.",
+        "IRCC Tracker is a free companion for anyone applying for Canadian permanent residence through Express Entry.\n\nCalculate your CRS score with the official IRCC formula, check the FSW 67-point grid, BC PNP SIRS and Saskatchewan EOI, and see every IRCC draw the moment it is published — with push alerts so you never miss one.\n\nTrack your application end to end: milestone timeline, IRCC processing-time estimates, and per-program document checklists.\n\nNo account, no sign-up, no in-app purchases. Everything stays on your device.",
     },
   },
 
@@ -76,6 +76,17 @@ const config = {
       flow: "store-01-draws",
       headline: { "en-US": "Every IRCC draw, the moment it lands" },
       subhead: { "en-US": "Live results, category filters and push alerts." },
+    },
+// Must be captured before home and analytics: they need the profile this flow fills.
+    // goldie.design.json's `order` drives BOTH the strip and the capture order, and it puts
+    // crs last. To re-capture, temporarily set its order to draws, crs, home, timeline,
+    // calculators, analytics, run `capture`, restore it, then `frame`.
+    {
+      kind: "screenshot",
+      id: "crs",
+      flow: "store-02-crs",
+      headline: { "en-US": "Know exactly where you stand" },
+      subhead: { "en-US": "The official IRCC CRS formula, recalculated as you type." },
     },
 {
       kind: "screenshot",
@@ -104,13 +115,6 @@ const config = {
       flow: "store-03-analytics",
       headline: { "en-US": "See your odds before the next draw" },
       subhead: { "en-US": "Your score against real cutoffs, and what would move it." },
-    },
-{
-      kind: "screenshot",
-      id: "crs",
-      flow: "store-02-crs",
-      headline: { "en-US": "Know exactly where you stand" },
-      subhead: { "en-US": "The official IRCC CRS formula, recalculated as you type." },
     },
 
     // Exactly one preview scene. Clips are joined as recorded: Apple requires an

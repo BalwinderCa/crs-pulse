@@ -165,7 +165,7 @@ module.exports = () => ({
   name: 'CRS Pulse',
   slug: 'crs-pulse',
   owner: 'balwinder98',
-  version: '1.0.17',
+  version: '1.0.18',
   newArchEnabled: true,
   orientation: 'portrait',
   icon: './assets/icon.png',
@@ -185,7 +185,7 @@ module.exports = () => ({
     },
     infoPlist: {
       UIBackgroundModes: ['remote-notification'],
-      CFBundleDisplayName: 'CRS Pulse',
+      CFBundleDisplayName: 'IRCC Tracker',
       ITSAppUsesNonExemptEncryption: false,
       NSUserTrackingUsageDescription: TRACKING_USAGE_DESCRIPTION,
     },

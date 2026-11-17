@@ -61,10 +61,14 @@ https://www.crspulse.com/privacy
 
 ---
 
-## Description  (max 4000)
+## Description  (max 4000; 3,236 used)
+
+_Rewritten 2026-11-16 for 1.0.18: product name "IRCC Tracker", "CRS Pulse" kept only as the publisher, disclaimer first, and the 7 official-source links (same as the Play en-GB listing). Live through 1.0.17: the old "CRS Pulse is the all-in-one companion…" text with no links._
 
 ```
-CRS Pulse is the all-in-one companion for Canadian Express Entry applicants. Calculate your score, get notified the instant a new draw is announced, and track your PR application from start to finish — completely private, with all your data stored on your device.
+DISCLAIMER: IRCC Tracker is an independent, unofficial app published by CRS Pulse. It does not represent any government entity and is not affiliated with, endorsed by, or sponsored by Immigration, Refugees and Citizenship Canada (IRCC), the Government of Canada or any provincial government. Official sources for its data are listed below.
+
+IRCC Tracker is the all-in-one companion for Canadian Express Entry applicants. Calculate your score, get notified the instant a new draw is announced, and track your PR application from start to finish — completely private, with all your data stored on your device.
 
 CALCULATE YOUR SCORE
 • Comprehensive Ranking System (CRS) calculator using the official scoring formula
@@ -92,17 +96,26 @@ PRIVATE BY DESIGN
 • All of your profile and application data stays on your device
 • No account, no sign-up required
 
-CRS Pulse provides estimates only. Scores, draw data, and processing times are for informational purposes and are not a guarantee of eligibility, invitation, or outcome. Always confirm details with official sources before making decisions.
+IRCC Tracker provides estimates only. Scores, draw data, and processing times are for informational purposes and are not a guarantee of eligibility, invitation, or outcome. Always confirm details with the official sources below before making decisions.
 
-CRS Pulse is an independent app and is not affiliated with, endorsed by, or sponsored by Immigration, Refugees and Citizenship Canada (IRCC) or the Government of Canada.
+OFFICIAL SOURCES
+The government information shown in the app comes from these public pages:
+• Express Entry rounds of invitations (IRCC): https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html
+• Comprehensive Ranking System (CRS) criteria: https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html
+• Federal Skilled Worker Program: https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/who-can-apply/federal-skilled-workers.html
+• IRCC processing times: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
+• Canada's immigration levels: https://www.canada.ca/en/immigration-refugees-citizenship/corporate/immigration-system/levels.html
+• BC PNP (British Columbia): https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents
+• SINP (Saskatchewan): https://www.saskatchewan.ca/residents/moving-to-saskatchewan/live-in-saskatchewan/by-immigrating/saskatchewan-immigrant-nominee-program
 ```
 
 ---
 
-## What's New in This Version  (first release — optional)
+## What's New in This Version  (1.0.18)
 ```
-Welcome to CRS Pulse! Calculate your CRS score, get instant Express Entry draw alerts, and track your PR application — all in one private, on-device app.
+The app now shows as "IRCC Tracker" on your home screen, to match its App Store name. Plus small fixes and improvements.
 ```
+_fr-CA [REVIEW]:_ `L'appli s'affiche maintenant sous le nom « IRCC Tracker » sur votre écran d'accueil, comme sur l'App Store. Et quelques petites corrections et améliorations.`
 
 ---
 
@@ -110,7 +123,8 @@ Welcome to CRS Pulse! Calculate your CRS score, get instant Express Entry draw a
 ```
 - All user data is stored locally on-device. No login/account is required, so no demo credentials are needed.
 - The app shows ads via Google AdMob (free tier) and requests App Tracking Transparency on first launch.
-- There are no in-app purchases on iOS in this version. The premium "Your Plan" analytics tab is unlocked for free on iOS; there is no purchase flow to test.
+- There are no in-app purchases. Every feature, including the "Your Plan" analytics tab, is free; there is no purchase flow and no rewarded ad.
+- 1.0.18 changes the home-screen name to "IRCC Tracker" to match the App Store name. "CRS Pulse" remains the publisher name in disclaimers and legal text.
 - Live draw data is fetched from public IRCC sources for informational/estimate purposes only.
 ```
 

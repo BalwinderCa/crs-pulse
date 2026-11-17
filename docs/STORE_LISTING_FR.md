@@ -82,3 +82,53 @@ Les renseignements gouvernementaux affichés dans l’appli proviennent de ces p
 
 CRS Pulse fournit des estimations seulement. Les scores, les données de tirages et les délais de traitement sont donnés à titre indicatif et ne garantissent ni l’admissibilité, ni une invitation, ni un résultat. Vérifiez toujours auprès des sources officielles avant de prendre une décision.
 ```
+
+## App Store description from 1.0.18 (3,637/4,000) [REVIEW]
+
+Written 2026-11-16. Same text as above with the iOS product name "Suivi IRCC"; "CRS Pulse" stays only as the publisher. Play keeps the description above.
+
+```
+AVIS : Suivi IRCC est une application indépendante et non officielle, publiée par CRS Pulse. Elle ne représente aucun organisme gouvernemental. Elle n’est ni affiliée à Immigration, Réfugiés et Citoyenneté Canada (IRCC), au gouvernement du Canada ou à un gouvernement provincial, ni approuvée ou commanditée par eux. Les sources officielles de ses données sont indiquées ci-dessous.
+
+Suivi IRCC accompagne les candidats à Entrée express du début à la fin. Calculez votre score, soyez averti dès qu’un nouveau tirage est annoncé et suivez votre demande de résidence permanente étape par étape, en toute confidentialité : vos données restent sur votre appareil.
+
+CALCULEZ VOTRE SCORE
+• Calculateur du Système de classement global (CRS) selon la grille officielle
+• Tous les tests de langue acceptés : IELTS, CELPIP, PTE Core, TEF et TCF (avec conversion en NCLC)
+• Grille d’admissibilité de 67 points du Programme des travailleurs qualifiés (fédéral)
+• Calculateur SIRS de 200 points du BC PNP (Colombie-Britannique)
+• Grille de 110 points de la déclaration d’intérêt de la Saskatchewan (SINP)
+
+NE MANQUEZ AUCUN TIRAGE
+• Résultats des tirages Entrée express d’IRCC en direct, mis à jour automatiquement
+• Notification dès qu’un nouveau tirage est publié
+• Filtrez les tirages par catégorie : général, candidats des provinces, français, santé, métiers, STIM et plus
+
+TENDANCES ET ANALYSES
+• Évolution des scores minimaux d’un tirage à l’autre
+• Comparez votre score aux derniers seuils d’invitation
+• Répartition du bassin Entrée express et Plan des niveaux d’immigration en un coup d’œil
+
+SUIVEZ VOTRE DEMANDE
+• Chronologie des étapes, du profil à l’invitation (IPD) jusqu’à la confirmation de RP
+• Délais de traitement estimés d’IRCC par programme et type de demande
+• Listes de documents par programme, avec suivi de progression
+
+CONFIDENTIALITÉ D’ABORD
+• Votre profil et votre demande restent sur votre appareil
+• Aucun compte, aucune inscription
+
+Appli offerte en français et en anglais, en thème clair ou sombre.
+
+Suivi IRCC fournit des estimations seulement. Les scores, les données de tirages et les délais de traitement sont donnés à titre indicatif et ne garantissent ni l’admissibilité, ni une invitation, ni un résultat. Vérifiez toujours auprès des sources officielles avant de prendre une décision.
+
+SOURCES OFFICIELLES
+Les renseignements gouvernementaux affichés dans l’appli proviennent de ces pages publiques :
+• Rondes d’invitations Entrée express (IRCC) : https://www.canada.ca/fr/immigration-refugies-citoyennete/organisation/mandat/politiques-directives-operationnelles-ententes-accords/instructions-ministerielles/entree-express-rondes.html
+• Critères du Système de classement global (CRS) : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/verifier-note/criteries-scg.html
+• Programme des travailleurs qualifiés (fédéral) : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/immigrer-canada/entree-express/qui-presenter-demande/travailleurs-qualifies-federal.html
+• Délais de traitement d’IRCC : https://www.canada.ca/fr/immigration-refugies-citoyennete/services/demande/verifier-delais-traitement.html
+• Niveaux d’immigration du Canada : https://www.canada.ca/fr/immigration-refugies-citoyennete/organisation/systeme-immigration/niveaux.html
+• BC PNP (Colombie-Britannique, en anglais) : https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/documents
+• SINP (Saskatchewan, en anglais) : https://www.saskatchewan.ca/residents/moving-to-saskatchewan/live-in-saskatchewan/by-immigrating/saskatchewan-immigrant-nominee-program
+```
