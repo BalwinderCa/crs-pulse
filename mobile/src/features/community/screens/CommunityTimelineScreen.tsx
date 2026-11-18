@@ -106,7 +106,15 @@ export default function CommunityTimelineScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
-      {back}
+      <View style={s.head}>
+        {back}
+        {timeline.isMine && (
+          <TouchableOpacity ph-label="community-share-edit" onPress={() => setEditing(true)}
+            style={[s.editBtn, { borderColor: accent }]} accessibilityRole="button">
+            <Text style={[s.editTxt, { color: accent }]}>{t('community.editSharing')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <ScrollView contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}>
         {/* Profile card */}
@@ -188,11 +196,7 @@ export default function CommunityTimelineScreen() {
           </View>
         )}
 
-        {timeline.isMine ? (
-          <TouchableOpacity ph-label="community-share-edit" onPress={() => setEditing(true)} style={s.footBtn}>
-            <Text style={[s.footTxt, { color: accent }]}>{t('community.editSharing')}</Text>
-          </TouchableOpacity>
-        ) : (
+        {!timeline.isMine && (
           <View style={s.footRow}>
             <TouchableOpacity ph-label="community-report" style={[s.footBtn, s.noTop]} onPress={() => setReporting(true)} accessibilityRole="button">
               <Text style={[s.footTxt, { color: c.textMuted }]}>{t('community.report')}</Text>
@@ -243,4 +247,8 @@ const s = StyleSheet.create({
   footRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.sm },
   footBtn: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.base, marginTop: spacing.sm },
   footTxt: { fontSize: typography.sm, fontWeight: typography.medium },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: spacing.base },
+  // Same look as the share sheet's Save button.
+  editBtn: { paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: borderRadius.md, borderWidth: 1, minWidth: 72, alignItems: 'center' },
+  editTxt: { fontSize: typography.base, fontWeight: typography.bold },
 });
