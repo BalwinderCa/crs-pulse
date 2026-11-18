@@ -15,7 +15,6 @@ import type { RootStackParamList } from '@/types';
 import { STOPS, currentStep, reachedIndex, stopOf, type SharedTimeline } from '../model';
 import { useCommunity, useCommunitySummary, useSharedTimeline } from '../useCommunity';
 import { Avatar, useProgramLabel, useStageTone } from '../components/TimelineCards';
-import { ShareTimelineModal } from '../components/ShareTimelineModal';
 import { FilterSheet } from '../components/FilterSheet';
 import { reportTimeline, type ReportReason } from '../communityApi';
 import { useBlockedStore } from '../shareStore';
@@ -39,7 +38,6 @@ export default function CommunityTimelineScreen() {
   const { timeline, loading } = useSharedTimeline(params.id);
   const pace = useCommunitySummary(timeline?.program);
   const { mySteps } = useCommunity();
-  const [editing, setEditing] = useState(false);
   const [reporting, setReporting] = useState(false);
 
   const report = async (reason: ReportReason) => {
@@ -106,15 +104,7 @@ export default function CommunityTimelineScreen() {
 
   return (
     <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
-      <View style={s.head}>
-        {back}
-        {timeline.isMine && (
-          <TouchableOpacity ph-label="community-share-edit" onPress={() => setEditing(true)}
-            style={[s.editBtn, { borderColor: accent }]} accessibilityRole="button">
-            <Text style={[s.editTxt, { color: accent }]}>{t('community.editSharing')}</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {back}
       <ScrollView contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}>
         {/* Profile card */}
@@ -208,7 +198,6 @@ export default function CommunityTimelineScreen() {
           </View>
         )}
       </ScrollView>
-      <ShareTimelineModal visible={editing} onClose={() => setEditing(false)} />
       <FilterSheet<ReportReason | null> visible={reporting} title={t('community.reportTitle')} selected={null}
         options={REASONS.map((r) => ({ value: r, label: t(`community.reportReasons.${r}`) }))}
         onSelect={(r) => { if (r) void report(r); }} onClose={() => setReporting(false)} />
@@ -247,8 +236,4 @@ const s = StyleSheet.create({
   footRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.sm },
   footBtn: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.base, marginTop: spacing.sm },
   footTxt: { fontSize: typography.sm, fontWeight: typography.medium },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingRight: spacing.base },
-  // Same look as the share sheet's Save button.
-  editBtn: { paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: borderRadius.md, borderWidth: 1, minWidth: 72, alignItems: 'center' },
-  editTxt: { fontSize: typography.base, fontWeight: typography.bold },
 });
