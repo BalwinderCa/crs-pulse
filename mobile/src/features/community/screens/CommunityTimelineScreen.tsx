@@ -16,6 +16,11 @@ import { STOPS, currentStep, reachedIndex, stopOf, type SharedTimeline } from '.
 import { useCommunity, useCommunitySummary, useSharedTimeline } from '../useCommunity';
 import { Avatar, useProgramLabel, useStageTone } from '../components/TimelineCards';
 import { ShareTimelineModal } from '../components/ShareTimelineModal';
+import { FilterSheet } from '../components/FilterSheet';
+import { reportTimeline, type ReportReason } from '../communityApi';
+import { useBlockedStore } from '../shareStore';
+
+const REASONS: ReportReason[] = ['spam', 'offensive', 'misleading', 'other'];
 
 /** First day a timeline reached `stop`, if it did. */
 const dayAt = (steps: SharedTimeline['steps'], stop: string) => steps.find((s) => stopOf(s.type) === stop)?.day;
@@ -35,6 +40,19 @@ export default function CommunityTimelineScreen() {
   const pace = useCommunitySummary(timeline?.program);
   const { mySteps } = useCommunity();
   const [editing, setEditing] = useState(false);
+  const [reporting, setReporting] = useState(false);
+
+  const report = async (reason: ReportReason) => {
+    if (!timeline) return;
+    const ok = await reportTimeline(timeline.id, reason).then(() => true, () => false);
+    Toast.show(ok ? { type: 'success', text1: t('community.reported') } : { type: 'error', text1: t('community.reportFailed') });
+  };
+  const block = async () => {
+    if (!timeline) return;
+    await useBlockedStore.getState().block(timeline.id).catch(() => {});
+    Toast.show({ type: 'success', text1: t('community.blocked') });
+    navigation.goBack();
+  };
 
   const view = useMemo(() => {
     if (!timeline) return null;
@@ -94,7 +112,7 @@ export default function CommunityTimelineScreen() {
         {/* Profile card */}
         <View style={[s.profile, { backgroundColor: c.surfaceCard }]}>
           <View style={s.who}>
-            <Avatar alias={alias} size={52} />
+            <Avatar alias={alias} avatar={timeline.avatar} size={52} />
             <View style={s.flex}>
               <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
               <Text style={[s.sub, { color: c.textMuted }]}>{sub}</Text>
@@ -175,14 +193,21 @@ export default function CommunityTimelineScreen() {
             <Text style={[s.footTxt, { color: accent }]}>{t('community.editSharing')}</Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity ph-label="community-report" style={s.footBtn}
-            // No server yet: Community is not live, so this only acknowledges.
-            onPress={() => Toast.show({ type: 'success', text1: t('community.reported') })}>
-            <Text style={[s.footTxt, { color: c.textMuted }]}>{t('community.report')}</Text>
-          </TouchableOpacity>
+          <View style={s.footRow}>
+            <TouchableOpacity ph-label="community-report" style={[s.footBtn, s.noTop]} onPress={() => setReporting(true)} accessibilityRole="button">
+              <Text style={[s.footTxt, { color: c.textMuted }]}>{t('community.report')}</Text>
+            </TouchableOpacity>
+            <Text style={{ color: c.textMuted }}>·</Text>
+            <TouchableOpacity ph-label="community-block" style={[s.footBtn, s.noTop]} onPress={block} accessibilityRole="button">
+              <Text style={[s.footTxt, { color: c.textMuted }]}>{t('community.block')}</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </ScrollView>
       <ShareTimelineModal visible={editing} onClose={() => setEditing(false)} />
+      <FilterSheet<ReportReason | null> visible={reporting} title={t('community.reportTitle')} selected={null}
+        options={REASONS.map((r) => ({ value: r, label: t(`community.reportReasons.${r}`) }))}
+        onSelect={(r) => { if (r) void report(r); }} onClose={() => setReporting(false)} />
     </SafeAreaView>
   );
 }
@@ -214,6 +239,8 @@ const s = StyleSheet.create({
   compare: { borderRadius: 14, padding: spacing.base, gap: 4, marginTop: spacing.xs },
   compareHead: { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.6, textTransform: 'uppercase' },
   compareTxt: { fontSize: typography.sm, lineHeight: 20 },
+  noTop: { marginTop: 0 },
+  footRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.xs, marginTop: spacing.sm },
   footBtn: { alignSelf: 'center', minHeight: 44, justifyContent: 'center', paddingHorizontal: spacing.base, marginTop: spacing.sm },
   footTxt: { fontSize: typography.sm, fontWeight: typography.medium },
 });

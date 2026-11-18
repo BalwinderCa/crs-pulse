@@ -135,6 +135,20 @@ Tools
 ## Content rating
 Everyone (IARC) — matches the App Store's 4+.
 
+## When Community goes live (store forms to update)
+
+Community (shared timelines, `COMMUNITY_LIVE`) sends user content to our
+server, so these change in the same release as the store build that turns it on.
+The privacy policy already describes it (2026-11-18).
+
+- **Play Data safety:**
+  - **App activity → Other user-generated content** (the shared timeline outline). Collected, optional, purpose App functionality.
+  - **Personal info → Name** (the optional display name; Play counts nicknames). Collected, optional, purpose App functionality.
+  - **Device or other IDs** (the random key the server issues on first share). Collected, purpose App functionality.
+  - Not "shared": other users seeing it is a user-initiated share. Encrypted in transit. Users can request deletion (Stop sharing, or Reset All Data, deletes it).
+- **App Store privacy label:** add User Content → Other User Content and Identifiers → User ID, both App Functionality, not linked, not tracking (wording in `docs/PRIVACY_POLICY.md`).
+- **Age ratings:** answer "yes" to user-generated content / users interacting on Play's IARC questionnaire and Apple's age-rating questions. Reporting (3 reports hide a timeline, each report emails `ALERT_EMAIL`) and blocking are in the app, as both stores require for user content.
+
 ## Contact email
 contact@crspulse.com
 

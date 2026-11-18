@@ -6,6 +6,7 @@ import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
 import type { MilestoneType } from '@/store/timelineStore';
+import { BuddyAvatar, isBuddyId } from './BuddyAvatar';
 import { PROGRAMS, currentStep, stopOf, type ProgramId, type SharedTimeline } from '../model';
 
 export function useProgramLabel() {
@@ -47,9 +48,10 @@ export function useStageTone() {
   };
 }
 
-export function Avatar({ alias, size = 42 }: { alias: string; size?: number }) {
+export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: string | undefined; size?: number }) {
   const accent = useAccentColor();
   const { t } = useTranslation();
+  if (isBuddyId(avatar)) return <BuddyAvatar id={avatar} size={size} />;
   const anon = !alias || alias === t('community.anonymous');
   return (
     <View style={[s.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: accent + '1F' }]}>
@@ -69,7 +71,7 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
       style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}>
-      <Avatar alias={alias} />
+      <Avatar alias={alias} avatar={timeline.avatar} />
       <View style={s.mid}>
         <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
         {now && pill && (

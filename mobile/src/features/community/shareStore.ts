@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import { useTimelineStore } from '@/store/timelineStore';
 import { sharedAorMonth, toSharedSteps, type ProgramId } from './model';
-import { publishTimeline, unpublishTimeline } from './communityApi';
+import { CommunityError, blockTimeline, getBlocked, publishTimeline, unpublishTimeline } from './communityApi';
 
 /**
  * The user's Community sharing settings. The shared steps themselves are not
@@ -14,15 +14,20 @@ export type ShareSettings = {
   alias: string;
   program: ProgramId;
   showMonths: boolean;
+  /** Preset avatar id (BuddyAvatar); the initial shows when absent. */
+  avatar?: string;
   sharedAt: string;
 };
+
+/** ok: shared. offline: saved here, sent later. badName: the server refused the name; nothing changed. */
+export type ShareResult = 'ok' | 'offline' | 'badName';
 
 type ShareStore = {
   settings: ShareSettings | null;
   loaded: boolean;
   load: () => Promise<void>;
-  /** Saves the settings and publishes; false if the server couldn't be reached (it retries on the next change or launch). */
-  share: (s: Omit<ShareSettings, 'sharedAt'>) => Promise<boolean>;
+  /** Saves the settings and publishes. If offline it retries on the next change or launch. */
+  share: (s: Omit<ShareSettings, 'sharedAt'>) => Promise<ShareResult>;
   /** Unpublishes, then forgets the settings; false (and still shared) if the server didn't confirm. */
   stop: () => Promise<boolean>;
 };
@@ -42,7 +47,10 @@ function sync(settings: ShareSettings): Promise<void> {
     const steps = toSharedSteps(milestones, settings.showMonths);
     if (!steps.length) return unpublishTimeline();
     const aorMonth = sharedAorMonth(milestones);
-    return publishTimeline({ alias: settings.alias, program: settings.program, steps, ...(aorMonth ? { aorMonth } : {}) });
+    return publishTimeline({
+      alias: settings.alias, program: settings.program, steps,
+      ...(aorMonth ? { aorMonth } : {}), ...(settings.avatar ? { avatar: settings.avatar } : {}),
+    });
   });
 }
 
@@ -62,10 +70,22 @@ export const useShareStore = create<ShareStore>((set, get) => ({
     }
   },
   share: async (s) => {
-    const settings: ShareSettings = { ...s, sharedAt: get().settings?.sharedAt ?? new Date().toISOString() };
+    const previous = get().settings;
+    const settings: ShareSettings = { ...s, sharedAt: previous?.sharedAt ?? new Date().toISOString() };
     set({ settings });
     await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(settings)).catch(() => {});
-    return sync(settings).then(() => true, () => false);
+    try {
+      await sync(settings);
+      return 'ok';
+    } catch (e) {
+      if (!(e instanceof CommunityError && e.message === 'alias not allowed')) return 'offline';
+      // Put back what was there, so a refused name isn't retried on every launch.
+      set({ settings: previous });
+      await (previous
+        ? AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(previous))
+        : AsyncStorage.removeItem(STORAGE_KEYS.COMMUNITY_SHARE)).catch(() => {});
+      return 'badName';
+    }
   },
   stop: async () => {
     try {
@@ -76,6 +96,16 @@ export const useShareStore = create<ShareStore>((set, get) => ({
     set({ settings: null });
     await AsyncStorage.removeItem(STORAGE_KEYS.COMMUNITY_SHARE).catch(() => {});
     return true;
+  },
+}));
+
+/** Blocked timeline ids, in memory too, so the feed drops a card the moment it's blocked. */
+export const useBlockedStore = create<{ ids: string[]; load: () => Promise<void>; block: (id: string) => Promise<void> }>((set, get) => ({
+  ids: [],
+  load: async () => set({ ids: await getBlocked() }),
+  block: async (id) => {
+    set({ ids: [...get().ids, id] });
+    await blockTimeline(id);
   },
 }));
 

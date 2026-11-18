@@ -12,7 +12,8 @@ import { useTimelineStore } from '@/store/timelineStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { PROGRAMS, programFromTypeId, sharedAorMonth, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
 import { useShareStore } from '../shareStore';
-import { PersonCard, useProgramLabel } from './TimelineCards';
+import { Avatar, PersonCard, useProgramLabel } from './TimelineCards';
+import { AvatarPicker } from './AvatarPicker';
 
 /**
  * Share my timeline: pick a display name, the program and whether months show,
@@ -32,26 +33,33 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
   const [alias, setAlias] = useState('');
   const [program, setProgram] = useState<ProgramId>('other');
   const [showMonths, setShowMonths] = useState(false);
+  const [avatar, setAvatar] = useState<string | undefined>(undefined);
+  const [picking, setPicking] = useState(false);
+  const [nameError, setNameError] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     setAlias(settings?.alias ?? '');
     setProgram(settings?.program ?? programFromTypeId(typeId));
     setShowMonths(settings?.showMonths ?? false);
+    setAvatar(settings?.avatar);
+    setNameError(false);
   }, [visible, settings, typeId]);
 
   const steps = useMemo(() => toSharedSteps(milestones, showMonths), [milestones, showMonths]);
   const aorMonth = useMemo(() => sharedAorMonth(milestones), [milestones]);
   const preview: SharedTimeline = {
-    id: 'mine', alias: alias.trim(), program, steps, updatedDaysAgo: 0, isMine: true, ...(aorMonth ? { aorMonth } : {}),
+    id: 'mine', alias: alias.trim(), program, steps, updatedDaysAgo: 0, isMine: true,
+    ...(aorMonth ? { aorMonth } : {}), ...(avatar ? { avatar } : {}),
   };
   const canShare = steps.length > 0;
 
   const save = async () => {
     if (!canShare) return;
-    const ok = await share({ alias: alias.trim(), program, showMonths });
+    const result = await share({ alias: alias.trim(), program, showMonths, ...(avatar ? { avatar } : {}) });
+    if (result === 'badName') { setNameError(true); return; }
     onClose();
-    if (!ok) Toast.show({ type: 'error', text1: t('community.shareFailed') });
+    if (result === 'offline') Toast.show({ type: 'error', text1: t('community.shareFailed') });
   };
 
   return (
@@ -83,17 +91,27 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
               </View>
             )}
 
+            <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.avatarLabel')}</Text>
+            <TouchableOpacity ph-label="community-avatar-change" onPress={() => setPicking(true)}
+              style={[s.row, { backgroundColor: c.surfaceCard, borderColor: c.border }]} accessibilityRole="button">
+              <Avatar alias={alias.trim() || t('community.anonymous')} avatar={avatar} size={48} />
+              <Text style={[s.rowTitle, s.flex, { color: c.textPrimary }]}>{t('community.avatarChange')}</Text>
+              <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+            </TouchableOpacity>
+
             <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.aliasLabel')}</Text>
             <TextInput
-              style={[s.input, { backgroundColor: c.surfaceCard, borderColor: c.border, color: c.textPrimary }]}
+              style={[s.input, { backgroundColor: c.surfaceCard, borderColor: nameError ? palette.danger : c.border, color: c.textPrimary }]}
               value={alias}
-              onChangeText={setAlias}
+              onChangeText={(v) => { setAlias(v); setNameError(false); }}
               placeholder={t('community.anonymous')}
               placeholderTextColor={c.textMuted}
               maxLength={24}
               autoCorrect={false}
             />
-            <Text style={[s.hint, { color: c.textMuted }]}>{t('community.aliasHint')}</Text>
+            <Text style={[s.hint, { color: nameError ? palette.danger : c.textMuted }]} accessibilityLiveRegion="polite">
+              {nameError ? t('community.nameNotAllowed') : t('community.aliasHint')}
+            </Text>
 
             <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.programLabel')}</Text>
             <View style={s.chips}>
@@ -142,6 +160,7 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <AvatarPicker visible={picking} alias={alias.trim()} selected={avatar} onSelect={setAvatar} onClose={() => setPicking(false)} />
     </Modal>
   );
 }

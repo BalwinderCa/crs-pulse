@@ -2,23 +2,26 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { cleanTimeline, handleCommunity } from './community.ts';
+import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity } from './community.ts';
 
 /** Just enough of D1 over node:sqlite, with the real migration applied. */
 function makeDb() {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(new URL('../migrations/0001_community.sql', import.meta.url), 'utf8'));
+  for (const f of ['0001_community.sql', '0002_community_moderation.sql']) {
+    db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
+  }
   const prepare = (sql: string) => {
     let args: unknown[] = [];
     const stmt = {
       bind: (...a: unknown[]) => { args = a; return stmt; },
       all: async () => ({ results: db.prepare(sql).all(...(args as never[])) }),
       first: async () => db.prepare(sql).get(...(args as never[])) ?? null,
-      run: async () => db.prepare(sql).run(...(args as never[])),
+      run: async () => ({ meta: { changes: Number(db.prepare(sql).run(...(args as never[])).changes) } }),
     };
     return stmt;
   };
-  return { prepare } as unknown as D1Database;
+  const batch = async (stmts: { run: () => Promise<unknown> }[]) => { for (const st of stmts) await st.run(); };
+  return { prepare, batch } as unknown as D1Database;
 }
 
 const KEY_A = 'a'.repeat(40);
@@ -29,13 +32,15 @@ const timeline = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
-async function call(db: D1Database, method: string, path: string, opts: { key?: string; body?: unknown; auth?: boolean } = {}) {
+async function call(db: D1Database, method: string, path: string,
+  opts: { key?: string; body?: unknown; auth?: boolean; ip?: string; onReport?: () => Promise<void> } = {}) {
   const headers: Record<string, string> = {};
   if (opts.key) headers['X-Community-Key'] = opts.key;
+  if (opts.ip) headers['CF-Connecting-IP'] = opts.ip;
   const req = new Request(`https://w.dev${path}`, {
     method, headers, ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
   });
-  const res = await handleCommunity(req, new URL(req.url), db, opts.auth ?? true, async () => false);
+  const res = await handleCommunity(req, new URL(req.url), db, opts.auth ?? true, async () => false, opts.onReport);
   return { status: res!.status, body: res!.status === 204 ? null : await res!.json() as any };
 }
 
@@ -111,4 +116,50 @@ test('needs auth, a device key, and a bound database', async () => {
   assert.equal((await call(db, 'PUT', '/community/me', { key: 'short', body: timeline() })).status, 422);
   const req = new Request('https://w.dev/community');
   assert.equal((await handleCommunity(req, new URL(req.url), undefined, true, async () => false))!.status, 503);
+});
+
+test('name filter blocks slurs, profanity, impersonation and contact details, not real names', () => {
+  for (const bad of ['F.u_c k', 'fück this', 'B1tch', 'IRCC Officer', 'Official helper', 'shit happens', 'me@mail.com',
+    'www.spam.ca', 'call 416 555 0199', 'Putain', 'crs pulse team']) {
+    assert.equal(aliasAllowed(bad), false, bad);
+  }
+  for (const ok of ['Kshitij', 'Dominique', 'Nazir', 'Grape Farmer', 'Scott from Essex', 'MapleBound', 'Priya 2026', 'Hancock']) {
+    assert.equal(aliasAllowed(ok), true, ok);
+  }
+  assert.equal(cleanTimeline(timeline({ alias: 'IRCC Officer' })), 'alias not allowed');
+});
+
+test('avatar round-trips, and must be a short id', async () => {
+  const db = makeDb();
+  const put = await call(db, 'PUT', '/community/me', { key: KEY_A, body: timeline({ avatar: 'b3201' }) });
+  assert.equal((await call(db, 'GET', `/community/${put.body.id}`)).body.avatar, 'b3201');
+  assert.equal(typeof cleanTimeline(timeline({ avatar: '<svg>' })), 'string');
+});
+
+test('reports count once per reporter and hide the timeline at the threshold', async () => {
+  const db = makeDb();
+  const { body: { id } } = await call(db, 'PUT', '/community/me', { key: KEY_A, body: timeline() });
+  const seen: number[] = [];
+  const report = (ip: string, reason = 'spam') =>
+    call(db, 'POST', `/community/${id}/report`, { ip, body: { reason }, onReport: async () => { seen.push(1); } });
+
+  assert.equal((await report('1.1.1.1', 'nonsense')).status, 422);
+  assert.equal((await report('1.1.1.1')).status, 204);
+  assert.equal((await report('1.1.1.1')).status, 204); // same reporter: not counted again
+  assert.equal(seen.length, 1);
+  for (let i = 2; i <= REPORT_HIDE_AT; i++) await report(`1.1.1.${i}`);
+  assert.equal(seen.length, REPORT_HIDE_AT);
+
+  assert.equal((await call(db, 'GET', `/community/${id}`)).status, 404);
+  assert.equal((await call(db, 'GET', '/community')).body.items.length, 0);
+  assert.deepEqual((await call(db, 'GET', '/community/summary?program=cec')).body, []);
+  // Re-sharing doesn't un-hide it.
+  await call(db, 'PUT', '/community/me', { key: KEY_A, body: timeline({ alias: 'New name' }) });
+  assert.equal((await call(db, 'GET', `/community/${id}`)).status, 404);
+  assert.equal((await call(db, 'POST', '/community/nope/report', { body: { reason: 'spam' } })).status, 404);
+  // Unsharing removes the reports with it.
+  const reports = () => db.prepare('SELECT COUNT(*) AS n FROM community_reports').bind().first<{ n: number }>();
+  assert.equal((await reports())!.n, REPORT_HIDE_AT);
+  await call(db, 'DELETE', '/community/me', { key: KEY_A });
+  assert.equal((await reports())!.n, 0);
 });

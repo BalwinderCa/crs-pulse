@@ -101,6 +101,8 @@ export const STORAGE_KEYS = {
   COMMUNITY_SHARE: 'crs_pulse.community_share',
   /** This device's shared Community row: { id, key }. The key is what lets it update or delete the row. */
   COMMUNITY_OWNER: 'crs_pulse.community_owner',
+  /** Community timeline ids this user blocked (hidden from their feed). */
+  COMMUNITY_BLOCKED: 'crs_pulse.community_blocked',
   /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
   AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
 } as const;

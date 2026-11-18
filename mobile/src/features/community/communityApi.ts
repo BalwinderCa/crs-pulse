@@ -62,11 +62,19 @@ export function pageOf(rows: SharedTimeline[], cursor: string | null, limit = PA
 
 const serverUrl = (): string | null => process.env.EXPO_PUBLIC_PUSH_URL?.replace(/\/$/, '') || null;
 
-/** A worker call; 404 comes back as null, any other failure throws. */
+/** A failed worker call; `message` is the server's (e.g. 'alias not allowed'). */
+export class CommunityError extends Error {
+  constructor(readonly status: number, message: string) { super(message); }
+}
+
+/** A worker call; 404 comes back as null, any other failure throws (CommunityError when the server answered). */
 async function call<T>(path: string, init: { method?: string; headers?: Record<string, string>; body?: string } = {}): Promise<T | null> {
   const res = await fetch(`${serverUrl()}${path}`, { ...init, headers: { ...buildPushHeaders(), ...init.headers } });
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`community ${init.method ?? 'GET'} ${path}: ${res.status}`);
+  if (!res.ok) {
+    const message = await res.json().then((b: { message?: string }) => b.message ?? '', () => '');
+    throw new CommunityError(res.status, message || `community ${init.method ?? 'GET'} ${path}: ${res.status}`);
+  }
   return res.status === 204 ? null : (await res.json()) as T;
 }
 
@@ -80,6 +88,33 @@ async function getOwner(): Promise<Owner | null> {
   } catch {
     return null;
   }
+}
+
+/** Timeline ids this user blocked: hidden from their feed, on this device only. */
+export async function getBlocked(): Promise<string[]> {
+  try {
+    return JSON.parse((await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_BLOCKED)) ?? '[]') as string[];
+  } catch {
+    return [];
+  }
+}
+
+export async function blockTimeline(id: string): Promise<void> {
+  const ids = await getBlocked();
+  if (!ids.includes(id)) await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_BLOCKED, JSON.stringify([...ids, id]));
+}
+
+export type ReportReason = 'spam' | 'offensive' | 'misleading' | 'other';
+
+/** POST /community/:id/report. Three reports from different people hide a timeline for everyone. */
+export async function reportTimeline(id: string, reason: ReportReason): Promise<void> {
+  if (!serverUrl()) return;
+  const owner = await getOwner();
+  await call(`/community/${encodeURIComponent(id)}/report`, {
+    method: 'POST',
+    headers: owner ? { 'X-Community-Key': owner.key } : {},
+    body: JSON.stringify({ reason }),
+  });
 }
 
 const markMine = (t: SharedTimeline, owner: Owner | null): SharedTimeline => (owner && t.id === owner.id ? { ...t, isMine: true } : t);
@@ -98,12 +133,15 @@ export async function fetchCommunityPage(
     if (filters.aorMonth) q.set('aor', filters.aorMonth);
     if (filters.stage) q.set('stage', filters.stage);
     if (cursor) q.set('cursor', cursor);
-    const [page, owner] = await Promise.all([call<CommunityPage>(`/community?${q}`), getOwner()]);
+    const [page, owner, blocked] = await Promise.all([call<CommunityPage>(`/community?${q}`), getOwner(), getBlocked()]);
     if (!page) throw new Error('community feed: 404');
-    return { items: page.items.map((t) => markMine(t, owner)), nextCursor: page.nextCursor };
+    // shortcut: blocked rows are dropped after paging, so a page can come up short; send them to the server if people block a lot.
+    const items = page.items.filter((t) => !blocked.includes(t.id)).map((t) => markMine(t, owner));
+    return { items, nextCursor: page.nextCursor };
   }
   await latency();
-  return pageOf(queryTimelines(SAMPLE_TIMELINES, filters), cursor, limit);
+  const blocked = await getBlocked();
+  return pageOf(queryTimelines(SAMPLE_TIMELINES.filter((t) => !blocked.includes(t.id)), filters), cursor, limit);
 }
 
 /** GET /community/:id → SharedTimeline, or 404 (null) once it's unshared. */
@@ -129,7 +167,7 @@ export async function fetchCommunitySummary(program: ProgramId): Promise<Communi
   return typicalPace(SAMPLE_TIMELINES.filter((t) => t.program === program));
 }
 
-export type PublishBody = { alias: string; program: ProgramId; aorMonth?: string; steps: SharedStep[] };
+export type PublishBody = { alias: string; program: ProgramId; aorMonth?: string; avatar?: string; steps: SharedStep[] };
 
 /** PUT /community/me: shares or updates this device's timeline. The first share gets its key from the server. */
 export async function publishTimeline(body: PublishBody): Promise<void> {

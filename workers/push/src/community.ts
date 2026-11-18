@@ -8,6 +8,8 @@
  *   PUT    /community/me     (X-Community-Key: device key)       → { id, key }
  *          (no key on the first share: the server issues one, which the app keeps)
  *   DELETE /community/me     (X-Community-Key: device key)       → 204
+ *   POST   /community/:id/report { reason }                      → 204
+ *          (REPORT_HIDE_AT distinct reporters hide a timeline from every read)
  *
  * The shapes match mobile/src/features/community/communityApi.ts. STOPS and
  * STOP_OF are copied from mobile/src/features/community/model.ts; keep in sync.
@@ -31,12 +33,37 @@ const MAX_DAY = 3650;
 const MAX_ALIAS = 30;
 const MAX_LIMIT = 50;
 const DAY_MS = 86_400_000;
+const AVATAR_RE = /^[a-z0-9]{1,16}$/;
+export const REPORT_REASONS = ['spam', 'offensive', 'misleading', 'other'] as const;
+export const REPORT_HIDE_AT = 3;
+
+// Display-name filter. Names are lowercased, with accents and look-alike digits
+// folded ("fück", "b1tch"). STEMS match anywhere, after dropping spaces and
+// punctuation ("F.u_c k"); WORDS only as a whole word, because they hide inside
+// real names (Kshitij, Dominique, Nazir, grape).
+const STEMS = [
+  'fuck', 'cunt', 'nigg', 'fagg', 'retard', 'whore', 'bitch', 'slut', 'tranny', 'pussy', 'twat', 'bastard', 'hitler',
+  'merde', 'putain', 'connard', 'connasse', 'salope', 'encule', 'tabarnak', 'calisse',
+  // Impersonation: nobody here speaks for IRCC, the government or the app.
+  'ircc', 'official', 'officiel', 'admin', 'moderator', 'moderateur', 'government', 'gouvernement', 'crspulse',
+];
+const WORDS = new Set(['shit', 'shitty', 'rape', 'rapist', 'nazi', 'nique', 'porn', 'wank', 'fuk', 'kike', 'chink', 'nigga', 'batard', 'pute']);
+const LOOKALIKE: Record<string, string> = { '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's', '7': 't', '$': 's', '!': 'i' };
+
+/** False for names with a slur, profanity, impersonation, or contact details (links, emails, @handles, phone numbers). */
+export function aliasAllowed(alias: string): boolean {
+  if (/https?:|www\.|\.(com|ca|net|org|io)\b|@|\d{6,}|(\d[\s.-]?){7,}/i.test(alias)) return false;
+  const folded = alias.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[013457$!]/g, (ch) => LOOKALIKE[ch]!);
+  const squashed = folded.replace(/[^a-z]/g, '');
+  return !STEMS.some((stem) => squashed.includes(stem)) && !folded.split(/[^a-z]+/).some((w) => WORDS.has(w));
+}
 
 type Step = { type: string; day: number; month?: string };
-export type Timeline = { alias: string; program: string; aorMonth?: string; steps: Step[] };
+export type Timeline = { alias: string; program: string; aorMonth?: string; avatar?: string; steps: Step[] };
 type Row = {
   id: string; alias: string; program: string; aor_month: string | null;
-  steps: string; stage: number; last_day: number; updated_at: number;
+  steps: string; stage: number; last_day: number; updated_at: number; avatar: string | null;
 };
 
 /** Checks a published timeline and keeps only the allowed fields. Returns an error string if it's invalid. */
@@ -45,6 +72,8 @@ export function cleanTimeline(body: unknown): Timeline | string {
   const b = body as Record<string, unknown>;
   const alias = typeof b.alias === 'string' ? b.alias.replace(/[\u0000-\u001f\u007f]/g, '').trim() : '';
   if (alias.length > MAX_ALIAS) return `alias is longer than ${MAX_ALIAS}`;
+  if (alias && !aliasAllowed(alias)) return 'alias not allowed';
+  if (b.avatar !== undefined && (typeof b.avatar !== 'string' || !AVATAR_RE.test(b.avatar))) return 'bad avatar';
   if (!PROGRAMS.includes(b.program as never)) return 'unknown program';
   if (b.aorMonth !== undefined && (typeof b.aorMonth !== 'string' || !MONTH_RE.test(b.aorMonth))) return 'bad aorMonth';
   if (!Array.isArray(b.steps) || b.steps.length === 0 || b.steps.length > MAX_STEPS) return 'steps must hold 1-40 items';
@@ -61,6 +90,7 @@ export function cleanTimeline(body: unknown): Timeline | string {
   if (steps[0]!.day !== 0) return 'first step must be day 0';
   const t: Timeline = { alias, program: b.program as string, steps };
   if (b.aorMonth !== undefined) t.aorMonth = b.aorMonth as string;
+  if (b.avatar !== undefined) t.avatar = b.avatar as string;
   return t;
 }
 
@@ -88,6 +118,7 @@ const toTimeline = (r: Row, now: number) => {
     updatedDaysAgo: Math.max(0, Math.floor((now - r.updated_at) / DAY_MS)),
   };
   if (r.aor_month) t.aorMonth = r.aor_month;
+  if (r.avatar) t.avatar = r.avatar;
   return t;
 };
 
@@ -108,7 +139,7 @@ export async function listPage(db: D1Database, q: URLSearchParams, now = Date.no
   const limit = Math.min(MAX_LIMIT, Math.max(1, Number(q.get('limit')) || 20));
   const cursor = q.get('cursor');
 
-  const where: string[] = [];
+  const where: string[] = ['hidden = 0'];
   const args: unknown[] = [];
   if (program && program !== 'all') { where.push('program = ?'); args.push(program); }
   if (aor) { where.push('aor_month = ?'); args.push(aor); }
@@ -124,7 +155,7 @@ export async function listPage(db: D1Database, q: URLSearchParams, now = Date.no
     offset = Math.max(0, Number(cursor) || 0);
   }
   const order = { recent: 'updated_at DESC, id', longest: 'last_day DESC, id', furthest: 'stage DESC, last_day ASC, id' }[sort];
-  const sql = `SELECT * FROM community_timelines ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+  const sql = `SELECT * FROM community_timelines WHERE ${where.join(' AND ')}
     ORDER BY ${order} LIMIT ? OFFSET ?`;
   const { results } = await db.prepare(sql).bind(...args, limit + 1, offset).all<Row>();
   const rows = results.slice(0, limit);
@@ -141,6 +172,8 @@ export async function handleCommunity(
   db: D1Database | undefined,
   authorized: boolean,
   rateLimited: (owner: string) => Promise<boolean>,
+  /** Called on each new report, e.g. to email ops; must not throw. */
+  onReport: (id: string, alias: string, reason: string, reports: number) => Promise<void> = async () => {},
 ): Promise<Response | null> {
   if (url.pathname !== '/community' && !url.pathname.startsWith('/community/')) return null;
   if (!db) return json({ message: 'Service unavailable' }, 503);
@@ -155,7 +188,7 @@ export async function handleCommunity(
     const program = url.searchParams.get('program');
     if (!PROGRAMS.includes(program as never)) return json({ message: 'unknown program' }, 422);
     // shortcut: reads every row of the program on each call; cache it (Cache API or a summary table) past ~50k rows.
-    const { results } = await db.prepare('SELECT steps FROM community_timelines WHERE program = ?')
+    const { results } = await db.prepare('SELECT steps FROM community_timelines WHERE program = ? AND hidden = 0')
       .bind(program).all<{ steps: string }>();
     return json(typicalPace(results.map((r) => JSON.parse(r.steps) as Step[])));
   }
@@ -169,7 +202,11 @@ export async function handleCommunity(
     if (await rateLimited(owner)) return json({ message: 'Too many requests' }, 429);
 
     if (request.method === 'DELETE') {
-      await db.prepare('DELETE FROM community_timelines WHERE owner = ?').bind(owner).run();
+      await db.batch([
+        // Reports go with the timeline, so nothing about it is kept after it's unshared.
+        db.prepare('DELETE FROM community_reports WHERE timeline_id IN (SELECT id FROM community_timelines WHERE owner = ?)').bind(owner),
+        db.prepare('DELETE FROM community_timelines WHERE owner = ?').bind(owner),
+      ]);
       return new Response(null, { status: 204 });
     }
 
@@ -178,9 +215,9 @@ export async function handleCommunity(
     const t = cleanTimeline(body);
     if (typeof t === 'string') return json({ message: t }, 422);
     const row = await db.prepare(
-      `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT(owner) DO UPDATE SET alias = excluded.alias, program = excluded.program,
+      `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at, avatar)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(owner) DO UPDATE SET alias = excluded.alias, program = excluded.program, avatar = excluded.avatar,
          aor_month = excluded.aor_month, steps = excluded.steps, stage = excluded.stage,
          last_day = excluded.last_day,
          -- Re-sending the same timeline (the app syncs on launch) doesn't count as an update.
@@ -190,13 +227,36 @@ export async function handleCommunity(
        RETURNING id`,
     ).bind(
       crypto.randomUUID(), owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps),
-      stageOf(t.steps), t.steps[t.steps.length - 1]!.day, Date.now(),
+      stageOf(t.steps), t.steps[t.steps.length - 1]!.day, Date.now(), t.avatar ?? null,
     ).first<{ id: string }>();
     return json({ id: row!.id, key });
   }
 
-  if (sub && sub !== 'me' && sub !== 'summary' && request.method === 'GET') {
-    const row = await db.prepare('SELECT * FROM community_timelines WHERE id = ?').bind(sub).first<Row>();
+  const report = /^([^/]+)\/report$/.exec(sub);
+  if (report && request.method === 'POST') {
+    const id = report[1]!;
+    let body: { reason?: unknown };
+    try { body = (await request.json()) as { reason?: unknown }; } catch { return json({ message: 'Invalid JSON body' }, 400); }
+    if (!REPORT_REASONS.includes(body.reason as never)) return json({ message: 'unknown reason' }, 422);
+    const key = request.headers.get('X-Community-Key');
+    // One vote per device; a device that never shared counts once per IP.
+    const reporter = await sha256(key && KEY_RE.test(key) ? key : `ip:${request.headers.get('CF-Connecting-IP') ?? ''}`);
+    if (await rateLimited(reporter)) return json({ message: 'Too many requests' }, 429);
+    const target = await db.prepare('SELECT alias FROM community_timelines WHERE id = ?').bind(id).first<{ alias: string }>();
+    if (!target) return json({ message: 'Not found' }, 404);
+    const added = await db.prepare(
+      'INSERT OR IGNORE INTO community_reports (timeline_id, reporter, reason, created_at) VALUES (?, ?, ?, ?)',
+    ).bind(id, reporter, body.reason, Date.now()).run();
+    if (added.meta.changes) {
+      const { n } = (await db.prepare('SELECT COUNT(*) AS n FROM community_reports WHERE timeline_id = ?').bind(id).first<{ n: number }>())!;
+      if (n >= REPORT_HIDE_AT) await db.prepare('UPDATE community_timelines SET hidden = 1 WHERE id = ?').bind(id).run();
+      await onReport(id, target.alias, body.reason as string, n);
+    }
+    return new Response(null, { status: 204 });
+  }
+
+  if (sub && !sub.includes('/') && sub !== 'me' && sub !== 'summary' && request.method === 'GET') {
+    const row = await db.prepare('SELECT * FROM community_timelines WHERE id = ? AND hidden = 0').bind(sub).first<Row>();
     return row ? json(toTimeline(row, Date.now())) : json({ message: 'Not found' }, 404);
   }
 

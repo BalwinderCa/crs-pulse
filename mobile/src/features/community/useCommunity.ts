@@ -24,6 +24,7 @@ export function useCommunity() {
     const mineTl: SharedTimeline = { id: MY_TIMELINE_ID, alias: settings.alias, program: settings.program, steps, updatedDaysAgo: 0, isMine: true };
     const aorMonth = sharedAorMonth(milestones);
     if (aorMonth) mineTl.aorMonth = aorMonth;
+    if (settings.avatar) mineTl.avatar = settings.avatar;
     return mineTl;
   }, [settings, milestones]);
 

@@ -1,8 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import {
-  DEFAULT_FILTERS, fetchCommunityPage, publishTimeline, unpublishTimeline,
+  DEFAULT_FILTERS, blockTimeline, fetchCommunityPage, publishTimeline, reportTimeline, unpublishTimeline,
 } from '@/features/community/communityApi';
+import { useShareStore } from '@/features/community/shareStore';
+import { useTimelineStore } from '@/store/timelineStore';
+import { buddyChoices, isBuddyId, randomBuddyId } from '@/features/community/components/BuddyAvatar';
 
 const URL = 'https://worker.test';
 const body = { alias: 'Maple', program: 'cec' as const, steps: [{ type: 'ITA' as const, day: 0 }] };
@@ -50,5 +53,45 @@ describe('community api (server)', () => {
     fetchMock.mockReturnValueOnce(reply(204));
     await unpublishTimeline();
     expect(await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_OWNER)).toBeNull();
+  });
+
+  it('drops blocked timelines from the feed', async () => {
+    await blockTimeline('other');
+    fetchMock.mockReturnValueOnce(reply(200, { items: [{ id: 'a' }, { id: 'other' }], nextCursor: null }));
+    expect((await fetchCommunityPage(DEFAULT_FILTERS, null)).items.map((t) => t.id)).toEqual(['a']);
+  });
+
+  it('reports with the reason, and the device key when there is one', async () => {
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_OWNER, JSON.stringify({ id: 'me', key: 'secret' }));
+    fetchMock.mockReturnValueOnce(reply(204));
+    await reportTimeline('t1', 'spam');
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(`${URL}/community/t1/report`);
+    expect(JSON.parse(init.body)).toEqual({ reason: 'spam' });
+    expect(init.headers['X-Community-Key']).toBe('secret');
+  });
+
+  it('a refused name puts the previous settings back', async () => {
+    useTimelineStore.setState({ milestones: [{ id: '1', type: 'ITA', date: '2026-01-05', note: '' }] });
+    useShareStore.setState({ settings: null, loaded: true });
+    fetchMock.mockReturnValueOnce(reply(422, { message: 'alias not allowed' }));
+    await expect(useShareStore.getState().share({ alias: 'IRCC Officer', program: 'cec', showMonths: false })).resolves.toBe('badName');
+    expect(useShareStore.getState().settings).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_SHARE)).toBeNull();
+
+    fetchMock.mockReturnValueOnce(reply(503));
+    await expect(useShareStore.getState().share({ alias: 'Maple', program: 'cec', showMonths: false })).resolves.toBe('offline');
+    expect(useShareStore.getState().settings?.alias).toBe('Maple');
+  });
+});
+
+describe('buddy avatars', () => {
+  it('makes valid, distinct ids and keeps the current one first', () => {
+    for (let i = 0; i < 200; i++) expect(isBuddyId(randomBuddyId())).toBe(true);
+    const ids = buddyChoices(12, 'b3201');
+    expect(ids[0]).toBe('b3201');
+    expect(new Set(ids).size).toBe(12);
+    expect(isBuddyId('b9999')).toBe(false);
+    expect(isBuddyId(undefined)).toBe(false);
   });
 });

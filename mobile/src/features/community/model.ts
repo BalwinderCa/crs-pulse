@@ -65,6 +65,8 @@ export type SharedTimeline = {
   updatedDaysAgo: number;
   /** "2026-08": the month of the AOR, always shared once there is one. Never the day. */
   aorMonth?: string;
+  /** A preset avatar id (see BuddyAvatar); the initial shows when absent. */
+  avatar?: string;
   isMine?: boolean;
 };
 

@@ -19,6 +19,7 @@ import { PROGRAMS, STOPS, programFromTypeId, sharedAorMonth, type ProgramId, typ
 import { DEFAULT_FILTERS, type CommunityFilters, type CommunitySort } from '../communityApi';
 import { MY_TIMELINE_ID, useCommunity } from '../useCommunity';
 import { useCommunityFeed } from '../useCommunityFeed';
+import { useBlockedStore } from '../shareStore';
 import { PersonCard, useProgramLabel } from './TimelineCards';
 import { FilterSheet, type SheetOption } from './FilterSheet';
 
@@ -42,6 +43,10 @@ export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle
   const [sheet, setSheet] = useState<SheetKey | null>(null);
   const touched = useRef(false);
   const feed = useCommunityFeed(filters);
+  const blocked = useBlockedStore((st) => st.ids);
+  const loadBlocked = useBlockedStore((st) => st.load);
+  useEffect(() => { void loadBlocked(); }, [loadBlocked]);
+  const items = useMemo(() => feed.items.filter((tl) => !blocked.includes(tl.id)), [feed.items, blocked]);
 
   const locale = i18n.language?.startsWith('fr') ? fr : enUS;
   const monthLabel = (m: string) => format(parseISO(`${m}-01`), 'MMM yyyy', { locale });
@@ -147,7 +152,7 @@ export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle
   return (
     <>
       <FlatList
-        data={feed.items}
+        data={items}
         keyExtractor={(tl) => tl.id}
         renderItem={({ item }) => (
           <PersonCard timeline={item} onPress={() => navigation.navigate('CommunityTimeline', { id: item.isMine ? MY_TIMELINE_ID : item.id })} />
