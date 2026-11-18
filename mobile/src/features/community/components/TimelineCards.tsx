@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
-import { spacing, typography, borderRadius } from '@/theme';
+import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
@@ -71,8 +71,14 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
  * (ITA → Decision), the name, the latest step and program · AOR month, and the
  * day reached with the stage count.
  */
+// Same colours as DrawCard's CATEGORY_COLOR (CEC, General, Trades); PNP draws use the accent there too.
+const PROGRAM_COLOR: Partial<Record<ProgramId, string>> = {
+  cec: palette.success, fsw: palette.gray300, fst: palette.warning, aip: palette.gray300, other: palette.gray300,
+};
+
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
+  const accent = useAccentColor();
   const { t, i18n } = useTranslation();
   const programLabel = useProgramLabel();
   const tone = useStageTone();
@@ -92,7 +98,7 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
 
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
-      style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}
+      style={[s.card, { backgroundColor: c.surfaceCard, borderLeftColor: PROGRAM_COLOR[timeline.program] ?? accent }]} accessibilityRole={onPress ? 'button' : undefined}
       accessible accessibilityLabel={label}>
       <View style={s.ring}>
         <Svg width={RING} height={RING} style={StyleSheet.absoluteFill}>
@@ -126,7 +132,7 @@ const RING_C = 2 * Math.PI * RING_R;
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
-  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.lg, paddingVertical: 12, paddingHorizontal: 14,
+  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.lg, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 3,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   mid: { flex: 1, minWidth: 0 },
