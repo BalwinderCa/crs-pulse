@@ -88,10 +88,14 @@ describe('community api (server)', () => {
 describe('buddy avatars', () => {
   it('makes valid, distinct ids and keeps the current one first', () => {
     for (let i = 0; i < 200; i++) expect(isBuddyId(randomBuddyId())).toBe(true);
-    const ids = buddyChoices(12, 'b3201');
+    const ids = buddyChoices(15, 'b3201');
     expect(ids[0]).toBe('b3201');
-    expect(new Set(ids).size).toBe(12);
-    expect(isBuddyId('b9999')).toBe(false);
+    expect(new Set(ids).size).toBe(15);
+    expect(isBuddyId('b9999')).toBe(false); // only 8 eyes
+    expect(isBuddyId('b3201')).toBe(true); // ids shared before the extra part still work
+    expect(isBuddyId('b97593')).toBe(true); // the newest of every part
+    expect(isBuddyId('b97594')).toBe(false); // only 4 extras
+    expect(isBuddyId('b320')).toBe(false);
     expect(isBuddyId(undefined)).toBe(false);
   });
 });

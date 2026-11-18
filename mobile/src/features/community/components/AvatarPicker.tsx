@@ -9,8 +9,8 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { BuddyAvatar, buddyChoices } from './BuddyAvatar';
 import { Avatar } from './TimelineCards';
 
-// With the initial in front, a full 4 × 3 grid.
-const GRID = 11;
+// With the initial in front, a full 4 × 4 grid.
+const GRID = 15;
 
 /** A bottom sheet of preset avatars; Shuffle deals a new set. Picking one closes it. */
 export function AvatarPicker({ visible, alias, selected, onSelect, onClose }: {
