@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 import { spacing, typography, borderRadius } from '@/theme';
@@ -66,8 +67,9 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
 }
 
 /**
- * One shared timeline as a card: avatar, name, program and AOR month, the day
- * reached, then a six-stop progress bar (ITA → Decision) with the latest step.
+ * One shared timeline as a card: the avatar inside a ring that fills by stage
+ * (ITA → Decision), the name, the latest step and program · AOR month, and the
+ * day reached with the stage count.
  */
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
@@ -83,51 +85,55 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
     : null;
   const meta = [programLabel(timeline.program), aor].filter(Boolean).join(' · ');
   const stepLabel = now ? t(MILESTONE_META[now.type].labelKey) : '';
-  const stage = reached >= 0 ? t('community.stageOf', { n: reached + 1, total: STOPS.length }) : '';
-  const label = [alias, stepLabel, now ? t('community.dayN', { n: now.day }) : '', meta, stage].filter(Boolean).join(', ');
+  const stages = reached + 1;
+  const label = [alias, stepLabel, now ? t('community.dayN', { n: now.day }) : '', meta,
+    stages > 0 ? t('community.stageOf', { n: stages, total: STOPS.length }) : ''].filter(Boolean).join(', ');
+  const dash = RING_C * Math.max(0, stages) / STOPS.length;
 
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
       style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}
       accessible accessibilityLabel={label}>
-      <View style={s.top}>
-        <Avatar alias={alias} avatar={timeline.avatar} />
-        <View style={s.mid}>
-          <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-          <Text style={[s.meta, { color: c.textMuted }]} numberOfLines={1}>{meta}</Text>
-        </View>
-        {now && <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>}
+      <View style={s.ring}>
+        <Svg width={RING} height={RING} style={StyleSheet.absoluteFill}>
+          <Circle cx={RING / 2} cy={RING / 2} r={RING_R} stroke={c.border} strokeWidth={4} fill="none" />
+          {st && dash > 0 && (
+            <Circle cx={RING / 2} cy={RING / 2} r={RING_R} stroke={st.ink} strokeWidth={4} fill="none" strokeLinecap="round"
+              strokeDasharray={`${dash} ${RING_C}`} transform={`rotate(-90 ${RING / 2} ${RING / 2})`} />
+          )}
+        </Svg>
+        <Avatar alias={alias} avatar={timeline.avatar} size={44} />
       </View>
-      {now && st && (
-        <>
-          <View style={s.track}>
-            {STOPS.map((stop, i) => (
-              <View key={stop} style={[s.seg, { backgroundColor: i <= reached ? st.ink : c.border }]} />
-            ))}
-          </View>
-          <View style={s.bottom}>
-            <Text style={[s.step, { color: st.ink }]} numberOfLines={1}>{stepLabel}</Text>
-            <Text style={[s.stage, { color: c.textMuted }]}>{stage}</Text>
-          </View>
-        </>
+      <View style={s.mid}>
+        <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
+        {now && st && <Text style={[s.step, { color: st.ink }]} numberOfLines={1}>{stepLabel}</Text>}
+        <Text style={[s.meta, { color: c.textMuted }]} numberOfLines={1}>{meta}</Text>
+      </View>
+      {now && (
+        <View style={s.right}>
+          <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>
+          {stages > 0 && <Text style={[s.stages, { color: c.textMuted }]}>{stages}/{STOPS.length}</Text>}
+        </View>
       )}
     </TouchableOpacity>
   );
 }
 
+const RING = 62;
+const RING_R = 27;
+const RING_C = 2 * Math.PI * RING_R;
+
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
-  card: { borderRadius: borderRadius.lg, padding: 14, gap: 10,
+  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.lg, paddingVertical: 12, paddingHorizontal: 14,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  top: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   mid: { flex: 1, minWidth: 0 },
   name: { fontSize: typography.base, fontWeight: typography.semibold },
+  step: { fontSize: typography.sm, fontWeight: typography.semibold, marginTop: 2 },
   meta: { fontSize: typography.xs, fontWeight: typography.medium, marginTop: 2 },
+  right: { alignItems: 'flex-end' },
   day: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  track: { flexDirection: 'row', gap: 4 },
-  seg: { flex: 1, height: 5, borderRadius: 3 },
-  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
-  step: { flex: 1, fontSize: typography.sm, fontWeight: typography.semibold },
-  stage: { fontSize: typography.xs, fontWeight: typography.medium },
+  stages: { fontSize: typography.xs, fontWeight: typography.medium, marginTop: 2, fontVariant: ['tabular-nums'] },
 });
