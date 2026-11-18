@@ -10,6 +10,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, parseISO, subMonths } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 import { spacing, typography, borderRadius } from '@/theme';
+import { AdBanner } from '@/components/common/AdBanner';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useApplicationStore } from '@/store/applicationStore';
@@ -154,8 +155,12 @@ export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle
       <FlatList
         data={items}
         keyExtractor={(tl) => tl.id}
-        renderItem={({ item }) => (
-          <PersonCard timeline={item} onPress={() => navigation.navigate('CommunityTimeline', { id: item.isMine ? MY_TIMELINE_ID : item.id })} />
+        renderItem={({ item, index }) => (
+          <>
+            <PersonCard timeline={item} onPress={() => navigation.navigate('CommunityTimeline', { id: item.isMine ? MY_TIMELINE_ID : item.id })} />
+            {/* An ad after every 4th person, as in Draws. */}
+            {(index + 1) % 4 === 0 && <AdBanner />}
+          </>
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
