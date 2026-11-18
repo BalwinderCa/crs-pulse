@@ -194,6 +194,8 @@ const fr: TranslationKeys = {
     editSharing: 'Modifier le partage',
     report: 'Signaler cette chronologie',
     reported: 'Merci. Nous allons l’examiner.',
+    shareFailed: 'Enregistré. Il sera partagé dès votre retour en ligne.', // [REVIEW]
+    stopFailed: 'Impossible d’arrêter le partage. Vérifiez votre connexion et réessayez.', // [REVIEW]
     yourTimeline: 'Votre chronologie',
     addMilestonesFirst: 'Ajoutez des étapes dans Ma chronologie pour partager',
     notShared: 'pas encore partagée',

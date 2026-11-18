@@ -99,6 +99,8 @@ export const STORAGE_KEYS = {
   COMMUNITY_INTEREST: 'crs_pulse.community_interest',
   /** Community share settings (alias, program, months on/off). Dev preview only until Community goes live. */
   COMMUNITY_SHARE: 'crs_pulse.community_share',
+  /** This device's shared Community row: { id, key }. The key is what lets it update or delete the row. */
+  COMMUNITY_OWNER: 'crs_pulse.community_owner',
   /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
   AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
 } as const;

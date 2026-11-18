@@ -5,7 +5,8 @@
  *   GET    /community?program=&aor=&stage=&sort=&cursor=&limit=  → { items, nextCursor }
  *   GET    /community/summary?program=cec                        → [{ stop, day, n }]
  *   GET    /community/:id                                        → SharedTimeline | 404
- *   PUT    /community/me     (X-Community-Key: device key)       → { id }
+ *   PUT    /community/me     (X-Community-Key: device key)       → { id, key }
+ *          (no key on the first share: the server issues one, which the app keeps)
  *   DELETE /community/me     (X-Community-Key: device key)       → 204
  *
  * The shapes match mobile/src/features/community/communityApi.ts. STOPS and
@@ -160,7 +161,9 @@ export async function handleCommunity(
   }
 
   if (sub === 'me' && (request.method === 'PUT' || request.method === 'DELETE')) {
-    const key = request.headers.get('X-Community-Key') ?? '';
+    const sent = request.headers.get('X-Community-Key');
+    // The app has no secure random source without a native module, so the server mints the key.
+    const key = sent ?? (request.method === 'PUT' ? `${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '') : '');
     if (!KEY_RE.test(key)) return json({ message: 'X-Community-Key is required' }, 422);
     const owner = await sha256(key);
     if (await rateLimited(owner)) return json({ message: 'Too many requests' }, 429);
@@ -179,13 +182,17 @@ export async function handleCommunity(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(owner) DO UPDATE SET alias = excluded.alias, program = excluded.program,
          aor_month = excluded.aor_month, steps = excluded.steps, stage = excluded.stage,
-         last_day = excluded.last_day, updated_at = excluded.updated_at
+         last_day = excluded.last_day,
+         -- Re-sending the same timeline (the app syncs on launch) doesn't count as an update.
+         updated_at = CASE WHEN community_timelines.steps IS excluded.steps AND community_timelines.alias IS excluded.alias
+           AND community_timelines.program IS excluded.program AND community_timelines.aor_month IS excluded.aor_month
+           THEN community_timelines.updated_at ELSE excluded.updated_at END
        RETURNING id`,
     ).bind(
       crypto.randomUUID(), owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps),
       stageOf(t.steps), t.steps[t.steps.length - 1]!.day, Date.now(),
     ).first<{ id: string }>();
-    return json({ id: row!.id });
+    return json({ id: row!.id, key });
   }
 
   if (sub && sub !== 'me' && sub !== 'summary' && request.method === 'GET') {

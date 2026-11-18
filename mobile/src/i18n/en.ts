@@ -187,6 +187,8 @@ const en = {
     editSharing: 'Edit sharing',
     report: 'Report this timeline',
     reported: 'Thanks. We’ll review it.',
+    shareFailed: 'Saved. It will be shared once you’re back online.',
+    stopFailed: 'Couldn’t stop sharing. Check your connection and try again.',
     yourTimeline: 'Your timeline',
     addMilestonesFirst: 'Add milestones in My timeline to share',
     notShared: 'not shared yet',

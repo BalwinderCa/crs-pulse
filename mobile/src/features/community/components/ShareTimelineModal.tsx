@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Toast from 'react-native-toast-message';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -48,8 +49,9 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
 
   const save = async () => {
     if (!canShare) return;
-    await share({ alias: alias.trim(), program, showMonths });
+    const ok = await share({ alias: alias.trim(), program, showMonths });
     onClose();
+    if (!ok) Toast.show({ type: 'error', text1: t('community.shareFailed') });
   };
 
   return (
@@ -129,7 +131,10 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
             </View>
 
             {settings && (
-              <TouchableOpacity ph-label="community-share-stop" onPress={async () => { await stop(); onClose(); }} style={s.stop}>
+              <TouchableOpacity ph-label="community-share-stop" onPress={async () => {
+                if (await stop()) onClose();
+                else Toast.show({ type: 'error', text1: t('community.stopFailed') });
+              }} style={s.stop}>
                 <Ionicons name="eye-off-outline" size={16} color={palette.danger} />
                 <Text style={[s.stopTxt, { color: palette.danger }]}>{t('community.stopSharing')}</Text>
               </TouchableOpacity>

@@ -57,6 +57,15 @@ test('publish, read back, update in place, delete', async () => {
   assert.equal((await call(db, 'GET', `/community/${id}`)).status, 404);
 });
 
+test('first share without a key gets one; reusing it updates the same row', async () => {
+  const db = makeDb();
+  const first = await call(db, 'PUT', '/community/me', { body: timeline() });
+  assert.match(first.body.key, /^[0-9a-f]{64}$/);
+  const again = await call(db, 'PUT', '/community/me', { key: first.body.key, body: timeline({ alias: 'Leaf' }) });
+  assert.equal(again.body.id, first.body.id);
+  assert.equal((await call(db, 'GET', '/community')).body.items.length, 1);
+});
+
 test('pages through every row exactly once, newest first', async () => {
   const db = makeDb();
   for (let i = 0; i < 7; i++) await call(db, 'PUT', '/community/me', { key: `${i}`.repeat(32), body: timeline() });
@@ -98,7 +107,8 @@ test('rejects anything outside the shared shape', () => {
 test('needs auth, a device key, and a bound database', async () => {
   const db = makeDb();
   assert.equal((await call(db, 'GET', '/community', { auth: false })).status, 401);
-  assert.equal((await call(db, 'PUT', '/community/me', { body: timeline() })).status, 422);
+  assert.equal((await call(db, 'DELETE', '/community/me')).status, 422);
+  assert.equal((await call(db, 'PUT', '/community/me', { key: 'short', body: timeline() })).status, 422);
   const req = new Request('https://w.dev/community');
   assert.equal((await handleCommunity(req, new URL(req.url), undefined, true, async () => false))!.status, 503);
 });

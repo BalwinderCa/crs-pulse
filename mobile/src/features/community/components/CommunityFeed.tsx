@@ -17,7 +17,7 @@ import { useTimelineStore } from '@/store/timelineStore';
 import type { RootStackParamList } from '@/types';
 import { PROGRAMS, STOPS, programFromTypeId, sharedAorMonth, type ProgramId, type Stop } from '../model';
 import { DEFAULT_FILTERS, type CommunityFilters, type CommunitySort } from '../communityApi';
-import { useCommunity } from '../useCommunity';
+import { MY_TIMELINE_ID, useCommunity } from '../useCommunity';
 import { useCommunityFeed } from '../useCommunityFeed';
 import { PersonCard, useProgramLabel } from './TimelineCards';
 import { FilterSheet, type SheetOption } from './FilterSheet';
@@ -150,7 +150,7 @@ export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle
         data={feed.items}
         keyExtractor={(tl) => tl.id}
         renderItem={({ item }) => (
-          <PersonCard timeline={item} onPress={() => navigation.navigate('CommunityTimeline', { id: item.id })} />
+          <PersonCard timeline={item} onPress={() => navigation.navigate('CommunityTimeline', { id: item.isMine ? MY_TIMELINE_ID : item.id })} />
         )}
         ListHeaderComponent={header}
         ListEmptyComponent={empty}
