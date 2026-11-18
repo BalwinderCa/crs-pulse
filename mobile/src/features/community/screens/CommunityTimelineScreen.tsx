@@ -59,8 +59,6 @@ export default function CommunityTimelineScreen() {
     const decided = STOPS[reached] === 'decision';
     const decisionDay = pace.find((p) => p.stop === 'decision')?.day;
     const toDecision = !decided && now && decisionDay !== undefined ? decisionDay - now.day : undefined;
-    const nextStop = decided ? undefined : STOPS[reached + 1];
-    const nextDay = nextStop ? pace.find((p) => p.stop === nextStop)?.day : undefined;
 
     // "Compared with you": the furthest stop you have both reached.
     let compare: { stop: string; mine: number; theirs: number } | undefined;
@@ -72,7 +70,7 @@ export default function CommunityTimelineScreen() {
         if (mine !== undefined && theirs !== undefined) compare = { stop, mine, theirs };
       }
     }
-    return { now, nextStop, nextDay, toDecision, compare, firstMonth: timeline.steps[0]?.month };
+    return { now, toDecision, compare, firstMonth: timeline.steps[0]?.month };
   }, [timeline, pace, mySteps]);
 
   const back = (
@@ -159,20 +157,6 @@ export default function CommunityTimelineScreen() {
             </View>
           );
         })}
-        {view.nextStop && (
-          <View style={[s.step, s.stepNext, { borderColor: c.border }]}>
-            <View style={[s.stepIcon, { backgroundColor: c.surfaceSecondary }]}>
-              <Ionicons name="ellipsis-horizontal" size={16} color={c.textMuted} />
-            </View>
-            <Text style={[s.stepLabel, { color: c.textMuted }]} numberOfLines={1}>{t(`community.stops.${view.nextStop}`)}</Text>
-            <Text style={[s.stepGap, { color: c.textMuted }]}>
-              {t(view.nextDay !== undefined ? 'community.typical' : 'community.noDataYet')}
-            </Text>
-            <Text style={[s.stepDay, { color: c.textMuted }]}>
-              {view.nextDay !== undefined ? `~ ${t('community.dayN', { n: view.nextDay })}` : ''}
-            </Text>
-          </View>
-        )}
 
         {view.compare && (
           <View style={[s.compare, { backgroundColor: c.surfaceCard }]}>
@@ -226,7 +210,6 @@ const s = StyleSheet.create({
   tileSub: { fontSize: typography.xs, marginTop: 2 },
   step: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: 14, borderWidth: 1.5,
           paddingVertical: 10, paddingHorizontal: spacing.md },
-  stepNext: { backgroundColor: 'transparent', borderStyle: 'dashed' },
   stepIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   stepLabel: { flex: 1, fontSize: typography.sm, fontWeight: typography.medium },
   stepGap: { fontSize: typography.xs },

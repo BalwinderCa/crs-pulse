@@ -213,8 +213,6 @@ const en = {
     shareWithCommunity: 'Share with community',
     peopleSharing_one: '{{count}} person sharing',
     peopleSharing_other: '{{count}} people sharing',
-    typical: 'typical',
-    noDataYet: 'no data yet',
     sharedAsCap: 'Shared as {{name}}',
     stops: { ita: 'ITA', aor: 'AOR', bio: 'Biometrics', medical: 'Medical', ppr: 'Passport', decision: 'Decision' },
     programOther: 'Other',
