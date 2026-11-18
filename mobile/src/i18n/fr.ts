@@ -223,6 +223,7 @@ const fr: TranslationKeys = {
     peopleSharing_other: '{{count}} personnes partagent',
     days: 'jours depuis le début', // [REVIEW]
     typical: 'habituel',
+    noDataYet: 'pas encore de données', // [REVIEW]
     sharedAsCap: 'Partagée sous {{name}}',
     stops: { ita: 'ITA', aor: 'AR', bio: 'Biométrie', medical: 'Médical', ppr: 'Passeport', decision: 'Décision' },
     programOther: 'Autre',
@@ -238,7 +239,7 @@ const fr: TranslationKeys = {
     myMonth: 'Mon mois', // [REVIEW]
     aorIn: 'AR {{month}}', // [REVIEW]
     sortRecent: 'Mis à jour récemment', // [REVIEW]
-    sortLongest: 'Attente la plus longue', // [REVIEW]
+    sortLongest: 'Le plus de jours depuis le début', // [REVIEW]
     sortFurthest: 'Les plus avancés', // [REVIEW]
     clearFilters: 'Effacer', // [REVIEW]
     emptyFiltered: 'Aucun parcours ne correspond à ces filtres.', // [REVIEW]

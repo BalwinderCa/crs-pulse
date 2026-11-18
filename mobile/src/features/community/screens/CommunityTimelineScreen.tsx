@@ -165,7 +165,9 @@ export default function CommunityTimelineScreen() {
               <Ionicons name="ellipsis-horizontal" size={16} color={c.textMuted} />
             </View>
             <Text style={[s.stepLabel, { color: c.textMuted }]} numberOfLines={1}>{t(`community.stops.${view.nextStop}`)}</Text>
-            <Text style={[s.stepGap, { color: c.textMuted }]}>{t('community.typical')}</Text>
+            <Text style={[s.stepGap, { color: c.textMuted }]}>
+              {t(view.nextDay !== undefined ? 'community.typical' : 'community.noDataYet')}
+            </Text>
             <Text style={[s.stepDay, { color: c.textMuted }]}>
               {view.nextDay !== undefined ? `~ ${t('community.dayN', { n: view.nextDay })}` : ''}
             </Text>
