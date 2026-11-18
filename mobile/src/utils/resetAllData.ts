@@ -7,6 +7,7 @@ import { useTimelineStore } from '@/store/timelineStore';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { unregisterPushNotifications } from '@/services/pushService';
 import { useShareStore } from '@/features/community/shareStore';
+import { usePushPrefs } from '@/hooks/useDrawNotifications';
 
 /**
  * Wipes ALL user data, on-device and off:
@@ -46,8 +47,10 @@ export async function resetAllData(): Promise<void> {
     STORAGE_KEYS.DOC_CHECKLIST,
     STORAGE_KEYS.LAST_SEEN_DRAW,
     STORAGE_KEYS.DRAW_NOTIFICATIONS,
+    STORAGE_KEYS.PUSH_PREFS,
     STORAGE_KEYS.COMMUNITY_BLOCKED,
   ]).catch(() => { failed = true; });
+  usePushPrefs.setState({ prefs: { draws: false, times: false, aor: false } });
 
   if (failed) throw new Error('resetAllData: some steps failed');
 }

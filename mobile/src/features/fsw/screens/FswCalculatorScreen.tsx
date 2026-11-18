@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { useMemo } from 'react';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { palette, spacing, typography, borderRadius } from '@/theme';

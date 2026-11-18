@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Dimensions, Image, Platform, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, Image, Platform, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {

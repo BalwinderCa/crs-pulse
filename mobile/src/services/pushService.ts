@@ -56,7 +56,9 @@ export type PushRegisterFailure =
 
 export type PushRegisterResult = { ok: true } | { ok: false; reason: PushRegisterFailure };
 
-export async function registerForPushNotifications(): Promise<PushRegisterResult> {
+export type ServerPushPrefs = { draws: boolean; times: boolean; aorMonth: string | null };
+
+export async function registerForPushNotifications(prefs: ServerPushPrefs): Promise<PushRegisterResult> {
   if (!Device.isDevice) return { ok: false, reason: 'simulator' };
 
   // Expo Go cannot receive remote push notifications (SDK 53+)
@@ -92,6 +94,7 @@ export async function registerForPushNotifications(): Promise<PushRegisterResult
       body: JSON.stringify({
         token,
         platform: Platform.OS === 'ios' ? 'ios' : 'android',
+        prefs,
       }),
     });
 
@@ -146,7 +149,7 @@ function dispatch(type: unknown, handlers: PushHandlers): void {
 
 // expo-notifications' DEFAULT_ACTION_IDENTIFIER: the user tapped the alert itself.
 const DEFAULT_ACTION = 'expo.modules.notifications.actions.DEFAULT';
-const KNOWN_TYPES = ['new_draw', 'processing_times', 'app_update'] as const;
+const KNOWN_TYPES = ['new_draw', 'processing_times', 'app_update', 'community'] as const;
 
 type TapResponse = {
   actionIdentifier?: string;

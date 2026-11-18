@@ -72,7 +72,7 @@ type EventProperties = {
   ad_late: { format: 'app_open'; load_ms: number };
   /** A tapped push. `draw_number` (public IRCC data) is set for new_draw pushes only. */
   push_opened: {
-    type: 'new_draw' | 'processing_times' | 'app_update' | 'other';
+    type: 'new_draw' | 'processing_times' | 'app_update' | 'community' | 'other';
     draw_number?: number;
   };
   /**

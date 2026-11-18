@@ -2,11 +2,11 @@ import React from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
-  Text,
   TouchableOpacity,
   TouchableOpacityProps,
   View,
 } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { palette, borderRadius, typography, spacing } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';

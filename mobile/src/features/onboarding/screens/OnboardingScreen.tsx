@@ -1,8 +1,15 @@
 import { useMemo, useRef, useState } from 'react';
 import {
-  FlatList, Image, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions,
-  type NativeScrollEvent, type NativeSyntheticEvent,
+  FlatList,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
@@ -16,7 +23,7 @@ import { STORAGE_KEYS } from '@/constants';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { useDrawNotifications } from '@/hooks/useDrawNotifications';
+import { usePushPrefs } from '@/hooks/useDrawNotifications';
 import { Toggle } from '@/components/common/Toggle';
 import type { RootStackParamList } from '@/types';
 
@@ -53,7 +60,10 @@ export default function OnboardingScreen() {
   const { t } = useTranslation();
   const save = useProfileStore((s) => s.save);
   const profile = useProfileStore((s) => s.profile);
-  const { enabled: notifyEnabled, toggle: toggleNotify } = useDrawNotifications();
+  const notifyEnabled = usePushPrefs((st) => st.prefs.draws);
+  const setPush = usePushPrefs((st) => st.set);
+  // Onboarding's one switch covers new draws and processing times, as before 1.0.19.
+  const toggleNotify = () => { void setPush({ draws: !notifyEnabled, times: !notifyEnabled }); };
   const listRef = useRef<FlatList<Slide>>(null);
   const [index, setIndex] = useState(0);
 

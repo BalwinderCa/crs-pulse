@@ -13,6 +13,10 @@ import {
   revokeEmail,
   listEmails,
   TOKEN_PREFIX,
+  wantsDraws,
+  wantsTimes,
+  wantsAor,
+  type PushPrefs,
 } from './tokenStore.ts';
 import { validateTokenWithExpo } from './expoValidate.ts';
 import { fetchExpoReceipts } from './expoReceipts.ts';
@@ -102,6 +106,12 @@ function json(data: unknown, status = 200): Response {
       'Content-Type': 'application/json',
     },
   });
+}
+
+/** Runs a push after the response is sent; never lets it fail the request. */
+function background(ctx: ExecutionContext | undefined, work: Promise<unknown>): void {
+  const safe = work.catch((e) => console.log(`background_error ${String(e)}`));
+  if (ctx) ctx.waitUntil(safe);
 }
 
 // ─── Rate limiting ────────────────────────────────────────────────────────────
@@ -472,7 +482,7 @@ export async function checkAndNotify(kv: KVNamespace, env?: Env): Promise<{
     });
   }
 
-  const tokens = await listTokens(kv);
+  const tokens = await listTokens(kv, wantsDraws);
   if (tokens.length === 0) {
     return { notified: true, draw_number: latest.draw_number, token_count: 0 };
   }
@@ -546,7 +556,7 @@ export async function checkProcessingTimes(
     ctaLabel: 'See the latest times',
   });
 
-  const tokens = await listTokens(kv);
+  const tokens = await listTokens(kv, wantsTimes);
   if (tokens.length === 0) return { changed: true, token_count: 0 };
 
   const { unregistered, receipts } = await sendExpoPush(
@@ -565,6 +575,92 @@ export async function checkProcessingTimes(
   );
 
   return { changed: true, token_count: tokens.length };
+}
+
+const AOR_MONTH_COOLDOWN_S = 24 * 3600;
+const AOR_OWNER_COOLDOWN_S = 30 * 86400;
+const AOR_QUIET_MS = 30 * 60_000;
+const AOR_NEW_PREFIX = 'aor_new:';
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+type AorNew = { at: number; x?: string };
+
+/**
+ * Queues a first share for the AOR-month digest. One key per share (race-free,
+ * like tokens), with the sharer's push token so the digest skips them. A sharer
+ * counts once per 30 days, so share/stop/share can't inflate the count.
+ */
+export async function queueAorMonth(
+  kv: KVNamespace,
+  aorMonth: string,
+  timelineId: string,
+  owner: string,
+  exclude?: string | null,
+  now = Date.now(),
+): Promise<void> {
+  const ownerKey = `aor_push:owner:${owner}`;
+  if (await kv.get(ownerKey)) return;
+  const meta: AorNew = { at: now };
+  if (exclude) meta.x = exclude;
+  await Promise.all([
+    kv.put(ownerKey, '1', { expirationTtl: AOR_OWNER_COOLDOWN_S }),
+    kv.put(`${AOR_NEW_PREFIX}${aorMonth}:${timelineId}`, '1', { metadata: meta, expirationTtl: 7 * 86400 }),
+  ]);
+}
+
+/** "3 people with AOR in March 2026 shared…" text for a digest of `n` shares. */
+export function aorDigestText(aorMonth: string, n: number): { title: string; body: string } {
+  const [y, m] = aorMonth.split('-');
+  const month = `${MONTHS[Number(m) - 1]} ${y}`;
+  return n === 1
+    ? { title: 'New timeline from your AOR month', body: `Someone with AOR in ${month} shared their timeline. See how they're doing.` }
+    : { title: `${n} new timelines from your AOR month`, body: `${n} people with AOR in ${month} shared their timelines. See how they're doing.` };
+}
+
+/**
+ * Cron: sends one push per AOR month for everything queued since the last one,
+ * once no share has come in for 30 minutes (so 20 timelines added in one night
+ * become one "20 new timelines" push) and at most once per month every 24 hours.
+ * Shares that arrive inside the 24 hours wait and go out in the next digest.
+ */
+export async function flushAorDigests(
+  kv: KVNamespace,
+  now = Date.now(),
+  send: (tokens: string[], title: string, body: string, data: Record<string, string>) => Promise<SendResult> = sendExpoPush,
+): Promise<{ month: string; shares: number; sent: number }[]> {
+  const byMonth = new Map<string, { keys: string[]; last: number; exclude: Set<string> }>();
+  let cursor: string | undefined;
+  do {
+    const res = await kv.list<AorNew>({ prefix: AOR_NEW_PREFIX, cursor });
+    for (const k of res.keys) {
+      const month = k.name.slice(AOR_NEW_PREFIX.length, AOR_NEW_PREFIX.length + 7);
+      const g = byMonth.get(month) ?? { keys: [], last: 0, exclude: new Set<string>() };
+      g.keys.push(k.name);
+      g.last = Math.max(g.last, k.metadata?.at ?? 0);
+      if (k.metadata?.x) g.exclude.add(k.metadata.x);
+      byMonth.set(month, g);
+    }
+    cursor = res.list_complete ? undefined : res.cursor;
+  } while (cursor);
+
+  const done: { month: string; shares: number; sent: number }[] = [];
+  for (const [month, g] of byMonth) {
+    if (now - g.last < AOR_QUIET_MS) continue;
+    const monthKey = `aor_push:month:${month}`;
+    if (await kv.get(monthKey)) continue;
+    await kv.put(monthKey, '1', { expirationTtl: AOR_MONTH_COOLDOWN_S });
+    await Promise.all(g.keys.map((k) => kv.delete(k)));
+    const tokens = (await listTokens(kv, wantsAor(month))).filter((t) => !g.exclude.has(t));
+    if (tokens.length > 0) {
+      const { title, body } = aorDigestText(month, g.keys.length);
+      const { unregistered, receipts } = await send(tokens, title, body, { type: 'community', aor_month: month });
+      if (unregistered.length > 0) await revokeTokens(kv, unregistered);
+      if (receipts.length > 0) await storeReceipts(kv, receipts);
+    }
+    console.log(`aor_push month=${month} shares=${g.keys.length} sent=${tokens.length}`);
+    done.push({ month, shares: g.keys.length, sent: tokens.length });
+  }
+  return done;
 }
 
 const STALE_KEY = 'mirror_stale_alerted';
@@ -839,8 +935,20 @@ async function kickMirror(env: Env): Promise<void> {
   }
 }
 
+/** `{ draws, times, aorMonth }` from the app (1.0.19+); absent = legacy, all-but-AOR on. */
+export function parsePushPrefs(raw: unknown): PushPrefs | undefined | 'invalid' {
+  if (raw === undefined) return undefined;
+  if (!raw || typeof raw !== 'object') return 'invalid';
+  const { draws, times, aorMonth } = raw as Record<string, unknown>;
+  if (typeof draws !== 'boolean' || typeof times !== 'boolean') return 'invalid';
+  if (aorMonth != null && (typeof aorMonth !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(aorMonth))) return 'invalid';
+  const prefs: PushPrefs = { d: draws ? 1 : 0, t: times ? 1 : 0 };
+  if (aorMonth) prefs.a = aorMonth as string;
+  return prefs;
+}
+
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
     if (request.method === 'OPTIONS') return corsPreflight();
 
     const url = new URL(request.url);
@@ -857,9 +965,9 @@ export default {
         return json({ message: 'Unauthorized' }, 401);
       }
 
-      let body: { token?: string; platform?: string };
+      let body: { token?: string; platform?: string; prefs?: unknown };
       try {
-        body = (await request.json()) as { token?: string; platform?: string };
+        body = (await request.json()) as { token?: string; platform?: string; prefs?: unknown };
       } catch {
         return json({ message: 'Invalid JSON body' }, 400);
       }
@@ -877,6 +985,8 @@ export default {
       if (!isValidExpoToken(body.token)) {
         return json({ message: 'Invalid Expo push token format' }, 422);
       }
+      const prefs = parsePushPrefs(body.prefs);
+      if (prefs === 'invalid') return json({ message: 'Invalid prefs' }, 422);
 
       // The client re-registers on every launch; skip the Expo probe (and its
       // silent validation push) when the token is already in the registry.
@@ -894,7 +1004,7 @@ export default {
       }
 
       try {
-        await registerToken(env.TOKENS_KV, body.token, body.platform);
+        await registerToken(env.TOKENS_KV, body.token, body.platform, prefs);
       } catch {
         return json({ message: 'Token registry unavailable' }, 503);
       }
@@ -999,12 +1109,15 @@ export default {
       !!env.PUSH_API_SECRET && isAuthorized(request, env.PUSH_API_SECRET),
       (owner) => isRateLimited(env.TOKENS_KV, request, 'community', owner),
       // No email per report: the dashboard sidebar counts timelines with open reports.
+      undefined,
+      (t) => background(ctx, queueAorMonth(env.TOKENS_KV, t.aorMonth, t.id, t.owner, request.headers.get('X-Push-Token'))),
     );
     if (community) return community;
 
     // Ops CRUD for admin.crspulse.com: SYNC_SECRET, never the key shipped in the app.
     const communityAdmin = await handleCommunityAdmin(
       request, url, env.COMMUNITY_DB, !!env.SYNC_SECRET && isAuthorized(request, env.SYNC_SECRET),
+      (t) => background(ctx, queueAorMonth(env.TOKENS_KV, t.aorMonth, t.id, t.owner)),
     );
     if (communityAdmin) return communityAdmin;
 
@@ -1018,6 +1131,7 @@ export default {
     await processReceipts(env.TOKENS_KV);
     await checkAndNotify(env.TOKENS_KV, env);
     await checkProcessingTimes(env.TOKENS_KV, env);
+    await flushAorDigests(env.TOKENS_KV).catch((e) => console.log(`aor_digest_error ${String(e)}`));
     await checkMirrorFreshness(env.TOKENS_KV, env);
     await checkMirrorRuns(env.TOKENS_KV, env);
   },

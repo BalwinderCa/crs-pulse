@@ -13,21 +13,26 @@ import {
   storeReceipts,
   listReceipts,
   deleteReceipt,
+  wantsDraws,
+  wantsTimes,
+  wantsAor,
 } from './tokenStore.ts';
 
 // Minimal in-memory KV that mimics Cloudflare KV semantics, including
 // cursor-based pagination (page size 2) so listTokens' paging is exercised.
 class MockKV {
   store = new Map<string, string>();
+  meta = new Map<string, unknown>();
   putCalls = 0;
 
   async get(key: string): Promise<string | null> {
     return this.store.has(key) ? this.store.get(key)! : null;
   }
 
-  async put(key: string, value: string): Promise<void> {
+  async put(key: string, value: string, opts?: { metadata?: unknown }): Promise<void> {
     this.putCalls++;
     this.store.set(key, value);
+    if (opts?.metadata) this.meta.set(key, opts.metadata); else this.meta.delete(key);
   }
 
   async delete(key: string): Promise<void> {
@@ -38,7 +43,7 @@ class MockKV {
     const keys = [...this.store.keys()].filter((k) => k.startsWith(prefix)).sort();
     const start = cursor ? parseInt(cursor, 10) : 0;
     const end = start + 2;
-    const page = keys.slice(start, end).map((name) => ({ name }));
+    const page = keys.slice(start, end).map((name) => ({ name, metadata: this.meta.get(name) }));
     return end >= keys.length
       ? { keys: page, list_complete: true as const }
       : { keys: page, list_complete: false as const, cursor: String(end) };
@@ -199,3 +204,15 @@ test('migrateLegacyTokens drops a corrupt legacy blob safely', async () => {
 });
 
 void kv; // silence unused in environments that tree-shake helpers
+
+test('listTokens filters by push prefs; tokens without prefs get draws and times only', async () => {
+  const k = kv();
+  await registerToken(k, 'ExpoPushToken[old]', 'ios');
+  await registerToken(k, 'ExpoPushToken[all]', 'ios', { d: 1, t: 1, a: '2026-03' });
+  await registerToken(k, 'ExpoPushToken[none]', 'android', { d: 0, t: 0, a: '2026-04' });
+  assert.deepEqual((await listTokens(k, wantsDraws)).sort(), ['ExpoPushToken[all]', 'ExpoPushToken[old]']);
+  assert.deepEqual((await listTokens(k, wantsTimes)).sort(), ['ExpoPushToken[all]', 'ExpoPushToken[old]']);
+  assert.deepEqual(await listTokens(k, wantsAor('2026-03')), ['ExpoPushToken[all]']);
+  assert.deepEqual(await listTokens(k, wantsAor('2026-04')), ['ExpoPushToken[none]']);
+  assert.equal((await listTokens(k)).length, 3);
+});

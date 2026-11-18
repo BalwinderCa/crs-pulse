@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawCard } from '../components/DrawCard';

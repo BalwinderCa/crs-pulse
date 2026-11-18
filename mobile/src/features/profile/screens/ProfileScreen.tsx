@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,11 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
+import { Toggle } from '@/components/common/Toggle';
+import { usePushPrefs, type PushPrefs } from '@/hooks/useDrawNotifications';
+import { useTimelineStore } from '@/store/timelineStore';
+import { sharedAorMonth } from '@/features/community/model';
+import { FONT_OPTIONS, loadAppFont, type AppFont } from '@/theme/fonts';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { summarizeProfile } from '../utils/profileSummary';
 
@@ -35,6 +41,12 @@ const ACCENT_OPTIONS: { value: string; labelKey: string }[] = [
   { value: '#6366F1', labelKey: 'profile.colorIndigo' },
   { value: '#8B5CF6', labelKey: 'profile.colorPurple' },
   { value: '#DB2777', labelKey: 'profile.colorPink' },
+];
+
+const ALERTS: { key: keyof PushPrefs; label: string; hint: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'draws', label: 'profile.alertDraws', hint: 'profile.alertDrawsHint', icon: 'megaphone-outline' },
+  { key: 'times', label: 'profile.alertTimes', hint: 'profile.alertTimesHint', icon: 'time-outline' },
+  { key: 'aor',   label: 'profile.alertAor',   hint: 'profile.alertAorHint', icon: 'people-outline' },
 ];
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -67,6 +79,7 @@ function makeStyles(c: Colors, accent: string) {
     // Notification row
     notifRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
     notifText:  { flex: 1, gap: 2 },
+    alertIcon:  { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
     notifLabel: { color: c.textPrimary, fontSize: typography.base, fontWeight: typography.semibold },
 
     // Appearance / Language
@@ -80,7 +93,10 @@ function makeStyles(c: Colors, accent: string) {
     themeBtnActive: { borderColor: accent, backgroundColor: accent + '18' },
     themeBtnText:   { color: c.textSecondary, fontSize: typography.sm, fontWeight: typography.semibold },
     themeBtnTextActive: { color: c.textPrimary },
+    fontRow:    { gap: spacing.xs },
+    fontBtn:    { flex: 0, paddingHorizontal: spacing.md },
     subTitle:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm },
+    groupLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm, marginBottom: spacing.xs, paddingHorizontal: spacing.xs },
     swatchRow:  { flexDirection: 'row' },
     swatchCell: { flex: 1, alignItems: 'center' },
     swatchRing: { width: 28, height: 28, borderRadius: 14, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
@@ -110,6 +126,15 @@ export default function ProfileScreen() {
     { label: t('profile.english'), value: 'en', icon: 'language-outline' },
     { label: t('profile.french'),  value: 'fr', icon: 'chatbubble-outline' },
   ];
+
+  const pushPrefs = usePushPrefs((st) => st.prefs);
+  const setPush = usePushPrefs((st) => st.set);
+  const aorMonth = sharedAorMonth(useTimelineStore((st) => st.milestones));
+
+  const handleFontChange = async (font: AppFont) => {
+    // Only switch once the files are in; on failure the current font stays.
+    if (await loadAppFont(font)) await save({ font });
+  };
 
   const handleLanguageChange = async (lang: AppLanguage) => {
     await i18n.changeLanguage(lang);
@@ -175,25 +200,33 @@ export default function ProfileScreen() {
       </Card>
 
       {/* ── Notifications ── */}
+      <Text style={styles.groupLabel}>{t('profile.notifications')}</Text>
       <Card style={styles.section}>
-        <TouchableOpacity ph-label="profile-notifications"
-          style={styles.notifRow}
-          onPress={() => navigation.navigate('Notifications')}
-          activeOpacity={0.7}
-          accessibilityRole="button"
-          accessibilityLabel={t('profile.notifications')}
-        >
-          <View style={styles.notifText}>
-            <Text style={styles.notifLabel}>{t('profile.notifications')}</Text>
-            <Text style={styles.hint}>{t('profile.manageNotifs')}</Text>
+        {ALERTS.map((a) => (
+          <View key={a.key} style={styles.notifRow}>
+            <View style={[styles.alertIcon, { backgroundColor: accent + '18' }]}>
+              <Ionicons name={a.icon} size={18} color={accent} />
+            </View>
+            <View style={styles.notifText}>
+              <Text style={styles.notifLabel}>{t(a.label)}</Text>
+              <Text style={styles.hint}>
+                {a.key === 'aor' && pushPrefs.aor && !aorMonth ? t('profile.alertAorMissing') : t(a.hint)}
+              </Text>
+            </View>
+            <Toggle
+              value={pushPrefs[a.key]}
+              onValueChange={() => { void setPush({ [a.key]: !pushPrefs[a.key] }); }}
+              activeColor={accent}
+              accessibilityLabel={t(a.label)}
+            />
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
-        </TouchableOpacity>
+        ))}
       </Card>
 
       {/* ── Appearance ── */}
+      <Text style={styles.groupLabel}>{t('profile.appearance')}</Text>
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('profile.appearance')}</Text>
+        <Text style={styles.sectionTitle}>{t('profile.themeTitle')}</Text>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((opt) => {
             const selected = (profile.theme ?? 'system') === opt.value;
@@ -218,6 +251,28 @@ export default function ProfileScreen() {
             );
           })}
         </View>
+
+        <Text style={styles.subTitle}>{t('profile.themeFont')}</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fontRow}>
+          {FONT_OPTIONS.map((opt) => {
+            const selected = (profile.font ?? 'system') === opt.value;
+            return (
+              <TouchableOpacity
+                key={opt.value}
+                ph-label={`profile-font-${opt.value}`}
+                onPress={() => { void handleFontChange(opt.value); }}
+                style={[styles.themeBtn, styles.fontBtn, selected && styles.themeBtnActive]}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                accessibilityLabel={opt.value === 'system' ? t('profile.themeSystem') : opt.label}
+              >
+                <Text style={[styles.themeBtnText, selected && styles.themeBtnTextActive]}>
+                  {opt.value === 'system' ? t('profile.themeSystem') : opt.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         <Text style={styles.subTitle}>{t('profile.themeColor')}</Text>
         <View style={styles.swatchRow}>
@@ -245,8 +300,8 @@ export default function ProfileScreen() {
       </Card>
 
       {/* ── Language ── */}
+      <Text style={styles.groupLabel}>{t('profile.appLanguage')}</Text>
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('profile.appLanguage')}</Text>
         <View style={styles.themeRow}>
           {LANG_OPTIONS.map((opt) => {
             const selected = (profile.language ?? 'en') === opt.value;

@@ -8,6 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS, MONETIZATION_ENABLED } from '@/constants';
 import { useProfileStore, DEFAULT_PROFILE } from '@/store/profileStore';
 import { useResolvedScheme } from '@/hooks/useColors';
+import { loadAppFont } from '@/theme/fonts';
+import { usePushPrefs } from '@/hooks/useDrawNotifications';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
@@ -61,7 +63,9 @@ export default function RootNavigator() {
     // Then Community catches up on a share edited offline. It must come after the
     // timeline: syncing with no milestones loaded would stop sharing.
     useTimelineStore.getState().load().catch(() => {})
-      .then(() => useShareStore.getState().load()).catch(() => {});
+      .then(() => useShareStore.getState().load()).catch(() => {})
+      // After the timeline: registering sends the AOR month taken from it.
+      .then(() => usePushPrefs.getState().load()).catch(() => {});
     useCalculatorsStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
     useProcessingTimesStore.getState().load().catch(() => {});
@@ -84,6 +88,8 @@ export default function RootNavigator() {
 
     loadProfile()
       .catch(() => {})
+      // Load the chosen font before first paint so text doesn't jump fonts.
+      .then(() => loadAppFont(useProfileStore.getState().profile?.font ?? 'system'))
       .finally(() => {
         clearTimeout(timeout);
         setReady(true);

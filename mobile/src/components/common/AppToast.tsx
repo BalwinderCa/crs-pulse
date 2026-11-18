@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import type { ToastConfig } from 'react-native-toast-message';
 import { borderRadius, palette, spacing, typography } from '@/theme';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import Svg, { Path, Circle, Line, Polyline, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 /**

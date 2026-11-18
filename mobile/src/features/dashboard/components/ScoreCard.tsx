@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import Svg, { Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 import { Badge } from '@/components/common/Badge';
 import { palette, spacing, typography, borderRadius, shadows } from '@/theme';

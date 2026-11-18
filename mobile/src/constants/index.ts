@@ -83,6 +83,8 @@ export const STORAGE_KEYS = {
   // users re-derive fresh data instead of waiting out the 7-day window.
   EE_POOL_CACHE: 'crs_pulse.ee_pool_cache_v2',
   DRAW_NOTIFICATIONS: 'crs_pulse.draw_notifications_enabled',
+  /** { times, aor } — the other two alerts; draws stays in DRAW_NOTIFICATIONS. */
+  PUSH_PREFS: 'crs_pulse.push_prefs',
   LAST_SEEN_DRAW: 'crs_pulse.last_seen_draw_number',
   PUSH_TOKEN: 'crs_pulse.push_token',
   ONBOARDING_SEEN: 'crs_pulse.onboarding_seen',

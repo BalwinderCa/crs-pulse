@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { create } from 'zustand';
 import { Alert, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
@@ -10,6 +10,8 @@ import {
   type PushRegisterFailure,
 } from '@/services/pushService';
 import { track } from '@/services/analyticsService';
+import { useTimelineStore } from '@/store/timelineStore';
+import { sharedAorMonth } from '@/features/community/model';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -33,47 +35,75 @@ export async function syncLastSeenDraw(draws: { draw_number: number }[]) {
   } catch {}
 }
 
-export function useDrawNotifications() {
-  const [enabled, setEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+export type PushPrefs = { draws: boolean; times: boolean; aor: boolean };
+const OFF: PushPrefs = { draws: false, times: false, aor: false };
+const anyOn = (p: PushPrefs) => p.draws || p.times || p.aor;
 
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS)
-      .then(async (v) => {
-        const isEnabled = v === 'true';
-        setEnabled(isEnabled);
-        if (isEnabled) await registerForPushNotifications();
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+function failureKey(reason: PushRegisterFailure): string {
+  const map: Record<PushRegisterFailure, string> = {
+    simulator: 'common.notifSimulator',
+    expo_go: 'common.notifExpoGo',
+    not_configured: 'common.notifNotConfigured',
+    permission_denied: 'common.notifPermissionDenied',
+    token_failed: 'common.notifTokenFailed',
+    server_error: 'common.notifServerError',
+  };
+  return map[reason];
+}
 
-  const failureKey = useCallback((reason: PushRegisterFailure): string => {
-    const map: Record<PushRegisterFailure, string> = {
-      simulator: 'common.notifSimulator',
-      expo_go: 'common.notifExpoGo',
-      not_configured: 'common.notifNotConfigured',
-      permission_denied: 'common.notifPermissionDenied',
-      token_failed: 'common.notifTokenFailed',
-      server_error: 'common.notifServerError',
-    };
-    return map[reason];
-  }, []);
+/** The device registers (with these prefs) while any alert is on, and revokes when all are off. */
+function register(p: PushPrefs) {
+  const aorMonth = p.aor ? sharedAorMonth(useTimelineStore.getState().milestones) ?? null : null;
+  return registerForPushNotifications({ draws: p.draws, times: p.times, aorMonth });
+}
 
-  // Flip the switch at once and do the push (un)registration behind it: the
-  // token fetch + worker round trip took long enough that the toggle seemed to
-  // hang. A failed enable flips it back and explains why.
-  const busy = useRef(false);
-  const toggle = useCallback(async () => {
-    if (busy.current) return;
-    busy.current = true;
-    const next = !enabled;
-    setEnabled(next);
+type PushPrefsStore = {
+  prefs: PushPrefs;
+  loading: boolean;
+  /** Reads saved prefs and re-registers so the server has the current AOR month. */
+  load: () => Promise<void>;
+  set: (change: Partial<PushPrefs>) => Promise<void>;
+};
+
+let busy = false;
+
+export const usePushPrefs = create<PushPrefsStore>((setState, get) => ({
+  prefs: OFF,
+  loading: true,
+
+  load: async () => {
     try {
-      if (next) {
-        const result = await registerForPushNotifications();
+      const [draws, saved] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS),
+        AsyncStorage.getItem(STORAGE_KEYS.PUSH_PREFS),
+      ]);
+      const d = draws === 'true';
+      // Before 1.0.19 one switch sent draws and processing times together.
+      const rest = saved ? (JSON.parse(saved) as Partial<PushPrefs>) : { times: d, aor: false };
+      const prefs = { draws: d, times: rest.times === true, aor: rest.aor === true };
+      setState({ prefs });
+      if (anyOn(prefs)) await register(prefs);
+    } catch {
+      // keep OFF
+    } finally {
+      setState({ loading: false });
+    }
+  },
+
+  // Flip at once and do the push (un)registration behind it: the token fetch +
+  // worker round trip took long enough that the toggle seemed to hang. A failed
+  // enable flips back and explains why.
+  set: async (change) => {
+    if (busy) return;
+    busy = true;
+    const prev = get().prefs;
+    const next = { ...prev, ...change };
+    setState({ prefs: next });
+    try {
+      if (anyOn(next)) {
+        const result = await register(next);
         if (!result.ok) {
-          setEnabled(false);
+          setState({ prefs: prev });
           track('push_enable_failed', { reason: result.reason });
           if (result.reason === 'permission_denied') {
             Alert.alert(i18n.t('common.notificationsDisabled'), i18n.t('common.notifPermissionDenied'), [
@@ -88,14 +118,23 @@ export function useDrawNotifications() {
       } else {
         await unregisterPushNotifications();
       }
-      track(next ? 'push_enabled' : 'push_disabled');
-      await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, next ? 'true' : 'false');
+      if (anyOn(next) !== anyOn(prev)) track(anyOn(next) ? 'push_enabled' : 'push_disabled');
+      await AsyncStorage.multiSet([
+        [STORAGE_KEYS.DRAW_NOTIFICATIONS, next.draws ? 'true' : 'false'],
+        [STORAGE_KEYS.PUSH_PREFS, JSON.stringify({ times: next.times, aor: next.aor })],
+      ]);
     } catch {
-      setEnabled(!next); // unexpected throw: show the state we actually have
+      setState({ prefs: prev }); // unexpected throw: show the state we actually have
     } finally {
-      busy.current = false;
+      busy = false;
     }
-  }, [enabled, failureKey]);
+  },
+}));
 
-  return { enabled, loading, toggle };
+/** The new-draw alert alone (Notifications screen). */
+export function useDrawNotifications() {
+  const draws = usePushPrefs((s) => s.prefs.draws);
+  const loading = usePushPrefs((s) => s.loading);
+  const set = usePushPrefs((s) => s.set);
+  return { enabled: draws, loading, toggle: () => set({ draws: !draws }) };
 }

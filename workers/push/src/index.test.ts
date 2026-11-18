@@ -320,3 +320,50 @@ test('GET /stats requires SYNC_SECRET, not the push key shipped in the app', asy
   assert.equal(ok.status, 200);
   assert.equal(((await ok.json()) as { tokens: { total: number } }).tokens.total, 0);
 });
+
+test('parsePushPrefs validates the app prefs and keeps legacy registers prefs-free', async () => {
+  const { parsePushPrefs } = await import('./index.ts');
+  assert.equal(parsePushPrefs(undefined), undefined);
+  assert.deepEqual(parsePushPrefs({ draws: true, times: false, aorMonth: '2026-03' }), { d: 1, t: 0, a: '2026-03' });
+  assert.deepEqual(parsePushPrefs({ draws: false, times: true, aorMonth: null }), { d: 0, t: 1 });
+  assert.equal(parsePushPrefs({ draws: true, times: true, aorMonth: '2026-13' }), 'invalid');
+  assert.equal(parsePushPrefs({ draws: 'yes', times: true }), 'invalid');
+});
+
+class MetaKV {
+  store = new Map<string, { v: string; m?: unknown }>();
+  async get(k: string) { return this.store.get(k)?.v ?? null; }
+  async put(k: string, v: string, o?: { metadata?: unknown }) { this.store.set(k, { v, m: o?.metadata }); }
+  async delete(k: string) { this.store.delete(k); }
+  async list({ prefix = '' }: { prefix?: string } = {}) {
+    const keys = [...this.store.keys()].filter((k) => k.startsWith(prefix)).sort()
+      .map((name) => ({ name, metadata: this.store.get(name)!.m }));
+    return { keys, list_complete: true as const };
+  }
+}
+
+test('AOR digest: 20 shares in a night become one push with the count, after 30 quiet minutes', async () => {
+  const { queueAorMonth, flushAorDigests } = await import('./index.ts');
+  const { registerToken } = await import('./tokenStore.ts');
+  const kv = new MetaKV() as unknown as KVNamespace;
+  await registerToken(kv, 'ExpoPushToken[me]', 'ios', { d: 1, t: 1, a: '2026-03' });
+  await registerToken(kv, 'ExpoPushToken[sharer]', 'ios', { d: 1, t: 1, a: '2026-03' });
+  await registerToken(kv, 'ExpoPushToken[other]', 'ios', { d: 1, t: 1, a: '2026-04' });
+  const t0 = Date.UTC(2026, 10, 18, 2, 0);
+  for (let i = 0; i < 19; i++) await queueAorMonth(kv, '2026-03', `id${i}`, `admin${i}`, null, t0 + i * 60_000);
+  await queueAorMonth(kv, '2026-03', 'id19', 'phone', 'ExpoPushToken[sharer]', t0 + 19 * 60_000);
+  await queueAorMonth(kv, '2026-03', 'id20', 'phone', null, t0 + 20 * 60_000); // same sharer again: not counted
+
+  const sent: { tokens: string[]; title: string }[] = [];
+  const send = async (tokens: string[], title: string) => { sent.push({ tokens, title }); return { unregistered: [], receipts: [] }; };
+
+  assert.deepEqual(await flushAorDigests(kv, t0 + 25 * 60_000, send), []); // still coming in
+  const out = await flushAorDigests(kv, t0 + 60 * 60_000, send);
+  assert.deepEqual(out, [{ month: '2026-03', shares: 20, sent: 1 }]);
+  assert.deepEqual(sent, [{ tokens: ['ExpoPushToken[me]'], title: '20 new timelines from your AOR month' }]);
+
+  // A share inside the 24-hour cooldown waits for the next digest.
+  await queueAorMonth(kv, '2026-03', 'id21', 'late', null, t0 + 2 * 3600_000);
+  assert.deepEqual(await flushAorDigests(kv, t0 + 3 * 3600_000, send), []);
+  assert.equal(sent.length, 1);
+});

@@ -1,8 +1,8 @@
 import { Alert } from 'react-native';
-import { act, renderHook, waitFor } from '@testing-library/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useDrawNotifications } from '@/hooks/useDrawNotifications';
+import { usePushPrefs } from '@/hooks/useDrawNotifications';
 import { registerForPushNotifications, unregisterPushNotifications } from '@/services/pushService';
+import { useTimelineStore } from '@/store/timelineStore';
 import { STORAGE_KEYS } from '@/constants';
 
 jest.mock('@/services/pushService', () => ({
@@ -13,6 +13,8 @@ jest.mock('@/services/analyticsService', () => ({ track: jest.fn() }));
 
 const register = registerForPushNotifications as jest.Mock;
 const unregister = unregisterPushNotifications as jest.Mock;
+const prefs = () => usePushPrefs.getState().prefs;
+const set = (c: Parameters<ReturnType<typeof usePushPrefs.getState>['set']>[0]) => usePushPrefs.getState().set(c);
 
 /** A promise the test resolves by hand, to observe state while the network call is in flight. */
 function deferred<T>() {
@@ -21,71 +23,71 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-describe('useDrawNotifications.toggle', () => {
+describe('usePushPrefs', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     await AsyncStorage.clear();
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+    usePushPrefs.setState({ prefs: { draws: false, times: false, aor: false }, loading: true });
+    useTimelineStore.setState({ milestones: [] });
   });
 
-  async function mount() {
-    const hook = renderHook(() => useDrawNotifications());
-    await waitFor(() => expect(hook.result.current.loading).toBe(false));
-    return hook;
-  }
+  it('carries a pre-1.0.19 single switch over to draws + processing times', async () => {
+    await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, 'true');
+    register.mockResolvedValue({ ok: true });
+    await usePushPrefs.getState().load();
+    expect(prefs()).toEqual({ draws: true, times: true, aor: false });
+    expect(register).toHaveBeenCalledWith({ draws: true, times: true, aorMonth: null });
+  });
+
+  it('sends the AOR month from the timeline when the AOR alert is on', async () => {
+    useTimelineStore.setState({ milestones: [{ id: '1', type: 'AOR Received', date: '2026-03-14' } as never] });
+    register.mockResolvedValue({ ok: true });
+    await set({ aor: true });
+    expect(register).toHaveBeenCalledWith({ draws: false, times: false, aorMonth: '2026-03' });
+    expect(JSON.parse((await AsyncStorage.getItem(STORAGE_KEYS.PUSH_PREFS))!)).toEqual({ times: false, aor: true });
+  });
 
   it('flips on immediately, before registration finishes', async () => {
     const pending = deferred<{ ok: true }>();
     register.mockReturnValue(pending.promise);
-    const { result } = await mount();
-
-    let done!: Promise<void>;
-    act(() => { done = result.current.toggle(); });
-    expect(result.current.enabled).toBe(true); // no wait for the network
-
-    await act(async () => { pending.resolve({ ok: true }); await done; });
-    expect(result.current.enabled).toBe(true);
+    const done = set({ draws: true });
+    expect(prefs().draws).toBe(true); // no wait for the network
+    pending.resolve({ ok: true });
+    await done;
+    expect(prefs().draws).toBe(true);
     expect(await AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS)).toBe('true');
   });
 
   it('flips back and explains when enabling fails', async () => {
     register.mockResolvedValue({ ok: false, reason: 'permission_denied' });
-    const { result } = await mount();
-
-    await act(async () => { await result.current.toggle(); });
-    expect(result.current.enabled).toBe(false);
+    await set({ draws: true });
+    expect(prefs().draws).toBe(false);
     expect(Alert.alert).toHaveBeenCalled();
     expect(await AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS)).toBeNull();
   });
 
-  it('flips off immediately and revokes in the background', async () => {
-    await AsyncStorage.setItem(STORAGE_KEYS.DRAW_NOTIFICATIONS, 'true');
+  it('revokes only when the last alert goes off', async () => {
     register.mockResolvedValue({ ok: true });
-    const pending = deferred<void>();
-    unregister.mockReturnValue(pending.promise);
-    const { result } = await mount();
-    expect(result.current.enabled).toBe(true);
-
-    let done!: Promise<void>;
-    act(() => { done = result.current.toggle(); });
-    expect(result.current.enabled).toBe(false);
-
-    await act(async () => { pending.resolve(); await done; });
+    unregister.mockResolvedValue(true);
+    await set({ draws: true, times: true });
+    await set({ draws: false });
+    expect(unregister).not.toHaveBeenCalled();
+    expect(register).toHaveBeenLastCalledWith({ draws: false, times: true, aorMonth: null });
+    await set({ times: false });
+    expect(unregister).toHaveBeenCalledTimes(1);
     expect(await AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS)).toBe('false');
   });
 
   it('ignores a second tap while the first is still in flight', async () => {
     const pending = deferred<{ ok: true }>();
     register.mockReturnValue(pending.promise);
-    const { result } = await mount();
-
-    let first!: Promise<void>;
-    act(() => { first = result.current.toggle(); });
-    await act(async () => { await result.current.toggle(); });
+    const first = set({ draws: true });
+    await set({ draws: false });
     expect(register).toHaveBeenCalledTimes(1);
     expect(unregister).not.toHaveBeenCalled();
-
-    await act(async () => { pending.resolve({ ok: true }); await first; });
-    expect(result.current.enabled).toBe(true);
+    pending.resolve({ ok: true });
+    await first;
+    expect(prefs().draws).toBe(true);
   });
 });

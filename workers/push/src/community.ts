@@ -37,6 +37,8 @@ const AVATAR_RE = /^[a-z0-9]{1,16}$/;
 export const REPORT_REASONS = ['spam', 'offensive', 'misleading', 'other'] as const;
 export const REPORT_HIDE_AT = 3;
 
+export type NewTimeline = { id: string; owner: string; aorMonth: string };
+
 // Display-name filter. Names are lowercased, with accents and look-alike digits
 // folded ("fück", "b1tch"). STEMS match anywhere, after dropping spaces and
 // punctuation ("F.u_c k"); WORDS only as a whole word, because they hide inside
@@ -178,6 +180,8 @@ export async function handleCommunity(
   rateLimited: (owner: string) => Promise<boolean>,
   /** Called on each new report, e.g. to email ops; must not throw. */
   onReport: (id: string, alias: string, reason: string, reports: number) => Promise<void> = async () => {},
+  /** Called once when a device first shares a timeline with an AOR month; must not throw. */
+  onNewTimeline: (t: NewTimeline) => void = () => {},
 ): Promise<Response | null> {
   if (url.pathname !== '/community' && !url.pathname.startsWith('/community/')) return null;
   if (!db) return json({ message: 'Service unavailable' }, 503);
@@ -218,6 +222,7 @@ export async function handleCommunity(
     try { body = await request.json(); } catch { return json({ message: 'Invalid JSON body' }, 400); }
     const t = cleanTimeline(body);
     if (typeof t === 'string') return json({ message: t }, 422);
+    const newId = crypto.randomUUID();
     const row = await db.prepare(
       `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at, avatar)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -230,9 +235,11 @@ export async function handleCommunity(
            THEN community_timelines.updated_at ELSE excluded.updated_at END
        RETURNING id`,
     ).bind(
-      crypto.randomUUID(), owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps),
+      newId, owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps),
       stageOf(t.steps), t.steps[t.steps.length - 1]!.day, Date.now(), t.avatar ?? null,
     ).first<{ id: string }>();
+    // An update keeps the row's old id, so a match means this was a first share.
+    if (row!.id === newId && t.aorMonth) onNewTimeline({ id: newId, owner, aorMonth: t.aorMonth });
     return json({ id: row!.id, key });
   }
 
@@ -302,6 +309,7 @@ export async function handleCommunityAdmin(
   url: URL,
   db: D1Database | undefined,
   authorized: boolean,
+  onNewTimeline: (t: NewTimeline) => void = () => {},
 ): Promise<Response | null> {
   if (url.pathname !== '/admin/community' && !url.pathname.startsWith('/admin/community/')) return null;
   if (!authorized) return json({ message: 'Unauthorized' }, 401);
@@ -342,6 +350,7 @@ export async function handleCommunityAdmin(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     ).bind(newId, owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps), stageOf(t.steps),
       t.steps[t.steps.length - 1]!.day, Date.now(), t.avatar ?? null).run();
+    if (t.aorMonth) onNewTimeline({ id: newId, owner, aorMonth: t.aorMonth });
     return json(await adminGet(db, newId), 201);
   }
 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { STORAGE_KEYS } from '@/constants';
 import type { ProgramCategory } from '@/types';
+import { isAppFont, type AppFont } from '@/theme/fonts';
 
 // ─── Calculator inputs ────────────────────────────────────────────────────────
 export type CalcInputs = {
@@ -78,6 +79,7 @@ export type LocalProfile = {
   category: ProgramCategory;
   accent_color: string;
   theme: ThemeMode;
+  font: AppFont;
   language: AppLanguage;
   notifications_enabled: boolean;
   weekly_summary_enabled: boolean;
@@ -91,6 +93,7 @@ export const DEFAULT_PROFILE: LocalProfile = {
   category: 'CEC',
   accent_color: '#DC2626',
   theme: 'system',
+  font: 'system',
   language: 'en',
   notifications_enabled: true,
   weekly_summary_enabled: true,
@@ -131,6 +134,7 @@ export const useProfileStore = create<ProfileStore>((set, get) => ({
         ...DEFAULT_PROFILE,
         ...parsed,
         accent_color: migrateAccent(parsed.accent_color),
+        font: isAppFont(parsed.font) ? parsed.font : 'system',
         language: (parsed.language === 'fr') ? 'fr' : 'en',
         calculatorInputs: { ...DEFAULT_CALC_INPUTS, ...(parsed.calculatorInputs ?? {}) },
       };

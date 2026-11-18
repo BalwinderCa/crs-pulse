@@ -47,13 +47,29 @@ export async function hasToken(kv: KVNamespace, token: string): Promise<boolean>
   return (await kv.get(TOKEN_PREFIX + token)) !== null;
 }
 
+/**
+ * Which alerts a device wants, kept as the token key's KV metadata so a send can
+ * filter straight from `kv.list` without a read per token. `d` = new draws,
+ * `t` = processing times (0 = off), `a` = the AOR month (YYYY-MM) to hear about.
+ * No metadata (builds before 1.0.19) means draws and processing times only.
+ */
+export interface PushPrefs {
+  d?: 0 | 1;
+  t?: 0 | 1;
+  a?: string;
+}
+export const wantsDraws = (p?: PushPrefs) => p?.d !== 0;
+export const wantsTimes = (p?: PushPrefs) => p?.t !== 0;
+export const wantsAor = (month: string) => (p?: PushPrefs) => p?.a === month;
+
 /** Idempotent and race-free: a single put to a token-scoped key. */
 export async function registerToken(
   kv: KVNamespace,
   token: string,
   platform: Platform,
+  prefs?: PushPrefs,
 ): Promise<void> {
-  await kv.put(TOKEN_PREFIX + token, platform);
+  await kv.put(TOKEN_PREFIX + token, platform, prefs ? { metadata: prefs } : undefined);
 }
 
 export async function revokeToken(kv: KVNamespace, token: string): Promise<void> {
@@ -66,13 +82,14 @@ export async function revokeToken(kv: KVNamespace, token: string): Promise<void>
   ]);
 }
 
-/** Lists every registered token, paginating through KV. */
-export async function listTokens(kv: KVNamespace): Promise<string[]> {
+/** Lists every registered token (or those whose prefs pass `want`), paginating through KV. */
+export async function listTokens(kv: KVNamespace, want?: (p?: PushPrefs) => boolean): Promise<string[]> {
   const tokens: string[] = [];
   let cursor: string | undefined;
   do {
-    const res = await kv.list({ prefix: TOKEN_PREFIX, cursor });
+    const res = await kv.list<PushPrefs>({ prefix: TOKEN_PREFIX, cursor });
     for (const key of res.keys) {
+      if (want && !want(key.metadata ?? undefined)) continue;
       tokens.push(key.name.slice(TOKEN_PREFIX.length));
     }
     cursor = res.list_complete ? undefined : res.cursor;

@@ -1,13 +1,13 @@
 import React, { forwardRef, useState } from 'react';
 import {
   StyleSheet,
-  Text,
   TextInput,
   TextInputProps,
   TouchableOpacity,
   View,
   ViewStyle,
 } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { palette, borderRadius, typography, spacing } from '@/theme';

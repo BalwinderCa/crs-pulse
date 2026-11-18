@@ -1,5 +1,6 @@
 import React, { Component, ReactNode } from 'react';
-import { Appearance, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Appearance, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { palette, spacing, typography } from '@/theme';
 import { darkColors, lightColors } from '@/theme/colors';
 import { reportError } from '@/services/errorReporter';

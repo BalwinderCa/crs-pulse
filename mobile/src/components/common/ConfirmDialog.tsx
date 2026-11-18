@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
 import { borderRadius, palette, spacing, typography } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';

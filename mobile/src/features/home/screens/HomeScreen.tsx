@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Text } from '@/components/common/AppText';
 import { useTranslation } from 'react-i18next';
 import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 import { fr, enUS } from 'date-fns/locale';

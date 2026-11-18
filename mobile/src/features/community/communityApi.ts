@@ -173,9 +173,11 @@ export type PublishBody = { alias: string; program: ProgramId; aorMonth?: string
 export async function publishTimeline(body: PublishBody): Promise<void> {
   if (!serverUrl()) return;
   const owner = await getOwner();
+  // Lets the server leave this device out of the "your AOR month" push about its own share.
+  const pushToken = await AsyncStorage.getItem(STORAGE_KEYS.PUSH_TOKEN).catch(() => null);
   const res = await call<Owner>('/community/me', {
     method: 'PUT',
-    headers: owner ? { 'X-Community-Key': owner.key } : {},
+    headers: { ...(owner ? { 'X-Community-Key': owner.key } : {}), ...(pushToken ? { 'X-Push-Token': pushToken } : {}) },
     body: JSON.stringify(body),
   });
   if (res && (res.id !== owner?.id || res.key !== owner?.key)) {
