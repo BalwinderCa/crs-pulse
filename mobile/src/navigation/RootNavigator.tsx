@@ -33,6 +33,7 @@ import { useTimelineStore } from '@/store/timelineStore';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
 import { useProcessingTimesStore } from '@/store/processingTimesStore';
 import { useEePoolStore } from '@/store/eePoolStore';
+import { useShareStore } from '@/features/community/shareStore';
 import DashboardScreen from '@/features/dashboard/screens/DashboardScreen';
 import type { RootStackParamList } from '@/types';
 
@@ -57,7 +58,10 @@ export default function RootNavigator() {
     useApplicationStore.getState().load().catch(() => {});
     // Home reads milestones (last milestone, logged final decision) before the
     // Timeline tab is ever opened, so they must be loaded at boot too.
-    useTimelineStore.getState().load().catch(() => {});
+    // Then Community catches up on a share edited offline. It must come after the
+    // timeline: syncing with no milestones loaded would stop sharing.
+    useTimelineStore.getState().load().catch(() => {})
+      .then(() => useShareStore.getState().load()).catch(() => {});
     useCalculatorsStore.getState().load().catch(() => {});
     useNotificationsStore.getState().load().catch(() => {});
     useProcessingTimesStore.getState().load().catch(() => {});
