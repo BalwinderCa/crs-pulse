@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -55,7 +56,9 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
   const anon = !alias || alias === t('community.anonymous');
   return (
     <View style={[s.avatar, { width: size, height: size, borderRadius: size / 2, backgroundColor: accent + '1F' }]}>
-      <Text style={[s.avatarTxt, { color: accent, fontSize: size * 0.4 }]}>{anon ? '?' : alias.trim()[0]!.toUpperCase()}</Text>
+      {anon
+        ? <Ionicons name="person" size={size * 0.5} color={accent} />
+        : <Text style={[s.avatarTxt, { color: accent, fontSize: size * 0.4 }]}>{alias.trim()[0]!.toUpperCase()}</Text>}
     </View>
   );
 }

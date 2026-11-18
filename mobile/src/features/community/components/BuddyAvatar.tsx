@@ -10,6 +10,8 @@ import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
 export const BUDDY_COLORS = ['#F97316', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#EF4444', '#14B8A6', '#0EA5E9', '#84CC16'];
 // New parts only ever go on the end of each list, so a shared id keeps its look.
 const PARTS = { color: BUDDY_COLORS.length, eyes: 8, mouth: 6, hat: 10, extra: 4 } as const;
+/** How many different avatars there are. */
+export const BUDDY_TOTAL = PARTS.color * PARTS.eyes * PARTS.mouth * PARTS.hat * PARTS.extra;
 const INK = '#1F2937';
 const ID_RE = /^b(\d)(\d)(\d)(\d)(\d)?$/;
 

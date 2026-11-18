@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { BuddyAvatar, buddyChoices } from './BuddyAvatar';
+import { BUDDY_TOTAL, BuddyAvatar, buddyChoices } from './BuddyAvatar';
 import { Avatar } from './TimelineCards';
 
 // With the initial in front, a full 4 × 4 grid.
@@ -23,7 +23,7 @@ export function AvatarPicker({ visible, alias, selected, onSelect, onClose }: {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [ids, setIds] = useState<string[]>([]);
   useEffect(() => { if (visible) setIds(buddyChoices(GRID, selected)); }, [visible, selected]);
 
@@ -43,6 +43,9 @@ export function AvatarPicker({ visible, alias, selected, onSelect, onClose }: {
             <Text style={[s.shuffleTxt, { color: accent }]}>{t('community.avatarShuffle')}</Text>
           </TouchableOpacity>
         </View>
+        <Text style={[s.hint, { color: c.textMuted }]}>
+          {t('community.avatarHint', { shown: GRID, total: BUDDY_TOTAL.toLocaleString(i18n.language) })}
+        </Text>
         <View style={s.grid}>
           {[undefined, ...ids].reduce<(string | undefined)[][]>((rows, id, i) => {
             if (i % 4 === 0) rows.push([]);
@@ -69,7 +72,8 @@ const s = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(15,23,42,0.4)' },
   sheet: { borderTopLeftRadius: borderRadius.lg, borderTopRightRadius: borderRadius.lg, paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   handle: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, marginBottom: spacing.md },
-  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  hint: { fontSize: typography.sm, marginBottom: spacing.md },
   title: { fontSize: typography.lg, fontWeight: typography.bold },
   shuffle: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 44, paddingHorizontal: spacing.sm },
   shuffleTxt: { fontSize: typography.sm, fontWeight: typography.semibold },

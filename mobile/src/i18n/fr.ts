@@ -206,8 +206,9 @@ const fr: TranslationKeys = {
     avatarChange: 'Choisir un avatar',
     avatarTitle: 'Choisissez un avatar',
     avatarShuffle: 'Mélanger',
-    avatarInitial: 'Utiliser mon initiale',
+    avatarInitial: 'Aucun avatar',
     avatarN: 'Avatar {{n}}',
+    avatarHint: '{{shown}} sur {{total}} affichés. Touchez Mélanger pour en voir d’autres.', // [REVIEW]
     nameNotAllowed: 'Ce nom ne peut pas être utilisé. Évitez les mots offensants, les liens, les coordonnées et les noms comme IRCC ou Officiel.',
     yourTimeline: 'Votre chronologie',
     addMilestonesFirst: 'Ajoutez des étapes dans Ma chronologie pour partager',
