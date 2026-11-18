@@ -213,7 +213,7 @@ const en = {
     shareWithCommunity: 'Share with community',
     peopleSharing_one: '{{count}} person sharing',
     peopleSharing_other: '{{count}} people sharing',
-    days: 'days to get here',
+    days: 'days since start',
     typical: 'typical',
     sharedAsCap: 'Shared as {{name}}',
     stops: { ita: 'ITA', aor: 'AOR', bio: 'Biometrics', medical: 'Medical', ppr: 'Passport', decision: 'Decision' },
