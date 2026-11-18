@@ -15,6 +15,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import type { Colors } from '@/theme/colors';
 import type { Draw } from '@/types';
+import { track } from '@/services/analyticsService';
 
 type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
@@ -78,7 +79,11 @@ export function DrawCard({ draw, userScore }: Props) {
 
   return (
     <TouchableOpacity ph-label="draw-open-ircc"
-      onPress={() => Linking.openURL(`${IRCC_ROUNDS_URL}?q=${draw.draw_number}`)}
+      onPress={() => {
+        Linking.openURL(`${IRCC_ROUNDS_URL}?q=${draw.draw_number}`)
+          .then(() => track('draw_opened', { draw_number: draw.draw_number, category: draw.category }))
+          .catch(() => {});
+      }}
       activeOpacity={0.7}
       accessible={true}
       accessibilityRole="link"
