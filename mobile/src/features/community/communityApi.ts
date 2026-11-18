@@ -1,4 +1,4 @@
-import { STOPS, reachedIndex, currentStep, type ProgramId, type SharedTimeline, type Stop } from './model';
+import { STOPS, reachedIndex, currentStep, typicalPace, type ProgramId, type SharedTimeline, type Stop } from './model';
 import { SAMPLE_TIMELINES } from './sampleTimelines';
 
 /**
@@ -57,12 +57,32 @@ export function pageOf(rows: SharedTimeline[], cursor: string | null, limit = PA
   return { items, nextCursor: end < rows.length ? String(end) : null };
 }
 
+// Stand-in for network latency, so loading states show in dev.
+const latency = () => new Promise((r) => setTimeout(r, 350));
+
 export async function fetchCommunityPage(
   filters: CommunityFilters,
   cursor: string | null,
   limit = PAGE_SIZE,
 ): Promise<CommunityPage> {
-  // Stand-in for network latency, so loading states show in dev.
-  await new Promise((r) => setTimeout(r, 350));
+  await latency();
   return pageOf(queryTimelines(SAMPLE_TIMELINES, filters), cursor, limit);
+}
+
+/** GET /community/:id → SharedTimeline, or 404 (null) once it's unshared. */
+export async function fetchCommunityTimeline(id: string): Promise<SharedTimeline | null> {
+  await latency();
+  return SAMPLE_TIMELINES.find((t) => t.id === id) ?? null;
+}
+
+export type CommunitySummary = ReturnType<typeof typicalPace>;
+
+/**
+ * GET /community/summary?program=cec → the median day each stop is reached.
+ * The server computes it over every timeline in the program (and can cache it),
+ * so the app never needs the whole list.
+ */
+export async function fetchCommunitySummary(program: ProgramId): Promise<CommunitySummary> {
+  await latency();
+  return typicalPace(SAMPLE_TIMELINES.filter((t) => t.program === program));
 }

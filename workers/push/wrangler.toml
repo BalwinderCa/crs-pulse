@@ -28,3 +28,11 @@ enabled = true
 #   wrangler secret put GITHUB_DISPATCH_TOKEN  # fine-grained PAT, repo crs-pulse, Actions: read+write
 #                                              # (drives the IRCC mirror on time — GitHub's own cron drops ~90% of ticks)
 # Email dispatch is skipped entirely unless BOTH RESEND_API_KEY and EMAIL_FROM are set.
+
+# Community timelines (src/community.ts). Schema: migrations/0001_community.sql,
+# applied with `npx wrangler d1 migrations apply crs-pulse-community --remote`.
+[[d1_databases]]
+binding = "COMMUNITY_DB"
+database_name = "crs-pulse-community"
+database_id = "56ae7b09-b5d2-4c20-8a75-372f2746bb65"
+migrations_dir = "migrations"

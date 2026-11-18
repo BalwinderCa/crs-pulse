@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -12,8 +12,8 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
 import type { RootStackParamList } from '@/types';
-import { STOPS, currentStep, reachedIndex, stopOf, typicalPace, type SharedTimeline } from '../model';
-import { useCommunity, useSharedTimeline } from '../useCommunity';
+import { STOPS, currentStep, reachedIndex, stopOf, type SharedTimeline } from '../model';
+import { useCommunity, useCommunitySummary, useSharedTimeline } from '../useCommunity';
 import { Avatar, useProgramLabel, useStageTone } from '../components/TimelineCards';
 import { ShareTimelineModal } from '../components/ShareTimelineModal';
 
@@ -31,15 +31,15 @@ export default function CommunityTimelineScreen() {
   const programLabel = useProgramLabel();
   const tone = useStageTone();
   const { params } = useRoute<RouteProp<RootStackParamList, 'CommunityTimeline'>>();
-  const timeline = useSharedTimeline(params.id);
-  const { others, mySteps } = useCommunity();
+  const { timeline, loading } = useSharedTimeline(params.id);
+  const pace = useCommunitySummary(timeline?.program);
+  const { mySteps } = useCommunity();
   const [editing, setEditing] = useState(false);
 
   const view = useMemo(() => {
     if (!timeline) return null;
     const now = currentStep(timeline);
     const reached = reachedIndex(timeline);
-    const pace = typicalPace(others.filter((o) => o.program === timeline.program));
     const decided = STOPS[reached] === 'decision';
     const decisionDay = pace.find((p) => p.stop === 'decision')?.day;
     const toDecision = !decided && now && decisionDay !== undefined ? decisionDay - now.day : undefined;
@@ -57,7 +57,7 @@ export default function CommunityTimelineScreen() {
       }
     }
     return { now, nextStop, nextDay, toDecision, compare, firstMonth: timeline.steps[0]?.month };
-  }, [timeline, others, mySteps]);
+  }, [timeline, pace, mySteps]);
 
   const back = (
     <TouchableOpacity ph-label="community-detail-back" onPress={() => navigation.goBack()} style={s.back}
@@ -71,7 +71,9 @@ export default function CommunityTimelineScreen() {
     return (
       <SafeAreaView style={[s.safe, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
         {back}
-        <Text style={[s.missing, { color: c.textMuted }]}>{t('community.missing')}</Text>
+        {loading
+          ? <ActivityIndicator style={s.loading} color={accent} />
+          : <Text style={[s.missing, { color: c.textMuted }]}>{t('community.missing')}</Text>}
       </SafeAreaView>
     );
   }
@@ -191,6 +193,7 @@ const s = StyleSheet.create({
   bold: { fontWeight: typography.bold },
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: spacing.sm, gap: 2 },
   backTxt: { fontSize: typography.base, fontWeight: typography.medium },
+  loading: { marginTop: spacing['2xl'] },
   missing: { textAlign: 'center', marginTop: spacing['2xl'], fontSize: typography.sm },
   body: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, gap: spacing.sm },
   profile: { borderRadius: 20, padding: 18, gap: 14, marginBottom: spacing.xs },

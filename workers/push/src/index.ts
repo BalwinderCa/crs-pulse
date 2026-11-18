@@ -1,3 +1,4 @@
+import { handleCommunity } from './community.ts';
 import {
   hasToken,
   listTokens,
@@ -62,6 +63,8 @@ export interface Env {
    * mirror falls back to GitHub's own (unreliable) schedule. See kickMirror().
    */
   GITHUB_DISPATCH_TOKEN?: string;
+  /** Community timelines (see community.ts). Its routes return 503 until bound. */
+  COMMUNITY_DB?: D1Database;
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -990,6 +993,13 @@ export default {
       const proc = await checkProcessingTimes(env.TOKENS_KV, env);
       return json({ ...result, processing_times_changed: proc.changed });
     }
+
+    const community = await handleCommunity(
+      request, url, env.COMMUNITY_DB,
+      !!env.PUSH_API_SECRET && isAuthorized(request, env.PUSH_API_SECRET),
+      (owner) => isRateLimited(env.TOKENS_KV, request, 'community', owner),
+    );
+    if (community) return community;
 
     return json({ message: 'Not found' }, 404);
   },
