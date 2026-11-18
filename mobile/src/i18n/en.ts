@@ -218,6 +218,7 @@ const en = {
     programOther: 'Other',
     anonymous: 'Anonymous applicant',
     dayN: 'Day {{n}}',
+    stageOf: 'Stage {{n}} of {{total}}',
     plusDays: '+{{n}} days',
     edit: 'Edit',
     filterProgram: 'Program',

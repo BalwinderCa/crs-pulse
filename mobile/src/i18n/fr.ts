@@ -226,6 +226,7 @@ const fr: TranslationKeys = {
     programOther: 'Autre',
     anonymous: 'Candidat anonyme',
     dayN: 'Jour {{n}}',
+    stageOf: 'Étape {{n}} sur {{total}}', // [REVIEW]
     plusDays: '+{{n}} jours',
     edit: 'Modifier',
     filterProgram: 'Programme', // [REVIEW]

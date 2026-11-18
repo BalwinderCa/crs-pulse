@@ -10,7 +10,7 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
 import type { MilestoneType } from '@/store/timelineStore';
 import { BuddyAvatar, isBuddyId } from './BuddyAvatar';
-import { PROGRAMS, currentStep, stopOf, type ProgramId, type SharedTimeline } from '../model';
+import { PROGRAMS, STOPS, currentStep, reachedIndex, stopOf, type ProgramId, type SharedTimeline } from '../model';
 
 export function useProgramLabel() {
   const { t } = useTranslation();
@@ -65,36 +65,51 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
   );
 }
 
-/** One shared timeline as a card: avatar, name, a stage pill with the AOR month, and the day count. */
+/**
+ * One shared timeline as a card: avatar, name, program and AOR month, the day
+ * reached, then a six-stop progress bar (ITA → Decision) with the latest step.
+ */
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
   const { t, i18n } = useTranslation();
+  const programLabel = useProgramLabel();
+  const tone = useStageTone();
+  const now = currentStep(timeline);
+  const reached = reachedIndex(timeline);
+  const alias = timeline.alias || t('community.anonymous');
+  const st = now ? tone(now.type) : undefined;
   const aor = timeline.aorMonth
     ? t('community.aorIn', { month: format(parseISO(`${timeline.aorMonth}-01`), 'MMM yyyy', { locale: i18n.language?.startsWith('fr') ? fr : enUS }) })
     : null;
-  const tone = useStageTone();
-  const now = currentStep(timeline);
-  const alias = timeline.alias || t('community.anonymous');
-  const pill = now ? tone(now.type) : undefined;
+  const meta = [programLabel(timeline.program), aor].filter(Boolean).join(' · ');
+  const stepLabel = now ? t(MILESTONE_META[now.type].labelKey) : '';
+  const stage = reached >= 0 ? t('community.stageOf', { n: reached + 1, total: STOPS.length }) : '';
+  const label = [alias, stepLabel, now ? t('community.dayN', { n: now.day }) : '', meta, stage].filter(Boolean).join(', ');
+
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
-      style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}>
-      <Avatar alias={alias} avatar={timeline.avatar} />
-      <View style={s.mid}>
-        <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-        <View style={s.meta}>
-          {now && pill && (
-            <View style={[s.pill, { backgroundColor: pill.tint }]}>
-              <Text style={[s.pillTxt, { color: pill.ink }]} numberOfLines={1}>{t(MILESTONE_META[now.type].labelKey)}</Text>
-            </View>
-          )}
-          {aor && <Text style={[s.aor, { color: c.textMuted }]} numberOfLines={1}>{aor}</Text>}
+      style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}
+      accessible accessibilityLabel={label}>
+      <View style={s.top}>
+        <Avatar alias={alias} avatar={timeline.avatar} />
+        <View style={s.mid}>
+          <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
+          <Text style={[s.meta, { color: c.textMuted }]} numberOfLines={1}>{meta}</Text>
         </View>
+        {now && <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>}
       </View>
-      {now && (
-        <View style={s.right}>
-          <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>
-        </View>
+      {now && st && (
+        <>
+          <View style={s.track}>
+            {STOPS.map((stop, i) => (
+              <View key={stop} style={[s.seg, { backgroundColor: i <= reached ? st.ink : c.border }]} />
+            ))}
+          </View>
+          <View style={s.bottom}>
+            <Text style={[s.step, { color: st.ink }]} numberOfLines={1}>{stepLabel}</Text>
+            <Text style={[s.stage, { color: c.textMuted }]}>{stage}</Text>
+          </View>
+        </>
       )}
     </TouchableOpacity>
   );
@@ -103,14 +118,16 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
-  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.lg, padding: 14,
+  card: { borderRadius: borderRadius.lg, padding: 14, gap: 10,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  mid: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
+  top: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  mid: { flex: 1, minWidth: 0 },
   name: { fontSize: typography.base, fontWeight: typography.semibold },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 6, maxWidth: '100%' },
-  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, flexShrink: 1 },
-  aor: { fontSize: typography.xs, fontWeight: typography.medium, flexShrink: 0 },
-  pillTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
-  right: { alignItems: 'flex-end' },
+  meta: { fontSize: typography.xs, fontWeight: typography.medium, marginTop: 2 },
   day: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  track: { flexDirection: 'row', gap: 4 },
+  seg: { flex: 1, height: 5, borderRadius: 3 },
+  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm },
+  step: { flex: 1, fontSize: typography.sm, fontWeight: typography.semibold },
+  stage: { fontSize: typography.xs, fontWeight: typography.medium },
 });
