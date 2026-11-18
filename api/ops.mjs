@@ -119,6 +119,7 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 /* Sidebar group (Community: Dashboard, Timelines) */
 .navgroup summary{list-style:none;cursor:pointer}.navgroup summary::-webkit-details-marker{display:none}
 .navgroup .caret{margin-left:auto;color:var(--ink3);font-size:11px;transition:transform .15s}
+.nbadge{margin-left:auto;min-width:18px;padding:1px 6px;border-radius:999px;background:#dc2626;color:#fff;font-size:11px;font-weight:600;line-height:16px;text-align:center}.nbadge+.caret{margin-left:6px}
 .navgroup:not([open]) .caret{transform:rotate(-90deg)}
 .navi.sub{padding-left:36px}
 @media (max-width:760px){.navgroup{display:contents}.navgroup summary{display:none}.navi.sub{padding-left:10px}}
@@ -209,7 +210,7 @@ const LOGIN_CODE = `<main class="login"><div class="card">${LOGIN_HEAD('This dev
 const DASH = `<div class="shell"><aside class="side"><div class="brand">${MARK}<span>Pulse HQ<small>CRS Pulse</small></span></div>
 <nav aria-label="Dashboards"><a class="navi" href="#posthog" data-view="posthog">${icon('users')}App usage<small>PostHog</small></a>
 <a class="navi" href="#admob" data-view="admob">${icon('dollar')}Revenue<small>AdMob</small></a>
-<details class="navgroup" open><summary class="navi">${icon('chat')}Community<span class="caret" aria-hidden="true">▾</span></summary>
+<details class="navgroup" open><summary class="navi">${icon('chat')}Community<span class="nbadge" id="cm-badge" hidden></span><span class="caret" aria-hidden="true">▾</span></summary>
 <a class="navi sub" href="#community" data-view="cdash">Dashboard</a>
 <a class="navi sub" href="#community-timelines" data-view="community">Timelines<small>D1</small></a></details></nav>
 <div class="side-foot"><button class="navi" id="forget" title="Ask for the passphrase again next time on this browser">${icon('key')}<span>Forget this device</span></button>
@@ -462,7 +463,12 @@ var CM_PROGRAMS=['cec','fsw','fst','pnp_ee','pnp','aip','other'];
 function cmApi(method,qs,body){
 return fetch('/api/ops-community'+(qs?'?'+qs:''),{method:method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined})
 .then(function(r){if(r.status===401){location.reload();throw new Error('Signed out')}if(r.status===204)return null;
-return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(cmMsg(j.error||j.message||('HTTP '+r.status)));return j})})}
+return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(cmMsg(j.error||j.message||('HTTP '+r.status)));return j})})
+.then(function(j){if(method!=='GET')cmBadge();return j})}
+// Sidebar count of timelines with open reports (replaces the per-report email). Refreshes every 5 minutes and after each write.
+function cmBadge(){cmApi('GET','stats=1').then(function(d){var b=document.getElementById('cm-badge');if(!b)return;var n=(d&&d.reported)||0;
+b.hidden=!n;b.textContent=n>99?'99+':String(n);b.title=n+' reported timeline'+(n===1?'':'s')+' to review';b.setAttribute('aria-label',b.title)}).catch(function(){})}
+cmBadge();setInterval(cmBadge,300000);
 function cmMsg(m){return m==='alias not allowed'?'That display name is blocked by the name filter (offensive words, links, contact details, IRCC/official names).':m}
 function cmErr(m){document.getElementById('cm-err').textContent=m||''}
 function cmDate(ms){return new Date(ms).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}

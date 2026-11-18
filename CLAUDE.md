@@ -665,7 +665,8 @@ it. Your card is rebuilt from the live timeline, so it always shows where you ha
 **Server (live 2026-11-18):** the push worker's `/community` routes on D1 `crs-pulse-community`
 (see `workers/push/src/community.ts`); `SAMPLE_TIMELINES` is only the fallback when no
 `EXPO_PUBLIC_PUSH_URL` is set. Tested end to end on 2026-11-18 on iOS and Android (feed, filters,
-paging, report: 3 reports hide and each emails `ALERT_EMAIL`, block, share/edit/stop, offline catch-up
+paging, report: 3 reports hide, and the admin.crspulse.com sidebar shows a red count of timelines with open
+reports, which replaced the per-report email on 2026-11-18; block, share/edit/stop, offline catch-up
 on the next launch, dark mode, French).
 
 ### Monetisation: ads only, no IAP

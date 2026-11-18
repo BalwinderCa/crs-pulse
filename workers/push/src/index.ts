@@ -998,13 +998,7 @@ export default {
       request, url, env.COMMUNITY_DB,
       !!env.PUSH_API_SECRET && isAuthorized(request, env.PUSH_API_SECRET),
       (owner) => isRateLimited(env.TOKENS_KV, request, 'community', owner),
-      async (id, alias, reason, reports) => {
-        // Apple expects reported user content to be acted on within 24 hours.
-        await sendOpsAlert(env, `🚩 Community report (${reports}): ${reason}`,
-          `Timeline ${id} ("${alias || 'Anonymous'}") was reported as ${reason}; ${reports} report(s) so far. ` +
-          `It is hidden automatically at 3. Remove it: npx wrangler d1 execute crs-pulse-community --remote ` +
-          `--command "UPDATE community_timelines SET hidden = 1 WHERE id = '${id}'"`).catch(() => false);
-      },
+      // No email per report: the dashboard sidebar counts timelines with open reports.
     );
     if (community) return community;
 
