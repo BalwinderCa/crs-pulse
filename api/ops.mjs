@@ -497,7 +497,7 @@ function buddySvg(id,alias,size){var m=/^b(\\d)(\\d)(\\d)(\\d)(\\d)?$/.exec(id||
 if(!p||p[0]>9||p[1]>7||p[2]>5||p[3]>9||p[4]>3){var ch=((alias||'').trim()[0]||'?').toUpperCase();
 return '<span class="bd bd-l" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.42)+'px">'+esc(ch)+'</span>'}
 var c=BD_COLORS[p[0]],fill=function(x){return x.replace(/"I"/g,'"'+BD_INK+'"').replace(/"C"/g,'"'+c+'"')};
-return '<svg class="bd" width="'+size+'" height="'+size+'" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
+return '<svg class="bd" width="'+size+'" height="'+size+'" style="width:'+size+'px;height:'+size+'px" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
 '<g transform="translate(0 2)">'+fill(BD_EYES[p[1]]+BD_MOUTHS[p[2]]+BD_EXTRAS[p[4]])+'</g>'+fill(BD_HATS[p[3]])+'</svg>'}
 var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0};
 var CM_STAGES=['ITA','AOR','Biometrics','Medical','Passport','Decision'];
