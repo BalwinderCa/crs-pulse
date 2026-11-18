@@ -132,7 +132,7 @@ const RING_C = 2 * Math.PI * RING_R;
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
-  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.lg, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 3,
+  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.md, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 3,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   mid: { flex: 1, minWidth: 0 },
