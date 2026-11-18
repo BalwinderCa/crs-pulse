@@ -213,7 +213,6 @@ const en = {
     shareWithCommunity: 'Share with community',
     peopleSharing_one: '{{count}} person sharing',
     peopleSharing_other: '{{count}} people sharing',
-    days: 'days since start',
     typical: 'typical',
     noDataYet: 'no data yet',
     sharedAsCap: 'Shared as {{name}}',

@@ -85,8 +85,7 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
       </View>
       {now && (
         <View style={s.right}>
-          <Text style={[s.day, { color: c.textPrimary }]}>{now.day}</Text>
-          <Text style={[s.days, { color: c.textMuted }]}>{t('community.days')}</Text>
+          <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -104,5 +103,4 @@ const s = StyleSheet.create({
   pillTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
   right: { alignItems: 'flex-end' },
   day: { fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  days: { fontSize: 11 },
 });
