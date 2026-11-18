@@ -140,6 +140,18 @@ tr.rep-row td{background:var(--raise)}
 dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(0,0,0,.25)}
 dialog::backdrop{background:rgba(15,15,14,.45)}
 .cm-f{display:grid;gap:12px;margin-top:14px}.cm-f label{display:grid;gap:5px;font-size:13px;color:var(--ink2)}
+.mp-wrap{position:relative;display:grid;gap:5px;font-size:13px;color:var(--ink2)}
+.mp-field{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:14px;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink);text-align:left;cursor:pointer}
+.mp-field:hover{border-color:var(--ink3)}.mp-field svg{width:17px!important;height:17px;flex:none;color:var(--ink3)}.mp-ph{color:var(--ink3)}
+.mp{position:absolute;top:calc(100% + 6px);right:0;z-index:5;width:256px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.16)}
+.mp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mp-head b{font-size:14px;color:var(--ink)}
+.mp-nav{width:30px;height:30px;border-radius:50%;border:0;background:none;color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+.mp-nav:hover:not([disabled]){background:var(--raise)}.mp-nav[disabled]{opacity:.3;cursor:default}
+.mp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.mp-grid button{font:inherit;font-size:13px;padding:9px 0;border-radius:9px;border:0;background:none;color:var(--ink);cursor:pointer}
+.mp-grid button:hover:not([disabled]){background:var(--raise)}.mp-grid button.now{box-shadow:inset 0 0 0 1px var(--line)}
+.mp-grid button.on{background:var(--ink);color:var(--surface);font-weight:600}.mp-grid button[disabled]{color:var(--ink3);opacity:.45;cursor:default}
+.mp-foot{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .who{display:flex;align-items:center;gap:10px}.bd{flex:none;border-radius:50%;display:block}
 .bd-l{display:inline-flex;align-items:center;justify-content:center;background:var(--raise);color:var(--ink2);font-weight:700}
 .cm-id{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.cm-id small{color:var(--ink3);font-size:12px}
@@ -525,7 +537,10 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<label>Avatar id<input name="avatar" placeholder="e.g. b32014"></label></div>'+
 '<div class="cm-id"><span id="cm-av"></span><button type="button" class="btn" data-act="random">Generate again</button><small>New random name and avatar. You can still type your own.</small></div>'+
 '<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
-'<label>AOR month<input name="aorMonth" type="month" min="2015-01" max="2035-12"></label></div>'+
+'<div class="mp-wrap"><span class="mp-lab" id="mp-lab">AOR month</span><input type="hidden" name="aorMonth">'+
+'<button type="button" class="mp-field" id="mp-btn" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="mp-lab mp-btn"><span id="mp-val"></span>'+
+'<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>'+
+'<div class="mp" id="mp" role="dialog" aria-label="Choose AOR month" hidden></div></div></div>'+
 '<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
 '<label class="check" id="cm-hid-l"><input type="checkbox" name="hidden"> Hidden (not shown in the app)</label>'+
 '<div class="err" id="cm-ferr" role="alert"></div><div class="foot"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></dialog>';
@@ -535,6 +550,7 @@ st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()}
 document.getElementById('cm').addEventListener('click',cmClick);
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
+mpInit();
 document.getElementById('cm-form').addEventListener('input',function(ev){if(ev.target.name==='alias'||ev.target.name==='avatar')cmPreview()});
 cmLoad()}
 function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
@@ -573,8 +589,30 @@ function cmOpen(t){CM.editing=t;var f=document.getElementById('cm-form');documen
 document.getElementById('cm-dt').textContent=t?'Edit '+(t.alias||'Anonymous'):'New timeline';
 f.alias.value=t?t.alias:'';f.avatar.value=t&&t.avatar?t.avatar:'';f.program.value=t?t.program:'cec';f.aorMonth.value=t&&t.aorMonth?t.aorMonth:'';
 f.steps.value=JSON.stringify(t?t.steps:[{type:'ITA',day:0},{type:'AOR Received',day:30}],null,1);
-f.hidden.checked=!!(t&&t.hidden);cmPreview();document.getElementById('cm-hid-l').style.display=t?'':'none';
+f.hidden.checked=!!(t&&t.hidden);cmPreview();mpSet(f.aorMonth.value);document.getElementById('cm-hid-l').style.display=t?'':'none';
 document.getElementById('cm-dlg').showModal();if(!t)cmRandom()}
+// AOR month picker: a year with arrows over a 4×3 month grid. Future months are off (the worker rejects them).
+var MP_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],MP={year:0};
+function mpNow(){var d=new Date();return d.getFullYear()*12+d.getMonth()}
+function mpSet(v){var f=document.getElementById('cm-form');f.aorMonth.value=v||'';var m=/^(\\d{4})-(\\d{2})$/.exec(v||'');
+var el=document.getElementById('mp-val');el.textContent=m?MP_NAMES[+m[2]-1]+' '+m[1]:'No AOR month';el.className=m?'':'mp-ph'}
+function mpRender(){var box=document.getElementById('mp'),cur=document.getElementById('cm-form').aorMonth.value,now=mpNow(),y=MP.year;
+box.innerHTML='<div class="mp-head"><button type="button" class="mp-nav" data-mp="prev" aria-label="Previous year"'+(y<=2015?' disabled':'')+'>‹</button><b>'+y+'</b>'+
+'<button type="button" class="mp-nav" data-mp="next" aria-label="Next year"'+(y*12>=now-11?' disabled':'')+'>›</button></div><div class="mp-grid">'+
+MP_NAMES.map(function(n,i){var v=y+'-'+(i<9?'0':'')+(i+1),off=y*12+i>now;
+return '<button type="button" data-mp="'+v+'" class="'+(v===cur?'on':'')+(y*12+i===now?' now':'')+'"'+(off?' disabled':'')+'>'+n+'</button>'}).join('')+
+'</div><div class="mp-foot"><button type="button" class="btn" data-mp="clear">Clear</button><button type="button" class="btn" data-mp="this">This month</button></div>'}
+function mpOpen(open){var box=document.getElementById('mp'),btn=document.getElementById('mp-btn');if(open===undefined)open=box.hidden;
+if(open){var m=/^(\\d{4})/.exec(document.getElementById('cm-form').aorMonth.value);MP.year=m?+m[1]:Math.floor(mpNow()/12);mpRender()}
+box.hidden=!open;btn.setAttribute('aria-expanded',String(open));if(open)(box.querySelector('.on')||box.querySelector('.mp-grid button:not([disabled])')).focus()}
+function mpInit(){var box=document.getElementById('mp');document.getElementById('mp-btn').addEventListener('click',function(){mpOpen()});
+box.addEventListener('click',function(ev){var b=ev.target.closest('button[data-mp]');if(!b)return;var a=b.dataset.mp;
+if(a==='prev'||a==='next'){MP.year+=a==='prev'?-1:1;mpRender();return}
+if(a==='clear')mpSet('');else if(a==='this'){var n=mpNow();mpSet(Math.floor(n/12)+'-'+(n%12<9?'0':'')+(n%12+1))}else mpSet(a);
+mpOpen(false);document.getElementById('mp-btn').focus()});
+// Escape closes the picker only, not the whole popup.
+box.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();mpOpen(false);document.getElementById('mp-btn').focus()}});
+document.getElementById('cm-dlg').addEventListener('click',function(ev){if(!box.hidden&&!ev.target.closest('.mp-wrap'))mpOpen(false)})}
 function cmPreview(){var f=document.getElementById('cm-form');document.getElementById('cm-av').innerHTML=buddySvg(f.avatar.value.trim(),f.alias.value||'Anonymous',56)}
 // Fills the form with a generated name + avatar; "Anonymous" is only for people sharing from the app.
 function cmRandom(){var f=document.getElementById('cm-form');cmApi('GET','random=1').then(function(r){f.alias.value=r.alias;f.avatar.value=r.avatar;cmPreview()})
