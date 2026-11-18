@@ -31,8 +31,8 @@ describe('community model', () => {
     expect(sharedAorMonth([m('ITA', '2026-03-01')], today)).toBeUndefined();
   });
 
-  it('stays hidden in release builds until Community goes live', () => {
-    expect(communityVisible(false)).toBe(false);
+  it('is live: release builds show Community too', () => {
+    expect(communityVisible(false)).toBe(true);
     expect(communityVisible(true)).toBe(true);
   });
 

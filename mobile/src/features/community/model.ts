@@ -13,7 +13,7 @@ import type { Milestone, MilestoneType } from '@/store/timelineStore';
  */
 
 /** Go live with a server behind it. Until then real users see the waitlist. */
-export const COMMUNITY_LIVE = false;
+export const COMMUNITY_LIVE = true;
 
 /**
  * Whether Community shows at all: the Timeline tabs, the Share card and the

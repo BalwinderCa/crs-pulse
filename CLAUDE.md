@@ -630,14 +630,16 @@ privacy policy's "Google AdSense (website ads)" section promises it.
 **PostHog stores each event's IP address and GeoIP city/region** — the project's "Discard client IP data" setting (`anonymize_ips`) is off. `docs/PRIVACY_POLICY.md` (also served at `crspulse.com/privacy`) discloses exactly that, and the App Store label declares Coarse Location for Analytics. If you turn the setting on, update the policy's PostHog section to match. When reading the data, exclude bots: Google Play pre-launch devices (Android, `OnePlus8Pro`, Google IP ranges) and Apple App Review (Cupertino iPhone, and an iPad) show up within an hour of each upload or review.
 - `adsService.ts` — Initializes Google Mobile Ads at boot (`initAds()` from `RootNavigator`; iOS requests App Tracking Transparency first). `AdBanner` renders in the Draws list after every 4th row and the Notifications list after every 5th, for all users, and self-hides on ad no-fill; `takeAppOpenAdTurn()` counts cold launches and returns true on every 2nd, and `showAppOpenAd()` then holds the splash for one **app open** ad (the only format Google permits on a launch screen — a banner over the splash is a policy violation), capped at 3s to load and 60s displayed, then `RootNavigator` hides the splash and runs `initAds()` (ATT prompt, which needs the app 'active'). A request still in flight at the 3s cap keeps running: if it loads, the ad is held and shown on the user's next return from the background (not `inactive` → `active`, which the ATT dialog causes), at most once and only within 4 hours, because AdMob counts it as matched either way; `__DEV__` uses Google test ad units. A brand-new AdMob app returns no-fill for hours–days, so empty ad slots are expected at first.
 
-### Community timelines (built, not live)
+### Community timelines (live from 1.0.19)
 
 Dev builds show Timeline with two tabs, **My timeline** and **Community**
-(`features/timeline/components/CommunityTab.tsx`). **Release builds show neither tab** (decided
-2026-11-15: 1.0.17 ships without them): `communityVisible()` in `features/community/model.ts` is
+(`features/timeline/components/CommunityTab.tsx`). **`COMMUNITY_LIVE = true` from 1.0.19**
+(2026-11-18, bumped in the same commit so an OTA from main can never switch it on for 1.0.18
+installs; 1.0.17 and 1.0.18 ship without it): `communityVisible()` in `features/community/model.ts` is
 `COMMUNITY_LIVE || __DEV__`, and gates the tabs, the Share card and the feed. The waitlist
-("I'm interested", one anonymous `community_interest` event per install) is still in the code but no
-release build reaches it. The design is "2 · Cards", chosen 2026-11-15 from the design canvas
+("I'm interested", `community_interest`) is now unreachable. **Before the 1.0.19 store build goes to
+review, update the store forms** listed in `docs/PLAY_STORE_LISTING.md` ("When Community goes live"):
+Play Data safety, the App Store privacy label, and the user-content age-rating answers. The design is "2 · Cards", chosen 2026-11-15 from the design canvas
 https://claude.ai/artifact/NCoEvLxpQkU6rCT288xtbe (six layout options plus the earlier concepts).
 **My timeline** starts with the user's "You" card (`MyShareCard`: a light accent tint, current step
 and day, and a full-width "Share with community" button, "Edit" once shared). **Community** is a paged
@@ -660,14 +662,11 @@ never the day, `sharedAorMonth`), plus every step's month/year if allowed (`toSh
 future-dated steps are never included; tests in `__tests__/features/communityModel.test.ts` check
 it. Your card is rebuilt from the live timeline, so it always shows where you have reached.
 
-**Not done before going live:** there is no server. Other people's timelines are
-`sampleTimelines.ts` (made up), so "typical pace" and "~N days to a typical decision" are medians of
-fake data, and Report only shows a toast. The timeline page and "typical pace" still read
-`SAMPLE_TIMELINES` directly; with a server they need a get-one route and a summary route, because a
-paged list no longer holds every timeline. Going live needs storage and list/publish/delete routes
-(planned: the Cloudflare Worker with D1, a random anonymous device ID, rate limits), a display-name
-filter, working Report/block (Apple requires them for user content), privacy policy and App Store /
-Play privacy label updates, then `COMMUNITY_LIVE = true`.
+**Server (live 2026-11-18):** the push worker's `/community` routes on D1 `crs-pulse-community`
+(see `workers/push/src/community.ts`); `SAMPLE_TIMELINES` is only the fallback when no
+`EXPO_PUBLIC_PUSH_URL` is set. Tested end to end on 2026-11-18 on iOS and Android (feed, filters,
+paging, report: 3 reports hide and each emails `ALERT_EMAIL`, block, share/edit/stop, offline catch-up
+on the next launch, dark mode, French).
 
 ### Monetisation: ads only, no IAP
 
