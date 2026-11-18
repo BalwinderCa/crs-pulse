@@ -65,7 +65,7 @@ export function MyShareCard() {
               <Ionicons name="create-outline" size={16} color="#FFFFFF" />
               <Text style={s.meBtnTxt}>{t('community.editSharing')}</Text>
             </TouchableOpacity>
-            <TouchableOpacity ph-label="community-my-preview" onPress={() => navigation.navigate('CommunityTimeline', { id: MY_TIMELINE_ID })}
+            <TouchableOpacity ph-label="community-my-preview" onPress={() => navigation.navigate('CommunityTimeline', { id: MY_TIMELINE_ID, from: 'mine' })}
               style={[s.meBtn, s.flex, s.outline, { borderColor: accent, backgroundColor: c.surfaceCard }]} accessibilityRole="button"
               accessibilityHint={t('community.previewHint')}>
               <Ionicons name="eye-outline" size={16} color={accent} />

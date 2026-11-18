@@ -181,6 +181,7 @@ const fr: TranslationKeys = {
   community: {
     // [REVIEW] Community timelines
     back: 'Retour à Communauté',
+    backMine: 'Retour à ma chronologie', // [REVIEW]
     missing: 'Cette chronologie n’est plus partagée.',
     started: 'commencé en {{month}}',
     updatedToday: 'mis à jour aujourd’hui',

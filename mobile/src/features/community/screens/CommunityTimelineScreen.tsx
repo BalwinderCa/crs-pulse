@@ -77,9 +77,9 @@ export default function CommunityTimelineScreen() {
 
   const back = (
     <TouchableOpacity ph-label="community-detail-back" onPress={() => navigation.goBack()} style={s.back}
-      accessibilityRole="button" accessibilityLabel={t('community.back')}>
+      accessibilityRole="button" accessibilityLabel={t(params.from === 'mine' ? 'community.backMine' : 'community.back')}>
       <Ionicons name="chevron-back" size={22} color={accent} />
-      <Text style={[s.backTxt, { color: accent }]}>{t('timeline.tabCommunity')}</Text>
+      <Text style={[s.backTxt, { color: accent }]}>{t(params.from === 'mine' ? 'timeline.tabMine' : 'timeline.tabCommunity')}</Text>
     </TouchableOpacity>
   );
 

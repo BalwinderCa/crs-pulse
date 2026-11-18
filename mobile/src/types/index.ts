@@ -107,7 +107,8 @@ export type RootStackParamList = {
   Notifications: undefined;
   ProcessingTimes: undefined;
   /** One shared Community timeline; `id` is `mine` for the user's own. */
-  CommunityTimeline: { id: string };
+  /** `from: 'mine'` when opened from My timeline, so the back link names it. */
+  CommunityTimeline: { id: string; from?: 'mine' };
 };
 
 export type MainTabParamList = {

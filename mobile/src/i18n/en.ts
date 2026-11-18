@@ -174,6 +174,7 @@ const en = {
 
   community: {
     back: 'Back to Community',
+    backMine: 'Back to My timeline',
     missing: 'This timeline is no longer shared.',
     started: 'started {{month}}',
     updatedToday: 'updated today',
