@@ -140,6 +140,9 @@ tr.rep-row td{background:var(--raise)}
 dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(0,0,0,.25)}
 dialog::backdrop{background:rgba(15,15,14,.45)}
 .cm-f{display:grid;gap:12px;margin-top:14px}.cm-f label{display:grid;gap:5px;font-size:13px;color:var(--ink2)}
+.who{display:flex;align-items:center;gap:10px}.bd{flex:none;border-radius:50%;display:block}
+.bd-l{display:inline-flex;align-items:center;justify-content:center;background:var(--raise);color:var(--ink2);font-weight:700}
+.cm-id{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.cm-id small{color:var(--ink3);font-size:12px}
 .cm-f textarea{min-height:190px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
 .cm-f label.check{display:flex;gap:8px;align-items:center}.cm-f .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .cm-f .foot{display:flex;gap:8px;justify-content:flex-end}
@@ -441,7 +444,7 @@ var pct=function(a,b){return b?Math.round(a/b*100)+'%':'–'};
 var none='<div class="msg">Nothing yet.</div>';
 var bars=function(list,map){return list.length?hbars(list.map(function(x){return {key:map?(map[x.key]||x.key):String(x.key).toUpperCase(),n:x.n}}),8,'timelines'):none};
 var review=d.review.length?'<table><thead><tr><th>Name</th><th>Program</th><th class="num">Reports</th><th>Status</th><th></th></tr></thead><tbody>'+
-d.review.map(function(t){return '<tr><td><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+'</small></td><td>'+esc(t.program.toUpperCase())+'</td><td class="num">'+t.reports+'</td><td>'+
+d.review.map(function(t){return '<tr><td><div class="who">'+buddySvg(t.avatar,t.alias||'Anonymous',28)+'<div><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+'</small></div></div></td><td>'+esc(t.program.toUpperCase())+'</td><td class="num">'+t.reports+'</td><td>'+
 (t.hidden?'<span class="pill hid">Hidden</span>':'<span class="pill">Visible</span>')+'</td><td><div class="acts"><button class="btn" data-cd-open="'+esc(t.id)+'">Open</button></div></td></tr>'}).join('')+'</tbody></table>'
 :'<div class="msg">No reports. Nothing to review.</div>';
 el.innerHTML='<div class="kpis">'+kpi('chat','Shared timelines',fmt(d.total),'<span class="d">'+fmt(d.active7)+' updated in the last 7 days</span>')+
@@ -457,6 +460,45 @@ el.addEventListener('click',function(ev){var b=ev.target.closest('[data-cd-open]
 CM.q=b.dataset.cdOpen;CM.status='all';CM.offset=0;var old=document.getElementById('cm');if(old)old.remove();location.hash='#community-timelines'})}
 
 // ---- Community: list, create, edit, hide, delete, reports (via /api/ops-community) ----
+// Buddy avatars: an SVG copy of mobile/src/features/community/components/BuddyAvatar.tsx. Keep the part lists in step.
+var BD_INK='#1F2937',BD_COLORS=['#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6','#EC4899','#EF4444','#14B8A6','#0EA5E9','#84CC16'];
+var BD_EYES=[
+'<circle cx="25" cy="36" r="2.6" fill="I"/><circle cx="39" cy="36" r="2.6" fill="I"/>',
+'<g stroke="I" stroke-width="2.2" fill="none" stroke-linecap="round"><path d="M22 37 Q25 33 28 37"/><path d="M36 37 Q39 33 42 37"/></g>',
+'<circle cx="25" cy="35" r="4.5" fill="#FFFFFF"/><circle cx="39" cy="35" r="4.5" fill="#FFFFFF"/><circle cx="26" cy="36" r="2.2" fill="I"/><circle cx="40" cy="36" r="2.2" fill="I"/>',
+'<g stroke="I" stroke-width="2.2" stroke-linecap="round"><path d="M22 36 L28 36"/><path d="M36 36 L42 36"/></g>',
+'<g fill="I"><rect x="19" y="32" width="11" height="7" rx="3"/><rect x="34" y="32" width="11" height="7" rx="3"/><path d="M30 34.5 L34 34.5" stroke="I" stroke-width="1.6"/></g>',
+'<circle cx="25" cy="36" r="2.6" fill="I"/><path d="M36 37 Q39 33 42 37" stroke="I" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+'<circle cx="25" cy="36" r="2.2" fill="I"/><circle cx="39" cy="36" r="2.2" fill="I"/><g stroke="I" stroke-width="1.6" fill="none"><circle cx="25" cy="36" r="5"/><circle cx="39" cy="36" r="5"/><path d="M30 36 L34 36"/></g>',
+'<circle cx="25" cy="37" r="2.4" fill="I"/><circle cx="39" cy="37" r="2.4" fill="I"/><g stroke="I" stroke-width="2" stroke-linecap="round"><path d="M21 31 L28 33"/><path d="M43 31 L36 33"/></g>'];
+var BD_MOUTHS=[
+'<path d="M27 44 Q32 49 37 44" stroke="I" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+'<path d="M26 43 Q32 52 38 43 Z" fill="I"/>',
+'<circle cx="32" cy="46" r="2.4" fill="I"/>',
+'<path d="M28 46 L36 46" stroke="I" stroke-width="2.2" stroke-linecap="round"/>',
+'<path d="M29.5 46 Q32 52 34.5 46 Z" fill="#F43F5E"/><path d="M27 44 Q32 48 37 44" stroke="I" stroke-width="2.2" fill="none" stroke-linecap="round"/>',
+'<path d="M26 45 Q29 48 32 45 Q35 48 38 45" stroke="I" stroke-width="2" fill="none" stroke-linecap="round"/>'];
+var BD_EXTRAS=['',
+'<g fill="#F472B6" opacity="0.55"><circle cx="20" cy="43" r="3"/><circle cx="44" cy="43" r="3"/></g>',
+'<path d="M26 41 Q29 38.5 32 40.5 Q35 38.5 38 41 Q35 43 32 42 Q29 43 26 41 Z" fill="I"/>',
+'<g fill="#92400E" opacity="0.6"><circle cx="19" cy="42" r="0.9"/><circle cx="22" cy="44" r="0.9"/><circle cx="18.5" cy="45" r="0.9"/><circle cx="45" cy="42" r="0.9"/><circle cx="42" cy="44" r="0.9"/><circle cx="45.5" cy="45" r="0.9"/></g>'];
+var BD_HATS=['',
+'<path d="M14 30 Q32 6 50 30 Z" fill="#DC2626"/><rect x="13" y="26" width="38" height="6" rx="3" fill="#FFFFFF"/><circle cx="32" cy="10" r="4" fill="#FFFFFF"/>',
+'<g fill="I"><path d="M14 30 Q32 10 50 30 Z"/><rect x="30" y="26" width="24" height="4" rx="2"/></g>',
+'<path d="M14 38 Q14 15 32 15 Q50 15 50 38" stroke="I" stroke-width="3.5" fill="none"/><rect x="9" y="33" width="8" height="12" rx="3" fill="I"/><rect x="47" y="33" width="8" height="12" rx="3" fill="I"/>',
+'<path d="M32 20 L32 11" stroke="C" stroke-width="2.5" stroke-linecap="round"/><path d="M32 12 Q24 4 21 11 Q27 15 32 12 Z" fill="#16A34A"/><path d="M32 12 Q40 4 43 11 Q37 15 32 12 Z" fill="#22C55E"/>',
+'<path d="M19 25 L19 13 L25.5 19 L32 9 L38.5 19 L45 13 L45 25 Z" fill="#FACC15"/><circle cx="32" cy="20" r="1.8" fill="#EF4444"/>',
+'<path d="M22 22 L22 27 Q32 31 42 27 L42 22 Z" fill="I"/><path d="M10 19 L32 10 L54 19 L32 28 Z" fill="I"/><path d="M51 20 L51 30" stroke="#FACC15" stroke-width="1.6"/><circle cx="51" cy="31" r="1.8" fill="#FACC15"/>',
+'<path d="M44 19 L36 13 L36 25 Z" fill="#DB2777"/><path d="M44 19 L52 13 L52 25 Z" fill="#DB2777"/><circle cx="44" cy="19" r="2.6" fill="#9D174D"/>',
+'<path d="M32 5 L23 22 L41 22 Z" fill="#6366F1"/><path d="M27.5 13.5 L36.5 13.5 M25.5 18 L38.5 18" stroke="#FACC15" stroke-width="1.6"/><circle cx="32" cy="5" r="3" fill="#FACC15"/>',
+'<ellipse cx="32" cy="11" rx="12" ry="3.5" stroke="#FACC15" stroke-width="2.6" fill="none"/>'];
+/** The avatar as an SVG string, or a letter disc when the id isn't a buddy (no avatar = the app shows the initial). */
+function buddySvg(id,alias,size){var m=/^b(\\d)(\\d)(\\d)(\\d)(\\d)?$/.exec(id||''),p=m&&m.slice(1).map(function(d){return d===undefined?0:+d});
+if(!p||p[0]>9||p[1]>7||p[2]>5||p[3]>9||p[4]>3){var ch=((alias||'').trim()[0]||'?').toUpperCase();
+return '<span class="bd bd-l" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size*.42)+'px">'+esc(ch)+'</span>'}
+var c=BD_COLORS[p[0]],fill=function(x){return x.replace(/"I"/g,'"'+BD_INK+'"').replace(/"C"/g,'"'+c+'"')};
+return '<svg class="bd" width="'+size+'" height="'+size+'" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
+'<g transform="translate(0 2)">'+fill(BD_EYES[p[1]]+BD_MOUTHS[p[2]]+BD_EXTRAS[p[4]])+'</g>'+fill(BD_HATS[p[3]])+'</svg>'}
 var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0};
 var CM_STAGES=['ITA','AOR','Biometrics','Medical','Passport','Decision'];
 var CM_PROGRAMS=['cec','fsw','fst','pnp_ee','pnp','aip','other'];
@@ -481,7 +523,7 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<dialog id="cm-dlg" aria-labelledby="cm-dt"><h2 id="cm-dt">Edit timeline</h2><form class="cm-f" id="cm-form">'+
 '<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Generated if empty"></label>'+
 '<label>Avatar id<input name="avatar" placeholder="e.g. b32014"></label></div>'+
-'<div class="foot" style="justify-content:flex-start;margin-top:-4px"><button type="button" class="btn" data-act="random">New random name and avatar</button></div>'+
+'<div class="cm-id"><span id="cm-av"></span><button type="button" class="btn" data-act="random">Generate again</button><small>New random name and avatar. You can still type your own.</small></div>'+
 '<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
 '<label>AOR month<input name="aorMonth" type="month" min="2015-01" max="2035-12"></label></div>'+
 '<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
@@ -493,13 +535,14 @@ st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()}
 document.getElementById('cm').addEventListener('click',cmClick);
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
+document.getElementById('cm-form').addEventListener('input',function(ev){if(ev.target.name==='alias'||ev.target.name==='avatar')cmPreview()});
 cmLoad()}
 function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
 return cmApi('GET',qs.toString()).then(function(d){CM.data=d;cmRender()}).catch(function(e){cmErr('Could not load: '+e.message)})}
 function cmRender(){var d=CM.data,el=document.getElementById('cm-list');if(!el)return;
 if(!d.items.length){el.innerHTML='<div class="msg">'+(CM.q||CM.status!=='all'?'Nothing matches.':'No one has shared a timeline yet.')+'</div>';return}
 var rows=d.items.map(function(t){var last=t.steps[t.steps.length-1];
-return '<tr data-id="'+t.id+'"><td><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+(t.avatar?' · '+esc(t.avatar):'')+'</small></td>'+
+return '<tr data-id="'+t.id+'"><td><div class="who">'+buddySvg(t.avatar,t.alias||'Anonymous',32)+'<div><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+(t.avatar?' · '+esc(t.avatar):'')+'</small></div></div></td>'+
 '<td>'+esc(t.program.toUpperCase())+'</td><td>'+esc(t.aorMonth||'–')+'</td>'+
 '<td>'+esc(CM_STAGES[t.stage]||'–')+'<small>'+esc(last?last.type:'')+' · day '+t.lastDay+'</small></td>'+
 '<td>'+cmDate(t.updatedAt)+'</td>'+
@@ -530,10 +573,11 @@ function cmOpen(t){CM.editing=t;var f=document.getElementById('cm-form');documen
 document.getElementById('cm-dt').textContent=t?'Edit '+(t.alias||'Anonymous'):'New timeline';
 f.alias.value=t?t.alias:'';f.avatar.value=t&&t.avatar?t.avatar:'';f.program.value=t?t.program:'cec';f.aorMonth.value=t&&t.aorMonth?t.aorMonth:'';
 f.steps.value=JSON.stringify(t?t.steps:[{type:'ITA',day:0},{type:'AOR Received',day:30}],null,1);
-f.hidden.checked=!!(t&&t.hidden);document.getElementById('cm-hid-l').style.display=t?'':'none';
+f.hidden.checked=!!(t&&t.hidden);cmPreview();document.getElementById('cm-hid-l').style.display=t?'':'none';
 document.getElementById('cm-dlg').showModal();if(!t)cmRandom()}
+function cmPreview(){var f=document.getElementById('cm-form');document.getElementById('cm-av').innerHTML=buddySvg(f.avatar.value.trim(),f.alias.value||'Anonymous',56)}
 // Fills the form with a generated name + avatar; "Anonymous" is only for people sharing from the app.
-function cmRandom(){var f=document.getElementById('cm-form');cmApi('GET','random=1').then(function(r){f.alias.value=r.alias;f.avatar.value=r.avatar})
+function cmRandom(){var f=document.getElementById('cm-form');cmApi('GET','random=1').then(function(r){f.alias.value=r.alias;f.avatar.value=r.avatar;cmPreview()})
 .catch(function(e){document.getElementById('cm-ferr').textContent='Could not generate a name: '+e.message})}
 function cmSave(ev){ev.preventDefault();var f=ev.target,fe=document.getElementById('cm-ferr'),sb=f.querySelector('[type=submit]'),steps;
 try{steps=JSON.parse(f.steps.value)}catch(e){fe.textContent='Steps are not valid JSON.';return}
