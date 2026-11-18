@@ -262,3 +262,133 @@ export async function handleCommunity(
 
   return json({ message: 'Not found' }, 404);
 }
+
+/**
+ * Ops CRUD for the dashboard (admin.crspulse.com), behind SYNC_SECRET (never in the app):
+ *
+ *   GET    /admin/community?q=&status=all|visible|hidden|reported&offset=  → { items, total }
+ *   POST   /admin/community            { alias, avatar?, program, aorMonth?, steps }   → item
+ *   PATCH  /admin/community/:id        any of those fields (null clears avatar/aorMonth), hidden → item
+ *   DELETE /admin/community/:id        the timeline and its reports
+ *   GET    /admin/community/:id/reports                                   → [{ reason, createdAt }]
+ *   DELETE /admin/community/:id/reports  dismiss its reports (doesn't un-hide)
+ *
+ * Unlike the app's routes this returns hidden rows, report counts and timestamps.
+ */
+const ADMIN_PAGE = 50;
+type AdminRow = Row & { hidden: number; reports: number };
+
+const toAdmin = (r: AdminRow) => ({
+  id: r.id, alias: r.alias, avatar: r.avatar, program: r.program, aorMonth: r.aor_month,
+  steps: JSON.parse(r.steps) as Step[], stage: r.stage, lastDay: r.last_day,
+  updatedAt: r.updated_at, hidden: !!r.hidden, reports: r.reports,
+});
+
+const ADMIN_SELECT = `SELECT t.*, (SELECT COUNT(*) FROM community_reports r WHERE r.timeline_id = t.id) AS reports
+  FROM community_timelines t`;
+
+async function adminGet(db: D1Database, id: string) {
+  const row = await db.prepare(`${ADMIN_SELECT} WHERE t.id = ?`).bind(id).first<AdminRow>();
+  return row ? toAdmin(row) : null;
+}
+
+export async function handleCommunityAdmin(
+  request: Request,
+  url: URL,
+  db: D1Database | undefined,
+  authorized: boolean,
+): Promise<Response | null> {
+  if (url.pathname !== '/admin/community' && !url.pathname.startsWith('/admin/community/')) return null;
+  if (!authorized) return json({ message: 'Unauthorized' }, 401);
+  if (!db) return json({ message: 'Service unavailable' }, 503);
+  const [id, sub, extra] = url.pathname.slice('/admin/community/'.length).split('/');
+  const m = request.method;
+
+  if (!id && m === 'GET') {
+    const q = (url.searchParams.get('q') ?? '').trim();
+    const status = url.searchParams.get('status') ?? 'all';
+    const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
+    const where: string[] = [];
+    const args: unknown[] = [];
+    if (q) { where.push('(t.alias LIKE ? OR t.id = ?)'); args.push(`%${q}%`, q); }
+    if (status === 'visible') where.push('t.hidden = 0');
+    if (status === 'hidden') where.push('t.hidden = 1');
+    if (status === 'reported') where.push('EXISTS (SELECT 1 FROM community_reports r WHERE r.timeline_id = t.id)');
+    const w = where.length ? ` WHERE ${where.join(' AND ')}` : '';
+    const [{ results }, total] = await Promise.all([
+      db.prepare(`${ADMIN_SELECT}${w} ORDER BY t.updated_at DESC, t.id LIMIT ? OFFSET ?`).bind(...args, ADMIN_PAGE, offset).all<AdminRow>(),
+      db.prepare(`SELECT COUNT(*) AS n FROM community_timelines t${w}`).bind(...args).first<{ n: number }>(),
+    ]);
+    return json({ items: results.map(toAdmin), total: total?.n ?? 0, offset, pageSize: ADMIN_PAGE });
+  }
+
+  if (!id && m === 'POST') {
+    let body: unknown;
+    try { body = await request.json(); } catch { return json({ message: 'Invalid JSON body' }, 400); }
+    const t = cleanTimeline(body);
+    if (typeof t === 'string') return json({ message: t }, 422);
+    const newId = crypto.randomUUID();
+    // No device holds this row's key, so only the dashboard can change or delete it.
+    const owner = await sha256(`admin:${crypto.randomUUID()}`);
+    await db.prepare(
+      `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at, avatar)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    ).bind(newId, owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps), stageOf(t.steps),
+      t.steps[t.steps.length - 1]!.day, Date.now(), t.avatar ?? null).run();
+    return json(await adminGet(db, newId), 201);
+  }
+
+  if (!id || extra !== undefined) return json({ message: 'Not found' }, 404);
+  const current = await adminGet(db, id);
+  if (!current) return json({ message: 'Not found' }, 404);
+
+  if (sub === 'reports') {
+    if (m === 'GET') {
+      const { results } = await db.prepare(
+        'SELECT reason, created_at FROM community_reports WHERE timeline_id = ? ORDER BY created_at DESC',
+      ).bind(id).all<{ reason: string; created_at: number }>();
+      return json(results.map((r) => ({ reason: r.reason, createdAt: r.created_at })));
+    }
+    if (m === 'DELETE') {
+      await db.prepare('DELETE FROM community_reports WHERE timeline_id = ?').bind(id).run();
+      return new Response(null, { status: 204 });
+    }
+    return json({ message: 'Not found' }, 404);
+  }
+  if (sub !== undefined) return json({ message: 'Not found' }, 404);
+
+  if (m === 'DELETE') {
+    await db.batch([
+      db.prepare('DELETE FROM community_reports WHERE timeline_id = ?').bind(id),
+      db.prepare('DELETE FROM community_timelines WHERE id = ?').bind(id),
+    ]);
+    return new Response(null, { status: 204 });
+  }
+
+  if (m === 'PATCH') {
+    let patch: Record<string, unknown>;
+    try { patch = (await request.json()) as Record<string, unknown>; } catch { return json({ message: 'Invalid JSON body' }, 400); }
+    if (!patch || typeof patch !== 'object') return json({ message: 'body must be an object' }, 400);
+    if (patch.hidden !== undefined && typeof patch.hidden !== 'boolean') return json({ message: 'hidden must be true or false' }, 422);
+    // Merge, then run the same checks as a share (null clears an optional field).
+    const merged: Record<string, unknown> = {
+      alias: patch.alias ?? current.alias, program: patch.program ?? current.program, steps: patch.steps ?? current.steps,
+    };
+    const avatar = patch.avatar === undefined ? current.avatar : patch.avatar;
+    const aorMonth = patch.aorMonth === undefined ? current.aorMonth : patch.aorMonth;
+    if (avatar !== null && avatar !== '') merged.avatar = avatar;
+    if (aorMonth !== null && aorMonth !== '') merged.aorMonth = aorMonth;
+    const t = cleanTimeline(merged);
+    if (typeof t === 'string') return json({ message: t }, 422);
+    const hidden = patch.hidden === undefined ? current.hidden : patch.hidden;
+    // An ops edit isn't the owner's update, so updated_at (feed order) stays as it was.
+    await db.prepare(
+      `UPDATE community_timelines SET alias = ?, program = ?, aor_month = ?, steps = ?, stage = ?, last_day = ?, avatar = ?, hidden = ?
+       WHERE id = ?`,
+    ).bind(t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps), stageOf(t.steps),
+      t.steps[t.steps.length - 1]!.day, t.avatar ?? null, hidden ? 1 : 0, id).run();
+    return json(await adminGet(db, id));
+  }
+
+  return json({ message: 'Not found' }, 404);
+}

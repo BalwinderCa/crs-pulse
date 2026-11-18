@@ -1,4 +1,4 @@
-import { handleCommunity } from './community.ts';
+import { handleCommunity, handleCommunityAdmin } from './community.ts';
 import {
   hasToken,
   listTokens,
@@ -1007,6 +1007,12 @@ export default {
       },
     );
     if (community) return community;
+
+    // Ops CRUD for admin.crspulse.com: SYNC_SECRET, never the key shipped in the app.
+    const communityAdmin = await handleCommunityAdmin(
+      request, url, env.COMMUNITY_DB, !!env.SYNC_SECRET && isAuthorized(request, env.SYNC_SECRET),
+    );
+    if (communityAdmin) return communityAdmin;
 
     return json({ message: 'Not found' }, 404);
   },

@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity } from './community.ts';
+import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity, handleCommunityAdmin } from './community.ts';
 
 /** Just enough of D1 over node:sqlite, with the real migration applied. */
 function makeDb() {
@@ -162,4 +162,45 @@ test('reports count once per reporter and hide the timeline at the threshold', a
   assert.equal((await reports())!.n, REPORT_HIDE_AT);
   await call(db, 'DELETE', '/community/me', { key: KEY_A });
   assert.equal((await reports())!.n, 0);
+});
+
+async function admin(db: D1Database, method: string, path: string, body?: unknown, authorized = true) {
+  const req = new Request(`https://w.dev${path}`, { method, ...(body ? { body: JSON.stringify(body) } : {}) });
+  const res = await handleCommunityAdmin(req, new URL(req.url), db, authorized);
+  return { status: res!.status, body: res!.status === 204 ? null : await res!.json() as any };
+}
+
+test('admin: list with hidden rows and report counts, filter, edit, dismiss, delete', async () => {
+  const db = makeDb();
+  assert.equal((await admin(db, 'GET', '/admin/community', undefined, false)).status, 401);
+
+  const created = await admin(db, 'POST', '/admin/community', timeline({ alias: 'Seed', avatar: 'b1111' }));
+  assert.equal(created.status, 201);
+  const id = created.body.id;
+  assert.equal(created.body.stage, 4);
+  assert.equal((await admin(db, 'POST', '/admin/community', timeline({ alias: 'IRCC' }))).status, 422);
+
+  await call(db, 'POST', `/community/${id}/report`, { ip: '1.1.1.1', body: { reason: 'spam' } });
+  const list = await admin(db, 'GET', '/admin/community?status=reported');
+  assert.equal(list.body.total, 1);
+  assert.equal(list.body.items[0].reports, 1);
+  assert.equal((await admin(db, 'GET', '/admin/community?q=nobody')).body.total, 0);
+  assert.equal((await admin(db, 'GET', '/admin/community?q=See')).body.total, 1);
+
+  // Hide, and it disappears from the app but not from the dashboard.
+  const hid = await admin(db, 'PATCH', `/admin/community/${id}`, { hidden: true, alias: 'Renamed', avatar: null });
+  assert.equal(hid.body.hidden, true);
+  assert.equal(hid.body.alias, 'Renamed');
+  assert.equal(hid.body.avatar, null);
+  assert.equal((await call(db, 'GET', `/community/${id}`)).status, 404);
+  assert.equal((await admin(db, 'GET', '/admin/community?status=hidden')).body.total, 1);
+  assert.equal((await admin(db, 'PATCH', `/admin/community/${id}`, { steps: [{ type: 'ITA', day: 3 }] })).status, 422);
+
+  assert.deepEqual((await admin(db, 'GET', `/admin/community/${id}/reports`)).body.map((r: any) => r.reason), ['spam']);
+  assert.equal((await admin(db, 'DELETE', `/admin/community/${id}/reports`)).status, 204);
+  assert.equal((await admin(db, 'GET', `/admin/community/${id}`)).status, 404); // no GET-one route; list is the view
+
+  assert.equal((await admin(db, 'DELETE', `/admin/community/${id}`)).status, 204);
+  assert.equal((await admin(db, 'GET', '/admin/community')).body.total, 0);
+  assert.equal((await admin(db, 'PATCH', `/admin/community/${id}`, { hidden: false })).status, 404);
 });

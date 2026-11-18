@@ -116,6 +116,26 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 .side-foot{margin:0;flex-direction:row}.side-foot .navi span,.side-foot #forget{display:none}
 .panel{margin:0;border-radius:0;box-shadow:none}.top{padding:12px 16px}.main{padding:16px 16px 40px}}
 
+/* Community (CRUD) */
+.cm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.cm-bar input,.cm-bar select,.cm-f input,.cm-f select,.cm-f textarea{font:inherit;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink)}
+.cm-bar input{flex:1;min-width:180px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--ink);white-space:nowrap}
+.btn:hover{background:var(--raise)}.btn.pri{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.btn.bad{color:var(--bad)}.btn:disabled{opacity:.5;cursor:default}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--raise);color:var(--ink2)}
+.pill.hid{background:var(--bad);color:var(--surface)}.pill.rep{background:var(--s4);color:#111}
+td small{display:block;color:var(--ink3);font-size:11.5px}
+tr.rep-row td{background:var(--raise)}
+.pager{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:10px;color:var(--ink3);font-size:12.5px}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(15,15,14,.45)}
+.cm-f{display:grid;gap:12px;margin-top:14px}.cm-f label{display:grid;gap:5px;font-size:13px;color:var(--ink2)}
+.cm-f textarea{min-height:190px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.cm-f label.check{display:flex;gap:8px;align-items:center}.cm-f .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cm-f .foot{display:flex;gap:8px;justify-content:flex-end}
+
 /* Login */
 .login{max-width:380px;margin:12vh auto 0;padding:0 16px}
 .login .card{padding:28px}
@@ -142,6 +162,7 @@ const ICONS = {
   key: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  chat: '<path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
 };
 const icon = (k) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
@@ -180,7 +201,8 @@ const LOGIN_CODE = `<main class="login"><div class="card">${LOGIN_HEAD('This dev
 
 const DASH = `<div class="shell"><aside class="side"><div class="brand">${MARK}<span>Pulse HQ<small>CRS Pulse</small></span></div>
 <nav aria-label="Dashboards"><a class="navi" href="#posthog" data-view="posthog">${icon('users')}App usage<small>PostHog</small></a>
-<a class="navi" href="#admob" data-view="admob">${icon('dollar')}Revenue<small>AdMob</small></a></nav>
+<a class="navi" href="#admob" data-view="admob">${icon('dollar')}Revenue<small>AdMob</small></a>
+<a class="navi" href="#community" data-view="community">${icon('chat')}Community<small>D1</small></a></nav>
 <div class="side-foot"><button class="navi" id="forget" title="Ask for the passphrase again next time on this browser">${icon('key')}<span>Forget this device</span></button>
 <button class="navi" id="out">${icon('logout')}<span>Sign out</span></button></div></aside>
 <div class="panel"><div class="top"><h1 id="title">App usage</h1>
@@ -377,11 +399,14 @@ card('App version','Version each user was last seen on',hbars(d.version,6,'users
 card('Days active in the week','How many of the last 7 days each user opened the app',hbars(d.daysActive.map(x=>({key:x.key+(x.key==='1'?' day':' days'),n:x.n})),7,'users'))+'</div>'};
 views.admob={title:'Revenue',meta:'AdMob · CRS Pulse apps only · estimated'+(d.admob?' · '+d.admob.currency+' · days in '+d.admob.timeZone:'')+' · '+upd,html:admobSection(d.admob,d.admobError,s.users_7)};
 show();}
-const views={};
-const current=()=>({'#admob':'admob'})[location.hash]||'posthog';
+const views={};let statsErr='';
+const current=()=>({'#admob':'admob','#community':'community'})[location.hash]||'posthog';
 function show(){const k=current(),v=views[k];
 document.querySelectorAll('.side nav a').forEach(a=>a.dataset.view===k?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
+// Community has its own data and controls (COMMUNITY_JS); mount it once, so a stats refresh doesn't wipe an edit.
+if(k==='community'){$('#title').textContent='Community';document.title='Community · Pulse HQ';if(!document.getElementById('cm'))setTimeout(cmMount);return}
 $('#title').textContent=v?v.title:({admob:'Revenue'})[k]||'App usage';document.title=(v?v.title:'Pulse HQ')+' · Pulse HQ';
+if(!v){$('#meta').textContent='';$('#app').innerHTML='<div class="msg">'+esc(statsErr||'Loading…')+'</div>';return}
 if(v){$('#meta').textContent=v.meta;$('#app').innerHTML=v.html;
 // The cached view HTML holds the default range; redraw from the chart's current one.
 document.querySelectorAll('.area-wrap').forEach(w=>{const id=w.dataset.chart;w.innerHTML=areaSvg(id);
@@ -390,7 +415,89 @@ addEventListener('hashchange',()=>{show();scrollTo(0,0)});show();
 
 fetch('/api/ops-stats',{credentials:'same-origin'}).then(async r=>{if(r.status===401){location.reload();return}
 if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);render(await r.json())})
-.catch(e=>{$('#app').innerHTML='<div class="msg">Could not load stats: '+esc(e.message)+'</div>';$('#meta').textContent=''});`;
+.catch(e=>{statsErr='Could not load stats: '+e.message;show()});`;
+
+// NB: same rules as DASH_JS (it's appended to it): no backticks, no dollar-brace, no backslashes.
+// Functions and var only, so show() can call cmMount before this part has run.
+const COMMUNITY_JS = `
+// ---- Community: list, create, edit, hide, delete, reports (via /api/ops-community) ----
+var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0};
+var CM_STAGES=['ITA','AOR','Biometrics','Medical','Passport','Decision'];
+var CM_PROGRAMS=['cec','fsw','fst','pnp_ee','pnp','aip','other'];
+function cmApi(method,qs,body){
+return fetch('/api/ops-community'+(qs?'?'+qs:''),{method:method,credentials:'same-origin',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined})
+.then(function(r){if(r.status===401){location.reload();throw new Error('Signed out')}if(r.status===204)return null;
+return r.json().catch(function(){return {}}).then(function(j){if(!r.ok)throw new Error(cmMsg(j.error||j.message||('HTTP '+r.status)));return j})})}
+function cmMsg(m){return m==='alias not allowed'?'That display name is blocked by the name filter (offensive words, links, contact details, IRCC/official names).':m}
+function cmErr(m){document.getElementById('cm-err').textContent=m||''}
+function cmDate(ms){return new Date(ms).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'})}
+function cmMount(){
+$('#meta').textContent='Shared timelines in Cloudflare D1 · changes show in the app straight away';
+$('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="search" placeholder="Search by name or id" aria-label="Search">'+
+'<select id="cm-s" aria-label="Status"><option value="all">All</option><option value="visible">Visible</option><option value="hidden">Hidden</option><option value="reported">Reported</option></select>'+
+'<button class="btn pri" data-act="new">New timeline</button></div><div id="cm-err" class="err" role="alert"></div>'+
+'<section class="card" id="cm-list"><div class="msg">Loading…</div></section></div>'+
+'<dialog id="cm-dlg" aria-labelledby="cm-dt"><h2 id="cm-dt">Edit timeline</h2><form class="cm-f" id="cm-form">'+
+'<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Anonymous"></label>'+
+'<label>Avatar id<input name="avatar" placeholder="e.g. b3201, empty for initial"></label></div>'+
+'<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
+'<label>AOR month<input name="aorMonth" placeholder="YYYY-MM"></label></div>'+
+'<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
+'<label class="check" id="cm-hid-l"><input type="checkbox" name="hidden"> Hidden (not shown in the app)</label>'+
+'<div class="err" id="cm-ferr" role="alert"></div><div class="foot"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></dialog>';
+var q=document.getElementById('cm-q'),st=document.getElementById('cm-s');q.value=CM.q;st.value=CM.status;
+q.addEventListener('input',function(){clearTimeout(CM.timer);CM.timer=setTimeout(function(){CM.q=q.value.trim();CM.offset=0;cmLoad()},250)});
+st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()});
+document.getElementById('cm').addEventListener('click',cmClick);
+document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close()});
+document.getElementById('cm-form').addEventListener('submit',cmSave);
+cmLoad()}
+function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
+return cmApi('GET',qs.toString()).then(function(d){CM.data=d;cmRender()}).catch(function(e){cmErr('Could not load: '+e.message)})}
+function cmRender(){var d=CM.data,el=document.getElementById('cm-list');if(!el)return;
+if(!d.items.length){el.innerHTML='<div class="msg">'+(CM.q||CM.status!=='all'?'Nothing matches.':'No one has shared a timeline yet.')+'</div>';return}
+var rows=d.items.map(function(t){var last=t.steps[t.steps.length-1];
+return '<tr data-id="'+t.id+'"><td><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+(t.avatar?' · '+esc(t.avatar):'')+'</small></td>'+
+'<td>'+esc(t.program.toUpperCase())+'</td><td>'+esc(t.aorMonth||'–')+'</td>'+
+'<td>'+esc(CM_STAGES[t.stage]||'–')+'<small>'+esc(last?last.type:'')+' · day '+t.lastDay+'</small></td>'+
+'<td>'+cmDate(t.updatedAt)+'</td>'+
+'<td class="num">'+(t.reports?'<button class="btn" data-act="reports">'+t.reports+'</button>':'0')+'</td>'+
+'<td>'+(t.hidden?'<span class="pill hid">Hidden</span>':'<span class="pill">Visible</span>')+'</td>'+
+'<td><div class="acts"><button class="btn" data-act="edit">Edit</button>'+
+'<button class="btn" data-act="'+(t.hidden?'unhide':'hide')+'">'+(t.hidden?'Unhide':'Hide')+'</button>'+
+'<button class="btn bad" data-act="del">Delete</button></div></td></tr>'}).join('');
+var end=Math.min(d.offset+d.items.length,d.total);
+el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Stage</th><th>Updated</th><th class="num">Reports</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
+'<div class="pager">'+(d.offset+1)+'–'+end+' of '+fmt(d.total)+'<button class="btn" data-act="prev"'+(d.offset?'':' disabled')+'>Previous</button><button class="btn" data-act="next"'+(end<d.total?'':' disabled')+'>Next</button></div>'}
+function cmFind(id){return CM.data&&CM.data.items.find(function(t){return t.id===id})}
+function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabled)return;var act=b.dataset.act,tr=b.closest('tr'),id=tr&&tr.dataset.id,t=id&&cmFind(id);
+if(act==='new')return cmOpen(null);
+if(act==='prev'){CM.offset=Math.max(0,CM.offset-CM.data.pageSize);return cmLoad()}
+if(act==='next'){CM.offset+=CM.data.pageSize;return cmLoad()}
+if(act==='edit')return cmOpen(t);
+if(act==='hide'||act==='unhide'){b.disabled=true;return cmApi('PATCH','id='+id,{hidden:act==='hide'}).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
+if(act==='del'){if(!confirm('Delete the timeline shared as '+(t.alias||'Anonymous')+'? Its owner will see it as no longer shared. This cannot be undone.'))return;
+b.disabled=true;return cmApi('DELETE','id='+id).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
+if(act==='reports'){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('rep-row')){nx.remove();return}
+return cmApi('GET','id='+id+'&reports=1').then(function(list){var r=document.createElement('tr');r.className='rep-row';
+r.innerHTML='<td colspan="8"><b>Reports</b> '+list.map(function(x){return '<span class="pill rep">'+esc(x.reason)+'</span> <small style="display:inline">'+cmDate(x.createdAt)+'</small>'}).join(' · ')+
+' <span class="acts" style="display:inline-flex;margin-left:12px"><button class="btn" data-act="dismiss" data-for="'+id+'">Dismiss reports</button></span></td>';tr.after(r)}).catch(function(e){cmErr(e.message)})}
+if(act==='dismiss'){var fid=b.dataset.for;if(!confirm('Dismiss these reports? This does not un-hide the timeline.'))return;
+b.disabled=true;return cmApi('DELETE','id='+fid+'&reports=1').then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}}
+function cmOpen(t){CM.editing=t;var f=document.getElementById('cm-form');document.getElementById('cm-ferr').textContent='';
+document.getElementById('cm-dt').textContent=t?'Edit '+(t.alias||'Anonymous'):'New timeline';
+f.alias.value=t?t.alias:'';f.avatar.value=t&&t.avatar?t.avatar:'';f.program.value=t?t.program:'cec';f.aorMonth.value=t&&t.aorMonth?t.aorMonth:'';
+f.steps.value=JSON.stringify(t?t.steps:[{type:'ITA',day:0},{type:'AOR Received',day:30}],null,1);
+f.hidden.checked=!!(t&&t.hidden);document.getElementById('cm-hid-l').style.display=t?'':'none';
+document.getElementById('cm-dlg').showModal()}
+function cmSave(ev){ev.preventDefault();var f=ev.target,fe=document.getElementById('cm-ferr'),sb=f.querySelector('[type=submit]'),steps;
+try{steps=JSON.parse(f.steps.value)}catch(e){fe.textContent='Steps are not valid JSON.';return}
+var av=f.avatar.value.trim(),aor=f.aorMonth.value.trim(),body={alias:f.alias.value.trim(),program:f.program.value,steps:steps},t=CM.editing;
+if(t){body.avatar=av||null;body.aorMonth=aor||null;body.hidden=f.hidden.checked}else{if(av)body.avatar=av;if(aor)body.aorMonth=aor}
+sb.disabled=true;fe.textContent='';
+(t?cmApi('PATCH','id='+t.id,body):cmApi('POST','',body)).then(function(){document.getElementById('cm-dlg').close();return cmLoad()})
+.catch(function(e){fe.textContent=e.message}).then(function(){sb.disabled=false})}
+`;
 
 export default function handler(req, res) {
   privateHeaders(res);
@@ -402,5 +509,5 @@ export default function handler(req, res) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   const authed = isAuthed(req);
   const login = isTrustedDevice(req) ? LOGIN_CODE : LOGIN_FULL;
-  res.status(200).send(authed ? page(nonce, DASH, DASH_JS) : page(nonce, login, LOGIN_JS));
+  res.status(200).send(authed ? page(nonce, DASH, DASH_JS + COMMUNITY_JS) : page(nonce, login, LOGIN_JS));
 }
