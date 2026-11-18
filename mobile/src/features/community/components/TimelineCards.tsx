@@ -102,5 +102,5 @@ const s = StyleSheet.create({
   pill: { marginTop: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, maxWidth: '100%' },
   pillTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
   right: { alignItems: 'flex-end' },
-  day: { fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  day: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
 });
