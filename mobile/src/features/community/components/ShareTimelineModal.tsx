@@ -44,7 +44,9 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
     setShowMonths(settings?.showMonths ?? false);
     setAvatar(settings?.avatar);
     setNameError(false);
-  }, [visible, settings, typeId]);
+    // Only on open: share() swaps settings while saving, and re-running this would wipe a refused name.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
 
   const steps = useMemo(() => toSharedSteps(milestones, showMonths), [milestones, showMonths]);
   const aorMonth = useMemo(() => sharedAorMonth(milestones), [milestones]);
