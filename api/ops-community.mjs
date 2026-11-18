@@ -4,6 +4,7 @@
 //
 //   GET    /api/ops-community?q=&status=&offset=      list
 //   GET    /api/ops-community?stats=1                 counts for the Community dashboard
+//   GET    /api/ops-community?random=1                a generated display name + avatar
 //   POST   /api/ops-community                         create
 //   PATCH  /api/ops-community?id=<id>                 edit / hide / unhide
 //   DELETE /api/ops-community?id=<id>                 delete
@@ -20,6 +21,7 @@ export function workerPath(method, query) {
   if (id !== undefined && !ID_RE.test(String(id))) return null;
   if (!id) {
     if (query.stats) return method === 'GET' ? '/admin/community/stats' : null;
+    if (query.random) return method === 'GET' ? '/admin/community/random' : null;
     if (method === 'GET') {
       const qs = new URLSearchParams();
       for (const k of ['q', 'status', 'offset']) if (query[k]) qs.set(k, String(query[k]));

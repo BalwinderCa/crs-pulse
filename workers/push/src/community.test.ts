@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { DatabaseSync } from 'node:sqlite';
-import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity, handleCommunityAdmin } from './community.ts';
+import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity, handleCommunityAdmin, randomIdentity } from './community.ts';
 
 /** Just enough of D1 over node:sqlite, with the real migration applied. */
 function makeDb() {
@@ -242,4 +242,30 @@ test('admin stats: totals, breakdowns and the most-reported first', async () => 
   assert.deepEqual(st.byStage, [{ key: 'ita', n: 1 }, { key: 'ppr', n: 2 }]);
   assert.deepEqual(st.byReason, [{ key: 'spam', n: 2 }, { key: 'offensive', n: 1 }]);
   assert.deepEqual(st.review.map((r: any) => r.alias), ['A', 'C']);
+});
+
+test('admin timelines are never anonymous: a missing name and avatar are generated', async () => {
+  for (let i = 0; i < 200; i++) {
+    const { alias, avatar } = randomIdentity();
+    assert.ok(aliasAllowed(alias) && alias.length <= 30, alias);
+    assert.match(avatar, /^b\d[0-7][0-5]\d[0-3]$/);
+  }
+  const db = makeDb();
+  const made = await admin(db, 'POST', '/admin/community', timeline({ alias: '' }));
+  assert.equal(made.status, 201);
+  assert.match(made.body.alias, /^[A-Z][a-z]+[A-Z][a-z]+\d{4}$/);
+  assert.match(made.body.avatar, /^b\d{5}$/);
+  const cleared = await admin(db, 'PATCH', `/admin/community/${made.body.id}`, { alias: '' });
+  assert.ok(cleared.body.alias.length > 0);
+  const random = await admin(db, 'GET', '/admin/community/random');
+  assert.ok(random.body.alias && random.body.avatar);
+});
+
+test('app shares keep an empty name as Anonymous (only admin timelines get a generated one)', async () => {
+  const db = makeDb();
+  const req = new Request('https://w.dev/community/me', { method: 'PUT', body: JSON.stringify(timeline({ alias: '' })) });
+  const res = await handleCommunity(req, new URL(req.url), db, true, async () => false);
+  assert.equal(res!.status, 200);
+  const row = await db.prepare('SELECT alias FROM community_timelines').first<{ alias: string }>();
+  assert.equal(row!.alias, '');
 });

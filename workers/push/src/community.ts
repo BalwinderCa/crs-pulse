@@ -288,6 +288,21 @@ export async function handleCommunity(
  * Unlike the app's routes this returns hidden rows, report counts and timestamps.
  */
 const ADMIN_PAGE = 50;
+
+// Admin timelines always get a display name: "Anonymous" is left to people sharing from the app.
+const NAME_ADJ = ['Calm', 'Bright', 'Brave', 'Patient', 'Hopeful', 'Sunny', 'Quiet', 'Steady', 'Kind', 'Lucky', 'Gentle', 'Bold', 'Cheerful', 'Swift', 'Clever', 'Happy'];
+const NAME_NOUN = ['Maple', 'Moose', 'Loon', 'Beaver', 'Otter', 'Pine', 'Lynx', 'Heron', 'Aurora', 'Cedar', 'Falcon', 'River', 'Birch', 'Puffin', 'Caribou', 'Lake'];
+const pick = <T,>(a: readonly T[]) => a[Math.floor(Math.random() * a.length)]!;
+const digit = (n: number) => String(Math.floor(Math.random() * n));
+
+/** A handle like "CalmMaple4821" (passes the name filter) and a buddy avatar id (see mobile BuddyAvatar). */
+export function randomIdentity(): { alias: string; avatar: string } {
+  let alias: string;
+  do alias = `${pick(NAME_ADJ)}${pick(NAME_NOUN)}${1000 + Math.floor(Math.random() * 9000)}`;
+  while (!aliasAllowed(alias));
+  // b + colour(10) eyes(8) mouth(6) hat(10) extra(4)
+  return { alias, avatar: `b${digit(10)}${digit(8)}${digit(6)}${digit(10)}${digit(4)}` };
+}
 type AdminRow = Row & { hidden: number; reports: number };
 
 const toAdmin = (r: AdminRow) => ({
@@ -318,6 +333,7 @@ export async function handleCommunityAdmin(
   const m = request.method;
 
   if (id === 'stats' && sub === undefined && m === 'GET') return json(await adminStats(db));
+  if (id === 'random' && sub === undefined && m === 'GET') return json(randomIdentity());
 
   if (!id && m === 'GET') {
     const q = (url.searchParams.get('q') ?? '').trim();
@@ -342,6 +358,9 @@ export async function handleCommunityAdmin(
     try { body = await request.json(); } catch { return json({ message: 'Invalid JSON body' }, 400); }
     const t = cleanTimeline(body);
     if (typeof t === 'string') return json({ message: t }, 422);
+    const made = randomIdentity();
+    t.alias ||= made.alias;
+    t.avatar ??= made.avatar;
     const newId = crypto.randomUUID();
     // No device holds this row's key, so only the dashboard can change or delete it.
     const owner = await sha256(`admin:${crypto.randomUUID()}`);
@@ -396,6 +415,7 @@ export async function handleCommunityAdmin(
     if (aorMonth !== null && aorMonth !== '') merged.aorMonth = aorMonth;
     const t = cleanTimeline(merged);
     if (typeof t === 'string') return json({ message: t }, 422);
+    if (current.byAdmin && !t.alias) t.alias = randomIdentity().alias;
     const hidden = patch.hidden === undefined ? current.hidden : patch.hidden;
     // An ops edit isn't the owner's update, so updated_at (feed order) stays as it was.
     await db.prepare(

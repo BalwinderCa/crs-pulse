@@ -479,8 +479,9 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<button class="btn pri" data-act="new">New timeline</button></div><div id="cm-err" class="err" role="alert"></div>'+
 '<section class="card" id="cm-list"><div class="msg">Loading…</div></section></div>'+
 '<dialog id="cm-dlg" aria-labelledby="cm-dt"><h2 id="cm-dt">Edit timeline</h2><form class="cm-f" id="cm-form">'+
-'<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Anonymous"></label>'+
-'<label>Avatar id<input name="avatar" placeholder="e.g. b3201, empty for initial"></label></div>'+
+'<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Generated if empty"></label>'+
+'<label>Avatar id<input name="avatar" placeholder="e.g. b32014"></label></div>'+
+'<div class="foot" style="justify-content:flex-start;margin-top:-4px"><button type="button" class="btn" data-act="random">New random name and avatar</button></div>'+
 '<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
 '<label>AOR month<input name="aorMonth" type="month" min="2015-01" max="2035-12"></label></div>'+
 '<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
@@ -490,7 +491,7 @@ var q=document.getElementById('cm-q'),st=document.getElementById('cm-s');q.value
 q.addEventListener('input',function(){clearTimeout(CM.timer);CM.timer=setTimeout(function(){CM.q=q.value.trim();CM.offset=0;cmLoad()},250)});
 st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()});
 document.getElementById('cm').addEventListener('click',cmClick);
-document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close()});
+document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
 cmLoad()}
 function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
@@ -530,7 +531,10 @@ document.getElementById('cm-dt').textContent=t?'Edit '+(t.alias||'Anonymous'):'N
 f.alias.value=t?t.alias:'';f.avatar.value=t&&t.avatar?t.avatar:'';f.program.value=t?t.program:'cec';f.aorMonth.value=t&&t.aorMonth?t.aorMonth:'';
 f.steps.value=JSON.stringify(t?t.steps:[{type:'ITA',day:0},{type:'AOR Received',day:30}],null,1);
 f.hidden.checked=!!(t&&t.hidden);document.getElementById('cm-hid-l').style.display=t?'':'none';
-document.getElementById('cm-dlg').showModal()}
+document.getElementById('cm-dlg').showModal();if(!t)cmRandom()}
+// Fills the form with a generated name + avatar; "Anonymous" is only for people sharing from the app.
+function cmRandom(){var f=document.getElementById('cm-form');cmApi('GET','random=1').then(function(r){f.alias.value=r.alias;f.avatar.value=r.avatar})
+.catch(function(e){document.getElementById('cm-ferr').textContent='Could not generate a name: '+e.message})}
 function cmSave(ev){ev.preventDefault();var f=ev.target,fe=document.getElementById('cm-ferr'),sb=f.querySelector('[type=submit]'),steps;
 try{steps=JSON.parse(f.steps.value)}catch(e){fe.textContent='Steps are not valid JSON.';return}
 var av=f.avatar.value.trim(),aor=f.aorMonth.value.trim(),body={alias:f.alias.value.trim(),program:f.program.value,steps:steps},t=CM.editing;
