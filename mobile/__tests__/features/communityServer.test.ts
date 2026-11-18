@@ -85,6 +85,41 @@ describe('community api (server)', () => {
   });
 });
 
+describe('removing every milestone', () => {
+  const fetchMock = jest.fn();
+  beforeEach(async () => {
+    process.env.EXPO_PUBLIC_PUSH_URL = URL;
+    global.fetch = fetchMock as unknown as typeof fetch;
+    fetchMock.mockReset();
+    await AsyncStorage.clear();
+  });
+  afterEach(() => { delete process.env.EXPO_PUBLIC_PUSH_URL; });
+
+  it('stops sharing, so a new milestone does not quietly re-share', async () => {
+    const settings = { alias: 'Billy', program: 'cec' as const, showMonths: false, sharedAt: '2026-11-18' };
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_OWNER, JSON.stringify({ id: 'me', key: 'k' }));
+    await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(settings));
+    useTimelineStore.setState({ milestones: [{ id: '1', type: 'ITA', date: '2026-01-05', note: '' }] });
+    useShareStore.setState({ settings, loaded: true });
+
+    fetchMock.mockReturnValue(reply(204));
+    useTimelineStore.setState({ milestones: [] });
+    await waitForCalls(1);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(fetchMock.mock.calls[0][1].method).toBe('DELETE');
+    expect(useShareStore.getState().settings).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_SHARE)).toBeNull();
+
+    useTimelineStore.setState({ milestones: [{ id: '2', type: 'ITA', date: '2026-02-01', note: '' }] });
+    await new Promise((r) => setTimeout(r, 10));
+    expect(fetchMock).toHaveBeenCalledTimes(1); // nothing re-published
+  });
+
+  async function waitForCalls(n: number) {
+    for (let i = 0; i < 50 && fetchMock.mock.calls.length < n; i++) await new Promise((r) => setTimeout(r, 5));
+  }
+});
+
 describe('buddy avatars', () => {
   it('makes valid, distinct ids and keeps the current one first', () => {
     for (let i = 0; i < 200; i++) expect(isBuddyId(randomBuddyId())).toBe(true);

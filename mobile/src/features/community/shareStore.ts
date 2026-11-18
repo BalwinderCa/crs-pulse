@@ -40,12 +40,21 @@ const serial = <T,>(fn: () => Promise<T>): Promise<T> => {
   return next;
 };
 
-/** Sends the current timeline under the current settings; with no steps left, takes it down. */
+/**
+ * Sends the current timeline under the current settings. With no steps left it
+ * stops sharing altogether, so adding a milestone later asks again instead of
+ * quietly re-sharing.
+ */
 function sync(settings: ShareSettings): Promise<void> {
   return serial(async () => {
     const milestones = useTimelineStore.getState().milestones;
     const steps = toSharedSteps(milestones, settings.showMonths);
-    if (!steps.length) return unpublishTimeline();
+    if (!steps.length) {
+      await unpublishTimeline();
+      useShareStore.setState({ settings: null });
+      await AsyncStorage.removeItem(STORAGE_KEYS.COMMUNITY_SHARE).catch(() => {});
+      return;
+    }
     const aorMonth = sharedAorMonth(milestones);
     return publishTimeline({
       alias: settings.alias, program: settings.program, steps,
