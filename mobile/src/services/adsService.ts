@@ -1,6 +1,7 @@
 import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ADMOB_APP_OPEN_AD_UNIT, STORAGE_KEYS } from '@/constants';
+import { ADMOB_APP_OPEN_AD_UNIT, ADMOB_INTERSTITIAL_AD_UNIT, MONETIZATION_ENABLED, STORAGE_KEYS } from '@/constants';
+import { isAdFree, useAdFreeStore } from '@/store/adFreeStore';
 import { track } from '@/services/analyticsService';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler.
@@ -15,8 +16,9 @@ interface AppOpenAdHandle {
 interface AdsModule {
   default: () => { initialize: () => Promise<unknown> };
   AppOpenAd?: { createForAdRequest: (unitId: string) => AppOpenAdHandle };
+  InterstitialAd?: { createForAdRequest: (unitId: string) => AppOpenAdHandle };
   AdEventType?: { LOADED: string; ERROR: string; CLOSED: string };
-  TestIds?: { APP_OPEN?: string };
+  TestIds?: { APP_OPEN?: string; INTERSTITIAL?: string };
 }
 
 /**
@@ -248,3 +250,54 @@ export function showAppOpenAd(timeoutMs: number): Promise<boolean> {
   });
 }
 
+
+/** Community timelines a user opens between interstitials. */
+export const INTERSTITIAL_EVERY = 5;
+let communityViews = 0;
+let interstitial: AppOpenAdHandle | null = null;
+let interstitialLoading = false;
+
+function interstitialUnitId(mod: AdsModule): string {
+  if (__DEV__) return mod.TestIds?.INTERSTITIAL ?? '';
+  return Platform.OS === 'ios' ? ADMOB_INTERSTITIAL_AD_UNIT.ios : ADMOB_INTERSTITIAL_AD_UNIT.android;
+}
+
+function preloadInterstitial(mod: AdsModule, unitId: string): void {
+  if (interstitial || interstitialLoading || !mod.InterstitialAd || !mod.AdEventType) return;
+  interstitialLoading = true;
+  const { AdEventType } = mod;
+  initSdk()
+    .then(() => {
+      const ad = mod.InterstitialAd!.createForAdRequest(unitId);
+      const offs = [
+        ad.addAdEventListener(AdEventType.LOADED, () => { interstitialLoading = false; interstitial = ad; }),
+        ad.addAdEventListener(AdEventType.ERROR, () => { interstitialLoading = false; offs.forEach((off) => off()); }),
+      ];
+      ad.load();
+    })
+    .catch(() => { interstitialLoading = false; });
+}
+
+/**
+ * Call each time the user opens someone else's Community timeline. Every 6th open
+ * (after INTERSTITIAL_EVERY views) shows a full-screen interstitial and starts the
+ * count again. The ad is preloaded after the 5th view; if it isn't ready yet, the
+ * user isn't kept waiting and the next open tries again.
+ */
+export function countCommunityView(): void {
+  if (!MONETIZATION_ENABLED || isAdFree(useAdFreeStore.getState().until)) return;
+  const mod = loadAdsModule();
+  const unitId = mod ? interstitialUnitId(mod) : '';
+  if (!mod?.InterstitialAd || !mod.AdEventType || !unitId) return;
+  if (communityViews >= INTERSTITIAL_EVERY && interstitial) {
+    const ad = interstitial;
+    interstitial = null;
+    communityViews = 0;
+    try {
+      ad.show();
+      track('ad_shown', { format: 'interstitial' });
+    } catch {}
+  }
+  communityViews++;
+  if (communityViews >= INTERSTITIAL_EVERY) preloadInterstitial(mod, unitId);
+}

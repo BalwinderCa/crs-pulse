@@ -30,6 +30,8 @@ jest.mock('@/services/analyticsService', () => ({
   track: (...a: unknown[]) => mockTrack(...a),
 }));
 
+jest.mock('@/constants', () => ({ ...jest.requireActual('@/constants'), MONETIZATION_ENABLED: true }));
+
 let adListeners: Record<string, (() => void)[]> = {};
 const emit = (type: string) => (adListeners[type] ?? []).forEach((cb) => cb());
 const flush = () => new Promise((r) => setImmediate(r));
@@ -38,8 +40,9 @@ jest.mock('react-native-google-mobile-ads', () => ({
   __esModule: true,
   default: (...a: unknown[]) => mockAdsDefault(...a),
   AppOpenAd: { createForAdRequest: (...a: unknown[]) => mockCreateForAdRequest(...(a as [])) },
+  InterstitialAd: { createForAdRequest: (...a: unknown[]) => mockCreateForAdRequest(...(a as [])) },
   AdEventType: { LOADED: 'loaded', ERROR: 'error', CLOSED: 'closed' },
-  TestIds: { APP_OPEN: 'ca-app-pub-3940256099942544/5575463023' },
+  TestIds: { APP_OPEN: 'ca-app-pub-3940256099942544/5575463023', INTERSTITIAL: 'ca-app-pub-3940256099942544/4411468910' },
 }));
 
 describe('adsService.initAds — iOS ATT timing & resilience', () => {
@@ -315,5 +318,47 @@ describe('adsService.takeAppOpenAdTurn — every 2nd launch', () => {
     const { takeAppOpenAdTurn } = require('../../src/services/adsService');
     expect(await takeAppOpenAdTurn()).toBe(false);
     spy.mockRestore();
+  });
+});
+
+describe('adsService.countCommunityView — interstitial every 5 timelines', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    adListeners = {};
+    mockInitialize.mockResolvedValue(undefined);
+    mockAdsDefault.mockReturnValue({ initialize: mockInitialize });
+  });
+
+  it('shows on the 6th open, resets, and shows again on the 11th', async () => {
+    let ads!: typeof import('../../src/services/adsService');
+    jest.isolateModules(() => { ads = require('../../src/services/adsService'); });
+    for (let i = 0; i < 5; i++) ads.countCommunityView();
+    await flush();
+    expect(mockAppOpenShow).not.toHaveBeenCalled();
+    expect(mockAppOpenLoad).toHaveBeenCalledTimes(1); // preloaded after the 5th view
+    emit('loaded');
+
+    ads.countCommunityView(); // 6th
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
+    expect(mockTrack).toHaveBeenCalledWith('ad_shown', { format: 'interstitial' });
+
+    adListeners = {};
+    for (let i = 0; i < 4; i++) ads.countCommunityView(); // 7th–10th
+    await flush();
+    emit('loaded');
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
+    ads.countCommunityView(); // 11th
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(2);
+  });
+
+  it('never waits for an ad that has not loaded; the next open tries again', async () => {
+    let ads!: typeof import('../../src/services/adsService');
+    jest.isolateModules(() => { ads = require('../../src/services/adsService'); });
+    for (let i = 0; i < 6; i++) ads.countCommunityView();
+    await flush();
+    expect(mockAppOpenShow).not.toHaveBeenCalled(); // not loaded by the 6th
+    emit('loaded');
+    ads.countCommunityView(); // 7th: now ready
+    expect(mockAppOpenShow).toHaveBeenCalledTimes(1);
   });
 });

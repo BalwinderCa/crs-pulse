@@ -155,6 +155,12 @@ export const AD_FREE_MS = 3 * 24 * 60 * 60 * 1000;
  * will not serve here. Empty means the splash never waits and no ad shows, so
  * this can be rolled out per-platform.
  */
+// Full-screen ad between Community timelines (adsService.countCommunityView).
+export const ADMOB_INTERSTITIAL_AD_UNIT = {
+  android: process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_ANDROID || '',
+  ios: process.env.EXPO_PUBLIC_ADMOB_INTERSTITIAL_IOS || '',
+} as const;
+
 export const ADMOB_APP_OPEN_AD_UNIT = {
   android: process.env.EXPO_PUBLIC_ADMOB_APP_OPEN_ANDROID || '',
   ios: process.env.EXPO_PUBLIC_ADMOB_APP_OPEN_IOS || '',

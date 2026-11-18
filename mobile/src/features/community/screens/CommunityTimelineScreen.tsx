@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
 import { format, parseISO } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -18,6 +19,7 @@ import { Avatar, useProgramLabel, useStageTone } from '../components/TimelineCar
 import { FilterSheet } from '../components/FilterSheet';
 import { reportTimeline, type ReportReason } from '../communityApi';
 import { useBlockedStore } from '../shareStore';
+import { countCommunityView } from '@/services/adsService';
 
 const REASONS: ReportReason[] = ['spam', 'offensive', 'misleading', 'other'];
 
@@ -29,13 +31,17 @@ export default function CommunityTimelineScreen() {
   const c = useColors();
   const accent = useAccentColor();
   const insets = useSafeAreaInsets();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const locale = i18n.language?.startsWith('fr') ? fr : enUS;
   const navigation = useNavigation();
   const { contentFrameStyle } = useResponsiveLayout();
   const programLabel = useProgramLabel();
   const tone = useStageTone();
   const { params } = useRoute<RouteProp<RootStackParamList, 'CommunityTimeline'>>();
   const { timeline, loading } = useSharedTimeline(params.id);
+  // One view per opened timeline (not your own); every 6th shows an interstitial.
+  const viewedId = timeline && !timeline.isMine ? timeline.id : null;
+  useEffect(() => { if (viewedId) countCommunityView(); }, [viewedId]);
   const pace = useCommunitySummary(timeline?.program);
   const { mySteps } = useCommunity();
   const [reporting, setReporting] = useState(false);
@@ -95,7 +101,7 @@ export default function CommunityTimelineScreen() {
   const alias = timeline.alias || t('community.anonymous');
   const sub = [
     programLabel(timeline.program),
-    view.firstMonth ? t('community.started', { month: format(parseISO(`${view.firstMonth}-01`), 'MMMM yyyy') }) : null,
+    view.firstMonth ? t('community.started', { month: format(parseISO(`${view.firstMonth}-01`), 'MMMM yyyy', { locale }) }) : null,
     timeline.updatedDaysAgo === 0 ? t('community.updatedToday') : t('community.updatedDaysAgo', { n: timeline.updatedDaysAgo }),
   ].filter(Boolean).join(' · ');
   const nowTone = view.now ? tone(view.now.type) : undefined;
@@ -148,7 +154,7 @@ export default function CommunityTimelineScreen() {
           const meta = MILESTONE_META[step.type];
           const st = tone(step.type);
           const gap = i === 0
-            ? (step.month ? format(parseISO(`${step.month}-01`), 'MMM yyyy') : t('community.start'))
+            ? (step.month ? format(parseISO(`${step.month}-01`), 'MMM yyyy', { locale }) : t('community.start'))
             : t('community.plusDays', { n: step.day - timeline.steps[i - 1]!.day });
           return (
             <View key={`${step.type}-${i}`}
