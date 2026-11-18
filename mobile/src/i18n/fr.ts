@@ -208,6 +208,8 @@ const fr: TranslationKeys = {
     avatarShuffle: 'Mélanger',
     avatarInitial: 'Aucun avatar',
     avatarN: 'Avatar {{n}}',
+    preview: 'Aperçu', // [REVIEW]
+    previewHint: 'Montre votre chronologie telle que les autres la voient', // [REVIEW]
     avatarHint: '{{shown}} sur {{total}} affichés. Touchez Mélanger pour en voir d’autres.', // [REVIEW]
     nameNotAllowed: 'Ce nom ne peut pas être utilisé. Évitez les mots offensants, les liens, les coordonnées et les noms comme IRCC ou Officiel.',
     yourTimeline: 'Votre chronologie',

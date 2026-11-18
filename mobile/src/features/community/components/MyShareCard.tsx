@@ -17,8 +17,9 @@ import { ShareTimelineModal } from './ShareTimelineModal';
 import { BuddyAvatar, isBuddyId } from './BuddyAvatar';
 
 /**
- * The user's own accent "You" card: current step and day, with Share (or Edit
- * once shared). Shown at the top of Timeline → My timeline.
+ * The user's own accent "You" card: current step and day, with Share, or once
+ * shared, Edit sharing and Preview (your timeline as others see it). Shown at
+ * the top of Timeline → My timeline.
  */
 export function MyShareCard() {
   const accent = useAccentColor();
@@ -43,13 +44,7 @@ export function MyShareCard() {
 
   return (
     <>
-      <TouchableOpacity
-        ph-label="community-my-row"
-        activeOpacity={0.7}
-        onPress={() => (mine ? navigation.navigate('CommunityTimeline', { id: MY_TIMELINE_ID }) : setSharing(true))}
-        style={[s.me, { backgroundColor: accent + '12', borderColor: accent + '33' }]}
-        accessibilityRole="button"
-      >
+      <View style={[s.me, { backgroundColor: accent + '12', borderColor: accent + '33' }]}>
         <View style={s.top}>
           {isBuddyId(settings?.avatar) ? (
             <BuddyAvatar id={settings.avatar} size={40} />
@@ -63,11 +58,28 @@ export function MyShareCard() {
             <Text style={[s.meSub, { color: c.textSecondary }]} numberOfLines={1}>{mySub}</Text>
           </View>
         </View>
-        <View style={[s.meBtn, { backgroundColor: accent }]}>
-          <Ionicons name={mine ? 'create-outline' : 'people-outline'} size={16} color="#FFFFFF" />
-          <Text style={s.meBtnTxt}>{mine ? t('community.edit') : t('community.shareWithCommunity')}</Text>
-        </View>
-      </TouchableOpacity>
+        {mine ? (
+          <View style={s.btns}>
+            <TouchableOpacity ph-label="community-my-edit" onPress={() => setSharing(true)}
+              style={[s.meBtn, s.flex, { backgroundColor: accent }]} accessibilityRole="button">
+              <Ionicons name="create-outline" size={16} color="#FFFFFF" />
+              <Text style={s.meBtnTxt}>{t('community.editSharing')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity ph-label="community-my-preview" onPress={() => navigation.navigate('CommunityTimeline', { id: MY_TIMELINE_ID })}
+              style={[s.meBtn, s.flex, s.outline, { borderColor: accent, backgroundColor: c.surfaceCard }]} accessibilityRole="button"
+              accessibilityHint={t('community.previewHint')}>
+              <Ionicons name="eye-outline" size={16} color={accent} />
+              <Text style={[s.meBtnTxt, { color: accent }]}>{t('community.preview')}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity ph-label="community-my-row" onPress={() => setSharing(true)}
+            style={[s.meBtn, { backgroundColor: accent }]} accessibilityRole="button">
+            <Ionicons name="people-outline" size={16} color="#FFFFFF" />
+            <Text style={s.meBtnTxt}>{t('community.shareWithCommunity')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
       <ShareTimelineModal visible={sharing} onClose={() => setSharing(false)} />
     </>
   );
@@ -83,4 +95,6 @@ const s = StyleSheet.create({
   meSub: { fontSize: typography.sm, fontWeight: typography.medium, marginTop: 2 },
   meBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: borderRadius.md },
   meBtnTxt: { color: '#FFFFFF', fontSize: typography.sm, fontWeight: typography.bold },
+  btns: { flexDirection: 'row', gap: spacing.sm },
+  outline: { borderWidth: 1.5 },
 });

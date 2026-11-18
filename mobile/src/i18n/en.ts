@@ -200,6 +200,8 @@ const en = {
     avatarShuffle: 'Shuffle',
     avatarInitial: 'No avatar',
     avatarN: 'Avatar {{n}}',
+    preview: 'Preview',
+    previewHint: 'Shows your timeline the way others see it',
     avatarHint: 'Showing {{shown}} of {{total}}. Tap Shuffle to see more.',
     nameNotAllowed: 'That name can’t be used. Leave out offensive words, links, contact details, and names like IRCC or Official.',
     yourTimeline: 'Your timeline',
