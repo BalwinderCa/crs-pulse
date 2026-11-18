@@ -17,7 +17,7 @@ import { useTabBarLayout } from '@/hooks/useTabBarLayout';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { CommunityTab } from '../components/CommunityTab';
-import { MyShareCard } from '@/features/community/components/MyShareCard';
+import { MyShareCard, ShareWithCommunityButton } from '@/features/community/components/MyShareCard';
 import { communityVisible } from '@/features/community/model';
 
 import { MILESTONE_META, MILESTONE_TYPES } from '../milestoneMeta';
@@ -467,11 +467,7 @@ export default function TimelineScreen() {
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={listStyle} showsVerticalScrollIndicator={false}>
-          {SHOW_COMMUNITY && (
-            <View style={s.shareCard}>
-              <MyShareCard />
-            </View>
-          )}
+          {SHOW_COMMUNITY && <MyShareCard />}
           {milestones.map((item) => (
             <View key={item.id} style={s.cardCol}>
               <MilestoneCard item={item} onEdit={() => setModalMilestone(item)} onDelete={() => remove(item.id)} />
@@ -487,6 +483,7 @@ export default function TimelineScreen() {
             <Ionicons name="add-circle-outline" size={18} color={accent} />
             <Text style={[s.bottomAddTxt, { color: accent }]}>{t('timeline.addMilestone')}</Text>
           </TouchableOpacity>
+          {SHOW_COMMUNITY && <ShareWithCommunityButton />}
         </ScrollView>
       )}
 
@@ -502,7 +499,6 @@ export default function TimelineScreen() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const s = StyleSheet.create({
-  shareCard: { marginBottom: spacing.md },
   safe: { flex: 1 },
 
   header:      { paddingHorizontal: spacing.base, borderBottomWidth: StyleSheet.hairlineWidth },
