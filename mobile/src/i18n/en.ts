@@ -176,6 +176,7 @@ const en = {
     back: 'Back to Community',
     backMine: 'Back to My timeline',
     missing: 'This timeline is no longer shared.',
+    postedByAdmin: 'Posted by admin',
     started: 'started {{month}}',
     updatedToday: 'updated today',
     updatedDaysAgo: 'updated {{n}}d ago',

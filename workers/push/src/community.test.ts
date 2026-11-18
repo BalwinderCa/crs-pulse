@@ -7,7 +7,7 @@ import { REPORT_HIDE_AT, aliasAllowed, cleanTimeline, handleCommunity, handleCom
 /** Just enough of D1 over node:sqlite, with the real migration applied. */
 function makeDb() {
   const db = new DatabaseSync(':memory:');
-  for (const f of ['0001_community.sql', '0002_community_moderation.sql']) {
+  for (const f of ['0001_community.sql', '0002_community_moderation.sql', '0003_community_by_admin.sql']) {
     db.exec(readFileSync(new URL(`../migrations/${f}`, import.meta.url), 'utf8'));
   }
   const prepare = (sql: string) => {
@@ -178,6 +178,8 @@ test('admin: list with hidden rows and report counts, filter, edit, dismiss, del
   assert.equal(created.status, 201);
   const id = created.body.id;
   assert.equal(created.body.stage, 4);
+  assert.equal(created.body.byAdmin, true);
+  assert.equal((await call(db, 'GET', `/community/${id}`)).body.byAdmin, true);
   assert.equal((await admin(db, 'POST', '/admin/community', timeline({ alias: 'IRCC' }))).status, 422);
 
   await call(db, 'POST', `/community/${id}/report`, { ip: '1.1.1.1', body: { reason: 'spam' } });

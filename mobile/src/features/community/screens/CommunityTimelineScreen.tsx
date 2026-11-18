@@ -113,6 +113,11 @@ export default function CommunityTimelineScreen() {
               <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
               <Text style={[s.sub, { color: c.textMuted }]}>{sub}</Text>
             </View>
+            {timeline.byAdmin && (
+              <View style={[s.chip, { backgroundColor: c.surfacePrimary }]}>
+                <Text style={[s.chipTxt, { color: c.textSecondary }]}>{t('community.postedByAdmin')}</Text>
+              </View>
+            )}
           </View>
           <View style={s.tiles}>
             <View style={[s.tile, { backgroundColor: nowTone?.tint ?? c.surfacePrimary }]}>
@@ -203,6 +208,8 @@ const s = StyleSheet.create({
   profile: { borderRadius: 20, padding: 18, gap: 14, marginBottom: spacing.xs },
   who: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   name: { fontSize: typography.xl, fontWeight: typography.bold },
+  chip: { alignSelf: 'flex-start', borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  chipTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
   sub: { fontSize: typography.sm, marginTop: 2 },
   tiles: { flexDirection: 'row', gap: spacing.sm },
   tile: { flex: 1, borderRadius: borderRadius.md, padding: spacing.md },

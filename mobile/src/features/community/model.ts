@@ -67,6 +67,8 @@ export type SharedTimeline = {
   aorMonth?: string;
   /** A preset avatar id (see BuddyAvatar); the initial shows when absent. */
   avatar?: string;
+  /** Added by CRS Pulse from the dashboard, not shared by its owner from the app. */
+  byAdmin?: boolean;
   isMine?: boolean;
 };
 

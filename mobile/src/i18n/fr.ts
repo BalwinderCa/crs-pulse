@@ -183,6 +183,7 @@ const fr: TranslationKeys = {
     back: 'Retour à Communauté',
     backMine: 'Retour à ma chronologie', // [REVIEW]
     missing: 'Cette chronologie n’est plus partagée.',
+    postedByAdmin: 'Publié par l’admin', // [REVIEW]
     started: 'commencé en {{month}}',
     updatedToday: 'mis à jour aujourd’hui',
     updatedDaysAgo: 'mis à jour il y a {{n}} j',

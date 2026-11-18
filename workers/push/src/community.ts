@@ -64,6 +64,7 @@ export type Timeline = { alias: string; program: string; aorMonth?: string; avat
 type Row = {
   id: string; alias: string; program: string; aor_month: string | null;
   steps: string; stage: number; last_day: number; updated_at: number; avatar: string | null;
+  by_admin?: number;
 };
 
 /** Checks a published timeline and keeps only the allowed fields. Returns an error string if it's invalid. */
@@ -119,6 +120,7 @@ const toTimeline = (r: Row, now: number) => {
   };
   if (r.aor_month) t.aorMonth = r.aor_month;
   if (r.avatar) t.avatar = r.avatar;
+  if (r.by_admin) t.byAdmin = true;
   return t;
 };
 
@@ -282,7 +284,7 @@ type AdminRow = Row & { hidden: number; reports: number };
 const toAdmin = (r: AdminRow) => ({
   id: r.id, alias: r.alias, avatar: r.avatar, program: r.program, aorMonth: r.aor_month,
   steps: JSON.parse(r.steps) as Step[], stage: r.stage, lastDay: r.last_day,
-  updatedAt: r.updated_at, hidden: !!r.hidden, reports: r.reports,
+  updatedAt: r.updated_at, hidden: !!r.hidden, reports: r.reports, byAdmin: !!r.by_admin,
 });
 
 const ADMIN_SELECT = `SELECT t.*, (SELECT COUNT(*) FROM community_reports r WHERE r.timeline_id = t.id) AS reports
@@ -334,8 +336,8 @@ export async function handleCommunityAdmin(
     // No device holds this row's key, so only the dashboard can change or delete it.
     const owner = await sha256(`admin:${crypto.randomUUID()}`);
     await db.prepare(
-      `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at, avatar)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO community_timelines (id, owner, alias, program, aor_month, steps, stage, last_day, updated_at, avatar, by_admin)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)`,
     ).bind(newId, owner, t.alias, t.program, t.aorMonth ?? null, JSON.stringify(t.steps), stageOf(t.steps),
       t.steps[t.steps.length - 1]!.day, Date.now(), t.avatar ?? null).run();
     return json(await adminGet(db, newId), 201);
