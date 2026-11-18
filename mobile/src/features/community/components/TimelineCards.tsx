@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { format, parseISO } from 'date-fns';
+import { enUS, fr } from 'date-fns/locale';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
@@ -63,10 +65,13 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
   );
 }
 
-/** One shared timeline as a card: avatar, name, a stage pill, and the day count. */
+/** One shared timeline as a card: avatar, name, a stage pill with the AOR month, and the day count. */
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const aor = timeline.aorMonth
+    ? t('community.aorIn', { month: format(parseISO(`${timeline.aorMonth}-01`), 'MMM yyyy', { locale: i18n.language?.startsWith('fr') ? fr : enUS }) })
+    : null;
   const tone = useStageTone();
   const now = currentStep(timeline);
   const alias = timeline.alias || t('community.anonymous');
@@ -77,11 +82,14 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
       <Avatar alias={alias} avatar={timeline.avatar} />
       <View style={s.mid}>
         <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-        {now && pill && (
-          <View style={[s.pill, { backgroundColor: pill.tint }]}>
-            <Text style={[s.pillTxt, { color: pill.ink }]} numberOfLines={1}>{t(MILESTONE_META[now.type].labelKey)}</Text>
-          </View>
-        )}
+        <View style={s.meta}>
+          {now && pill && (
+            <View style={[s.pill, { backgroundColor: pill.tint }]}>
+              <Text style={[s.pillTxt, { color: pill.ink }]} numberOfLines={1}>{t(MILESTONE_META[now.type].labelKey)}</Text>
+            </View>
+          )}
+          {aor && <Text style={[s.aor, { color: c.textMuted }]} numberOfLines={1}>{aor}</Text>}
+        </View>
       </View>
       {now && (
         <View style={s.right}>
@@ -99,7 +107,9 @@ const s = StyleSheet.create({
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   mid: { flex: 1, minWidth: 0, alignItems: 'flex-start' },
   name: { fontSize: typography.base, fontWeight: typography.semibold },
-  pill: { marginTop: 6, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, maxWidth: '100%' },
+  meta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 6, maxWidth: '100%' },
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, flexShrink: 1 },
+  aor: { fontSize: typography.xs, fontWeight: typography.medium, flexShrink: 0 },
   pillTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
   right: { alignItems: 'flex-end' },
   day: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
