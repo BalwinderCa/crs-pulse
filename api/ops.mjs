@@ -476,7 +476,7 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Anonymous"></label>'+
 '<label>Avatar id<input name="avatar" placeholder="e.g. b3201, empty for initial"></label></div>'+
 '<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
-'<label>AOR month<input name="aorMonth" placeholder="YYYY-MM"></label></div>'+
+'<label>AOR month<input name="aorMonth" type="month" min="2015-01" max="2035-12"></label></div>'+
 '<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
 '<label class="check" id="cm-hid-l"><input type="checkbox" name="hidden"> Hidden (not shown in the app)</label>'+
 '<div class="err" id="cm-ferr" role="alert"></div><div class="foot"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></dialog>';
