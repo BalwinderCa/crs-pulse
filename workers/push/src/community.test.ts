@@ -269,3 +269,21 @@ test('app shares keep an empty name as Anonymous (only admin timelines get a gen
   const row = await db.prepare('SELECT alias FROM community_timelines').first<{ alias: string }>();
   assert.equal(row!.alias, '');
 });
+
+test('admin list filters like the app: program, AOR month, stage, sort', async () => {
+  const db = makeDb();
+  const add = (over: Record<string, unknown>) => admin(db, 'POST', '/admin/community', timeline(over));
+  await add({ program: 'cec', aorMonth: '2026-03', steps: [{ type: 'ITA', day: 0 }, { type: 'AOR Received', day: 30 }] });
+  await add({ program: 'cec', aorMonth: '2026-04', steps: [{ type: 'AOR Received', day: 0 }, { type: 'Portal 1', day: 90 }] });
+  await add({ program: 'fsw', aorMonth: undefined, steps: [{ type: 'ITA', day: 0 }] });
+  const list = async (qs: string) => (await admin(db, 'GET', `/admin/community?${qs}`)).body;
+  assert.equal((await list('program=cec')).total, 2);
+  assert.equal((await list('aor=2026-03')).total, 1);
+  assert.equal((await list('aor=none')).total, 1);
+  assert.equal((await list('stage=decision')).total, 1);
+  assert.equal((await list('program=cec&stage=aor')).total, 1);
+  assert.equal((await list('program=nope')).total, 3); // unknown values are ignored
+  assert.deepEqual((await list('')).aorMonths, ['2026-04', '2026-03']);
+  assert.equal((await list('sort=longest')).items[0].lastDay, 90);
+  assert.equal((await list('sort=furthest')).items[0].stage, 5);
+});

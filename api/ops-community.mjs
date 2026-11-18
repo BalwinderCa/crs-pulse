@@ -2,7 +2,7 @@
 // /admin/community routes, which need SYNC_SECRET (ops-only, never shipped in the app).
 // The session cookie is SameSite=Strict, so another site can't drive these writes.
 //
-//   GET    /api/ops-community?q=&status=&offset=      list
+//   GET    /api/ops-community?q=&status=&offset=&program=&aor=&stage=&sort=   list
 //   GET    /api/ops-community?stats=1                 counts for the Community dashboard
 //   GET    /api/ops-community?random=1                a generated display name + avatar
 //   POST   /api/ops-community                         create
@@ -24,7 +24,7 @@ export function workerPath(method, query) {
     if (query.random) return method === 'GET' ? '/admin/community/random' : null;
     if (method === 'GET') {
       const qs = new URLSearchParams();
-      for (const k of ['q', 'status', 'offset']) if (query[k]) qs.set(k, String(query[k]));
+      for (const k of ['q', 'status', 'offset', 'program', 'aor', 'stage', 'sort']) if (query[k]) qs.set(k, String(query[k]));
       return `/admin/community?${qs}`;
     }
     return method === 'POST' ? '/admin/community' : null;

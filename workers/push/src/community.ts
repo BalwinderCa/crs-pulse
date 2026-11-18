@@ -345,12 +345,24 @@ export async function handleCommunityAdmin(
     if (status === 'visible') where.push('t.hidden = 0');
     if (status === 'hidden') where.push('t.hidden = 1');
     if (status === 'reported') where.push('EXISTS (SELECT 1 FROM community_reports r WHERE r.timeline_id = t.id)');
+    // The app's feed filters (program, AOR month, stage, sort); unknown values are ignored.
+    const program = url.searchParams.get('program');
+    const aor = url.searchParams.get('aor') ?? '';
+    const stage = STOPS.indexOf(url.searchParams.get('stage') as never);
+    if (PROGRAMS.includes(program as never)) { where.push('t.program = ?'); args.push(program); }
+    if (aor === 'none') where.push('t.aor_month IS NULL');
+    else if (MONTH_RE.test(aor)) { where.push('t.aor_month = ?'); args.push(aor); }
+    if (stage >= 0) { where.push('t.stage = ?'); args.push(stage); }
+    const sort = url.searchParams.get('sort');
+    const order = sort === 'longest' ? 't.last_day DESC, t.id' : sort === 'furthest' ? 't.stage DESC, t.last_day ASC, t.id' : 't.updated_at DESC, t.id';
     const w = where.length ? ` WHERE ${where.join(' AND ')}` : '';
-    const [{ results }, total] = await Promise.all([
-      db.prepare(`${ADMIN_SELECT}${w} ORDER BY t.updated_at DESC, t.id LIMIT ? OFFSET ?`).bind(...args, ADMIN_PAGE, offset).all<AdminRow>(),
+    const [{ results }, total, months] = await Promise.all([
+      db.prepare(`${ADMIN_SELECT}${w} ORDER BY ${order} LIMIT ? OFFSET ?`).bind(...args, ADMIN_PAGE, offset).all<AdminRow>(),
       db.prepare(`SELECT COUNT(*) AS n FROM community_timelines t${w}`).bind(...args).first<{ n: number }>(),
+      // For the AOR month filter's options.
+      db.prepare('SELECT DISTINCT aor_month AS m FROM community_timelines WHERE aor_month IS NOT NULL ORDER BY aor_month DESC').all<{ m: string }>(),
     ]);
-    return json({ items: results.map(toAdmin), total: total?.n ?? 0, offset, pageSize: ADMIN_PAGE });
+    return json({ items: results.map(toAdmin), total: total?.n ?? 0, offset, pageSize: ADMIN_PAGE, aorMonths: months.results.map((r) => r.m) });
   }
 
   if (!id && m === 'POST') {

@@ -127,7 +127,7 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 /* Community (CRUD) */
 .cm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .cm-bar input,.cm-bar select,.cm-f input,.cm-f select,.cm-f textarea{font:inherit;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink)}
-.cm-bar input{flex:1;min-width:180px}
+.cm-bar input{flex:1;min-width:180px}.cm-filters{margin-top:-4px}.cm-filters select{flex:1 1 150px;min-width:0}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--ink);white-space:nowrap}
 .btn:hover{background:var(--raise)}.btn.pri{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .btn.bad{color:var(--bad)}.btn:disabled{opacity:.5;cursor:default}
@@ -469,7 +469,7 @@ card('By stage','Furthest step reached',bars(d.byStage,CD_STAGE))+
 card('Report reasons',fmt(d.reportsTotal)+' reports in total',d.byReason.length?hbars(d.byReason.map(function(x){return {key:CD_REASON[x.key]||x.key,n:x.n}}),4,'reports'):none)+'</div>'+
 '<div style="margin-top:12px"><a class="btn pri" href="#community-timelines" style="text-decoration:none;display:inline-block">Manage timelines</a></div>';
 el.addEventListener('click',function(ev){var b=ev.target.closest('[data-cd-open]');if(!b)return;
-CM.q=b.dataset.cdOpen;CM.status='all';CM.offset=0;var old=document.getElementById('cm');if(old)old.remove();location.hash='#community-timelines'})}
+CM.q=b.dataset.cdOpen;CM.status='all';CM.offset=0;CM.f={program:'',aor:'',stage:'',sort:''};var old=document.getElementById('cm');if(old)old.remove();location.hash='#community-timelines'})}
 
 // ---- Community: list, create, edit, hide, delete, reports (via /api/ops-community) ----
 // Buddy avatars: an SVG copy of mobile/src/features/community/components/BuddyAvatar.tsx. Keep the part lists in step.
@@ -511,7 +511,11 @@ return '<span class="bd bd-l" style="width:'+size+'px;height:'+size+'px;font-siz
 var c=BD_COLORS[p[0]],fill=function(x){return x.replace(/"I"/g,'"'+BD_INK+'"').replace(/"C"/g,'"'+c+'"')};
 return '<svg class="bd" width="'+size+'" height="'+size+'" style="width:'+size+'px;height:'+size+'px" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
 '<g transform="translate(0 2)">'+fill(BD_EYES[p[1]]+BD_MOUTHS[p[2]]+BD_EXTRAS[p[4]])+'</g>'+fill(BD_HATS[p[3]])+'</svg>'}
-var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0};
+var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0,f:{program:'',aor:'',stage:'',sort:''}};
+// The app's feed filters. Stage values are the worker's STOPS; labels match CM_STAGES.
+var CM_PROGRAM_LABELS={cec:'CEC',fsw:'FSW',fst:'FST',pnp_ee:'PNP (Express Entry)',pnp:'PNP (base)',aip:'AIP',other:'Other'};
+var CM_STOPS=['ita','aor','bio','medical','ppr','decision'];
+var CM_SORTS=[['','Recently updated'],['longest','Longest waiting'],['furthest','Furthest along']];
 var CM_STAGES=['ITA','AOR','Biometrics','Medical','Passport','Decision'];
 var CM_PROGRAMS=['cec','fsw','fst','pnp_ee','pnp','aip','other'];
 function cmApi(method,qs,body){
@@ -530,7 +534,14 @@ function cmMount(){
 $('#meta').textContent='Shared timelines in Cloudflare D1 · changes show in the app straight away';
 $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="search" placeholder="Search by name or id" aria-label="Search">'+
 '<select id="cm-s" aria-label="Status"><option value="all">All</option><option value="visible">Visible</option><option value="hidden">Hidden</option><option value="reported">Reported</option></select>'+
-'<button class="btn pri" data-act="new">New timeline</button></div><div id="cm-err" class="err" role="alert"></div>'+
+'<button class="btn pri" data-act="new">New timeline</button></div>'+
+'<div class="cm-bar cm-filters" id="cm-filters">'+
+'<select data-f="program" aria-label="Program"><option value="">All programs</option>'+CM_PROGRAMS.map(function(p){return '<option value="'+p+'">'+CM_PROGRAM_LABELS[p]+'</option>'}).join('')+'</select>'+
+'<select data-f="aor" aria-label="AOR month"><option value="">Any AOR month</option></select>'+
+'<select data-f="stage" aria-label="Stage"><option value="">Any stage</option>'+CM_STOPS.map(function(v,i){return '<option value="'+v+'">'+CM_STAGES[i]+'</option>'}).join('')+'</select>'+
+'<select data-f="sort" aria-label="Sort">'+CM_SORTS.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>'}).join('')+'</select>'+
+'<button class="btn" data-act="clearf" id="cm-clearf" hidden>Clear filters</button></div>'+
+'<div id="cm-err" class="err" role="alert"></div>'+
 '<section class="card" id="cm-list"><div class="msg">Loading…</div></section></div>'+
 '<dialog id="cm-dlg" aria-labelledby="cm-dt"><h2 id="cm-dt">Edit timeline</h2><form class="cm-f" id="cm-form">'+
 '<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Generated if empty"></label>'+
@@ -547,16 +558,25 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 var q=document.getElementById('cm-q'),st=document.getElementById('cm-s');q.value=CM.q;st.value=CM.status;
 q.addEventListener('input',function(){clearTimeout(CM.timer);CM.timer=setTimeout(function(){CM.q=q.value.trim();CM.offset=0;cmLoad()},250)});
 st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()});
+var fb=document.getElementById('cm-filters');fb.querySelectorAll('select').forEach(function(s){s.value=CM.f[s.dataset.f]});
+fb.addEventListener('change',function(ev){var k=ev.target.dataset.f;if(!k)return;CM.f[k]=ev.target.value;CM.offset=0;cmLoad()});
 document.getElementById('cm').addEventListener('click',cmClick);
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
 mpInit();
 document.getElementById('cm-form').addEventListener('input',function(ev){if(ev.target.name==='alias'||ev.target.name==='avatar')cmPreview()});
 cmLoad()}
+function cmFiltered(){return !!(CM.f.program||CM.f.aor||CM.f.stage)}
+// AOR options come from the list response; the current choice stays even when nothing matches it any more.
+function cmAorOptions(months){var sel=document.querySelector('#cm-filters [data-f="aor"]');if(!sel)return;var cur=CM.f.aor,ms=months.slice();
+if(cur&&cur!=='none'&&ms.indexOf(cur)<0)ms.unshift(cur);
+sel.innerHTML='<option value="">Any AOR month</option>'+ms.map(function(m){var p=m.split('-');return '<option value="'+m+'">'+MP_NAMES[+p[1]-1]+' '+p[0]+'</option>'}).join('')+'<option value="none">No AOR month</option>';sel.value=cur;
+document.getElementById('cm-clearf').hidden=!cmFiltered()}
 function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
-return cmApi('GET',qs.toString()).then(function(d){CM.data=d;cmRender()}).catch(function(e){cmErr('Could not load: '+e.message)})}
+Object.keys(CM.f).forEach(function(k){if(CM.f[k])qs.set(k,CM.f[k])});
+return cmApi('GET',qs.toString()).then(function(d){CM.data=d;cmAorOptions(d.aorMonths||[]);cmRender()}).catch(function(e){cmErr('Could not load: '+e.message)})}
 function cmRender(){var d=CM.data,el=document.getElementById('cm-list');if(!el)return;
-if(!d.items.length){el.innerHTML='<div class="msg">'+(CM.q||CM.status!=='all'?'Nothing matches.':'No one has shared a timeline yet.')+'</div>';return}
+if(!d.items.length){el.innerHTML='<div class="msg">'+(CM.q||CM.status!=='all'||cmFiltered()?'Nothing matches.':'No one has shared a timeline yet.')+'</div>';return}
 var rows=d.items.map(function(t){var last=t.steps[t.steps.length-1];
 return '<tr data-id="'+t.id+'"><td><div class="who">'+buddySvg(t.avatar,t.alias||'Anonymous',32)+'<div><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+(t.avatar?' · '+esc(t.avatar):'')+'</small></div></div></td>'+
 '<td>'+esc(t.program.toUpperCase())+'</td><td>'+esc(t.aorMonth||'–')+'</td>'+
@@ -573,6 +593,7 @@ el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Sta
 function cmFind(id){return CM.data&&CM.data.items.find(function(t){return t.id===id})}
 function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabled)return;var act=b.dataset.act,tr=b.closest('tr'),id=tr&&tr.dataset.id,t=id&&cmFind(id);
 if(act==='new')return cmOpen(null);
+if(act==='clearf'){CM.f={program:'',aor:'',stage:'',sort:CM.f.sort};CM.offset=0;document.querySelectorAll('#cm-filters select').forEach(function(s){s.value=CM.f[s.dataset.f]});return cmLoad()}
 if(act==='prev'){CM.offset=Math.max(0,CM.offset-CM.data.pageSize);return cmLoad()}
 if(act==='next'){CM.offset+=CM.data.pageSize;return cmLoad()}
 if(act==='edit')return cmOpen(t);
