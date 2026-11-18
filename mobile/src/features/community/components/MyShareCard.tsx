@@ -14,6 +14,7 @@ import { programFromTypeId } from '../model';
 import { MY_TIMELINE_ID, useCommunity } from '../useCommunity';
 import { useProgramLabel } from './TimelineCards';
 import { ShareTimelineModal } from './ShareTimelineModal';
+import { BuddyAvatar, isBuddyId } from './BuddyAvatar';
 
 /**
  * The user's own accent "You" card: current step and day, with Share (or Edit
@@ -50,9 +51,13 @@ export function MyShareCard() {
         accessibilityRole="button"
       >
         <View style={s.top}>
-          <View style={[s.youDot, { backgroundColor: accent + '22' }]}>
-            <Text style={[s.youTxt, { color: accent }]}>{t('community.youShort')}</Text>
-          </View>
+          {isBuddyId(settings?.avatar) ? (
+            <BuddyAvatar id={settings.avatar} size={40} />
+          ) : (
+            <View style={[s.youDot, { backgroundColor: accent + '22' }]}>
+              <Text style={[s.youTxt, { color: accent }]}>{t('community.youShort')}</Text>
+            </View>
+          )}
           <View style={s.flex}>
             <Text style={[s.meTitle, { color: c.textPrimary }]} numberOfLines={1}>{myTitle}</Text>
             <Text style={[s.meSub, { color: c.textSecondary }]} numberOfLines={1}>{mySub}</Text>
