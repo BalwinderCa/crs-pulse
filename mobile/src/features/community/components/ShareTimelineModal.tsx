@@ -60,6 +60,7 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
     if (result === 'badName') { setNameError(true); return; }
     onClose();
     if (result === 'offline') Toast.show({ type: 'error', text1: t('community.shareFailed') });
+    if (result === 'invalid') Toast.show({ type: 'error', text1: t('community.shareInvalid') });
   };
 
   return (

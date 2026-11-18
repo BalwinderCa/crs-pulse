@@ -197,6 +197,7 @@ const fr: TranslationKeys = {
     report: 'Signaler',
     reported: 'Merci. Nous allons l’examiner.',
     shareFailed: 'Enregistré. Il sera partagé dès votre retour en ligne.', // [REVIEW]
+    shareInvalid: 'Partage impossible. Vérifiez les dates de vos étapes.', // [REVIEW]
     stopFailed: 'Impossible d’arrêter le partage. Vérifiez votre connexion et réessayez.', // [REVIEW]
     // [REVIEW]
     reportTitle: 'Pourquoi signalez-vous ceci ?',

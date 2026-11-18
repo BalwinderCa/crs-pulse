@@ -44,6 +44,16 @@ async function call(db: D1Database, method: string, path: string,
   return { status: res!.status, body: res!.status === 204 ? null : await res!.json() as any };
 }
 
+test('cleanTimeline strips invisible characters and refuses a future AOR month', () => {
+  const base = { program: 'cec', steps: [{ type: 'ITA', day: 0 }] };
+  const t = cleanTimeline({ ...base, alias: 'abc\u202Eevil\u200B' }) as { alias: string };
+  assert.equal(t.alias, 'abcevil');
+  assert.equal(cleanTimeline({ ...base, alias: 'I\u200BRCC' }), 'alias not allowed');
+  const now = new Date('2026-11-18T12:00:00Z');
+  assert.equal(cleanTimeline({ ...base, aorMonth: '2026-12' }, now), 'bad aorMonth');
+  assert.equal(typeof cleanTimeline({ ...base, aorMonth: '2026-11' }, now), 'object');
+});
+
 test('publish, read back, update in place, delete', async () => {
   const db = makeDb();
   const put = await call(db, 'PUT', '/community/me', { key: KEY_A, body: timeline() });

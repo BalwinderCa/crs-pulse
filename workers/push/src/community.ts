@@ -68,15 +68,17 @@ type Row = {
 };
 
 /** Checks a published timeline and keeps only the allowed fields. Returns an error string if it's invalid. */
-export function cleanTimeline(body: unknown): Timeline | string {
+export function cleanTimeline(body: unknown, now = new Date()): Timeline | string {
   if (!body || typeof body !== 'object') return 'body must be an object';
   const b = body as Record<string, unknown>;
-  const alias = typeof b.alias === 'string' ? b.alias.replace(/[\u0000-\u001f\u007f]/g, '').trim() : '';
+  // Also drops invisible characters (zero-width, bidi overrides) that can disguise or reverse a name.
+  const alias = typeof b.alias === 'string' ? b.alias.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u202a-\u202e\u2060-\u2069\ufeff]/g, '').trim() : '';
   if (alias.length > MAX_ALIAS) return `alias is longer than ${MAX_ALIAS}`;
   if (alias && !aliasAllowed(alias)) return 'alias not allowed';
   if (b.avatar !== undefined && (typeof b.avatar !== 'string' || !AVATAR_RE.test(b.avatar))) return 'bad avatar';
   if (!PROGRAMS.includes(b.program as never)) return 'unknown program';
-  if (b.aorMonth !== undefined && (typeof b.aorMonth !== 'string' || !MONTH_RE.test(b.aorMonth))) return 'bad aorMonth';
+  if (b.aorMonth !== undefined && (typeof b.aorMonth !== 'string' || !MONTH_RE.test(b.aorMonth)
+    || b.aorMonth > now.toISOString().slice(0, 7))) return 'bad aorMonth';
   if (!Array.isArray(b.steps) || b.steps.length === 0 || b.steps.length > MAX_STEPS) return 'steps must hold 1-40 items';
   const steps: Step[] = [];
   let prev = 0;

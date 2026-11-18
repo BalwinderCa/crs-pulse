@@ -20,7 +20,7 @@ export type ShareSettings = {
 };
 
 /** ok: shared. offline: saved here, sent later. badName: the server refused the name; nothing changed. */
-export type ShareResult = 'ok' | 'offline' | 'badName';
+export type ShareResult = 'ok' | 'offline' | 'badName' | 'invalid';
 
 type ShareStore = {
   settings: ShareSettings | null;
@@ -87,13 +87,15 @@ export const useShareStore = create<ShareStore>((set, get) => ({
       await sync(settings);
       return 'ok';
     } catch (e) {
-      if (!(e instanceof CommunityError && e.message === 'alias not allowed')) return 'offline';
-      // Put back what was there, so a refused name isn't retried on every launch.
+      // Any other 4xx (e.g. a year typo making the timeline span 10+ years) will be refused again, so it isn't "offline".
+      const refused = e instanceof CommunityError && e.status >= 400 && e.status < 500 && e.status !== 429;
+      if (!refused) return 'offline';
+      // Put back what was there, so a refused share isn't retried on every launch.
       set({ settings: previous });
       await (previous
         ? AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(previous))
         : AsyncStorage.removeItem(STORAGE_KEYS.COMMUNITY_SHARE)).catch(() => {});
-      return 'badName';
+      return e.message === 'alias not allowed' ? 'badName' : 'invalid';
     }
   },
   stop: async () => {

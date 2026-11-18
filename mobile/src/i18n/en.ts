@@ -190,6 +190,7 @@ const en = {
     report: 'Report',
     reported: 'Thanks. We’ll review it.',
     shareFailed: 'Saved. It will be shared once you’re back online.',
+    shareInvalid: 'Couldn’t share. Check your milestone dates.',
     stopFailed: 'Couldn’t stop sharing. Check your connection and try again.',
     reportTitle: 'Why are you reporting this?',
     reportReasons: { spam: 'Spam or advertising', offensive: 'Offensive name', misleading: 'Fake or misleading timeline', other: 'Something else' },

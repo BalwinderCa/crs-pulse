@@ -83,6 +83,22 @@ describe('community api (server)', () => {
     await expect(useShareStore.getState().share({ alias: 'Maple', program: 'cec', showMonths: false })).resolves.toBe('offline');
     expect(useShareStore.getState().settings?.alias).toBe('Maple');
   });
+
+  it('a timeline the server refuses is not reported as offline or kept for retry', async () => {
+    useShareStore.setState({ settings: null, loaded: true });
+    // A year typo: 2016 instead of 2026 makes the span over 3,650 days.
+    useTimelineStore.setState({ milestones: [
+      { id: '1', type: 'ITA', date: '2016-01-05', note: '' }, { id: '2', type: 'AOR Received', date: '2026-02-01', note: '' },
+    ] });
+    useShareStore.setState({ settings: null, loaded: true });
+    fetchMock.mockReturnValueOnce(reply(422, { message: 'bad step day' }));
+    await expect(useShareStore.getState().share({ alias: 'Maple', program: 'cec', showMonths: false })).resolves.toBe('invalid');
+    expect(useShareStore.getState().settings).toBeNull();
+    expect(await AsyncStorage.getItem(STORAGE_KEYS.COMMUNITY_SHARE)).toBeNull();
+
+    fetchMock.mockReturnValueOnce(reply(429, { message: 'Too many requests' }));
+    await expect(useShareStore.getState().share({ alias: 'Maple', program: 'cec', showMonths: false })).resolves.toBe('offline');
+  });
 });
 
 describe('removing every milestone', () => {
