@@ -221,7 +221,7 @@ const fr: TranslationKeys = {
     shareWithCommunity: 'Partager avec la communauté', // [REVIEW]
     peopleSharing_one: '{{count}} personne partage',
     peopleSharing_other: '{{count}} personnes partagent',
-    days: 'jours',
+    days: 'jours pour y arriver', // [REVIEW]
     typical: 'habituel',
     sharedAsCap: 'Partagée sous {{name}}',
     stops: { ita: 'ITA', aor: 'AR', bio: 'Biométrie', medical: 'Médical', ppr: 'Passeport', decision: 'Décision' },
