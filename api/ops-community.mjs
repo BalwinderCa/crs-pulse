@@ -3,6 +3,7 @@
 // The session cookie is SameSite=Strict, so another site can't drive these writes.
 //
 //   GET    /api/ops-community?q=&status=&offset=      list
+//   GET    /api/ops-community?stats=1                 counts for the Community dashboard
 //   POST   /api/ops-community                         create
 //   PATCH  /api/ops-community?id=<id>                 edit / hide / unhide
 //   DELETE /api/ops-community?id=<id>                 delete
@@ -18,6 +19,7 @@ export function workerPath(method, query) {
   const id = query.id;
   if (id !== undefined && !ID_RE.test(String(id))) return null;
   if (!id) {
+    if (query.stats) return method === 'GET' ? '/admin/community/stats' : null;
     if (method === 'GET') {
       const qs = new URLSearchParams();
       for (const k of ['q', 'status', 'offset']) if (query[k]) qs.set(k, String(query[k]));

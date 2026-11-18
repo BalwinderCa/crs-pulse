@@ -204,3 +204,30 @@ test('admin: list with hidden rows and report counts, filter, edit, dismiss, del
   assert.equal((await admin(db, 'GET', '/admin/community')).body.total, 0);
   assert.equal((await admin(db, 'PATCH', `/admin/community/${id}`, { hidden: false })).status, 404);
 });
+
+test('admin stats: totals, breakdowns and the most-reported first', async () => {
+  const db = makeDb();
+  const empty = await admin(db, 'GET', '/admin/community/stats');
+  assert.equal(empty.body.total, 0);
+  assert.deepEqual(empty.body.review, []);
+
+  const a = (await admin(db, 'POST', '/admin/community', timeline({ alias: 'A' }))).body.id;
+  await admin(db, 'POST', '/admin/community', timeline({ alias: 'B', program: 'fsw', steps: [{ type: 'ITA', day: 0 }] }));
+  const c = (await admin(db, 'POST', '/admin/community', timeline({ alias: 'C' }))).body.id;
+  await admin(db, 'PATCH', `/admin/community/${c}`, { hidden: true });
+  for (const ip of ['1', '2']) await call(db, 'POST', `/community/${a}/report`, { ip, body: { reason: 'spam' } });
+  await call(db, 'POST', `/community/${c}/report`, { ip: '1', body: { reason: 'offensive' } });
+
+  const st = (await admin(db, 'GET', '/admin/community/stats')).body;
+  assert.equal(st.total, 3);
+  assert.equal(st.hidden, 1);
+  assert.equal(st.visible, 2);
+  assert.equal(st.active7, 3);
+  assert.equal(st.reported, 2);
+  assert.equal(st.reportsTotal, 3);
+  assert.equal(st.reports7, 3);
+  assert.deepEqual(st.byProgram, [{ key: 'cec', n: 2 }, { key: 'fsw', n: 1 }]);
+  assert.deepEqual(st.byStage, [{ key: 'ita', n: 1 }, { key: 'ppr', n: 2 }]);
+  assert.deepEqual(st.byReason, [{ key: 'spam', n: 2 }, { key: 'offensive', n: 1 }]);
+  assert.deepEqual(st.review.map((r: any) => r.alias), ['A', 'C']);
+});

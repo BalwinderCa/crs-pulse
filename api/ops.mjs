@@ -116,6 +116,13 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 .side-foot{margin:0;flex-direction:row}.side-foot .navi span,.side-foot #forget{display:none}
 .panel{margin:0;border-radius:0;box-shadow:none}.top{padding:12px 16px}.main{padding:16px 16px 40px}}
 
+/* Sidebar group (Community: Dashboard, Timelines) */
+.navgroup summary{list-style:none;cursor:pointer}.navgroup summary::-webkit-details-marker{display:none}
+.navgroup .caret{margin-left:auto;color:var(--ink3);font-size:11px;transition:transform .15s}
+.navgroup:not([open]) .caret{transform:rotate(-90deg)}
+.navi.sub{padding-left:36px}
+@media (max-width:760px){.navgroup{display:contents}.navgroup summary{display:none}.navi.sub{padding-left:10px}}
+
 /* Community (CRUD) */
 .cm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .cm-bar input,.cm-bar select,.cm-f input,.cm-f select,.cm-f textarea{font:inherit;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink)}
@@ -202,7 +209,9 @@ const LOGIN_CODE = `<main class="login"><div class="card">${LOGIN_HEAD('This dev
 const DASH = `<div class="shell"><aside class="side"><div class="brand">${MARK}<span>Pulse HQ<small>CRS Pulse</small></span></div>
 <nav aria-label="Dashboards"><a class="navi" href="#posthog" data-view="posthog">${icon('users')}App usage<small>PostHog</small></a>
 <a class="navi" href="#admob" data-view="admob">${icon('dollar')}Revenue<small>AdMob</small></a>
-<a class="navi" href="#community" data-view="community">${icon('chat')}Community<small>D1</small></a></nav>
+<details class="navgroup" open><summary class="navi">${icon('chat')}Community<span class="caret" aria-hidden="true">▾</span></summary>
+<a class="navi sub" href="#community" data-view="cdash">Dashboard</a>
+<a class="navi sub" href="#community-timelines" data-view="community">Timelines<small>D1</small></a></details></nav>
 <div class="side-foot"><button class="navi" id="forget" title="Ask for the passphrase again next time on this browser">${icon('key')}<span>Forget this device</span></button>
 <button class="navi" id="out">${icon('logout')}<span>Sign out</span></button></div></aside>
 <div class="panel"><div class="top"><h1 id="title">App usage</h1>
@@ -400,11 +409,12 @@ card('Days active in the week','How many of the last 7 days each user opened the
 views.admob={title:'Revenue',meta:'AdMob · CRS Pulse apps only · estimated'+(d.admob?' · '+d.admob.currency+' · days in '+d.admob.timeZone:'')+' · '+upd,html:admobSection(d.admob,d.admobError,s.users_7)};
 show();}
 const views={};let statsErr='';
-const current=()=>({'#admob':'admob','#community':'community'})[location.hash]||'posthog';
+const current=()=>({'#admob':'admob','#community':'cdash','#community-timelines':'community'})[location.hash]||'posthog';
 function show(){const k=current(),v=views[k];
 document.querySelectorAll('.side nav a').forEach(a=>a.dataset.view===k?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'));
 // Community has its own data and controls (COMMUNITY_JS); mount it once, so a stats refresh doesn't wipe an edit.
-if(k==='community'){$('#title').textContent='Community';document.title='Community · Pulse HQ';if(!document.getElementById('cm'))setTimeout(cmMount);return}
+if(k==='community'){$('#title').textContent='Community · Timelines';document.title='Timelines · Pulse HQ';if(!document.getElementById('cm'))setTimeout(cmMount);return}
+if(k==='cdash'){$('#title').textContent='Community';document.title='Community · Pulse HQ';if(!document.getElementById('cd'))setTimeout(cdMount);return}
 $('#title').textContent=v?v.title:({admob:'Revenue'})[k]||'App usage';document.title=(v?v.title:'Pulse HQ')+' · Pulse HQ';
 if(!v){$('#meta').textContent='';$('#app').innerHTML='<div class="msg">'+esc(statsErr||'Loading…')+'</div>';return}
 if(v){$('#meta').textContent=v.meta;$('#app').innerHTML=v.html;
@@ -420,6 +430,31 @@ if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);rende
 // NB: same rules as DASH_JS (it's appended to it): no backticks, no dollar-brace, no backslashes.
 // Functions and var only, so show() can call cmMount before this part has run.
 const COMMUNITY_JS = `
+// ---- Community dashboard: counts, breakdowns, most-reported (via /api/ops-community?stats=1) ----
+var CD_STAGE={none:'No steps',ita:'ITA',aor:'AOR',bio:'Biometrics',medical:'Medical',ppr:'Passport',decision:'Decision'};
+var CD_REASON={spam:'Spam or advertising',offensive:'Offensive name',misleading:'Fake or misleading',other:'Something else'};
+function cdMount(){$('#meta').textContent='Cloudflare D1 · live';$('#app').innerHTML='<div id="cd"><div class="msg">Loading…</div></div>';
+cmApi('GET','stats=1').then(cdRender).catch(function(e){var el=document.getElementById('cd');if(el)el.innerHTML='<div class="msg">Could not load Community stats: '+esc(e.message)+'</div>'})}
+function cdRender(d){var el=document.getElementById('cd');if(!el)return;
+var pct=function(a,b){return b?Math.round(a/b*100)+'%':'–'};
+var none='<div class="msg">Nothing yet.</div>';
+var bars=function(list,map){return list.length?hbars(list.map(function(x){return {key:map?(map[x.key]||x.key):String(x.key).toUpperCase(),n:x.n}}),8,'timelines'):none};
+var review=d.review.length?'<table><thead><tr><th>Name</th><th>Program</th><th class="num">Reports</th><th>Status</th><th></th></tr></thead><tbody>'+
+d.review.map(function(t){return '<tr><td><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+'</small></td><td>'+esc(t.program.toUpperCase())+'</td><td class="num">'+t.reports+'</td><td>'+
+(t.hidden?'<span class="pill hid">Hidden</span>':'<span class="pill">Visible</span>')+'</td><td><div class="acts"><button class="btn" data-cd-open="'+esc(t.id)+'">Open</button></div></td></tr>'}).join('')+'</tbody></table>'
+:'<div class="msg">No reports. Nothing to review.</div>';
+el.innerHTML='<div class="kpis">'+kpi('chat','Shared timelines',fmt(d.total),'<span class="d">'+fmt(d.active7)+' updated in the last 7 days</span>')+
+kpi('users','Visible in the app',fmt(d.visible),'<span class="d">'+pct(d.visible,d.total)+' of all</span>')+
+kpi('key','Hidden',fmt(d.hidden),'<span class="d">by reports or by you</span>')+
+kpi('target','Reported',fmt(d.reported),'<span class="d">'+fmt(d.reports7)+' new reports in 7 days</span>')+'</div>'+
+'<div class="grid">'+card('Needs review','Most-reported timelines first · 3 reports hide one automatically',review,'wide')+'</div>'+
+'<div class="grid">'+card('By program','All shared timelines',bars(d.byProgram))+
+card('By stage','Furthest step reached',bars(d.byStage,CD_STAGE))+
+card('Report reasons',fmt(d.reportsTotal)+' reports in total',d.byReason.length?hbars(d.byReason.map(function(x){return {key:CD_REASON[x.key]||x.key,n:x.n}}),4,'reports'):none)+'</div>'+
+'<div style="margin-top:12px"><a class="btn pri" href="#community-timelines" style="text-decoration:none;display:inline-block">Manage timelines</a></div>';
+el.addEventListener('click',function(ev){var b=ev.target.closest('[data-cd-open]');if(!b)return;
+CM.q=b.dataset.cdOpen;CM.status='all';CM.offset=0;var old=document.getElementById('cm');if(old)old.remove();location.hash='#community-timelines'})}
+
 // ---- Community: list, create, edit, hide, delete, reports (via /api/ops-community) ----
 var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0};
 var CM_STAGES=['ITA','AOR','Biometrics','Medical','Passport','Decision'];

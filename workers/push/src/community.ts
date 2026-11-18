@@ -267,6 +267,7 @@ export async function handleCommunity(
  * Ops CRUD for the dashboard (admin.crspulse.com), behind SYNC_SECRET (never in the app):
  *
  *   GET    /admin/community?q=&status=all|visible|hidden|reported&offset=  → { items, total }
+ *   GET    /admin/community/stats      counts for the dashboard's Community overview
  *   POST   /admin/community            { alias, avatar?, program, aorMonth?, steps }   → item
  *   PATCH  /admin/community/:id        any of those fields (null clears avatar/aorMonth), hidden → item
  *   DELETE /admin/community/:id        the timeline and its reports
@@ -303,6 +304,8 @@ export async function handleCommunityAdmin(
   if (!db) return json({ message: 'Service unavailable' }, 503);
   const [id, sub, extra] = url.pathname.slice('/admin/community/'.length).split('/');
   const m = request.method;
+
+  if (id === 'stats' && sub === undefined && m === 'GET') return json(await adminStats(db));
 
   if (!id && m === 'GET') {
     const q = (url.searchParams.get('q') ?? '').trim();
@@ -391,4 +394,33 @@ export async function handleCommunityAdmin(
   }
 
   return json({ message: 'Not found' }, 404);
+}
+
+const WEEK_MS = 7 * DAY_MS;
+
+/** Counts for the dashboard: totals, activity, breakdowns, and the most-reported timelines. */
+export async function adminStats(db: D1Database, now = Date.now()) {
+  const since = now - WEEK_MS;
+  const [totals, reports7, programs, stages, reasons, review] = await Promise.all([
+    db.prepare(`SELECT COUNT(*) AS total, COALESCE(SUM(hidden), 0) AS hidden,
+        COALESCE(SUM(CASE WHEN updated_at >= ? THEN 1 ELSE 0 END), 0) AS active7,
+        COALESCE(SUM(CASE WHEN EXISTS (SELECT 1 FROM community_reports r WHERE r.timeline_id = t.id) THEN 1 ELSE 0 END), 0) AS reported,
+        (SELECT COUNT(*) FROM community_reports) AS reportsTotal
+      FROM community_timelines t`).bind(since).first<Record<string, number>>(),
+    db.prepare('SELECT COUNT(*) AS n FROM community_reports WHERE created_at >= ?').bind(since).first<{ n: number }>(),
+    db.prepare('SELECT program AS k, COUNT(*) AS n FROM community_timelines GROUP BY program ORDER BY n DESC').bind().all<{ k: string; n: number }>(),
+    db.prepare('SELECT stage AS k, COUNT(*) AS n FROM community_timelines GROUP BY stage ORDER BY stage').bind().all<{ k: number; n: number }>(),
+    db.prepare('SELECT reason AS k, COUNT(*) AS n FROM community_reports GROUP BY reason ORDER BY n DESC').bind().all<{ k: string; n: number }>(),
+    db.prepare(`${ADMIN_SELECT} WHERE EXISTS (SELECT 1 FROM community_reports r WHERE r.timeline_id = t.id)
+      ORDER BY reports DESC, t.updated_at DESC LIMIT 5`).bind().all<AdminRow>(),
+  ]);
+  const t = totals ?? {};
+  return {
+    total: t.total ?? 0, hidden: t.hidden ?? 0, visible: (t.total ?? 0) - (t.hidden ?? 0),
+    active7: t.active7 ?? 0, reported: t.reported ?? 0, reportsTotal: t.reportsTotal ?? 0, reports7: reports7?.n ?? 0,
+    byProgram: programs.results.map((r) => ({ key: r.k, n: r.n })),
+    byStage: stages.results.map((r) => ({ key: STOPS[r.k] ?? 'none', n: r.n })),
+    byReason: reasons.results.map((r) => ({ key: r.k, n: r.n })),
+    review: review.results.map(toAdmin),
+  };
 }
