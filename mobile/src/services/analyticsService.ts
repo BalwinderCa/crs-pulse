@@ -82,6 +82,8 @@ type EventProperties = {
   review_requested: { trigger: ReviewTrigger };
   /** "I'm interested" on the Timeline Community tab (waitlist for shared timelines). Once per install. */
   community_interest: undefined;
+  /** A Draws row was tapped and the IRCC rounds page opened (fires only once the browser opens). Public draw data only. */
+  draw_opened: { draw_number: number; category: string };
 };
 
 export type AnalyticsEvent = keyof EventProperties;
