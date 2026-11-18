@@ -79,22 +79,21 @@ export const useShareStore = create<ShareStore>((set, get) => ({
     }
   },
   share: async (s) => {
-    const previous = get().settings;
-    const settings: ShareSettings = { ...s, sharedAt: previous?.sharedAt ?? new Date().toISOString() };
-    set({ settings });
-    await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(settings)).catch(() => {});
+    const settings: ShareSettings = { ...s, sharedAt: get().settings?.sharedAt ?? new Date().toISOString() };
+    const keep = async () => {
+      set({ settings });
+      await AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(settings)).catch(() => {});
+    };
+    // Settings change only once the server has answered: swapping them early swaps the
+    // Share button (which holds the form) for the share card, and a refused name came back blank.
     try {
       await sync(settings);
+      await keep();
       return 'ok';
     } catch (e) {
       // Any other 4xx (e.g. a year typo making the timeline span 10+ years) will be refused again, so it isn't "offline".
       const refused = e instanceof CommunityError && e.status >= 400 && e.status < 500 && e.status !== 429;
-      if (!refused) return 'offline';
-      // Put back what was there, so a refused share isn't retried on every launch.
-      set({ settings: previous });
-      await (previous
-        ? AsyncStorage.setItem(STORAGE_KEYS.COMMUNITY_SHARE, JSON.stringify(previous))
-        : AsyncStorage.removeItem(STORAGE_KEYS.COMMUNITY_SHARE)).catch(() => {});
+      if (!refused) { await keep(); return 'offline'; } // saved; load() retries on the next launch
       return e.message === 'alias not allowed' ? 'badName' : 'invalid';
     }
   },
