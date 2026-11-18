@@ -73,7 +73,7 @@ const fr: TranslationKeys = {
     trackApplication: 'Suivre votre demande',
     appliedToIrcc: 'Demande soumise à l\'IRCC? Consultez votre date de décision estimée',
     applicationTimeline: 'Chronologie de la demande',
-    trackItaAor: 'Suivez l\'ITA, l\'ARD, la biométrie et plus',
+    trackItaAor: 'Suivez l\'ITA, l\'AR, la biométrie et plus',
     lastMilestone: 'Dernier jalon · {{rel}}',
     recentDraws: 'Tirages récents',
     lastDraw: 'Dernier tirage',
@@ -179,16 +179,16 @@ const fr: TranslationKeys = {
   },
 
   community: {
-    // [REVIEW] Community timelines
-    back: 'Retour à Communauté',
-    backMine: 'Retour à ma chronologie', // [REVIEW]
+    // Community timelines
+    back: 'Retour à la communauté',
+    backMine: 'Retour à ma chronologie',
     missing: 'Cette chronologie n’est plus partagée.',
-    postedByAdmin: 'Publié par l’admin', // [REVIEW]
+    postedByAdmin: 'Publié par l’admin',
     started: 'commencé en {{month}}',
     updatedToday: 'mis à jour aujourd’hui',
     updatedDaysAgo: 'mis à jour il y a {{n}} j',
     aboutDays: '~{{n}} jours',
-    toTypicalDecision: 'avant une décision habituelle',
+    toTypicalDecision: 'avant une décision typique',
     stepsLogged: 'étapes enregistrées',
     start: 'Début',
     comparedWithYou: 'Comparé à vous',
@@ -196,10 +196,10 @@ const fr: TranslationKeys = {
     editSharing: 'Modifier le partage',
     report: 'Signaler',
     reported: 'Merci. Nous allons l’examiner.',
-    shareFailed: 'Enregistré. Il sera partagé dès votre retour en ligne.', // [REVIEW]
-    shareInvalid: 'Partage impossible. Vérifiez les dates de vos étapes.', // [REVIEW]
-    stopFailed: 'Impossible d’arrêter le partage. Vérifiez votre connexion et réessayez.', // [REVIEW]
-    // [REVIEW]
+    shareFailed: 'Enregistré. Votre chronologie sera partagée dès votre retour en ligne.',
+    shareInvalid: 'Partage impossible. Vérifiez les dates de vos étapes.',
+    stopFailed: 'Impossible d’arrêter le partage. Vérifiez votre connexion et réessayez.',
+   
     reportTitle: 'Pourquoi signalez-vous ceci ?',
     reportReasons: { spam: 'Spam ou publicité', offensive: 'Nom offensant', misleading: 'Chronologie fausse ou trompeuse', other: 'Autre chose' },
     reportFailed: 'Impossible d’envoyer le signalement. Vérifiez votre connexion et réessayez.',
@@ -211,16 +211,16 @@ const fr: TranslationKeys = {
     avatarShuffle: 'Mélanger',
     avatarInitial: 'Aucun avatar',
     avatarN: 'Avatar {{n}}',
-    preview: 'Aperçu', // [REVIEW]
-    previewHint: 'Montre votre chronologie telle que les autres la voient', // [REVIEW]
-    avatarHint: '{{shown}} sur {{total}} affichés. Touchez Mélanger pour en voir d’autres.', // [REVIEW]
+    preview: 'Aperçu',
+    previewHint: 'Montre votre chronologie telle que les autres la voient',
+    avatarHint: '{{shown}} sur {{total}} affichés. Touchez Mélanger pour en voir d’autres.',
     nameNotAllowed: 'Ce nom ne peut pas être utilisé. Évitez les mots offensants, les liens, les coordonnées et les noms comme IRCC ou Officiel.',
     yourTimeline: 'Votre chronologie',
     addMilestonesFirst: 'Ajoutez des étapes dans Ma chronologie pour partager',
     notShared: 'pas encore partagée',
     youShort: 'Vous',
     share: 'Partager',
-    shareWithCommunity: 'Partager avec la communauté', // [REVIEW]
+    shareWithCommunity: 'Partager avec la communauté',
     peopleSharing_one: '{{count}} personne partage',
     peopleSharing_other: '{{count}} personnes partagent',
     sharedAsCap: 'Partagée sous {{name}}',
@@ -228,23 +228,23 @@ const fr: TranslationKeys = {
     programOther: 'Autre',
     anonymous: 'Candidat anonyme',
     dayN: 'Jour {{n}}',
-    stageOf: 'Étape {{n}} sur {{total}}', // [REVIEW]
+    stageOf: 'Étape {{n}} sur {{total}}',
     plusDays: '+{{n}} jours',
     edit: 'Modifier',
-    filterProgram: 'Programme', // [REVIEW]
-    filterAorMonth: 'Mois de l’AR', // [REVIEW]
-    filterStage: 'Étape', // [REVIEW]
-    filterSort: 'Trier par', // [REVIEW]
-    any: 'Tous', // [REVIEW]
-    myMonth: 'Mon mois', // [REVIEW]
-    aorIn: 'AR {{month}}', // [REVIEW]
-    sortRecent: 'Mis à jour récemment', // [REVIEW]
-    sortLongest: 'Le plus de jours depuis le début', // [REVIEW]
-    sortFurthest: 'Les plus avancés', // [REVIEW]
-    clearFilters: 'Effacer', // [REVIEW]
-    emptyFiltered: 'Aucun parcours ne correspond à ces filtres.', // [REVIEW]
-    loadError: 'Impossible de charger les parcours.', // [REVIEW]
-    retry: 'Réessayer', // [REVIEW]
+    filterProgram: 'Programme',
+    filterAorMonth: 'Mois de l’AR',
+    filterStage: 'Étape',
+    filterSort: 'Trier par',
+    any: 'Tous',
+    myMonth: 'Mon mois',
+    aorIn: 'AR {{month}}',
+    sortRecent: 'Mis à jour récemment',
+    sortLongest: 'Attente la plus longue',
+    sortFurthest: 'Les plus avancés',
+    clearFilters: 'Effacer',
+    emptyFiltered: 'Aucune chronologie ne correspond à ces filtres.',
+    loadError: 'Impossible de charger les chronologies.',
+    retry: 'Réessayer',
     filterAll: 'Tous',
     empty: 'Aucune chronologie partagée pour ce programme pour l’instant.',
     shareTitle: 'Partager ma chronologie',
@@ -256,9 +256,9 @@ const fr: TranslationKeys = {
     aliasHint: 'Facultatif. Laissez vide pour rester anonyme, et n’utilisez pas votre vrai nom.',
     programLabel: 'Programme',
     monthsLabel: 'Afficher le mois et l’année',
-    monthsHint: 'Désactivé : seuls les jours depuis votre première étape et le mois de votre AR sont affichés.', // [REVIEW]
+    monthsHint: 'Désactivé : seuls les jours depuis votre première étape et le mois de votre AR sont affichés.',
     sharedLabel: 'Ce qui est partagé',
-    sharedYes: 'Vos types d’étapes, le nombre de jours entre elles et le mois de votre AR (jamais le jour), mis à jour quand vous en ajoutez', // [REVIEW]
+    sharedYes: 'Vos types d’étapes, le nombre de jours entre elles et le mois de votre AR (jamais le jour), mis à jour quand vous en ajoutez',
     sharedNo: 'Jamais partagé : notes, étapes personnalisées, dates exactes, votre profil ou score CRS',
     noMilestones: 'Ajoutez d’abord au moins une étape dans Ma chronologie. Les étapes futures ne sont pas partagées.',
     stopSharing: 'Arrêter le partage',
@@ -278,7 +278,7 @@ const fr: TranslationKeys = {
     communityJoined: 'Vous êtes sur la liste. Merci !',
     communityFoot: 'Ce bouton nous indique votre intérêt. Rien de votre propre chronologie n’est envoyé.',
     noMilestonesYet: 'Aucun jalon pour l\'instant',
-    noMilestonesDesc: 'Suivez votre parcours d\'immigration — enregistrez les dates importantes comme votre ITA, ARD, biométrie, visite médicale et demande de passeport.',
+    noMilestonesDesc: 'Suivez votre parcours d\'immigration — enregistrez les dates importantes comme votre ITA, AR, biométrie, visite médicale et demande de passeport.',
     forExample: 'PAR EXEMPLE',
     addFirstMilestone: 'Ajoutez votre premier jalon',
     addMilestone: 'Ajouter un jalon',
@@ -1008,7 +1008,7 @@ const fr: TranslationKeys = {
   milestoneTypes: {
     ita: 'ITA',
     applicationSubmitted: 'Demande soumise',
-    aorReceived: 'ARD reçue',
+    aorReceived: 'AR reçu',
     biometricsRequested: 'Biométrie demandée',
     biometricsCompleted: 'Biométrie complétée',
     medicalRequested: 'Médical demandé',
