@@ -103,8 +103,8 @@ export default function CommunityTimelineScreen() {
   const sub = [
     programLabel(timeline.program),
     view.firstMonth ? t('community.started', { month: format(parseISO(`${view.firstMonth}-01`), 'MMMM yyyy', { locale }) }) : null,
-    timeline.updatedDaysAgo === 0 ? t('community.updatedToday') : t('community.updatedDaysAgo', { n: timeline.updatedDaysAgo }),
   ].filter(Boolean).join(' · ');
+  const updated = timeline.updatedDaysAgo === 0 ? t('community.updatedToday') : t('community.updatedDaysAgo', { n: timeline.updatedDaysAgo });
   const nowTone = view.now ? tone(view.now.type) : undefined;
 
   return (
@@ -112,41 +112,46 @@ export default function CommunityTimelineScreen() {
       {back}
       <ScrollView contentContainerStyle={[s.body, contentFrameStyle, { paddingBottom: insets.bottom + spacing['2xl'] }]}
         showsVerticalScrollIndicator={false}>
-        {/* Profile card */}
+        {/* Profile card: who, then where they are now */}
         <View style={[s.profile, { backgroundColor: c.surfaceCard }]}>
           <View style={s.who}>
-            <Avatar alias={alias} avatar={timeline.avatar} size={52} />
+            <Avatar alias={alias} avatar={timeline.avatar} size={56} />
             <View style={s.flex}>
               <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-              <Text style={[s.sub, { color: c.textMuted }]}>{sub}</Text>
-            </View>
-            {timeline.byAdmin && (
-              <View style={[s.chip, { backgroundColor: c.surfacePrimary }]}>
-                <Text style={[s.chipTxt, { color: c.textSecondary }]}>{t('community.postedByAdmin')}</Text>
+              <Text style={[s.sub, { color: c.textSecondary }]} numberOfLines={1}>{sub}</Text>
+              <View style={s.metaRow}>
+                <Text style={[s.updated, { color: c.textMuted }]}>{updated}</Text>
+                {timeline.byAdmin && (
+                  <View style={[s.chip, { backgroundColor: c.surfacePrimary }]}>
+                    <Text style={[s.chipTxt, { color: c.textSecondary }]}>{t('community.postedByAdmin')}</Text>
+                  </View>
+                )}
               </View>
-            )}
-          </View>
-          <View style={s.tiles}>
-            <View style={[s.tile, { backgroundColor: nowTone?.tint ?? c.surfacePrimary }]}>
-              <Text style={[s.tileBig, { color: nowTone?.ink ?? c.textPrimary }]}>{t('community.dayN', { n: view.now?.day ?? 0 })}</Text>
-              <Text style={[s.tileSub, { color: nowTone?.ink ?? c.textMuted }]} numberOfLines={1}>
-                {view.now ? t(MILESTONE_META[view.now.type].labelKey) : ''}
-              </Text>
             </View>
-            <View style={[s.tile, { backgroundColor: c.surfacePrimary }]}>
-              {view.toDecision !== undefined && view.toDecision > 0 ? (
-                <>
-                  <Text style={[s.tileBig, { color: c.textPrimary }]}>{t('community.aboutDays', { n: view.toDecision })}</Text>
-                  <Text style={[s.tileSub, { color: c.textSecondary }]}>{t('community.toTypicalDecision')}</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={[s.tileBig, { color: c.textPrimary }]}>{timeline.steps.length}</Text>
-                  <Text style={[s.tileSub, { color: c.textSecondary }]}>{t('community.stepsLogged')}</Text>
-                </>
+          </View>
+
+          {view.now && (
+            <>
+              <View style={[s.divider, { backgroundColor: c.border }]} />
+              <View style={s.status}>
+                <View style={[s.stagePill, { backgroundColor: nowTone?.tint ?? c.surfacePrimary }]}>
+                  <Ionicons name={MILESTONE_META[view.now.type].icon} size={14} color={nowTone?.ink ?? c.textPrimary} />
+                  <Text style={[s.stageTxt, { color: nowTone?.ink ?? c.textPrimary }]} numberOfLines={1}>
+                    {t(MILESTONE_META[view.now.type].labelKey)}
+                  </Text>
+                </View>
+                <Text style={[s.dayBig, { color: c.textPrimary }]}>{t('community.dayN', { n: view.now.day })}</Text>
+              </View>
+              {view.toDecision !== undefined && view.toDecision > 0 && (
+                <View style={s.etaRow}>
+                  <Ionicons name="time-outline" size={14} color={c.textMuted} />
+                  <Text style={[s.eta, { color: c.textMuted }]}>
+                    {t('community.aboutDays', { n: view.toDecision })} {t('community.toTypicalDecision')}
+                  </Text>
+                </View>
               )}
-            </View>
-          </View>
+            </>
+          )}
         </View>
 
         {/* Steps as cards */}
@@ -212,16 +217,22 @@ const s = StyleSheet.create({
   loading: { marginTop: spacing['2xl'] },
   missing: { textAlign: 'center', marginTop: spacing['2xl'], fontSize: typography.sm },
   body: { paddingHorizontal: spacing.base, paddingTop: spacing.xs, gap: spacing.sm },
-  profile: { borderRadius: 20, padding: 18, gap: 14, marginBottom: spacing.xs },
+  profile: { borderRadius: 20, padding: 18, marginBottom: spacing.xs },
   who: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  name: { fontSize: typography.xl, fontWeight: typography.bold },
+  name: { fontSize: typography.lg, fontWeight: typography.bold },
   chip: { alignSelf: 'flex-start', borderRadius: borderRadius.full, paddingHorizontal: spacing.sm, paddingVertical: 3 },
   chipTxt: { fontSize: typography.xs, fontWeight: typography.semibold },
   sub: { fontSize: typography.sm, marginTop: 2 },
-  tiles: { flexDirection: 'row', gap: spacing.sm },
-  tile: { flex: 1, borderRadius: borderRadius.md, padding: spacing.md },
-  tileBig: { fontSize: 20, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  tileSub: { fontSize: typography.xs, marginTop: 2 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: spacing.sm, marginTop: 6 },
+  updated: { fontSize: typography.xs },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: 14 },
+  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  stagePill: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, borderRadius: borderRadius.full,
+               paddingHorizontal: spacing.md, paddingVertical: 6 },
+  stageTxt: { fontSize: typography.sm, fontWeight: typography.semibold, flexShrink: 1 },
+  dayBig: { fontSize: 26, fontWeight: '800', fontVariant: ['tabular-nums'] },
+  etaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: spacing.sm },
+  eta: { fontSize: typography.xs },
   step: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: 14, borderWidth: 1.5,
           paddingVertical: 10, paddingHorizontal: spacing.md },
   stepIcon: { width: 30, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },

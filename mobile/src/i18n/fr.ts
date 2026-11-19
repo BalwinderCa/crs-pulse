@@ -198,7 +198,6 @@ const fr: TranslationKeys = {
     updatedDaysAgo: 'mis à jour il y a {{n}} j',
     aboutDays: '~{{n}} jours',
     toTypicalDecision: 'avant une décision typique',
-    stepsLogged: 'étapes enregistrées',
     start: 'Début',
     comparedWithYou: 'Comparé à vous',
     compareLine: 'Vous avez atteint l’étape {{stop}} au jour {{mine}}. {{name}} l’a atteinte au jour {{theirs}}.',

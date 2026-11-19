@@ -191,7 +191,6 @@ const en = {
     updatedDaysAgo: 'updated {{n}}d ago',
     aboutDays: '~{{n}} days',
     toTypicalDecision: 'to a typical decision',
-    stepsLogged: 'steps logged',
     start: 'Start',
     comparedWithYou: 'Compared with you',
     compareLine: 'You reached {{stop}} on day {{mine}}. {{name}} did on day {{theirs}}.',
