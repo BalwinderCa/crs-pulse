@@ -107,6 +107,10 @@ export const STORAGE_KEYS = {
   COMMUNITY_BLOCKED: 'crs_pulse.community_blocked',
   /** Epoch ms until which ads are off, earned by watching a rewarded ad in Settings. */
   AD_FREE_UNTIL: 'crs_pulse.ad_free_until',
+  /** Cached Pro state { active, expires } so boot (and the launch ad) knows before RevenueCat answers. */
+  PRO_STATE: 'crs_pulse.pro_state',
+  /** When this install first ran a version with Pro: the 7-day free trial counts from here. */
+  PRO_TRIAL_START: 'crs_pulse.pro_trial_start',
 } as const;
 
 /**

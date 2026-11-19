@@ -37,14 +37,14 @@ describe('usePushPrefs', () => {
     register.mockResolvedValue({ ok: true });
     await usePushPrefs.getState().load();
     expect(prefs()).toEqual({ draws: true, times: true, aor: false });
-    expect(register).toHaveBeenCalledWith({ draws: true, times: true, aorMonth: null });
+    expect(register).toHaveBeenCalledWith({ draws: true, times: true, aorMonth: null }, null);
   });
 
   it('sends the AOR month from the timeline when the AOR alert is on', async () => {
     useTimelineStore.setState({ milestones: [{ id: '1', type: 'AOR Received', date: '2026-03-14' } as never] });
     register.mockResolvedValue({ ok: true });
     await set({ aor: true });
-    expect(register).toHaveBeenCalledWith({ draws: false, times: false, aorMonth: '2026-03' });
+    expect(register).toHaveBeenCalledWith({ draws: false, times: false, aorMonth: '2026-03' }, null);
     expect(JSON.parse((await AsyncStorage.getItem(STORAGE_KEYS.PUSH_PREFS))!)).toEqual({ times: false, aor: true });
   });
 
@@ -73,7 +73,7 @@ describe('usePushPrefs', () => {
     await set({ draws: true, times: true });
     await set({ draws: false });
     expect(unregister).not.toHaveBeenCalled();
-    expect(register).toHaveBeenLastCalledWith({ draws: false, times: true, aorMonth: null });
+    expect(register).toHaveBeenLastCalledWith({ draws: false, times: true, aorMonth: null }, null);
     await set({ times: false });
     expect(unregister).toHaveBeenCalledTimes(1);
     expect(await AsyncStorage.getItem(STORAGE_KEYS.DRAW_NOTIFICATIONS)).toBe('false');

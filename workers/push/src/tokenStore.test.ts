@@ -16,6 +16,8 @@ import {
   wantsDraws,
   wantsTimes,
   wantsAor,
+  proOk,
+  PRO_TRIAL_MS,
 } from './tokenStore.ts';
 
 // Minimal in-memory KV that mimics Cloudflare KV semantics, including
@@ -208,11 +210,21 @@ void kv; // silence unused in environments that tree-shake helpers
 test('listTokens filters by push prefs; tokens without prefs get draws and times only', async () => {
   const k = kv();
   await registerToken(k, 'ExpoPushToken[old]', 'ios');
-  await registerToken(k, 'ExpoPushToken[all]', 'ios', { d: 1, t: 1, a: '2026-03' });
-  await registerToken(k, 'ExpoPushToken[none]', 'android', { d: 0, t: 0, a: '2026-04' });
+  await registerToken(k, 'ExpoPushToken[all]', 'ios', { d: 1, t: 1, a: '2026-03', g: Date.now() });
+  await registerToken(k, 'ExpoPushToken[none]', 'android', { d: 0, t: 0, a: '2026-04', g: Date.now() });
   assert.deepEqual((await listTokens(k, wantsDraws)).sort(), ['ExpoPushToken[all]', 'ExpoPushToken[old]']);
   assert.deepEqual((await listTokens(k, wantsTimes)).sort(), ['ExpoPushToken[all]', 'ExpoPushToken[old]']);
   assert.deepEqual(await listTokens(k, wantsAor('2026-03')), ['ExpoPushToken[all]']);
   assert.deepEqual(await listTokens(k, wantsAor('2026-04')), ['ExpoPushToken[none]']);
   assert.equal((await listTokens(k)).length, 3);
+});
+
+test('Pro alerts: trial for 7 days from first register, then only with Pro; pre-Pro builds unaffected', () => {
+  const now = Date.UTC(2026, 11, 1);
+  assert.equal(proOk(undefined, now), true); // builds before Pro send no prefs
+  assert.equal(proOk({ d: 1, t: 1, g: now - 1000 }, now), true); // in trial
+  assert.equal(proOk({ d: 1, t: 1, g: now - PRO_TRIAL_MS - 1 }, now), false); // trial over, no Pro
+  assert.equal(proOk({ d: 1, t: 1, g: now - PRO_TRIAL_MS - 1, x: now + 1 }, now), true); // Pro
+  assert.equal(proOk({ d: 1, t: 1, g: now - PRO_TRIAL_MS - 1, x: now - 1 }, now), false); // Pro lapsed
+  assert.equal(proOk({ d: 1, t: 1 }, now), false); // prefs but no trial start: not Pro
 });

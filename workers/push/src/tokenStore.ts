@@ -57,10 +57,32 @@ export interface PushPrefs {
   d?: 0 | 1;
   t?: 0 | 1;
   a?: string;
+  /** First registration with prefs (ms): the 7-day Pro trial counts from here. */
+  g?: number;
+  /** Pro paid until (ms), as RevenueCat reported at the last register. */
+  x?: number;
 }
+
+/** Everyone gets the Pro alerts free for this long after first registering with prefs (matches the app's trial). */
+export const PRO_TRIAL_MS = 7 * 86_400_000;
+
+/**
+ * Pro alerts (processing times, AOR month) go to Pro devices and to devices in
+ * their trial. Tokens without prefs come from builds before Pro and keep getting
+ * processing times, as they always have.
+ */
+export const proOk = (p: PushPrefs | undefined, now = Date.now()) =>
+  !p || (p.x ?? 0) > now || (p.g !== undefined && now < p.g + PRO_TRIAL_MS);
+
 export const wantsDraws = (p?: PushPrefs) => p?.d !== 0;
-export const wantsTimes = (p?: PushPrefs) => p?.t !== 0;
-export const wantsAor = (month: string) => (p?: PushPrefs) => p?.a === month;
+export const wantsTimes = (p?: PushPrefs) => p?.t !== 0 && proOk(p);
+export const wantsAor = (month: string) => (p?: PushPrefs) => p?.a === month && proOk(p);
+
+/** The stored prefs for a token (null when it isn't registered). */
+export async function getTokenPrefs(kv: KVNamespace, token: string): Promise<{ exists: boolean; prefs?: PushPrefs }> {
+  const r = await kv.getWithMetadata<PushPrefs>(TOKEN_PREFIX + token);
+  return { exists: r.value !== null, ...(r.metadata ? { prefs: r.metadata } : {}) };
+}
 
 /** Idempotent and race-free: a single put to a token-scoped key. */
 export async function registerToken(

@@ -670,7 +670,26 @@ paging, report: 3 reports hide, and the admin.crspulse.com sidebar shows a red c
 reports, which replaced the per-report email on 2026-11-18; block, share/edit/stop, offline catch-up
 on the next launch, dark mode, French).
 
-### Monetisation: ads only, no IAP
+### Monetisation: ads + Pro subscription (from 1.0.19)
+
+**Pro (added 2026-11-18, ships natively in 1.0.19):** a RevenueCat subscription (`react-native-purchases`
+v11, Play Billing 8) with one entitlement, `pro`, sold monthly and yearly. Pro removes all ads (banner,
+native, app-open, interstitial), unlocks the processing-times and same-AOR-month alerts, and the whole
+Appearance section (theme, font, accent). **Everyone gets a 7-day free trial** counted from the first
+launch of a Pro version (`PRO_TRIAL_START`, kept on Reset All Data); after it, free users see the default
+look (system theme, red, system font) and those two alerts turn off, but their choices stay saved and come
+back with Pro. State lives in `src/store/proStore.ts` (`useIsPro()`, cached in `PRO_STATE` so boot and the
+launch ad don't wait on the network); the paywall is `features/pro/screens/ProScreen.tsx` (route `Pro`,
+reached from the Settings "Go Pro" card and every locked control). **The worker enforces the alerts**: the
+app sends RevenueCat's app user id on `/register`; the worker asks RevenueCat (`REVENUECAT_SECRET`, v1
+`GET /subscribers/{id}`) and stores the paid-until time (`x`) and the first-register time (`g`, the trial
+start) in the token's KV metadata; `wantsTimes`/`wantsAor` only pass Pro or in-trial devices. Tokens
+without prefs (builds before 1.0.19) keep processing-times alerts. **Before release:** RevenueCat project +
+products in both stores (Paid Apps agreement, banking, tax), `EXPO_PUBLIC_RC_IOS_KEY` /
+`EXPO_PUBLIC_RC_ANDROID_KEY` in eas.json, `wrangler secret put REVENUECAT_SECRET`, App Store privacy label
+(Purchases → Purchase History) and Play Data safety (Purchase history). Without `REVENUECAT_SECRET` the
+worker treats nobody as paid, so Pro buyers would lose the alerts after the trial.
+
 
 **Rewarded ad in Settings ("3 days without ads"): removed 2026-11-14.** It shipped in the fourth
 and fifth 1.0.15 updates and natively in 1.0.16 (iOS build 69, Android versionCode 33). One user
@@ -682,7 +701,7 @@ they can be deleted once no install can hold one. The AdMob rewarded ad units
 **AdMob's rewarded-ad policy forbids a plain "watch to support us" button**; there must be a real
 in-app reward, stated before the ad, and declining must cost nothing.
 
-**The app has no in-app purchase.** Everything, including the analytics "Your Plan" tab, is free; revenue comes from AdMob alone. `react-native-iap` was removed on 2026-09-08 because Google Play began rejecting uploads that bundle Play Billing < 8.0.0, and react-native-iap 12.x pins 7.0.0. Moving to a Billing-8 release (14.0.0+) would have required `react-native-nitro-modules`, Kotlin 2.1 and compileSdk 36 — an Expo SDK upgrade — so with the purchase never having been sold (Android had 0 installs, and the product was Play-only so it never loaded on iOS) the purchase path was dropped instead.
+**Until 1.0.19 the app had no in-app purchase** (see Pro above). The analytics "Your Plan" tab stays free. `react-native-iap` was removed on 2026-09-08 because Google Play began rejecting uploads that bundle Play Billing < 8.0.0, and react-native-iap 12.x pins 7.0.0. Moving to a Billing-8 release (14.0.0+) would have required `react-native-nitro-modules`, Kotlin 2.1 and compileSdk 36 — an Expo SDK upgrade — so with the purchase never having been sold (Android had 0 installs, and the product was Play-only so it never loaded on iOS) the purchase path was dropped instead.
 
 Removed with it: `premiumStore`, `iapService`, the `paywall` feature, `UpgradeBanner`, the header PRO badge, and the locked "Your Plan" preview. Ads never gated on entitlement — `AdBanner` checks `MONETIZATION_ENABLED` and ad availability only — so ad behaviour is unchanged. **Do not reintroduce `react-native-iap` without first checking the Play Billing minimum**, which Google raises periodically.
 

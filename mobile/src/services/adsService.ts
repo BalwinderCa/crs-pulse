@@ -2,6 +2,7 @@ import { AppState, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ADMOB_APP_OPEN_AD_UNIT, ADMOB_INTERSTITIAL_AD_UNIT, MONETIZATION_ENABLED, STORAGE_KEYS } from '@/constants';
 import { isAdFree, useAdFreeStore } from '@/store/adFreeStore';
+import { isProOn, useProStore } from '@/store/proStore';
 import { track } from '@/services/analyticsService';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler.
@@ -285,7 +286,7 @@ function preloadInterstitial(mod: AdsModule, unitId: string): void {
  * user isn't kept waiting and the next open tries again.
  */
 export function countCommunityView(): void {
-  if (!MONETIZATION_ENABLED || isAdFree(useAdFreeStore.getState().until)) return;
+  if (!MONETIZATION_ENABLED || isAdFree(useAdFreeStore.getState().until) || isProOn(useProStore.getState())) return;
   const mod = loadAdsModule();
   const unitId = mod ? interstitialUnitId(mod) : '';
   if (!mod?.InterstitialAd || !mod.AdEventType || !unitId) return;

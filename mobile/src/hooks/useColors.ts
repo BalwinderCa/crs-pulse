@@ -1,6 +1,7 @@
 import { useColorScheme } from 'react-native';
 import { darkColors, lightColors, type Colors } from '@/theme/colors';
 import { useProfileStore } from '@/store/profileStore';
+import { useIsPro } from '@/store/proStore';
 
 export function useColors(): Colors {
   const resolved = useResolvedScheme();
@@ -15,7 +16,9 @@ export function useColors(): Colors {
  */
 export function useResolvedScheme(): 'light' | 'dark' {
   const systemScheme = useColorScheme();
-  const theme = useProfileStore(s => s.profile?.theme ?? 'system');
+  const chosen = useProfileStore(s => s.profile?.theme ?? 'system');
+  // Light/dark is a Pro choice; without Pro the app follows the system.
+  const theme = useIsPro() ? chosen : 'system';
 
   const resolved = theme === 'system' ? systemScheme : theme;
   return resolved === 'dark' ? 'dark' : 'light';

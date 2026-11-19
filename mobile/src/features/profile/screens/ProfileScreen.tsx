@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +26,7 @@ import { usePushPrefs, type PushPrefs } from '@/hooks/useDrawNotifications';
 import { useTimelineStore } from '@/store/timelineStore';
 import { sharedAorMonth } from '@/features/community/model';
 import { FONT_OPTIONS, loadAppFont, type AppFont } from '@/theme/fonts';
+import { useIsPro, useProStore } from '@/store/proStore';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { summarizeProfile } from '../utils/profileSummary';
 
@@ -43,11 +44,22 @@ const ACCENT_OPTIONS: { value: string; labelKey: string }[] = [
   { value: '#DB2777', labelKey: 'profile.colorPink' },
 ];
 
-const ALERTS: { key: keyof PushPrefs; label: string; hint: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+const ALERTS: { key: keyof PushPrefs; label: string; hint: string; icon: keyof typeof Ionicons.glyphMap; pro?: true }[] = [
   { key: 'draws', label: 'profile.alertDraws', hint: 'profile.alertDrawsHint', icon: 'megaphone-outline' },
-  { key: 'times', label: 'profile.alertTimes', hint: 'profile.alertTimesHint', icon: 'time-outline' },
-  { key: 'aor',   label: 'profile.alertAor',   hint: 'profile.alertAorHint', icon: 'people-outline' },
+  { key: 'times', label: 'profile.alertTimes', hint: 'profile.alertTimesHint', icon: 'time-outline', pro: true },
+  { key: 'aor',   label: 'profile.alertAor',   hint: 'profile.alertAorHint', icon: 'people-outline', pro: true },
 ];
+
+const PRO_POINTS = ['pro.pointAds', 'pro.pointTimes', 'pro.pointAor', 'pro.pointLook'] as const;
+
+/** Small "PRO" tag next to a locked feature. */
+function ProBadge({ accent, label }: { accent: string; label: string }) {
+  return (
+    <View style={{ backgroundColor: accent, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 }}>
+      <Text style={{ color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.6 }}>{label}</Text>
+    </View>
+  );
+}
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 function makeStyles(c: Colors, accent: string) {
@@ -63,18 +75,19 @@ function makeStyles(c: Colors, accent: string) {
     hint:         { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
 
     // Score hero
-    scoreHero:  { alignItems: 'center', paddingVertical: spacing.md, gap: spacing.xs },
-    scoreNum:   { fontSize: 60, fontWeight: typography.black, letterSpacing: -2, lineHeight: 68 },
-    scoreLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8, textTransform: 'uppercase' },
+    scoreRow:   { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    scoreRight: { alignItems: 'flex-end', gap: 4 },
+    scoreNum:   { fontSize: 30, fontWeight: typography.black, letterSpacing: -0.5, lineHeight: 34 },
+    scoreLabel: { color: c.textMuted, fontSize: typography.xs, marginTop: 2 },
     catBadge: {
-      paddingHorizontal: spacing.md,
-      paddingVertical:   spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical:   2,
       borderRadius:      borderRadius.md,
       borderWidth:       0.3,
       borderColor:       c.border,
       backgroundColor:   c.surfaceSecondary,
     },
-    catText: { fontSize: typography.sm, fontWeight: typography.bold },
+    catText: { fontSize: typography.xs, fontWeight: typography.bold },
 
     // Notification row
     notifRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
@@ -96,6 +109,18 @@ function makeStyles(c: Colors, accent: string) {
     fontRow:    { gap: spacing.xs },
     fontBtn:    { flex: 0, paddingHorizontal: spacing.md },
     subTitle:   { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm },
+    groupHead:  { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm, marginBottom: spacing.xs, paddingHorizontal: spacing.xs },
+    groupLabelInline: { marginTop: 0, marginBottom: 0, paddingHorizontal: 0 },
+    locked:     { opacity: 0.45 },
+    labelRow:   { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    proCard:    { padding: spacing.base, borderRadius: borderRadius.lg, borderWidth: 1, marginBottom: spacing.sm, gap: spacing.md },
+    proHead:    { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    proTitle:   { color: c.textPrimary, fontSize: typography.lg, fontWeight: typography.bold },
+    proList:    { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6, columnGap: spacing.md },
+    proPoint:   { flexDirection: 'row', alignItems: 'center', gap: 6, width: '46%' },
+    proPointTxt: { color: c.textPrimary, fontSize: typography.sm, fontWeight: typography.medium, flexShrink: 1 },
+    proCta:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, borderRadius: borderRadius.md, paddingVertical: 11 },
+    proCtaTxt:  { color: '#fff', fontSize: typography.base, fontWeight: typography.bold },
     groupLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm, marginBottom: spacing.xs, paddingHorizontal: spacing.xs },
     swatchRow:  { flexDirection: 'row' },
     swatchCell: { flex: 1, alignItems: 'center' },
@@ -127,6 +152,11 @@ export default function ProfileScreen() {
     { label: t('profile.french'),  value: 'fr', icon: 'chatbubble-outline' },
   ];
 
+  const isPro = useIsPro();
+  const proPaid = useProStore((st) => st.active);
+  const proTrialEnds = useProStore((st) => st.trialEnds);
+  const proTrialDays = !proPaid && proTrialEnds ? Math.max(0, Math.ceil((proTrialEnds - Date.now()) / 86_400_000)) : 0;
+  const goPro = () => navigation.navigate('Pro');
   const pushPrefs = usePushPrefs((st) => st.prefs);
   const setPush = usePushPrefs((st) => st.set);
   const aorMonth = sharedAorMonth(useTimelineStore((st) => st.milestones));
@@ -162,24 +192,54 @@ export default function ProfileScreen() {
 
   return (
     <ScreenWrapper scrollable keyboardAvoiding header={<AppHeader title={t('profile.title')} />}>
-      {/* ── CRS Score Hero ── */}
-      <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('profile.crsScore')}</Text>
-        <View style={styles.scoreHero}>
-          <Text style={[styles.scoreNum, { color: scoreColor }]}>
-            {scoreReady ? score : '—'}
-          </Text>
-          <Text style={styles.scoreLabel}>{t('profile.comprehensiveRanking')}</Text>
-          {cat && (
-            <View style={styles.catBadge}>
-              <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
+      {/* ── Pro ── */}
+      {!proPaid && (
+        <TouchableOpacity ph-label="profile-go-pro" onPress={goPro} activeOpacity={0.85} accessibilityRole="button"
+          accessibilityLabel={`${t('pro.goPro')}. ${t('pro.goProSub')}`}
+          style={[styles.proCard, { backgroundColor: accent + '10', borderColor: accent + '55' }]}>
+          <View style={styles.proHead}>
+            <View style={[styles.alertIcon, { backgroundColor: accent }]}>
+              <MaterialCommunityIcons name="crown" size={20} color="#fff" />
             </View>
-          )}
-        </View>
+            <View style={styles.notifText}>
+              <Text style={styles.proTitle}>{t('pro.goPro')}</Text>
+              <Text style={styles.hint}>
+                {proTrialDays > 0 ? t('pro.statusTrial', { count: proTrialDays }) : t('pro.goProSub')}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.proList}>
+            {PRO_POINTS.map((k) => (
+              <View key={k} style={styles.proPoint}>
+                <Ionicons name="checkmark-circle" size={16} color={accent} />
+                <Text style={styles.proPointTxt}>{t(k)}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={[styles.proCta, { backgroundColor: accent }]}>
+            <Text style={styles.proCtaTxt}>{t('pro.ctaShort')}</Text>
+            <Ionicons name="arrow-forward" size={16} color="#fff" />
+          </View>
+        </TouchableOpacity>
+      )}
 
-        {!scoreReady && (
-          <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>
-        )}
+      {/* ── CRS Score (compact) ── */}
+      <Card style={styles.section}>
+        <View style={styles.scoreRow}>
+          <View style={styles.notifText}>
+            <Text style={styles.notifLabel}>{t('profile.crsScore')}</Text>
+            <Text style={styles.scoreLabel}>{t('profile.comprehensiveRanking')}</Text>
+          </View>
+          <View style={styles.scoreRight}>
+            <Text style={[styles.scoreNum, { color: scoreColor }]}>{scoreReady ? score : '—'}</Text>
+            {cat && (
+              <View style={styles.catBadge}>
+                <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+        {!scoreReady && <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>}
       </Card>
 
       {/* ── My Profile (details live on their own screen) ── */}
@@ -202,38 +262,51 @@ export default function ProfileScreen() {
       {/* ── Notifications ── */}
       <Text style={styles.groupLabel}>{t('profile.notifications')}</Text>
       <Card style={styles.section}>
-        {ALERTS.map((a) => (
+        {ALERTS.map((a) => {
+          // Locked Pro alerts are dimmed (the PRO tag stays bright) and open the paywall.
+          const dim = a.pro && !isPro ? styles.locked : null;
+          return (
           <View key={a.key} style={styles.notifRow}>
-            <View style={[styles.alertIcon, { backgroundColor: accent + '18' }]}>
+            <View style={[styles.alertIcon, { backgroundColor: accent + '18' }, dim]}>
               <Ionicons name={a.icon} size={18} color={accent} />
             </View>
             <View style={styles.notifText}>
-              <Text style={styles.notifLabel}>{t(a.label)}</Text>
-              <Text style={styles.hint}>
+              <View style={styles.labelRow}>
+                <Text style={[styles.notifLabel, dim]}>{t(a.label)}</Text>
+                {a.pro && !isPro && <ProBadge accent={accent} label={t('pro.proBadge')} />}
+              </View>
+              <Text style={[styles.hint, dim]}>
                 {a.key === 'aor' && pushPrefs.aor && !aorMonth ? t('profile.alertAorMissing') : t(a.hint)}
               </Text>
             </View>
+            {/* Pro alerts stay off (and open Pro) without Pro; the saved choice is kept. */}
+            <View style={dim}>
             <Toggle
-              value={pushPrefs[a.key]}
-              onValueChange={() => { void setPush({ [a.key]: !pushPrefs[a.key] }); }}
+              value={a.pro && !isPro ? false : pushPrefs[a.key]}
+              onValueChange={a.pro && !isPro ? goPro : () => { void setPush({ [a.key]: !pushPrefs[a.key] }); }}
               activeColor={accent}
               accessibilityLabel={t(a.label)}
             />
+            </View>
           </View>
-        ))}
+          );
+        })}
       </Card>
 
       {/* ── Appearance ── */}
-      <Text style={styles.groupLabel}>{t('profile.appearance')}</Text>
-      <Card style={styles.section}>
+      <View style={styles.groupHead}>
+        <Text style={[styles.groupLabel, styles.groupLabelInline]}>{t('profile.appearance')}</Text>
+        {!isPro && <ProBadge accent={accent} label={t('pro.proBadge')} />}
+      </View>
+      <Card style={[styles.section, !isPro && styles.locked]}>
         <Text style={styles.sectionTitle}>{t('profile.themeTitle')}</Text>
         <View style={styles.themeRow}>
           {THEME_OPTIONS.map((opt) => {
-            const selected = (profile.theme ?? 'system') === opt.value;
+            const selected = (isPro ? profile.theme ?? 'system' : 'system') === opt.value;
             return (
               <TouchableOpacity
                 key={opt.value}
-                onPress={() => save({ theme: opt.value })}
+                onPress={isPro ? () => save({ theme: opt.value }) : goPro}
                 style={[styles.themeBtn, selected && styles.themeBtnActive]}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
@@ -255,12 +328,12 @@ export default function ProfileScreen() {
         <Text style={styles.subTitle}>{t('profile.themeFont')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fontRow}>
           {FONT_OPTIONS.map((opt) => {
-            const selected = (profile.font ?? 'system') === opt.value;
+            const selected = (isPro ? profile.font ?? 'system' : 'system') === opt.value;
             return (
               <TouchableOpacity
                 key={opt.value}
                 ph-label={`profile-font-${opt.value}`}
-                onPress={() => { void handleFontChange(opt.value); }}
+                onPress={isPro ? () => { void handleFontChange(opt.value); } : goPro}
                 style={[styles.themeBtn, styles.fontBtn, selected && styles.themeBtnActive]}
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
@@ -282,7 +355,7 @@ export default function ProfileScreen() {
               <View key={opt.value} style={styles.swatchCell}>
                 <TouchableOpacity
                   ph-label={`profile-accent-${opt.labelKey.replace('profile.color', '').toLowerCase()}`}
-                  onPress={() => save({ accent_color: opt.value })}
+                  onPress={isPro ? () => save({ accent_color: opt.value }) : goPro}
                   style={[styles.swatchRing, selected && { borderColor: opt.value }]}
                   hitSlop={6}
                   accessibilityRole="button"
