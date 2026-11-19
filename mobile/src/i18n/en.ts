@@ -257,6 +257,7 @@ const en = {
     aliasLabel: 'Display name',
     aliasHint: 'Your name is picked at random so no one can tell who you are. Tap Shuffle both for a new one.',
     programLabel: 'Program',
+    openTimelineHint: 'Opens their full timeline',
     shareNote: 'Only your milestone types, their month and year, and the days between them are shared. Never the exact day, your notes or your CRS score.',
     noMilestones: 'Add at least one milestone in My timeline first. Future-dated milestones aren’t shared.',
     stopSharing: 'Stop sharing',

@@ -68,8 +68,8 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
 }
 
 /**
- * One shared timeline as a card: the avatar inside a ring that fills by stage
- * (ITA → Decision), the name, the latest step and program · AOR month, and the
+ * One shared timeline as a card: the avatar inside a ring of one segment per stage
+ * (ITA → Decision, coloured up to the stage reached), the name, the latest step and program · AOR month, and the
  * day reached with the stage count.
  */
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
@@ -89,19 +89,21 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
   const stages = reached + 1;
   const label = [alias, stepLabel, now ? t('community.dayN', { n: now.day }) : '', meta,
     stages > 0 ? t('community.stageOf', { n: stages, total: STOPS.length }) : ''].filter(Boolean).join(', ');
-  const dash = RING_C * Math.max(0, stages) / STOPS.length;
 
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
       style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}
-      accessible accessibilityLabel={label}>
+      accessible accessibilityLabel={label} accessibilityHint={onPress ? t('community.openTimelineHint') : undefined}>
+      <View style={s.row}>
       <View style={s.ring}>
         <Svg width={RING} height={RING} style={StyleSheet.absoluteFill}>
-          <Circle cx={RING / 2} cy={RING / 2} r={RING_R} stroke={c.border} strokeWidth={4} fill="none" />
-          {st && dash > 0 && (
-            <Circle cx={RING / 2} cy={RING / 2} r={RING_R} stroke={st.ink} strokeWidth={4} fill="none" strokeLinecap="round"
-              strokeDasharray={`${dash} ${RING_C}`} transform={`rotate(-90 ${RING / 2} ${RING / 2})`} />
-          )}
+          {/* One arc per stage with a small gap between, filled up to the stage reached. */}
+          {STOPS.map((_, i) => (
+            <Circle key={i} cx={RING / 2} cy={RING / 2} r={RING_R} strokeWidth={3} fill="none"
+              stroke={st && i < stages ? st.ink : c.border}
+              strokeDasharray={`${SEG_LEN} ${RING_C - SEG_LEN}`}
+              transform={`rotate(${-90 + i * SEG_DEG + GAP_DEG / 2} ${RING / 2} ${RING / 2})`} />
+          ))}
         </Svg>
         <Avatar alias={alias} avatar={timeline.avatar} size={44} />
       </View>
@@ -116,6 +118,7 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
           {stages > 0 && <Text style={[s.stages, { color: c.textMuted }]}>{stages}/{STOPS.length}</Text>}
         </View>
       )}
+      </View>
     </TouchableOpacity>
   );
 }
@@ -123,11 +126,15 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
 const RING = 62;
 const RING_R = 27;
 const RING_C = 2 * Math.PI * RING_R;
+const SEG_DEG = 360 / STOPS.length;
+const GAP_DEG = 6;
+const SEG_LEN = RING_C * (SEG_DEG - GAP_DEG) / 360;
 
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
-  card: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.md, paddingVertical: 12, paddingHorizontal: 14,
+  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  card: { borderRadius: borderRadius.md, paddingVertical: 12, paddingHorizontal: 14,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
   ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   mid: { flex: 1, minWidth: 0 },

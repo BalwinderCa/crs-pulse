@@ -265,6 +265,7 @@ const fr: TranslationKeys = {
     aliasLabel: 'Nom affiché',
     aliasHint: 'Votre nom est choisi au hasard pour que personne ne sache qui vous êtes. Touchez Tout mélanger pour en changer.',
     programLabel: 'Programme',
+    openTimelineHint: 'Ouvre sa chronologie complète',
     shareNote: 'Seuls vos types d’étapes, leur mois et année et les jours entre elles sont partagés. Jamais le jour exact, vos notes ou votre score CRS.',
     noMilestones: 'Ajoutez d’abord au moins une étape dans Ma chronologie. Les étapes futures ne sont pas partagées.',
     stopSharing: 'Arrêter le partage',
