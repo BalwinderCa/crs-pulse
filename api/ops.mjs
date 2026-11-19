@@ -126,8 +126,32 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 
 /* Community (CRUD) */
 .cm-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.cm-bar input,.cm-bar select,.cm-f input,.cm-f select,.cm-f textarea{font:inherit;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink)}
-.cm-bar input{flex:1;min-width:180px}.cm-filters{margin-top:-4px}.cm-filters select{flex:1 1 150px;min-width:0}
+.cm-bar input,.cm-f input:not([type=checkbox]),.cm-f textarea,.cs-btn{font:inherit;font-size:13.5px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);outline:none;transition:border-color .12s,box-shadow .12s;-webkit-appearance:none;appearance:none}
+.cm-bar input:hover,.cm-f input:not([type=checkbox]):hover,.cm-f textarea:hover,.cs-btn:hover,.mp-field:hover{border-color:var(--ink3)}
+.cm-bar input:focus,.cm-f input:not([type=checkbox]):focus,.cm-f textarea:focus,.cs-btn:focus-visible,.cs-btn[aria-expanded=true],.mp-field:focus-visible,.mp-field[aria-expanded=true]{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 18%,transparent)}
+.cm-bar input::placeholder,.cm-f input::placeholder{color:var(--ink3)}
+.cm-bar input[type=search]{padding-left:36px;background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='9' cy='9' r='5.5' fill='none' stroke='%2386857f' stroke-width='1.6'/%3E%3Cpath d='M13.2 13.2 17 17' stroke='%2386857f' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") 12px 50%/16px no-repeat}
+.cm-bar input[type=search]::-webkit-search-cancel-button{-webkit-appearance:none}
+.cm-bar input{flex:1;min-width:180px}.cm-filters{margin-top:-4px}.cm-filters .cs{flex:1 1 150px;min-width:0}
+/* Custom select: the real <select> stays in the DOM (hidden) so form values and change events work as before. */
+.cs{position:relative;display:block;min-width:130px}.cs>select{display:none}
+.cs-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;cursor:pointer}
+.cs-btn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cs-btn svg{width:14px!important;height:14px;flex:none;color:var(--ink3);transition:transform .15s}.cs-btn[aria-expanded=true] svg{transform:rotate(180deg)}
+.cs-list{position:absolute;top:calc(100% + 6px);left:0;min-width:100%;max-height:280px;overflow:auto;z-index:6;margin:0;padding:5px;list-style:none;border-radius:12px;border:1px solid var(--line);background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.16)}
+.cs-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border-radius:8px;font-size:13.5px;color:var(--ink);cursor:pointer;white-space:nowrap;outline:none}
+.cs-list li:hover,.cs-list li:focus{background:var(--raise)}.cs-list li[aria-selected=true]{font-weight:600}
+.cs-list li[aria-selected=true]::after{content:'';width:12px;height:7px;border-left:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(-45deg) translateY(-2px)}
+.cm-f input[type=checkbox]{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin:0;flex:none;border-radius:5px;border:1.5px solid var(--ink3);background:var(--surface);cursor:pointer;transition:background .12s,box-shadow .12s}
+.cm-f input[type=checkbox]:checked{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--surface)}
+.cm-f input[type=checkbox]:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 25%,transparent)}
+.cm-f input[type=checkbox]:checked:focus-visible{box-shadow:inset 0 0 0 3px var(--surface),0 0 0 3px color-mix(in srgb,var(--focus) 25%,transparent)}
+.btn.danger{background:var(--bad);border-color:var(--bad);color:#fff}.btn.danger:hover{filter:brightness(1.06);background:var(--bad)}
+.cf{width:min(420px,calc(100vw - 32px))}.cf-top{display:flex;gap:14px;align-items:flex-start}
+.cf-icon{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.cf-icon svg{width:20px!important;height:20px}.cf h2{margin:2px 0 6px;font-size:16px}.cf p{margin:0;color:var(--ink2);font-size:13.5px;line-height:1.5}
+.cf-who{display:flex;align-items:center;gap:10px;margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--raise)}.cf-who b{font-size:13.5px}.cf-who small{display:block;color:var(--ink3);font-size:12px}
+.cf .foot{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
 .btn{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--ink);white-space:nowrap}
 .btn:hover{background:var(--raise)}.btn.pri{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .btn.bad{color:var(--bad)}.btn:disabled{opacity:.5;cursor:default}
@@ -141,7 +165,7 @@ dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface)
 dialog::backdrop{background:rgba(15,15,14,.45)}
 .cm-f{display:grid;gap:12px;margin-top:14px}.cm-f label{display:grid;gap:5px;font-size:13px;color:var(--ink2)}
 .mp-wrap{position:relative;display:grid;gap:5px;font-size:13px;color:var(--ink2)}
-.mp-field{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:14px;padding:8px 11px;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--ink);text-align:left;cursor:pointer}
+.mp-field{display:flex;align-items:center;justify-content:space-between;gap:8px;font:inherit;font-size:13.5px;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);outline:none;transition:border-color .12s,box-shadow .12s;color:var(--ink);text-align:left;cursor:pointer}
 .mp-field:hover{border-color:var(--ink3)}.mp-field svg{width:17px!important;height:17px;flex:none;color:var(--ink3)}.mp-ph{color:var(--ink3)}
 .mp{position:absolute;top:calc(100% + 6px);right:0;z-index:5;width:256px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:0 12px 32px rgba(0,0,0,.16)}
 .mp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mp-head b{font-size:14px;color:var(--ink)}
@@ -547,19 +571,23 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Generated if empty"></label>'+
 '<label>Avatar id<input name="avatar" placeholder="e.g. b32014"></label></div>'+
 '<div class="cm-id"><span id="cm-av"></span><button type="button" class="btn" data-act="random">Generate again</button><small>New random name and avatar. You can still type your own.</small></div>'+
-'<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option>'+p+'</option>'}).join('')+'</select></label>'+
+'<div class="row2"><label>Program<select name="program">'+CM_PROGRAMS.map(function(p){return '<option value="'+p+'">'+CM_PROGRAM_LABELS[p]+'</option>'}).join('')+'</select></label>'+
 '<div class="mp-wrap"><span class="mp-lab" id="mp-lab">AOR month</span><input type="hidden" name="aorMonth">'+
 '<button type="button" class="mp-field" id="mp-btn" aria-haspopup="dialog" aria-expanded="false" aria-labelledby="mp-lab mp-btn"><span id="mp-val"></span>'+
 '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4.5" width="14" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M3 8.5h14M7 3v3M13 3v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>'+
 '<div class="mp" id="mp" role="dialog" aria-label="Choose AOR month" hidden></div></div></div>'+
 '<label>Steps (JSON: type, day, optional month)<textarea name="steps" spellcheck="false"></textarea></label>'+
 '<label class="check" id="cm-hid-l"><input type="checkbox" name="hidden"> Hidden (not shown in the app)</label>'+
-'<div class="err" id="cm-ferr" role="alert"></div><div class="foot"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></dialog>';
+'<div class="err" id="cm-ferr" role="alert"></div><div class="foot"><button type="button" class="btn" data-act="close">Cancel</button><button type="submit" class="btn pri">Save</button></div></form></dialog>'+
+'<dialog id="cm-cf" class="cf" aria-labelledby="cf-t" aria-describedby="cf-b"><div class="cf-top"><span class="cf-icon"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3.5 2.8 16h14.4L10 3.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 8.5v3.4M10 14.2v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>'+
+'<div><h2 id="cf-t"></h2><p id="cf-b"></p></div></div><div id="cf-who"></div>'+
+'<div class="foot"><button type="button" class="btn" data-cf="no">Cancel</button><button type="button" class="btn danger" data-cf="yes" id="cf-ok"></button></div></dialog>';
 var q=document.getElementById('cm-q'),st=document.getElementById('cm-s');q.value=CM.q;st.value=CM.status;
 q.addEventListener('input',function(){clearTimeout(CM.timer);CM.timer=setTimeout(function(){CM.q=q.value.trim();CM.offset=0;cmLoad()},250)});
 st.addEventListener('change',function(){CM.status=st.value;CM.offset=0;cmLoad()});
 var fb=document.getElementById('cm-filters');fb.querySelectorAll('select').forEach(function(s){s.value=CM.f[s.dataset.f]});
 fb.addEventListener('change',function(ev){var k=ev.target.dataset.f;if(!k)return;CM.f[k]=ev.target.value;CM.offset=0;cmLoad()});
+csEnhance(document.getElementById('app'));
 document.getElementById('cm').addEventListener('click',cmClick);
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
@@ -570,7 +598,7 @@ function cmFiltered(){return !!(CM.f.program||CM.f.aor||CM.f.stage)}
 // AOR options come from the list response; the current choice stays even when nothing matches it any more.
 function cmAorOptions(months){var sel=document.querySelector('#cm-filters [data-f="aor"]');if(!sel)return;var cur=CM.f.aor,ms=months.slice();
 if(cur&&cur!=='none'&&ms.indexOf(cur)<0)ms.unshift(cur);
-sel.innerHTML='<option value="">Any AOR month</option>'+ms.map(function(m){var p=m.split('-');return '<option value="'+m+'">'+MP_NAMES[+p[1]-1]+' '+p[0]+'</option>'}).join('')+'<option value="none">No AOR month</option>';sel.value=cur;
+sel.innerHTML='<option value="">Any AOR month</option>'+ms.map(function(m){var p=m.split('-');return '<option value="'+m+'">'+MP_NAMES[+p[1]-1]+' '+p[0]+'</option>'}).join('')+'<option value="none">No AOR month</option>';sel.value=cur;csSync(sel);
 document.getElementById('cm-clearf').hidden=!cmFiltered()}
 function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
 Object.keys(CM.f).forEach(function(k){if(CM.f[k])qs.set(k,CM.f[k])});
@@ -593,24 +621,24 @@ el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Sta
 function cmFind(id){return CM.data&&CM.data.items.find(function(t){return t.id===id})}
 function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabled)return;var act=b.dataset.act,tr=b.closest('tr'),id=tr&&tr.dataset.id,t=id&&cmFind(id);
 if(act==='new')return cmOpen(null);
-if(act==='clearf'){CM.f={program:'',aor:'',stage:'',sort:CM.f.sort};CM.offset=0;document.querySelectorAll('#cm-filters select').forEach(function(s){s.value=CM.f[s.dataset.f]});return cmLoad()}
+if(act==='clearf'){CM.f={program:'',aor:'',stage:'',sort:CM.f.sort};CM.offset=0;document.querySelectorAll('#cm-filters select').forEach(function(s){s.value=CM.f[s.dataset.f];csSync(s)});return cmLoad()}
 if(act==='prev'){CM.offset=Math.max(0,CM.offset-CM.data.pageSize);return cmLoad()}
 if(act==='next'){CM.offset+=CM.data.pageSize;return cmLoad()}
 if(act==='edit')return cmOpen(t);
 if(act==='hide'||act==='unhide'){b.disabled=true;return cmApi('PATCH','id='+id,{hidden:act==='hide'}).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
-if(act==='del'){if(!confirm('Delete the timeline shared as '+(t.alias||'Anonymous')+'? Its owner will see it as no longer shared. This cannot be undone.'))return;
-b.disabled=true;return cmApi('DELETE','id='+id).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
+if(act==='del')return cmConfirm({title:'Delete this timeline?',body:'It disappears from the app. If someone shared it, they will see it as no longer shared. This cannot be undone.',ok:'Delete timeline',who:t})
+.then(function(yes){if(!yes)return;b.disabled=true;return cmApi('DELETE','id='+id).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})});
 if(act==='reports'){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('rep-row')){nx.remove();return}
 return cmApi('GET','id='+id+'&reports=1').then(function(list){var r=document.createElement('tr');r.className='rep-row';
 r.innerHTML='<td colspan="8"><b>Reports</b> '+list.map(function(x){return '<span class="pill rep">'+esc(x.reason)+'</span> <small style="display:inline">'+cmDate(x.createdAt)+'</small>'}).join(' · ')+
 ' <span class="acts" style="display:inline-flex;margin-left:12px"><button class="btn" data-act="dismiss" data-for="'+id+'">Dismiss reports</button></span></td>';tr.after(r)}).catch(function(e){cmErr(e.message)})}
-if(act==='dismiss'){var fid=b.dataset.for;if(!confirm('Dismiss these reports? This does not un-hide the timeline.'))return;
-b.disabled=true;return cmApi('DELETE','id='+fid+'&reports=1').then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}}
+if(act==='dismiss'){var fid=b.dataset.for;return cmConfirm({title:'Dismiss these reports?',body:'The reports are cleared. This does not un-hide the timeline.',ok:'Dismiss reports',who:cmFind(fid)})
+.then(function(yes){if(!yes)return;b.disabled=true;return cmApi('DELETE','id='+fid+'&reports=1').then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})})}}
 function cmOpen(t){CM.editing=t;var f=document.getElementById('cm-form');document.getElementById('cm-ferr').textContent='';
 document.getElementById('cm-dt').textContent=t?'Edit '+(t.alias||'Anonymous'):'New timeline';
 f.alias.value=t?t.alias:'';f.avatar.value=t&&t.avatar?t.avatar:'';f.program.value=t?t.program:'cec';f.aorMonth.value=t&&t.aorMonth?t.aorMonth:'';
 f.steps.value=JSON.stringify(t?t.steps:[{type:'ITA',day:0},{type:'AOR Received',day:30}],null,1);
-f.hidden.checked=!!(t&&t.hidden);cmPreview();mpSet(f.aorMonth.value);document.getElementById('cm-hid-l').style.display=t?'':'none';
+f.hidden.checked=!!(t&&t.hidden);cmPreview();csSync(f.program);mpSet(f.aorMonth.value);document.getElementById('cm-hid-l').style.display=t?'':'none';
 document.getElementById('cm-dlg').showModal();if(!t)cmRandom()}
 // AOR month picker: a year with arrows over a 4×3 month grid. Future months are off (the worker rejects them).
 var MP_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],MP={year:0};
@@ -634,6 +662,44 @@ mpOpen(false);document.getElementById('mp-btn').focus()});
 // Escape closes the picker only, not the whole popup.
 box.addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();mpOpen(false);document.getElementById('mp-btn').focus()}});
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(!box.hidden&&!ev.target.closest('.mp-wrap'))mpOpen(false)})}
+// Confirm popup in the dashboard's style (replaces window.confirm). Resolves true on the red button.
+function cmConfirm(o){var d=document.getElementById('cm-cf');document.getElementById('cf-t').textContent=o.title;document.getElementById('cf-b').textContent=o.body;
+document.getElementById('cf-ok').textContent=o.ok;var t=o.who;
+document.getElementById('cf-who').innerHTML=t?'<div class="cf-who">'+buddySvg(t.avatar,t.alias||'Anonymous',36)+'<div><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc((CM_PROGRAM_LABELS[t.program]||t.program)+(t.aorMonth?' · AOR '+t.aorMonth:'')+' · '+t.id.slice(0,8))+'</small></div></div>':'';
+return new Promise(function(done){function end(v){d.removeEventListener('click',onClick);d.removeEventListener('close',onClose);if(d.open)d.close();done(v)}
+function onClick(ev){var b=ev.target.closest('[data-cf]');if(b)end(b.dataset.cf==='yes')}
+function onClose(){end(false)}
+d.addEventListener('click',onClick);d.addEventListener('close',onClose);d.showModal();d.querySelector('[data-cf="no"]').focus()})}
+// Custom selects: a button + listbox drawn over each native <select>, which stays (hidden) as the source of truth.
+var CS_CHEV='<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 7.5 10 12.5 15 7.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function csEnhance(root){root.querySelectorAll('select:not([data-cs])').forEach(function(sel){sel.dataset.cs='1';
+var w=document.createElement('div');w.className='cs';sel.parentNode.insertBefore(w,sel);
+var b=document.createElement('button');b.type='button';b.className='cs-btn';b.setAttribute('aria-haspopup','listbox');b.setAttribute('aria-expanded','false');
+if(sel.getAttribute('aria-label'))b.setAttribute('aria-label',sel.getAttribute('aria-label'));
+var l=document.createElement('ul');l.className='cs-list';l.setAttribute('role','listbox');l.hidden=true;
+// Button first, so a wrapping <label> activates it.
+w.appendChild(b);w.appendChild(sel);w.appendChild(l);sel.tabIndex=-1;
+b.addEventListener('click',function(){csOpen(w,l.hidden)});
+b.addEventListener('keydown',function(ev){if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();csOpen(w,true)}});
+l.addEventListener('click',function(ev){var li=ev.target.closest('li');if(li)csPick(w,li.dataset.v)});
+l.addEventListener('keydown',function(ev){var items=[].slice.call(l.children),i=items.indexOf(document.activeElement);
+if(ev.key==='ArrowDown'||ev.key==='ArrowUp'){ev.preventDefault();var n=items[Math.max(0,Math.min(items.length-1,i+(ev.key==='ArrowDown'?1:-1)))];if(n)n.focus()}
+else if(ev.key==='Home'||ev.key==='End'){ev.preventDefault();items[ev.key==='Home'?0:items.length-1].focus()}
+else if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();if(i>=0)csPick(w,items[i].dataset.v)}
+// Escape closes the list only, not the popup it sits in.
+else if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();csOpen(w,false);b.focus()}
+else if(ev.key==='Tab')csOpen(w,false)});
+csSync(sel)})}
+function csSync(sel){var w=sel&&sel.parentNode;if(!w||!w.classList||!w.classList.contains('cs'))return;var o=sel.options[sel.selectedIndex];
+w.querySelector('.cs-btn').innerHTML='<span>'+esc(o?o.text:'')+'</span>'+CS_CHEV}
+function csOpen(w,open){var sel=w.querySelector('select'),b=w.querySelector('.cs-btn'),l=w.querySelector('.cs-list');
+if(open){document.querySelectorAll('.cs-list:not([hidden])').forEach(function(x){if(x!==l)csOpen(x.parentNode,false)});
+l.innerHTML=[].map.call(sel.options,function(o){return '<li role="option" tabindex="-1" data-v="'+esc(o.value)+'" aria-selected="'+(o.selected?'true':'false')+'">'+esc(o.text)+'</li>'}).join('')}
+l.hidden=!open;b.setAttribute('aria-expanded',String(open));
+if(open)(l.querySelector('[aria-selected=true]')||l.firstChild).focus()}
+function csPick(w,v){var sel=w.querySelector('select');csOpen(w,false);w.querySelector('.cs-btn').focus();if(sel.value===v)return;
+sel.value=v;csSync(sel);sel.dispatchEvent(new Event('change',{bubbles:true}))}
+document.addEventListener('mousedown',function(ev){document.querySelectorAll('.cs-list:not([hidden])').forEach(function(l){if(!l.parentNode.contains(ev.target))csOpen(l.parentNode,false)})});
 function cmPreview(){var f=document.getElementById('cm-form');document.getElementById('cm-av').innerHTML=buddySvg(f.avatar.value.trim(),f.alias.value||'Anonymous',56)}
 // Fills the form with a generated name + avatar; "Anonymous" is only for people sharing from the app.
 function cmRandom(){var f=document.getElementById('cm-form');cmApi('GET','random=1').then(function(r){f.alias.value=r.alias;f.avatar.value=r.avatar;cmPreview()})
