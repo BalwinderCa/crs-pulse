@@ -1,6 +1,7 @@
 import type { Milestone } from '@/store/timelineStore';
 import {
   communityVisible, programFromTypeId, reachedIndex, sharedAorMonth, toSharedSteps, typicalPace, type SharedTimeline,
+  randomAlias,
 } from '@/features/community/model';
 
 const m = (type: Milestone['type'], date: string, extra: Partial<Milestone> = {}): Milestone =>
@@ -60,5 +61,15 @@ describe('community model', () => {
       tl([{ type: 'ITA', day: 0 }, { type: 'AOR Received', day: 50 }]),
     ]);
     expect(pace).toEqual([{ stop: 'aor', day: 30, n: 3 }, { stop: 'ppr', day: 150, n: 1 }]);
+  });
+});
+
+describe('randomAlias', () => {
+  it('makes a short handle with no look-alike digits', () => {
+    for (let i = 0; i < 300; i++) {
+      const a = randomAlias();
+      expect(a).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+[2689]{4}$/);
+      expect(a.length).toBeLessThanOrEqual(24); // the name field's maxLength
+    }
   });
 });

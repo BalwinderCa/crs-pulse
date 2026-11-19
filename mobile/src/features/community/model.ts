@@ -126,6 +126,20 @@ export function toSharedSteps(milestones: Milestone[], showMonths: boolean, toda
   });
 }
 
+// Same word lists as the worker's randomIdentity() (workers/push/src/community.ts); keep them in step.
+const NAME_ADJ = ['Calm', 'Bright', 'Brave', 'Patient', 'Hopeful', 'Sunny', 'Quiet', 'Steady', 'Kind', 'Lucky', 'Gentle', 'Bold', 'Cheerful', 'Swift', 'Clever', 'Happy'];
+const NAME_NOUN = ['Maple', 'Moose', 'Loon', 'Beaver', 'Otter', 'Pine', 'Lynx', 'Heron', 'Aurora', 'Cedar', 'Falcon', 'River', 'Birch', 'Puffin', 'Caribou', 'Lake'];
+// The worker's name filter reads 0 1 3 4 5 7 as letters (look-alikes), so only these digits are used.
+const NAME_DIGITS = '2689';
+
+/** A handle like "CalmMaple2869" for Share my timeline's "Surprise me". */
+export function randomAlias(rand: () => number = Math.random): string {
+  const pick = <T,>(a: readonly T[]) => a[Math.floor(rand() * a.length)]!;
+  let n = '';
+  for (let i = 0; i < 4; i++) n += pick(NAME_DIGITS.split(''));
+  return `${pick(NAME_ADJ)}${pick(NAME_NOUN)}${n}`;
+}
+
 /** The month ("2026-08") of the user's AOR, if it has happened. Never the day. */
 export function sharedAorMonth(milestones: Milestone[], today: Date = new Date()): string | undefined {
   const aor = milestones

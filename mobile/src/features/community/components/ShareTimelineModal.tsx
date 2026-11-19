@@ -11,10 +11,11 @@ import { useAccentColor } from '@/hooks/useAccentColor';
 import { Toggle } from '@/components/common/Toggle';
 import { useTimelineStore } from '@/store/timelineStore';
 import { useApplicationStore } from '@/store/applicationStore';
-import { PROGRAMS, programFromTypeId, sharedAorMonth, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
+import { PROGRAMS, programFromTypeId, randomAlias, sharedAorMonth, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
 import { useShareStore } from '../shareStore';
 import { Avatar, PersonCard, useProgramLabel } from './TimelineCards';
 import { AvatarPicker } from './AvatarPicker';
+import { randomBuddyId } from './BuddyAvatar';
 
 /**
  * Share my timeline: pick a display name, the program and whether months show,
@@ -56,6 +57,8 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
     ...(aorMonth ? { aorMonth } : {}), ...(avatar ? { avatar } : {}),
   };
   const canShare = steps.length > 0;
+
+  const surprise = () => { setAlias(randomAlias()); setAvatar(randomBuddyId()); setNameError(false); };
 
   const save = async () => {
     if (!canShare) return;
@@ -101,6 +104,12 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
               <Avatar alias={alias.trim() || t('community.anonymous')} avatar={avatar} size={48} />
               <Text style={[s.rowTitle, s.flex, { color: c.textPrimary }]}>{t('community.avatarChange')}</Text>
               <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
+            </TouchableOpacity>
+            <TouchableOpacity ph-label="community-surprise-me" onPress={surprise}
+              style={[s.surprise, { borderColor: accent, backgroundColor: accent + '14' }]}
+              accessibilityRole="button" accessibilityHint={t('community.surpriseHint')}>
+              <Ionicons name="shuffle" size={17} color={accent} />
+              <Text style={[s.surpriseTxt, { color: accent }]}>{t('community.surpriseMe')}</Text>
             </TouchableOpacity>
 
             <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.aliasLabel')}</Text>
@@ -186,6 +195,9 @@ const s = StyleSheet.create({
   chipTxt: { fontSize: typography.sm, fontWeight: typography.semibold },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base },
   rowTitle: { fontSize: typography.base, fontWeight: typography.semibold },
+  surprise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.sm,
+              paddingVertical: spacing.md, borderRadius: borderRadius.md, borderWidth: 1 },
+  surpriseTxt: { fontSize: typography.base, fontWeight: typography.semibold },
   privacy: { borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base, gap: spacing.sm },
   privRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
   privTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },

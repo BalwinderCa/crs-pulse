@@ -216,6 +216,8 @@ const fr: TranslationKeys = {
     blocked: 'Bloqué. Vous ne verrez plus cette chronologie.',
     avatarLabel: 'Avatar',
     avatarChange: 'Choisir un avatar',
+    surpriseMe: 'Au hasard',
+    surpriseHint: 'Choisit un nom et un avatar au hasard. Vous pouvez toujours les modifier.',
     avatarTitle: 'Choisissez un avatar',
     avatarShuffle: 'Mélanger',
     avatarInitial: 'Aucun avatar',

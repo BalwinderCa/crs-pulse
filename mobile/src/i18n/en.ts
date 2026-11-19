@@ -208,6 +208,8 @@ const en = {
     blocked: 'Blocked. You won’t see this timeline again.',
     avatarLabel: 'Avatar',
     avatarChange: 'Choose an avatar',
+    surpriseMe: 'Surprise me',
+    surpriseHint: 'Picks a random name and avatar. You can still change them.',
     avatarTitle: 'Pick an avatar',
     avatarShuffle: 'Shuffle',
     avatarInitial: 'No avatar',
