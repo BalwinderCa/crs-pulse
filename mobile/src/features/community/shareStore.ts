@@ -48,7 +48,8 @@ const serial = <T,>(fn: () => Promise<T>): Promise<T> => {
 function sync(settings: ShareSettings): Promise<void> {
   return serial(async () => {
     const milestones = useTimelineStore.getState().milestones;
-    const steps = toSharedSteps(milestones, settings.showMonths);
+    // Each step's month and year is always shared (2026-11-18); a stored showMonths is ignored.
+    const steps = toSharedSteps(milestones, true);
     if (!steps.length) {
       await unpublishTimeline();
       useShareStore.setState({ settings: null });

@@ -26,7 +26,7 @@ This data is not transmitted to our servers, except the outline of your timeline
 When completing Apple's App Privacy questionnaire:
 
 - CRS calculator inputs are stored on device only and are not collected. Timeline data is not collected unless you share it in Community.
-- **User Content → Other User Content:** a Community timeline you choose to share (milestone types, day counts, optional months, AOR month), used for app functionality, not linked to identity, not used for tracking.
+- **User Content → Other User Content:** a Community timeline you choose to share (milestone types, day counts, each milestone's month and year, AOR month), used for app functionality, not linked to identity, not used for tracking.
 - **Identifiers → User ID:** the display name you choose for Community (optional) and a random key our server issues when you share, used for app functionality (to show, update and delete your shared timeline), not linked to identity, not used for tracking.
 - **Usage Data → Product Interaction:** anonymous screen views and taps (PostHog), used for analytics, not linked to identity, not used for tracking.
 - **Location → Coarse Location:** approximate location derived from the IP address (PostHog), used for analytics, not linked to identity, not used for tracking.
@@ -48,7 +48,7 @@ You can disable notifications and revoke your token at any time in Settings.
 
 Community lets you share an outline of your immigration timeline with other app users and see theirs. Nothing is shared unless you tap **Share with community**.
 
-- **What is shared:** the types of milestones you've reached (for example "AOR Received"), how many days after your first milestone each one happened, the month of your AOR, your program (for example CEC), and, only if you turn it on, the month and year of each milestone. Also the display name and preset avatar you choose; both are optional.
+- **What is shared:** the types of milestones you've reached (for example "AOR Received"), how many days after your first milestone each one happened, the month and year of each milestone (never the day), the month of your AOR, and your program (for example CEC). Also the display name and preset avatar you choose; both are optional.
 - **What is never shared:** exact dates, notes, custom milestones, milestones dated in the future, your CRS profile or score, and anything that identifies you. Avatars are drawn in the app from a preset list; no photo is uploaded.
 - **Who can see it:** anyone using the app's Community feature. Display names are checked against a list of offensive words, links, contact details and names that impersonate IRCC or the app.
 - **Where it's stored:** our Cloudflare Worker and Cloudflare D1 database, with a random key our server issues to your device. Only a one-way hash of that key is stored with your timeline. Your device's IP address is used briefly to limit abuse and is not stored with your timeline.

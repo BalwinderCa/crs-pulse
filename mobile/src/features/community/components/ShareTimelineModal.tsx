@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -8,19 +8,19 @@ import Toast from 'react-native-toast-message';
 import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
-import { Toggle } from '@/components/common/Toggle';
+import { Button } from '@/components/common/Button';
 import { useTimelineStore } from '@/store/timelineStore';
 import { useApplicationStore } from '@/store/applicationStore';
-import { PROGRAMS, programFromTypeId, randomAlias, sharedAorMonth, toSharedSteps, type ProgramId, type SharedTimeline } from '../model';
+import { PROGRAMS, programFromTypeId, randomAlias, toSharedSteps, type ProgramId } from '../model';
 import { useShareStore } from '../shareStore';
-import { Avatar, PersonCard, useProgramLabel } from './TimelineCards';
+import { Avatar, useProgramLabel } from './TimelineCards';
 import { AvatarPicker } from './AvatarPicker';
 import { randomBuddyId } from './BuddyAvatar';
 
 /**
- * Share my timeline: pick a display name, the program and whether months show,
- * with a live preview of the card others would see. Steps come from the live
- * timeline, so the shared card follows the user as they reach new milestones.
+ * Share my timeline: a display name and avatar (random on the first share), the
+ * and the program. Each step's month and year is always shared. Steps come from the live timeline, so the
+ * shared card follows the user as they reach new milestones.
  */
 export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const c = useColors();
@@ -34,105 +34,111 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
 
   const [alias, setAlias] = useState('');
   const [program, setProgram] = useState<ProgramId>('other');
-  const [showMonths, setShowMonths] = useState(false);
   const [avatar, setAvatar] = useState<string | undefined>(undefined);
   const [picking, setPicking] = useState(false);
-  const [nameError, setNameError] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
-    setAlias(settings?.alias ?? '');
+    // First share: start from a random name and avatar. Once shared, keep what they chose (even Anonymous).
+    setAlias(settings ? settings.alias : randomAlias());
     setProgram(settings?.program ?? programFromTypeId(typeId));
-    setShowMonths(settings?.showMonths ?? false);
-    setAvatar(settings?.avatar);
-    setNameError(false);
+    setAvatar(settings ? settings.avatar : randomBuddyId());
     // Only on open: share() swaps settings while saving, and re-running this would wipe a refused name.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visible]);
 
-  const steps = useMemo(() => toSharedSteps(milestones, showMonths), [milestones, showMonths]);
-  const aorMonth = useMemo(() => sharedAorMonth(milestones), [milestones]);
-  const preview: SharedTimeline = {
-    id: 'mine', alias: alias.trim(), program, steps, updatedDaysAgo: 0, isMine: true,
-    ...(aorMonth ? { aorMonth } : {}), ...(avatar ? { avatar } : {}),
-  };
+  const steps = useMemo(() => toSharedSteps(milestones, true), [milestones]);
   const canShare = steps.length > 0;
 
-  const surprise = () => { setAlias(randomAlias()); setAvatar(randomBuddyId()); setNameError(false); };
+  const shuffle = () => { setAlias(randomAlias()); setAvatar(randomBuddyId()); };
 
+  const [saving, setSaving] = useState(false);
   const save = async () => {
-    if (!canShare) return;
-    const result = await share({ alias: alias.trim(), program, showMonths, ...(avatar ? { avatar } : {}) });
-    if (result === 'badName') { setNameError(true); return; }
+    if (!canShare || saving) return;
+    setSaving(true);
+    let result;
+    try { result = await share({ alias: alias.trim(), program, showMonths: true, ...(avatar ? { avatar } : {}) }); }
+    finally { setSaving(false); }
+    // Only an old custom name can be refused now; keep the sheet open so they can shuffle.
+    if (result === 'badName') { Toast.show({ type: 'error', text1: t('community.nameNotAllowed') }); return; }
     onClose();
     if (result === 'offline') Toast.show({ type: 'error', text1: t('community.shareFailed') });
     if (result === 'invalid') Toast.show({ type: 'error', text1: t('community.shareInvalid') });
   };
 
+  const card = [s.card, { backgroundColor: c.surfaceCard, borderColor: c.border }];
+  const divider = [s.divider, { backgroundColor: c.border }];
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={[s.flex, { backgroundColor: c.surfacePrimary }]} edges={['top', 'left', 'right']}>
-        <KeyboardAvoidingView style={s.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={s.flex}>
           <View style={[s.bar, { borderBottomColor: c.border }]}>
-            <TouchableOpacity onPress={onClose} style={[s.barBtn, { borderColor: c.border }]}>
-              <Text style={[s.barBtnTxt, { color: c.textMuted }]}>{t('community.cancel')}</Text>
+            <TouchableOpacity onPress={onClose} hitSlop={8} style={s.barSide}>
+              <Text style={[s.barBtnTxt, { color: c.textSecondary }]}>{t('community.cancel')}</Text>
             </TouchableOpacity>
-            <Text style={[s.barTitle, { color: c.textPrimary }]}>{t('community.shareTitle')}</Text>
-            <TouchableOpacity ph-label="community-share-save" onPress={save} disabled={!canShare}
-              style={[s.barBtn, { borderColor: canShare ? accent : c.border }]}>
-              <Text style={[s.barBtnTxt, { color: canShare ? accent : c.textMuted, fontWeight: typography.bold }]}>
-                {settings ? t('community.saveAction') : t('community.shareAction')}
-              </Text>
-            </TouchableOpacity>
+            <Text style={[s.barTitle, { color: c.textPrimary }]} numberOfLines={1}>{t('community.shareTitle')}</Text>
+            {/* Keeps the title centred. */}
+            <View style={s.barSide} />
           </View>
 
           <ScrollView contentContainerStyle={[s.body, { paddingBottom: insets.bottom + spacing['2xl'] }]}
             keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <Text style={[s.label, { color: c.textMuted }]}>{t('community.previewLabel')}</Text>
-            {canShare ? (
-              <PersonCard timeline={preview} />
-            ) : (
-              <View style={[s.empty, { borderColor: c.border }]}>
-                <Ionicons name="time-outline" size={22} color={c.textMuted} />
-                <Text style={[s.emptyTxt, { color: c.textSecondary }]}>{t('community.noMilestones')}</Text>
+            {!canShare && (
+              <View style={[s.notice, { backgroundColor: accent + '12', borderColor: accent + '40' }]}>
+                <Ionicons name="time-outline" size={20} color={accent} />
+                <Text style={[s.noticeTxt, { color: c.textPrimary }]}>{t('community.noMilestones')}</Text>
               </View>
             )}
 
-            <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.avatarLabel')}</Text>
-            <TouchableOpacity ph-label="community-avatar-change" onPress={() => setPicking(true)}
-              style={[s.row, { backgroundColor: c.surfaceCard, borderColor: c.border }]} accessibilityRole="button">
-              <Avatar alias={alias.trim() || t('community.anonymous')} avatar={avatar} size={48} />
-              <Text style={[s.rowTitle, s.flex, { color: c.textPrimary }]}>{t('community.avatarChange')}</Text>
-              <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
-            </TouchableOpacity>
-            <TouchableOpacity ph-label="community-surprise-me" onPress={surprise}
-              style={[s.surprise, { borderColor: accent, backgroundColor: accent + '14' }]}
-              accessibilityRole="button" accessibilityHint={t('community.surpriseHint')}>
-              <Ionicons name="shuffle" size={17} color={accent} />
-              <Text style={[s.surpriseTxt, { color: accent }]}>{t('community.surpriseMe')}</Text>
-            </TouchableOpacity>
+            {/* Profile: how you appear */}
+            <Text style={[s.label, { color: c.textMuted }]}>{t('community.profileLabel')}</Text>
+            <View style={card}>
+              <View style={s.identity}>
+                <TouchableOpacity ph-label="community-avatar-change" onPress={() => setPicking(true)}
+                  accessibilityRole="button" accessibilityLabel={t('community.avatarChange')}>
+                  <Avatar alias={alias.trim() || t('community.anonymous')} avatar={avatar} size={64} />
+                  <View style={[s.editBadge, { backgroundColor: accent, borderColor: c.surfaceCard }]}>
+                    <Ionicons name="pencil" size={11} color={palette.white} />
+                  </View>
+                </TouchableOpacity>
+                <View style={s.flex}>
+                  <Text style={[s.fieldLabel, { color: c.textSecondary }]}>{t('community.aliasLabel')}</Text>
+                  {/* Read-only: names come from Shuffle both, so no one can type a real name or anything offensive. */}
+                  <View style={[s.input, s.nameBox, { backgroundColor: c.surfacePrimary, borderColor: c.border }]}
+                    accessible accessibilityLabel={`${t('community.aliasLabel')}: ${alias.trim() || t('community.anonymous')}`}>
+                    <Text style={[s.nameTxt, { color: alias.trim() ? c.textPrimary : c.textMuted }]} numberOfLines={1}>
+                      {alias.trim() || t('community.anonymous')}
+                    </Text>
+                    <Ionicons name="lock-closed" size={13} color={c.textMuted} />
+                  </View>
+                </View>
+              </View>
+              <Text style={[s.hint, { color: c.textMuted }]}>{t('community.aliasHint')}</Text>
+              <View style={divider} />
+              <View style={s.actions}>
+                <TouchableOpacity ph-label="community-avatar-change-btn" onPress={() => setPicking(true)}
+                  style={s.action} accessibilityRole="button">
+                  <Ionicons name="happy-outline" size={17} color={accent} />
+                  <Text style={[s.actionTxt, { color: accent }]}>{t('community.avatarChange')}</Text>
+                </TouchableOpacity>
+                <View style={[s.actionSep, { backgroundColor: c.border }]} />
+                <TouchableOpacity ph-label="community-shuffle-identity" onPress={shuffle}
+                  style={s.action} accessibilityRole="button" accessibilityHint={t('community.shuffleHint')}>
+                  <Ionicons name="shuffle" size={17} color={accent} />
+                  <Text style={[s.actionTxt, { color: accent }]}>{t('community.shuffleIdentity')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
 
-            <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.aliasLabel')}</Text>
-            <TextInput
-              style={[s.input, { backgroundColor: c.surfaceCard, borderColor: nameError ? palette.danger : c.border, color: c.textPrimary }]}
-              value={alias}
-              onChangeText={(v) => { setAlias(v); setNameError(false); }}
-              placeholder={t('community.anonymous')}
-              placeholderTextColor={c.textMuted}
-              maxLength={24}
-              autoCorrect={false}
-            />
-            <Text style={[s.hint, { color: nameError ? palette.danger : c.textMuted }]} accessibilityLiveRegion="polite">
-              {nameError ? t('community.nameNotAllowed') : t('community.aliasHint')}
-            </Text>
-
+            {/* Program */}
             <Text style={[s.label, s.gapTop, { color: c.textMuted }]}>{t('community.programLabel')}</Text>
-            <View style={s.chips}>
+            <View style={[card, s.chips]}>
               {PROGRAMS.map((p) => {
                 const on = p.id === program;
                 return (
                   <TouchableOpacity key={p.id} ph-label={`community-program-${p.id}`} onPress={() => setProgram(p.id)}
-                    style={[s.chip, { borderColor: on ? accent : c.border, backgroundColor: on ? accent : c.surfaceCard }]}
+                    style={[s.chip, { borderColor: on ? accent : c.border, backgroundColor: on ? accent : c.surfacePrimary }]}
                     accessibilityRole="radio" accessibilityState={{ selected: on }}>
                     <Text style={[s.chipTxt, { color: on ? palette.white : c.textSecondary }]}>{programLabel(p.id)}</Text>
                   </TouchableOpacity>
@@ -140,38 +146,26 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
               })}
             </View>
 
-            <View style={[s.row, s.gapTop, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
-              <View style={s.flex}>
-                <Text style={[s.rowTitle, { color: c.textPrimary }]}>{t('community.monthsLabel')}</Text>
-                <Text style={[s.hint, { color: c.textMuted, marginTop: 2 }]}>{t('community.monthsHint')}</Text>
-              </View>
-              <Toggle value={showMonths} onValueChange={() => setShowMonths((v) => !v)} activeColor={accent}
-                accessibilityLabel={t('community.monthsLabel')} />
-            </View>
+            <Button ph-label="community-share-save" title={settings ? t('community.saveAction') : t('community.shareAction')}
+              onPress={save} disabled={!canShare || saving} loading={saving} fullWidth size="lg" style={s.shareBtn}
+              icon={<Ionicons name={settings ? 'checkmark-circle-outline' : 'people-outline'} size={19} color={palette.white} />} />
 
-            <View style={[s.privacy, s.gapTop, { backgroundColor: c.surfaceCard, borderColor: c.border }]}>
-              <Text style={[s.rowTitle, { color: c.textPrimary }]}>{t('community.sharedLabel')}</Text>
-              <View style={s.privRow}>
-                <Ionicons name="checkmark-circle" size={16} color={palette.success} />
-                <Text style={[s.privTxt, { color: c.textSecondary }]}>{t('community.sharedYes')}</Text>
-              </View>
-              <View style={s.privRow}>
-                <Ionicons name="close-circle" size={16} color={palette.danger} />
-                <Text style={[s.privTxt, { color: c.textSecondary }]}>{t('community.sharedNo')}</Text>
-              </View>
+            <View style={s.note}>
+              <Ionicons name="lock-closed-outline" size={14} color={c.textMuted} />
+              <Text style={[s.noteTxt, { color: c.textMuted }]}>{t('community.shareNote')}</Text>
             </View>
 
             {settings && (
               <TouchableOpacity ph-label="community-share-stop" onPress={async () => {
                 if (await stop()) onClose();
                 else Toast.show({ type: 'error', text1: t('community.stopFailed') });
-              }} style={s.stop}>
+              }} style={[s.stop, { borderColor: palette.danger + '55' }]} accessibilityRole="button">
                 <Ionicons name="eye-off-outline" size={16} color={palette.danger} />
                 <Text style={[s.stopTxt, { color: palette.danger }]}>{t('community.stopSharing')}</Text>
               </TouchableOpacity>
             )}
           </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </SafeAreaView>
       <AvatarPicker visible={picking} alias={alias.trim()} selected={avatar} onSelect={setAvatar} onClose={() => setPicking(false)} />
     </Modal>
@@ -180,29 +174,39 @@ export function ShareTimelineModal({ visible, onClose }: { visible: boolean; onC
 
 const s = StyleSheet.create({
   flex: { flex: 1 },
-  bar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.lg,
+  bar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.base,
          paddingVertical: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth },
-  barTitle: { fontSize: typography.base, fontWeight: typography.semibold },
-  barBtn: { paddingHorizontal: spacing.md, paddingVertical: 6, borderRadius: borderRadius.md, borderWidth: 1, minWidth: 72, alignItems: 'center' },
+  barSide: { width: 96 },
+  barTitle: { flex: 1, textAlign: 'center', fontSize: typography.base, fontWeight: typography.semibold },
   barBtnTxt: { fontSize: typography.base },
-  body: { padding: spacing.base },
-  label: { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: spacing.xs },
-  gapTop: { marginTop: spacing.lg },
-  hint: { fontSize: typography.xs, lineHeight: 16, marginTop: spacing.xs },
-  input: { borderRadius: borderRadius.md, borderWidth: 0.3, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: typography.base },
+  shareBtn: { marginTop: spacing.xl },
+  body: { padding: spacing.base, paddingTop: spacing.lg },
+  label: { fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8, textTransform: 'uppercase',
+           marginBottom: spacing.sm, marginLeft: spacing.xs },
+  gapTop: { marginTop: spacing.xl },
+  card: { borderRadius: borderRadius.lg, borderWidth: 0.3, padding: spacing.base },
+  divider: { height: StyleSheet.hairlineWidth, marginVertical: spacing.md },
+  notice: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderWidth: 1, borderRadius: borderRadius.lg,
+            padding: spacing.base, marginBottom: spacing.xl },
+  noticeTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: spacing.base },
+  editBadge: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, borderWidth: 2,
+               alignItems: 'center', justifyContent: 'center' },
+  fieldLabel: { fontSize: typography.xs, fontWeight: typography.semibold, marginBottom: 6 },
+  input: { borderRadius: borderRadius.md, borderWidth: 1, paddingHorizontal: spacing.md, paddingVertical: 10 },
+  nameBox: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  nameTxt: { flex: 1, fontSize: typography.base, fontWeight: typography.semibold },
+  hint: { fontSize: typography.xs, lineHeight: 16, marginTop: spacing.sm },
+  actions: { flexDirection: 'row', alignItems: 'center', marginVertical: -spacing.xs },
+  action: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.sm },
+  actionSep: { width: StyleSheet.hairlineWidth, alignSelf: 'stretch' },
+  actionTxt: { fontSize: typography.sm, fontWeight: typography.semibold },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   chip: { paddingHorizontal: spacing.md, paddingVertical: 7, borderRadius: borderRadius.full, borderWidth: 1 },
   chipTxt: { fontSize: typography.sm, fontWeight: typography.semibold },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base },
-  rowTitle: { fontSize: typography.base, fontWeight: typography.semibold },
-  surprise: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.sm,
-              paddingVertical: spacing.md, borderRadius: borderRadius.md, borderWidth: 1 },
-  surpriseTxt: { fontSize: typography.base, fontWeight: typography.semibold },
-  privacy: { borderRadius: borderRadius.md, borderWidth: 0.3, padding: spacing.base, gap: spacing.sm },
-  privRow: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  privTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
-  empty: { borderWidth: 1, borderStyle: 'dashed', borderRadius: borderRadius.md, padding: spacing.base, flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  emptyTxt: { flex: 1, fontSize: typography.sm, lineHeight: 19 },
-  stop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xl, paddingVertical: spacing.md },
+  note: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, marginTop: spacing.lg, paddingHorizontal: spacing.xs },
+  noteTxt: { flex: 1, fontSize: typography.xs, lineHeight: 17 },
+  stop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, marginTop: spacing.xl,
+          paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1 },
   stopTxt: { fontSize: typography.base, fontWeight: typography.semibold },
 });

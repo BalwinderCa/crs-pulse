@@ -19,7 +19,7 @@ export function useCommunity() {
   const mySteps = useMemo(() => toSharedSteps(milestones, false), [milestones]);
   const mine: SharedTimeline | null = useMemo(() => {
     if (!settings) return null;
-    const steps = toSharedSteps(milestones, settings.showMonths);
+    const steps = toSharedSteps(milestones, true);
     if (!steps.length) return null;
     const mineTl: SharedTimeline = { id: MY_TIMELINE_ID, alias: settings.alias, program: settings.program, steps, updatedDaysAgo: 0, isMine: true };
     const aorMonth = sharedAorMonth(milestones);

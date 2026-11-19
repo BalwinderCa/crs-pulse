@@ -653,12 +653,13 @@ white card (initial avatar, stage-coloured pill, big day count). The list reads 
 up). Tapping a card pushes the `CommunityTimeline` stack screen: profile card with a stage-tinted
 "Day N" tile and days to a typical decision, each step as a card (icon, gap, day; latest outlined in
 the accent, next expected one dashed), "Compared with you", and Report (Edit sharing on your own).
-Share my timeline (`ShareTimelineModal`) takes an optional display name, program (pre-filled from the
-tracked application) and a months on/off switch, with a live card preview.
+Share my timeline (`ShareTimelineModal`, redesigned 2026-11-18) has a "Your profile" card (display name
+and avatar, both random on the first share, with Change avatar / Shuffle both), a Program card (pre-filled
+from the tracked application) and a one-line note on what is shared. No card preview, no months switch.
 
 **Privacy by construction:** a shared timeline holds only milestone types and day offsets from the
 first step, the AOR month (always, decided 2026-11-15, so "My month" can find people; month only,
-never the day, `sharedAorMonth`), plus every step's month/year if allowed (`toSharedSteps`). Notes, custom milestones, exact dates and
+never the day, `sharedAorMonth`), plus every step's month/year, always shared since 2026-11-18 (the "Show month and year" switch was removed; a stored `showMonths` is ignored) (`toSharedSteps`). Notes, custom milestones, exact dates and
 future-dated steps are never included; tests in `__tests__/features/communityModel.test.ts` check
 it. Your card is rebuilt from the live timeline, so it always shows where you have reached.
 
