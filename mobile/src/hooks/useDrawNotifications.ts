@@ -11,7 +11,7 @@ import {
 } from '@/services/pushService';
 import { track } from '@/services/analyticsService';
 import { useTimelineStore } from '@/store/timelineStore';
-import { useProStore } from '@/store/proStore';
+import { isProOn, useProStore } from '@/store/proStore';
 import { sharedAorMonth } from '@/features/community/model';
 
 Notifications.setNotificationHandler({
@@ -54,8 +54,11 @@ function failureKey(reason: PushRegisterFailure): string {
 
 /** The device registers (with these prefs) while any alert is on, and revokes when all are off. */
 function register(p: PushPrefs) {
-  const aorMonth = p.aor ? sharedAorMonth(useTimelineStore.getState().milestones) ?? null : null;
-  return registerForPushNotifications({ draws: p.draws, times: p.times, aorMonth }, useProStore.getState().userId);
+  // Pro alerts are sent as off once the trial is over (without Pro), so the server never outlasts
+  // what the app shows; the saved choice stays for when they get Pro.
+  const pro = isProOn(useProStore.getState());
+  const aorMonth = pro && p.aor ? sharedAorMonth(useTimelineStore.getState().milestones) ?? null : null;
+  return registerForPushNotifications({ draws: p.draws, times: pro && p.times, aorMonth }, useProStore.getState().userId);
 }
 
 type PushPrefsStore = {
