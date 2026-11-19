@@ -541,7 +541,7 @@ return '<span class="bd bd-l" style="width:'+size+'px;height:'+size+'px;font-siz
 var c=BD_COLORS[p[0]],fill=function(x){return x.replace(/"I"/g,'"'+BD_INK+'"').replace(/"C"/g,'"'+c+'"')};
 return '<svg class="bd" width="'+size+'" height="'+size+'" style="width:'+size+'px;height:'+size+'px" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
 '<g transform="translate(0 2)">'+fill(BD_EYES[p[1]]+BD_MOUTHS[p[2]]+BD_EXTRAS[p[4]])+'</g>'+fill(BD_HATS[p[3]])+'</svg>'}
-var CM={q:'',status:'all',offset:0,limit:25,data:null,editing:null,timer:0,f:{program:'',aor:'',stage:'',sort:''}};
+var CM={q:'',status:'all',offset:0,limit:10,data:null,editing:null,timer:0,f:{program:'',aor:'',stage:'',sort:''}};
 // Rows per page is remembered in this browser only.
 try{var CM_L=+localStorage.getItem('cm-limit');if([10,25,50,100].indexOf(CM_L)>=0)CM.limit=CM_L}catch(e){}
 // The app's feed filters. Stage values are the worker's STOPS; labels match CM_STAGES.
