@@ -287,3 +287,16 @@ test('admin list filters like the app: program, AOR month, stage, sort', async (
   assert.equal((await list('sort=longest')).items[0].lastDay, 90);
   assert.equal((await list('sort=furthest')).items[0].stage, 5);
 });
+
+test('admin list pages by limit and offset', async () => {
+  const db = makeDb();
+  for (let i = 0; i < 7; i++) await admin(db, 'POST', '/admin/community', timeline({ alias: `Seed${i}` }));
+  const page = async (qs: string) => (await admin(db, 'GET', `/admin/community?${qs}`)).body;
+  const p1 = await page('limit=3');
+  assert.equal(p1.items.length, 3); assert.equal(p1.pageSize, 3); assert.equal(p1.total, 7);
+  assert.equal((await page('limit=3&offset=6')).items.length, 1);
+  assert.equal((await page('limit=999')).pageSize, 100);
+  assert.equal((await page('limit=abc')).pageSize, 50);
+  const seen = new Set([...(await page('limit=3')).items, ...(await page('limit=3&offset=3')).items, ...(await page('limit=3&offset=6')).items].map((t: any) => t.id));
+  assert.equal(seen.size, 7);
+});

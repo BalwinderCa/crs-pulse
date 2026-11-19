@@ -277,7 +277,7 @@ export async function handleCommunity(
 /**
  * Ops CRUD for the dashboard (admin.crspulse.com), behind SYNC_SECRET (never in the app):
  *
- *   GET    /admin/community?q=&status=all|visible|hidden|reported&offset=  → { items, total }
+ *   GET    /admin/community?q=&status=all|visible|hidden|reported&offset=&limit=(1-100, default 50)  → { items, total }
  *   GET    /admin/community/stats      counts for the dashboard's Community overview
  *   POST   /admin/community            { alias, avatar?, program, aorMonth?, steps }   → item
  *   PATCH  /admin/community/:id        any of those fields (null clears avatar/aorMonth), hidden → item
@@ -339,6 +339,7 @@ export async function handleCommunityAdmin(
     const q = (url.searchParams.get('q') ?? '').trim();
     const status = url.searchParams.get('status') ?? 'all';
     const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
+    const limit = Math.min(100, Math.max(1, Math.floor(Number(url.searchParams.get('limit'))) || ADMIN_PAGE));
     const where: string[] = [];
     const args: unknown[] = [];
     if (q) { where.push('(t.alias LIKE ? OR t.id = ?)'); args.push(`%${q}%`, q); }
@@ -357,12 +358,12 @@ export async function handleCommunityAdmin(
     const order = sort === 'longest' ? 't.last_day DESC, t.id' : sort === 'furthest' ? 't.stage DESC, t.last_day ASC, t.id' : 't.updated_at DESC, t.id';
     const w = where.length ? ` WHERE ${where.join(' AND ')}` : '';
     const [{ results }, total, months] = await Promise.all([
-      db.prepare(`${ADMIN_SELECT}${w} ORDER BY ${order} LIMIT ? OFFSET ?`).bind(...args, ADMIN_PAGE, offset).all<AdminRow>(),
+      db.prepare(`${ADMIN_SELECT}${w} ORDER BY ${order} LIMIT ? OFFSET ?`).bind(...args, limit, offset).all<AdminRow>(),
       db.prepare(`SELECT COUNT(*) AS n FROM community_timelines t${w}`).bind(...args).first<{ n: number }>(),
       // For the AOR month filter's options.
       db.prepare('SELECT DISTINCT aor_month AS m FROM community_timelines WHERE aor_month IS NOT NULL ORDER BY aor_month DESC').all<{ m: string }>(),
     ]);
-    return json({ items: results.map(toAdmin), total: total?.n ?? 0, offset, pageSize: ADMIN_PAGE, aorMonths: months.results.map((r) => r.m) });
+    return json({ items: results.map(toAdmin), total: total?.n ?? 0, offset, pageSize: limit, aorMonths: months.results.map((r) => r.m) });
   }
 
   if (!id && m === 'POST') {

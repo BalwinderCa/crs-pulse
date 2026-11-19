@@ -160,7 +160,13 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 .pill.hid{background:var(--bad);color:var(--surface)}.pill.rep{background:var(--s4);color:#111}
 td small{display:block;color:var(--ink3);font-size:11.5px}
 tr.rep-row td{background:var(--raise)}
-.pager{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin-top:10px;color:var(--ink3);font-size:12.5px}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink2);font-size:12.5px}
+.pg-size{display:flex;align-items:center;gap:10px}.pg-size .cs{min-width:76px}.pg-size .cs-btn{padding:6px 10px;font-size:12.5px}.pg-size .cs-list{top:auto;bottom:calc(100% + 6px)}
+.pg-count{color:var(--ink3)}.pg-nav{display:flex;align-items:center;gap:4px}
+.pg-btn{min-width:32px;height:32px;padding:0 9px;border-radius:9px;border:1px solid transparent;background:none;color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+.pg-btn:hover:not([disabled]):not(.on){background:var(--raise)}.pg-btn[disabled]{color:var(--ink3);opacity:.45;cursor:default}
+.pg-btn.on{background:var(--ink);color:var(--surface);font-weight:600}.pg-btn:focus-visible{outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--focus) 25%,transparent)}
+.pg-gap{min-width:20px;text-align:center;color:var(--ink3)}
 dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:22px;width:min(560px,calc(100vw - 32px));box-shadow:0 20px 50px rgba(0,0,0,.25)}
 dialog::backdrop{background:rgba(15,15,14,.45)}
 .cm-f{display:grid;gap:12px;margin-top:14px}.cm-f label{display:grid;gap:5px;font-size:13px;color:var(--ink2)}
@@ -535,7 +541,9 @@ return '<span class="bd bd-l" style="width:'+size+'px;height:'+size+'px;font-siz
 var c=BD_COLORS[p[0]],fill=function(x){return x.replace(/"I"/g,'"'+BD_INK+'"').replace(/"C"/g,'"'+c+'"')};
 return '<svg class="bd" width="'+size+'" height="'+size+'" style="width:'+size+'px;height:'+size+'px" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="32" fill="'+c+'2E"/><circle cx="32" cy="38" r="19" fill="'+c+'"/>'+
 '<g transform="translate(0 2)">'+fill(BD_EYES[p[1]]+BD_MOUTHS[p[2]]+BD_EXTRAS[p[4]])+'</g>'+fill(BD_HATS[p[3]])+'</svg>'}
-var CM={q:'',status:'all',offset:0,data:null,editing:null,timer:0,f:{program:'',aor:'',stage:'',sort:''}};
+var CM={q:'',status:'all',offset:0,limit:25,data:null,editing:null,timer:0,f:{program:'',aor:'',stage:'',sort:''}};
+// Rows per page is remembered in this browser only.
+try{var CM_L=+localStorage.getItem('cm-limit');if([10,25,50,100].indexOf(CM_L)>=0)CM.limit=CM_L}catch(e){}
 // The app's feed filters. Stage values are the worker's STOPS; labels match CM_STAGES.
 var CM_PROGRAM_LABELS={cec:'CEC',fsw:'FSW',fst:'FST',pnp_ee:'PNP (Express Entry)',pnp:'PNP (base)',aip:'AIP',other:'Other'};
 var CM_STOPS=['ita','aor','bio','medical','ppr','decision'];
@@ -589,6 +597,8 @@ var fb=document.getElementById('cm-filters');fb.querySelectorAll('select').forEa
 fb.addEventListener('change',function(ev){var k=ev.target.dataset.f;if(!k)return;CM.f[k]=ev.target.value;CM.offset=0;cmLoad()});
 csEnhance(document.getElementById('app'));
 document.getElementById('cm').addEventListener('click',cmClick);
+document.getElementById('cm-list').addEventListener('change',function(ev){if(!ev.target.hasAttribute('data-pg'))return;
+CM.limit=+ev.target.value;CM.offset=0;try{localStorage.setItem('cm-limit',String(CM.limit))}catch(e){}cmLoad()});
 document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.target.closest('[data-act="close"]'))document.getElementById('cm-dlg').close();if(ev.target.closest('[data-act="random"]'))cmRandom()});
 document.getElementById('cm-form').addEventListener('submit',cmSave);
 mpInit();
@@ -600,10 +610,12 @@ function cmAorOptions(months){var sel=document.querySelector('#cm-filters [data-
 if(cur&&cur!=='none'&&ms.indexOf(cur)<0)ms.unshift(cur);
 sel.innerHTML='<option value="">Any AOR month</option>'+ms.map(function(m){var p=m.split('-');return '<option value="'+m+'">'+MP_NAMES[+p[1]-1]+' '+p[0]+'</option>'}).join('')+'<option value="none">No AOR month</option>';sel.value=cur;csSync(sel);
 document.getElementById('cm-clearf').hidden=!cmFiltered()}
-function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset)});if(CM.q)qs.set('q',CM.q);
+function cmLoad(){cmErr('');var qs=new URLSearchParams({status:CM.status,offset:String(CM.offset),limit:String(CM.limit)});if(CM.q)qs.set('q',CM.q);
 Object.keys(CM.f).forEach(function(k){if(CM.f[k])qs.set(k,CM.f[k])});
 return cmApi('GET',qs.toString()).then(function(d){CM.data=d;cmAorOptions(d.aorMonths||[]);cmRender()}).catch(function(e){cmErr('Could not load: '+e.message)})}
 function cmRender(){var d=CM.data,el=document.getElementById('cm-list');if(!el)return;
+// A delete can empty the last page: step back to the one before.
+if(!d.items.length&&d.offset>0&&d.total>0){CM.offset=Math.max(0,(Math.ceil(d.total/CM.limit)-1)*CM.limit);return cmLoad()}
 if(!d.items.length){el.innerHTML='<div class="msg">'+(CM.q||CM.status!=='all'||cmFiltered()?'Nothing matches.':'No one has shared a timeline yet.')+'</div>';return}
 var rows=d.items.map(function(t){var last=t.steps[t.steps.length-1];
 return '<tr data-id="'+t.id+'"><td><div class="who">'+buddySvg(t.avatar,t.alias||'Anonymous',32)+'<div><b>'+esc(t.alias||'Anonymous')+'</b><small>'+esc(t.id.slice(0,8))+(t.avatar?' · '+esc(t.avatar):'')+'</small></div></div></td>'+
@@ -617,13 +629,22 @@ return '<tr data-id="'+t.id+'"><td><div class="who">'+buddySvg(t.avatar,t.alias|
 '<button class="btn bad" data-act="del">Delete</button></div></td></tr>'}).join('');
 var end=Math.min(d.offset+d.items.length,d.total);
 el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Stage</th><th>Updated</th><th class="num">Reports</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
-'<div class="pager">'+(d.offset+1)+'–'+end+' of '+fmt(d.total)+'<button class="btn" data-act="prev"'+(d.offset?'':' disabled')+'>Previous</button><button class="btn" data-act="next"'+(end<d.total?'':' disabled')+'>Next</button></div>'}
+cmPager(d,end);csEnhance(el)}
+// Numbered pages: first, last, and one either side of the current one, with … for the gaps.
+function cmPageList(cur,last){var out=[],i;for(i=1;i<=last;i++){if(i===1||i===last||Math.abs(i-cur)<=1)out.push(i);else if(out[out.length-1]!=='…')out.push('…')}return out}
+function cmPager(d,end){var size=d.pageSize||CM.limit,cur=Math.floor(d.offset/size)+1,last=Math.max(1,Math.ceil(d.total/size));
+var nav=function(p,label,aria,dis){return '<button class="pg-btn" data-act="page" data-p="'+p+'" aria-label="'+aria+'"'+(dis?' disabled':'')+'>'+label+'</button>'};
+var nums=cmPageList(cur,last).map(function(p){return p==='…'?'<span class="pg-gap" aria-hidden="true">…</span>':
+'<button class="pg-btn pg-num'+(p===cur?' on':'')+'" data-act="page" data-p="'+p+'" aria-label="Page '+p+'"'+(p===cur?' aria-current="page"':'')+'>'+p+'</button>'}).join('');
+document.getElementById('cm-list').insertAdjacentHTML('beforeend','<nav class="pager" aria-label="Pages"><div class="pg-size"><span>Rows per page</span>'+
+'<select data-pg aria-label="Rows per page">'+[10,25,50,100].map(function(n){return '<option value="'+n+'"'+(n===size?' selected':'')+'>'+n+'</option>'}).join('')+'</select>'+
+'<span class="pg-count">'+fmt(d.offset+1)+'–'+fmt(end)+' of '+fmt(d.total)+'</span></div>'+
+'<div class="pg-nav">'+nav(1,'«','First page',cur===1)+nav(cur-1,'‹','Previous page',cur===1)+nums+nav(cur+1,'›','Next page',cur===last)+nav(last,'»','Last page',cur===last)+'</div></nav>')}
 function cmFind(id){return CM.data&&CM.data.items.find(function(t){return t.id===id})}
 function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabled)return;var act=b.dataset.act,tr=b.closest('tr'),id=tr&&tr.dataset.id,t=id&&cmFind(id);
 if(act==='new')return cmOpen(null);
 if(act==='clearf'){CM.f={program:'',aor:'',stage:'',sort:CM.f.sort};CM.offset=0;document.querySelectorAll('#cm-filters select').forEach(function(s){s.value=CM.f[s.dataset.f];csSync(s)});return cmLoad()}
-if(act==='prev'){CM.offset=Math.max(0,CM.offset-CM.data.pageSize);return cmLoad()}
-if(act==='next'){CM.offset+=CM.data.pageSize;return cmLoad()}
+if(act==='page'){CM.offset=(Math.max(1,+b.dataset.p)-1)*CM.limit;cmLoad().then(function(){var l=document.getElementById('cm-list');if(l)l.scrollIntoView({block:'start',behavior:'smooth'})});return}
 if(act==='edit')return cmOpen(t);
 if(act==='hide'||act==='unhide'){b.disabled=true;return cmApi('PATCH','id='+id,{hidden:act==='hide'}).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
 if(act==='del')return cmConfirm({title:'Delete this timeline?',body:'It disappears from the app. If someone shared it, they will see it as no longer shared. This cannot be undone.',ok:'Delete timeline',who:t})

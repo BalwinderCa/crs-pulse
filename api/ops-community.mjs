@@ -24,7 +24,7 @@ export function workerPath(method, query) {
     if (query.random) return method === 'GET' ? '/admin/community/random' : null;
     if (method === 'GET') {
       const qs = new URLSearchParams();
-      for (const k of ['q', 'status', 'offset', 'program', 'aor', 'stage', 'sort']) if (query[k]) qs.set(k, String(query[k]));
+      for (const k of ['q', 'status', 'offset', 'limit', 'program', 'aor', 'stage', 'sort']) if (query[k]) qs.set(k, String(query[k]));
       return `/admin/community?${qs}`;
     }
     return method === 'POST' ? '/admin/community' : null;
