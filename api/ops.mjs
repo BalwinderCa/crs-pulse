@@ -636,10 +636,10 @@ function cmPager(d,end){var size=d.pageSize||CM.limit,cur=Math.floor(d.offset/si
 var nav=function(p,label,aria,dis){return '<button class="pg-btn" data-act="page" data-p="'+p+'" aria-label="'+aria+'"'+(dis?' disabled':'')+'>'+label+'</button>'};
 var nums=cmPageList(cur,last).map(function(p){return p==='…'?'<span class="pg-gap" aria-hidden="true">…</span>':
 '<button class="pg-btn pg-num'+(p===cur?' on':'')+'" data-act="page" data-p="'+p+'" aria-label="Page '+p+'"'+(p===cur?' aria-current="page"':'')+'>'+p+'</button>'}).join('');
-document.getElementById('cm-list').insertAdjacentHTML('beforeend','<nav class="pager" aria-label="Pages"><div class="pg-size"><span>Rows per page</span>'+
+return '<nav class="pager" aria-label="Pages"><div class="pg-size"><span>Rows per page</span>'+
 '<select data-pg aria-label="Rows per page">'+[10,25,50,100].map(function(n){return '<option value="'+n+'"'+(n===size?' selected':'')+'>'+n+'</option>'}).join('')+'</select>'+
 '<span class="pg-count">'+fmt(d.offset+1)+'–'+fmt(end)+' of '+fmt(d.total)+'</span></div>'+
-'<div class="pg-nav">'+nav(1,'«','First page',cur===1)+nav(cur-1,'‹','Previous page',cur===1)+nums+nav(cur+1,'›','Next page',cur===last)+nav(last,'»','Last page',cur===last)+'</div></nav>')}
+'<div class="pg-nav">'+nav(1,'«','First page',cur===1)+nav(cur-1,'‹','Previous page',cur===1)+nums+nav(cur+1,'›','Next page',cur===last)+nav(last,'»','Last page',cur===last)+'</div></nav>'}
 function cmFind(id){return CM.data&&CM.data.items.find(function(t){return t.id===id})}
 function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabled)return;var act=b.dataset.act,tr=b.closest('tr'),id=tr&&tr.dataset.id,t=id&&cmFind(id);
 if(act==='new')return cmOpen(null);
