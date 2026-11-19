@@ -12,7 +12,7 @@ import { palette, spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { PRIVACY_POLICY_URL, TERMS_OF_USE_URL } from '@/constants';
-import { isProOn, purchasesAvailable, purchasesModule, useProStore } from '@/store/proStore';
+import { MANAGE_SUBSCRIPTIONS_URL, isProOn, purchasesAvailable, purchasesModule, restorePro, useProStore } from '@/store/proStore';
 import { toPlans, type PlanPackage } from '../plans';
 
 const BENEFITS = [
@@ -23,9 +23,6 @@ const BENEFITS = [
 ] as const;
 
 const STORE = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
-const MANAGE_URL = Platform.OS === 'ios'
-  ? 'https://apps.apple.com/account/subscriptions'
-  : 'https://play.google.com/store/account/subscriptions';
 
 // Development builds have no RevenueCat key: sample plans so the design can be reviewed. Never in a release build.
 const SAMPLE: PlanPackage[] = [
@@ -94,18 +91,12 @@ export default function ProScreen() {
   };
 
   const restore = async () => {
-    const P = purchasesModule();
-    if (!P) return;
     setBusy(true);
-    try {
-      const info = await P.restorePurchases();
-      const ok = !!info.entitlements.active.pro;
-      Toast.show({ type: ok ? 'success' : 'info', text1: t(ok ? 'pro.restored' : 'pro.nothingToRestore') });
-    } catch {
-      Toast.show({ type: 'error', text1: t('pro.restoreFailed') });
-    } finally {
-      setBusy(false);
-    }
+    const r = await restorePro();
+    setBusy(false);
+    Toast.show(r === 'restored' ? { type: 'success', text1: t('pro.restored') }
+      : r === 'none' ? { type: 'info', text1: t('pro.nothingToRestore') }
+      : { type: 'error', text1: t('pro.restoreFailed') });
   };
 
   const showPlans = !active && plans.length > 0;
@@ -223,7 +214,7 @@ export default function ProScreen() {
       {/* Pinned action */}
       <View style={[s.bar, { paddingBottom: insets.bottom + spacing.sm, backgroundColor: c.surfacePrimary, borderTopColor: c.border }]}>
         {active ? (
-          <Button title={t('pro.manage')} variant="outline" fullWidth size="lg" onPress={() => { void Linking.openURL(MANAGE_URL); }} />
+          <Button title={t('pro.manage')} variant="outline" fullWidth size="lg" onPress={() => { void Linking.openURL(MANAGE_SUBSCRIPTIONS_URL); }} />
         ) : showPlans ? (
           <>
             <Button ph-label="pro-buy" title={trial !== null ? t('pro.startTrial', { count: trial }) : t('pro.subscribe')}

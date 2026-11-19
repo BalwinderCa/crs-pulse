@@ -107,6 +107,11 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
 
           <View style={s.brandCenter}>
             <Logo size={15} />
+            {/* Subscribers get a small crown on the wordmark instead of the PRO button. */}
+            {proPaid && (
+              <MaterialCommunityIcons name="crown" size={14} color={accent} style={s.brandCrown}
+                accessibilityLabel={t('pro.activeHeadline')} />
+            )}
           </View>
 
           <View style={s.sideRight}>
@@ -156,6 +161,7 @@ const s = StyleSheet.create({
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
   sideRight:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.md },
   iconBtn:     { padding: 2 },
+  brandCrown:  { position: 'absolute', top: -9, right: -11, transform: [{ rotate: '18deg' }] },
   crownBtn:    { marginLeft: -9, marginRight: 12 },
   proTag:      { position: 'absolute', top: -8, left: 18, width: 28, alignItems: 'center', borderRadius: 6, borderWidth: 1.5, paddingVertical: 0 },
   proTagTxt:   { color: palette.white, fontSize: 8, fontWeight: '900', letterSpacing: 0.4 },
