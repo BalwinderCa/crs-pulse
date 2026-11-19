@@ -691,7 +691,9 @@ else if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();csOpen(w,fal
 else if(ev.key==='Tab')csOpen(w,false)});
 csSync(sel)})}
 function csSync(sel){var w=sel&&sel.parentNode;if(!w||!w.classList||!w.classList.contains('cs'))return;var o=sel.options[sel.selectedIndex];
-w.querySelector('.cs-btn').innerHTML='<span>'+esc(o?o.text:'')+'</span>'+CS_CHEV}
+var b=w.querySelector('.cs-btn');b.innerHTML='<span>'+esc(o?o.text:'')+'</span>'+CS_CHEV;
+// Screen readers hear the field and its value ("Program: CEC"), as with a native select.
+if(sel.getAttribute('aria-label'))b.setAttribute('aria-label',sel.getAttribute('aria-label')+': '+(o?o.text:''))}
 function csOpen(w,open){var sel=w.querySelector('select'),b=w.querySelector('.cs-btn'),l=w.querySelector('.cs-list');
 if(open){document.querySelectorAll('.cs-list:not([hidden])').forEach(function(x){if(x!==l)csOpen(x.parentNode,false)});
 l.innerHTML=[].map.call(sel.options,function(o){return '<li role="option" tabindex="-1" data-v="'+esc(o.value)+'" aria-selected="'+(o.selected?'true':'false')+'">'+esc(o.text)+'</li>'}).join('')}
