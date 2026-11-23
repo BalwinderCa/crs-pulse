@@ -1,8 +1,17 @@
 {
-  "updated": "2026-10-28",
-  "updatedFull": "October 28, 2026",
-  "distributionAsOf": "October 25, 2026",
+  "updated": "2026-11-23",
+  "updatedFull": "November 23, 2026",
+  "distributionAsOf": "November 22, 2026",
   "rounds": [
+    {
+      "number": "454",
+      "date": "2026-11-23",
+      "dateFull": "November 23, 2026",
+      "name": "Provincial Nominee Program",
+      "label": "Provincial Nominee Program",
+      "size": 1999,
+      "crs": 673
+    },
     {
       "number": "453",
       "date": "2026-10-28",
@@ -173,52 +182,43 @@
       "label": "Provincial Nominee Program",
       "size": 442,
       "crs": 760
-    },
-    {
-      "number": "434",
-      "date": "2026-08-07",
-      "dateFull": "August 7, 2026",
-      "name": "Transport Occupations, 2026-Version 2",
-      "label": "Transport Occupations",
-      "size": 300,
-      "crs": 470
     }
   ],
   "pool": [
     {
       "label": "601–1200",
-      "count": 787
+      "count": 2068
     },
     {
       "label": "501–600",
-      "count": 20535
+      "count": 43754
     },
     {
       "label": "451–500",
-      "count": 71112
+      "count": 66810
     },
     {
       "label": "401–450",
-      "count": 63505
+      "count": 56261
     },
     {
       "label": "351–400",
-      "count": 47911
+      "count": 45934
     },
     {
       "label": "301–350",
-      "count": 17247
+      "count": 16627
     },
     {
       "label": "0–300",
-      "count": 7627
+      "count": 7238
     }
   ],
-  "poolTotal": 228724,
+  "poolTotal": 238692,
   "ytd": {
     "year": 2026,
-    "rounds": 65,
-    "invitations": 149409,
+    "rounds": 66,
+    "invitations": 151408,
     "categories": 9
   }
 }
