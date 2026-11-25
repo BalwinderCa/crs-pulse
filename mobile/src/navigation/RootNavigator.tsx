@@ -30,6 +30,7 @@ import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService
 import { useAdFreeStore } from '@/store/adFreeStore';
 import { trackScreen } from '@/services/analyticsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
+import { useCommunityBadgeStore } from '@/features/community/communityBadgeStore';
 import { useApplicationStore } from '@/store/applicationStore';
 import { useTimelineStore } from '@/store/timelineStore';
 import { useCalculatorsStore } from '@/store/calculatorsStore';
@@ -72,9 +73,16 @@ export default function RootNavigator() {
     useEePoolStore.getState().load().catch(() => {});
 
     AsyncStorage.getItem(STORAGE_KEYS.ONBOARDING_SEEN)
-      .then((v) => setOnboardingSeen(v === 'true'))
+      .then((v) => {
+        setOnboardingSeen(v === 'true');
+        // No onboarding yet = a fresh install: its red dots start quiet, like the draw and processing-times dots.
+        void useCommunityBadgeStore.getState().load(v !== 'true');
+      })
       // On storage failure, skip onboarding rather than re-showing it forever
-      .catch(() => setOnboardingSeen(true));
+      .catch(() => {
+        setOnboardingSeen(true);
+        void useCommunityBadgeStore.getState().load(false);
+      });
 
     const timeout = setTimeout(() => {
       // Safety net: if AsyncStorage hung and profile is still null, seed defaults

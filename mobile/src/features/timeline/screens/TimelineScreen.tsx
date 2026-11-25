@@ -27,6 +27,8 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { CommunityTab } from '../components/CommunityTab';
 import { MyShareCard, ShareWithCommunityButton } from '@/features/community/components/MyShareCard';
 import { communityVisible } from '@/features/community/model';
+import { useCommunityBadgeStore, useCommunityHasNew } from '@/features/community/communityBadgeStore';
+import { useIsFocused } from '@react-navigation/native';
 
 import { MILESTONE_META, MILESTONE_TYPES } from '../milestoneMeta';
 
@@ -401,6 +403,19 @@ export default function TimelineScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // Red dot on Community (and the Timeline tab): looking at the feed clears it, and
+  // opening the tab re-checks so the dot doesn't come back for what's on screen now.
+  const communityNew = useCommunityHasNew();
+  const latestCommunity = useCommunityBadgeStore((st) => st.latest);
+  const focused = useIsFocused();
+  const viewingCommunity = SHOW_COMMUNITY && focused && tab === 'community';
+  useEffect(() => {
+    if (viewingCommunity) void useCommunityBadgeStore.getState().check(true);
+  }, [viewingCommunity]);
+  useEffect(() => {
+    if (viewingCommunity) void useCommunityBadgeStore.getState().markCommunitySeen();
+  }, [viewingCommunity, latestCommunity]);
+
   const listStyle = [s.list, !SHOW_COMMUNITY && s.listNoTabs, { paddingBottom: contentPaddingBottom }, contentFrameStyle];
 
   return (
@@ -424,7 +439,12 @@ export default function TimelineScreen() {
                 accessibilityRole="tab"
                 accessibilityState={{ selected: active }}
               >
-                <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{tb.label}</Text>
+                <View style={s.segLabel}>
+                  <Text style={[s.segText, { color: active ? palette.white : c.textSecondary }]}>{tb.label}</Text>
+                  {tb.key === 'community' && communityNew && !active && (
+                    <View style={[s.segDot, { backgroundColor: palette.danger }]} accessibilityLabel={t('timeline.communityNew')} />
+                  )}
+                </View>
               </TouchableOpacity>
             );
           })}
@@ -520,6 +540,8 @@ const s = StyleSheet.create({
   segBtn:      { flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 40,
                  paddingVertical: spacing.sm - 2, borderRadius: borderRadius.md },
   segText:     { fontSize: typography.sm, fontWeight: typography.bold },
+  segLabel:    { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  segDot:      { width: 8, height: 8, borderRadius: 4 },
   modalKeyboard: { flex: 1 },
   timelineRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: 4 },
   lineCol:     { alignItems: 'center', width: 16 },

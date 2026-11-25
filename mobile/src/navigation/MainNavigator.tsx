@@ -1,12 +1,18 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, StyleSheet, View } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, Platform, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { typography, spacing, borderRadius } from '@/theme';
+import { palette, typography, spacing, borderRadius } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useTabBarLayout, TAB_BAR_TOP_PADDING } from '@/hooks/useTabBarLayout';
 import type { MainTabParamList } from '@/types';
+import {
+  useCommunityBadgeStore,
+  useCommunityHasNew,
+  useSettingsHasNew,
+} from '@/features/community/communityBadgeStore';
 
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import TimelineScreen from '@/features/timeline/screens/TimelineScreen';
@@ -31,6 +37,21 @@ export default function MainNavigator() {
   const accent = useAccentColor();
   const { tabBarHeight, tabBarBottomPadding } = useTabBarLayout();
   const { t } = useTranslation();
+  const communityNew = useCommunityHasNew();
+  const settingsNew = useSettingsHasNew();
+
+  // Red dots: check the Community feed at launch and on each return to the app (RootNavigator loads what was seen).
+  useEffect(() => {
+    void useCommunityBadgeStore.getState().check();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void useCommunityBadgeStore.getState().check();
+    });
+    return () => sub.remove();
+  }, []);
+  const DOTS: Partial<Record<keyof MainTabParamList, boolean>> = {
+    Timeline: communityNew,
+    Settings: settingsNew,
+  };
 
   const TAB_LABELS: Record<keyof MainTabParamList, string> = {
     Dashboard: t('tabs.home'),
@@ -78,6 +99,9 @@ export default function MainNavigator() {
                 size={focused ? 22 : 20}
                 color={color}
               />
+              {DOTS[route.name] && (
+                <View style={[styles.dot, { backgroundColor: palette.danger }]} />
+              )}
             </View>
           );
         },
@@ -87,7 +111,8 @@ export default function MainNavigator() {
       <Tab.Screen name="Timeline"  component={TimelineScreen} />
       <Tab.Screen name="Draws"     component={DrawsScreen} />
       <Tab.Screen name="Analytics" component={PremiumAnalyticsScreen} />
-      <Tab.Screen name="Settings"  component={ProfileScreen} />
+      <Tab.Screen name="Settings"  component={ProfileScreen}
+        listeners={{ focus: () => { void useCommunityBadgeStore.getState().markSettingsSeen(); } }} />
     </Tab.Navigator>
   );
 }
@@ -104,6 +129,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 2,
+  },
+  dot: {
+    position: 'absolute', top: 2, right: 6,
+    width: 9, height: 9, borderRadius: 5,
   },
   tabLabel: {
     fontSize: typography.xs,

@@ -265,6 +265,7 @@ const en = {
     title: 'Timeline',
     tabMine: 'My timeline',
     tabCommunity: 'Community',
+    communityNew: 'New activity',
     communitySoon: 'Coming soon',
     communityTitle: 'See how others are moving',
     communityBody: 'Compare your journey with people on the same path: how long others waited from ITA to AOR, biometrics, passport request and landing. Share your own timeline anonymously, only if you want to.',

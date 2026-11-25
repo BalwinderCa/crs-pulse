@@ -274,6 +274,7 @@ const fr: TranslationKeys = {
     // [REVIEW] Timeline tabs + Community waitlist
     tabMine: 'Ma chronologie',
     tabCommunity: 'Communauté',
+    communityNew: 'Nouvelle activité',
     communitySoon: 'Bientôt',
     communityTitle: 'Voyez où en sont les autres',
     communityBody: 'Comparez votre parcours avec celui de personnes sur la même voie : combien de temps d’autres ont attendu entre l’ITA, l’AR, la biométrie, la demande de passeport et l’arrivée. Partagez votre propre chronologie de façon anonyme, seulement si vous le souhaitez.',
