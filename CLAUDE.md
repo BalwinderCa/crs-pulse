@@ -114,6 +114,20 @@ approves, click "Release This Version". Promotional Text is empty in both langua
 build exists yet**, and nothing may be sent to Play while the title review is pending; until Android has a
 1.0.18 build, OTAs from main reach no Android install (publish Android fixes from a 1.0.17 checkout).
 
+**1.0.19 (Community, no Pro).** The Pro subscription (RevenueCat) was postponed on 2026-11-25: its
+three commits were reverted on main and the work lives on branch `feature/pro`. **iOS builds 73–75 are
+1.0.19 builds that contain Pro; never attach them.** The worker was redeployed without the RevenueCat
+check (version `ae3edc19`; the unused `REVENUECAT_SECRET` secret is still set). 1.0.19 also adds red dots
+for new Community activity (Timeline tab + Community sub-tab) and a one-time Settings dot (`6302b51`).
+iOS **build 77** (EAS `7b7685cb`, tag `ios-build-1.0.19-b2`, from `6302b51`) was opened on a device, then
+**submitted for review on 2026-11-25** with manual release, no phased release (Waiting for Review). The
+same day: What's New (en + fr-CA) and review notes for Community; age rating answered UGC Yes, Social
+Media No (stays 4+), Shared Location No, Dating No; the App Privacy label gained Other User Content and
+User ID (App Functionality, not linked, no tracking), published immediately. Android **versionCode 35**
+(EAS `32e392de`) went to Alpha without the dots; nobody has opened it. Before Android 1.0.19 goes to
+Production: build versionCode 36 from main, open it on a device, and update Play Data safety and the
+content rating (UGC yes, users interacting no).
+
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
   released by hand, and the public App Store lookup shows 1.0.15 from 2026-10-24 04:26 UTC. App
