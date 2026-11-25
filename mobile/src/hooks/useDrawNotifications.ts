@@ -11,7 +11,6 @@ import {
 } from '@/services/pushService';
 import { track } from '@/services/analyticsService';
 import { useTimelineStore } from '@/store/timelineStore';
-import { useProStore } from '@/store/proStore';
 import { sharedAorMonth } from '@/features/community/model';
 
 Notifications.setNotificationHandler({
@@ -55,7 +54,7 @@ function failureKey(reason: PushRegisterFailure): string {
 /** The device registers (with these prefs) while any alert is on, and revokes when all are off. */
 function register(p: PushPrefs) {
   const aorMonth = p.aor ? sharedAorMonth(useTimelineStore.getState().milestones) ?? null : null;
-  return registerForPushNotifications({ draws: p.draws, times: p.times, aorMonth }, useProStore.getState().userId);
+  return registerForPushNotifications({ draws: p.draws, times: p.times, aorMonth });
 }
 
 type PushPrefsStore = {
@@ -64,8 +63,6 @@ type PushPrefsStore = {
   /** Reads saved prefs and re-registers so the server has the current AOR month. */
   load: () => Promise<void>;
   set: (change: Partial<PushPrefs>) => Promise<void>;
-  /** Re-registers with the current prefs (e.g. once Pro status is known), if any alert is on. */
-  resync: () => Promise<void>;
 };
 
 let busy = false;
@@ -91,11 +88,6 @@ export const usePushPrefs = create<PushPrefsStore>((setState, get) => ({
     } finally {
       setState({ loading: false });
     }
-  },
-
-  resync: async () => {
-    const p = get().prefs;
-    if (anyOn(p)) await register(p).catch(() => {});
   },
 
   // Flip at once and do the push (un)registration behind it: the token fetch +

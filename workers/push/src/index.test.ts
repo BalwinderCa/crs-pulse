@@ -346,8 +346,8 @@ test('AOR digest: 20 shares in a night become one push with the count, after 30 
   const { queueAorMonth, flushAorDigests } = await import('./index.ts');
   const { registerToken } = await import('./tokenStore.ts');
   const kv = new MetaKV() as unknown as KVNamespace;
-  await registerToken(kv, 'ExpoPushToken[me]', 'ios', { d: 1, t: 1, a: '2026-03', g: Date.now() });
-  await registerToken(kv, 'ExpoPushToken[sharer]', 'ios', { d: 1, t: 1, a: '2026-03', g: Date.now() });
+  await registerToken(kv, 'ExpoPushToken[me]', 'ios', { d: 1, t: 1, a: '2026-03' });
+  await registerToken(kv, 'ExpoPushToken[sharer]', 'ios', { d: 1, t: 1, a: '2026-03' });
   await registerToken(kv, 'ExpoPushToken[other]', 'ios', { d: 1, t: 1, a: '2026-04' });
   const t0 = Date.UTC(2026, 10, 18, 2, 0);
   for (let i = 0; i < 19; i++) await queueAorMonth(kv, '2026-03', `id${i}`, `admin${i}`, null, t0 + i * 60_000);
@@ -366,19 +366,4 @@ test('AOR digest: 20 shares in a night become one push with the count, after 30 
   await queueAorMonth(kv, '2026-03', 'id21', 'late', null, t0 + 2 * 3600_000);
   assert.deepEqual(await flushAorDigests(kv, t0 + 3 * 3600_000, send), []);
   assert.equal(sent.length, 1);
-});
-
-test('proUntil reads the pro entitlement from RevenueCat and ignores everything else', async () => {
-  const { proUntil } = await import('./index.ts');
-  const now = Date.UTC(2026, 11, 1);
-  const reply = (ent: unknown, ok = true) => (async () => new Response(JSON.stringify({ subscriber: { entitlements: ent } }), { status: ok ? 200 : 500 })) as unknown as typeof fetch;
-  const env = { REVENUECAT_SECRET: 'sk_test' };
-  const id = '$RCAnonymousID:abc123';
-  assert.equal(await proUntil(env, id, now, reply({ pro: { expires_date: '2026-12-31T00:00:00Z' } })), Date.parse('2026-12-31T00:00:00Z'));
-  assert.ok((await proUntil(env, id, now, reply({ pro: { expires_date: null } })))! > now + 1e12); // lifetime
-  assert.equal(await proUntil(env, id, now, reply({ pro: { expires_date: '2026-11-01T00:00:00Z' } })), undefined); // expired
-  assert.equal(await proUntil(env, id, now, reply({})), undefined); // no Pro
-  assert.equal(await proUntil(env, id, now, reply({}, false)), undefined); // RevenueCat error
-  assert.equal(await proUntil({}, id, now, reply({ pro: { expires_date: null } })), undefined); // not set up
-  assert.equal(await proUntil(env, '../../evil', now, reply({ pro: { expires_date: null } })), undefined); // bad id
 });

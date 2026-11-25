@@ -12,7 +12,6 @@ import { borderRadius, palette, spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { track } from '@/services/analyticsService';
 import { isAdFree, useAdFreeStore } from '@/store/adFreeStore';
-import { useIsPro } from '@/store/proStore';
 
 // `require` is provided by the Metro runtime; declare it for the TS compiler
 // (the project's tsconfig pulls no node types).
@@ -119,9 +118,8 @@ function useSeenOnScreen(enabled: boolean): [React.RefObject<View | null>, boole
  */
 export function AdBanner() {
   const [failed, setFailed] = useState(false);
-  // Off for Pro, and while a rewarded ad's "3 days without ads" reward is running.
-  const rewarded = useAdFreeStore((st) => isAdFree(st.until));
-  const adFree = useIsPro() || rewarded;
+  // Off while a rewarded ad's "3 days without ads" reward is running.
+  const adFree = useAdFreeStore((st) => isAdFree(st.until));
   const enabled = MONETIZATION_ENABLED && !!ads && !failed && !adFree;
   const [ref, seen] = useSeenOnScreen(enabled);
 

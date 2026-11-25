@@ -26,8 +26,7 @@
       "env": {
         "APP_ENV": "staging",
         "EXPO_PUBLIC_PUSH_URL": "https://crs-pulse-push.balwinderxcode.workers.dev",
-        "EXPO_PUBLIC_PUSH_API_KEY": "dummy_secret_for_preview_replace_in_eas_secrets",
-        "EXPO_PUBLIC_RC_IOS_KEY": "appl_hyAhmeGnoeckZPRKoEmoNbXxtsv"
+        "EXPO_PUBLIC_PUSH_API_KEY": "dummy_secret_for_preview_replace_in_eas_secrets"
       }
     },
     "production": {
@@ -58,8 +57,7 @@
         "EXPO_PUBLIC_ADMOB_INTERSTITIAL_IOS": "ca-app-pub-4874088724567128/1593641399",
         "EXPO_PUBLIC_MONETIZATION_ENABLED": "true",
         "EXPO_PUBLIC_POSTHOG_KEY": "phc_B6cfSjHfowwLnGsM73hPhTeqm7MWep8Lgsxe6za9Zamj",
-        "EXPO_PUBLIC_POSTHOG_HOST": "https://t.crspulse.com",
-        "EXPO_PUBLIC_RC_IOS_KEY": "appl_hyAhmeGnoeckZPRKoEmoNbXxtsv"
+        "EXPO_PUBLIC_POSTHOG_HOST": "https://t.crspulse.com"
       }
     },
     "production-apk": {

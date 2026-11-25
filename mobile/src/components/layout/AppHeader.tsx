@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,8 +14,6 @@ import { useDrawsStore } from '@/store/drawsStore';
 import { spacing, typography } from '@/theme';
 import { useColors } from '@/hooks/useColors';
 import { palette } from '@/theme';
-import { useAccentColor } from '@/hooks/useAccentColor';
-import { useProStore } from '@/store/proStore';
 import type { RootStackParamList } from '@/types';
 
 type Props = {
@@ -33,8 +31,6 @@ type Props = {
 
 export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props) {
   const c = useColors();
-  const accent = useAccentColor();
-  const proPaid = useProStore((st) => st.active);
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -101,12 +97,12 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               )}
             </TouchableOpacity>
             <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
-              {t('common.menu')}
+              {title}
             </Text>
           </View>
 
           <View style={s.brandCenter}>
-            <Logo size={15} />
+            <Logo size={20} />
           </View>
 
           <View style={s.sideRight}>
@@ -121,15 +117,6 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               <Ionicons name="notifications-outline" size={23} color={c.textPrimary} />
               {hasUnseen && <View style={[s.badge, { backgroundColor: palette.danger }]} />}
             </TouchableOpacity>
-            {!proPaid && (
-              <TouchableOpacity ph-label="header-go-pro" onPress={() => navigation.navigate('Pro')} hitSlop={8}
-                style={[s.iconBtn, s.crownBtn]} accessibilityRole="button" accessibilityLabel={t('pro.goPro')}>
-                <MaterialCommunityIcons name="crown" size={30} color={accent} />
-                <View style={[s.proTag, { backgroundColor: accent, borderColor: c.surfacePrimary }]}>
-                  <Text style={s.proTagTxt}>{t('pro.proBadge')}</Text>
-                </View>
-              </TouchableOpacity>
-            )}
           </View>
         </>
       )}
@@ -156,9 +143,6 @@ const s = StyleSheet.create({
   brandCenter: { flexDirection: 'row', alignItems: 'center' },
   sideRight:   { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.md },
   iconBtn:     { padding: 2 },
-  crownBtn:    { marginLeft: -9, marginRight: 12 },
-  proTag:      { position: 'absolute', top: -8, left: 18, width: 28, alignItems: 'center', borderRadius: 6, borderWidth: 1.5, paddingVertical: 0 },
-  proTagTxt:   { color: palette.white, fontSize: 8, fontWeight: '900', letterSpacing: 0.4 },
   badge: {
     position: 'absolute', top: 1, right: 1,
     width: 9, height: 9, borderRadius: 5,

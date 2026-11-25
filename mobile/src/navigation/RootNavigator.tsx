@@ -15,7 +15,6 @@ import MainNavigator from './MainNavigator';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
 import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
 import MyProfileScreen from '@/features/profile/screens/MyProfileScreen';
-import ProScreen from '@/features/pro/screens/ProScreen';
 import SinpCalculatorScreen from '@/features/sinp/screens/SinpCalculatorScreen';
 import OnboardingScreen from '@/features/onboarding/screens/OnboardingScreen';
 import CalculatorsScreen from '@/features/calculators/screens/CalculatorsScreen';
@@ -29,7 +28,6 @@ import ProcessingTimesScreen from '@/features/tracker/screens/ProcessingTimesScr
 import CommunityTimelineScreen from '@/features/community/screens/CommunityTimelineScreen';
 import { initAds, showAppOpenAd, takeAppOpenAdTurn } from '@/services/adsService';
 import { useAdFreeStore } from '@/store/adFreeStore';
-import { isProOn, useProStore } from '@/store/proStore';
 import { trackScreen } from '@/services/analyticsService';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
 import { useApplicationStore } from '@/store/applicationStore';
@@ -88,8 +86,7 @@ export default function RootNavigator() {
       setReady(true);
     }, BOOT_TIMEOUT_MS);
 
-    // Pro state (cached) before first paint, so the look doesn't flip after the splash.
-    Promise.all([loadProfile(), useProStore.getState().load()])
+    loadProfile()
       .catch(() => {})
       // Load the chosen font before first paint so text doesn't jump fonts.
       .then(() => loadAppFont(useProfileStore.getState().profile?.font ?? 'system'))
@@ -100,11 +97,6 @@ export default function RootNavigator() {
 
     return () => clearTimeout(timeout);
   }, [loadProfile, loadDraws]);
-
-  // When RevenueCat answers (id, or Pro bought/ended), tell the push worker so Pro alerts follow.
-  useEffect(() => useProStore.subscribe((st, prev) => {
-    if (st.userId !== prev.userId || st.active !== prev.active) void usePushPrefs.getState().resync();
-  }), []);
 
   // Sync i18n language whenever the profile language changes.
   useEffect(() => {
@@ -125,9 +117,8 @@ export default function RootNavigator() {
   useEffect(() => {
     if (!ready) return;
     void (async () => {
-      // Pro (or an earned ad-free period) skips the launch ad without using up a turn.
-      const [rewarded] = await Promise.all([useAdFreeStore.getState().load(), useProStore.getState().load()]);
-      const adFree = rewarded || isProOn(useProStore.getState());
+      // An earned ad-free period skips the launch ad without using up a turn.
+      const adFree = await useAdFreeStore.getState().load();
       if (MONETIZATION_ENABLED && !adFree && (await takeAppOpenAdTurn())) {
         await showAppOpenAd(SPLASH_AD_TIMEOUT_MS);
       }
@@ -160,7 +151,6 @@ export default function RootNavigator() {
         <Stack.Screen name="Faq" component={FaqScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="ReportIssue" component={ReportIssueScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="MyProfile" component={MyProfileScreen} options={{ animation: 'slide_from_right' }} />
-        <Stack.Screen name="Pro" component={ProScreen} options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="SinpCalculator" component={SinpCalculatorScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="CrsCalculator" component={DashboardScreen} options={{ animation: 'slide_from_right' }} />
         <Stack.Screen name="Calculators" component={CalculatorsScreen} options={{ animation: 'slide_from_right' }} />

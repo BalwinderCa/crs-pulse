@@ -58,9 +58,7 @@ export type PushRegisterResult = { ok: true } | { ok: false; reason: PushRegiste
 
 export type ServerPushPrefs = { draws: boolean; times: boolean; aorMonth: string | null };
 
-/** `proUserId`: RevenueCat's id for this install, so the worker can check Pro before sending Pro alerts. */
-
-export async function registerForPushNotifications(prefs: ServerPushPrefs, proUserId?: string | null): Promise<PushRegisterResult> {
+export async function registerForPushNotifications(prefs: ServerPushPrefs): Promise<PushRegisterResult> {
   if (!Device.isDevice) return { ok: false, reason: 'simulator' };
 
   // Expo Go cannot receive remote push notifications (SDK 53+)
@@ -97,7 +95,6 @@ export async function registerForPushNotifications(prefs: ServerPushPrefs, proUs
         token,
         platform: Platform.OS === 'ios' ? 'ios' : 'android',
         prefs,
-        ...(proUserId ? { proUserId } : {}),
       }),
     });
 

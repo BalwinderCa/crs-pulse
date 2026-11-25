@@ -95,7 +95,6 @@ export type RootStackParamList = {
   Faq:  undefined;
   ReportIssue: undefined;
   MyProfile: undefined;
-  Pro: undefined;
   SinpCalculator: undefined;
   CrsCalculator: undefined;
   Calculators: undefined;

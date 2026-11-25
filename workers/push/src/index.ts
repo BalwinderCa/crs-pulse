@@ -1,5 +1,6 @@
 import { handleCommunity, handleCommunityAdmin } from './community.ts';
 import {
+  hasToken,
   listTokens,
   migrateLegacyTokens,
   registerToken,
@@ -15,7 +16,6 @@ import {
   wantsDraws,
   wantsTimes,
   wantsAor,
-  getTokenPrefs,
   type PushPrefs,
 } from './tokenStore.ts';
 import { validateTokenWithExpo } from './expoValidate.ts';
@@ -69,11 +69,6 @@ export interface Env {
   GITHUB_DISPATCH_TOKEN?: string;
   /** Community timelines (see community.ts). Its routes return 503 until bound. */
   COMMUNITY_DB?: D1Database;
-  /**
-   * RevenueCat secret API key (v1). Optional: when unset nobody is treated as
-   * Pro by the worker, so Pro alerts go only to trial and pre-Pro devices.
-   */
-  REVENUECAT_SECRET?: string;
 }
 
 const EXPO_TOKEN_RE = /^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/;
@@ -940,32 +935,6 @@ async function kickMirror(env: Env): Promise<void> {
   }
 }
 
-const RC_ID_RE = /^[A-Za-z0-9$:._-]{1,100}$/;
-
-/**
- * When this RevenueCat user's Pro entitlement ends (ms), or undefined if they
- * don't have it (or RevenueCat isn't set up / didn't answer). A lifetime unlock
- * has no end date, so it's stored as far in the future.
- */
-export async function proUntil(env: Pick<Env, 'REVENUECAT_SECRET'>, id: unknown, now = Date.now(),
-  fetcher: typeof fetch = fetch): Promise<number | undefined> {
-  if (!env.REVENUECAT_SECRET || typeof id !== 'string' || !RC_ID_RE.test(id)) return undefined;
-  try {
-    const res = await fetcher(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(id)}`, {
-      headers: { Authorization: `Bearer ${env.REVENUECAT_SECRET}`, Accept: 'application/json' },
-    });
-    if (!res.ok) return undefined;
-    const data = (await res.json()) as { subscriber?: { entitlements?: Record<string, { expires_date?: string | null }> } };
-    const pro = data.subscriber?.entitlements?.pro;
-    if (!pro) return undefined;
-    if (pro.expires_date == null) return 8_640_000_000_000_000; // lifetime
-    const until = Date.parse(pro.expires_date);
-    return Number.isFinite(until) && until > now ? until : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /** `{ draws, times, aorMonth }` from the app (1.0.19+); absent = legacy, all-but-AOR on. */
 export function parsePushPrefs(raw: unknown): PushPrefs | undefined | 'invalid' {
   if (raw === undefined) return undefined;
@@ -996,9 +965,9 @@ export default {
         return json({ message: 'Unauthorized' }, 401);
       }
 
-      let body: { token?: string; platform?: string; prefs?: unknown; proUserId?: unknown };
+      let body: { token?: string; platform?: string; prefs?: unknown };
       try {
-        body = (await request.json()) as { token?: string; platform?: string; prefs?: unknown; proUserId?: unknown };
+        body = (await request.json()) as { token?: string; platform?: string; prefs?: unknown };
       } catch {
         return json({ message: 'Invalid JSON body' }, 400);
       }
@@ -1022,19 +991,10 @@ export default {
       // The client re-registers on every launch; skip the Expo probe (and its
       // silent validation push) when the token is already in the registry.
       let alreadyRegistered = false;
-      let stored: PushPrefs | undefined;
       try {
-        const existing = await getTokenPrefs(env.TOKENS_KV, body.token);
-        alreadyRegistered = existing.exists;
-        stored = existing.prefs;
+        alreadyRegistered = await hasToken(env.TOKENS_KV, body.token);
       } catch {
         // KV read failed — fall through and validate as if new.
-      }
-      if (prefs) {
-        // The trial clock starts once and survives re-registers; Pro is re-checked every launch.
-        prefs.g = stored?.g ?? Date.now();
-        const until = await proUntil(env, body.proUserId);
-        if (until) prefs.x = until;
       }
 
       // Reject tokens Expo synchronously flags as invalid (fails open on Expo
