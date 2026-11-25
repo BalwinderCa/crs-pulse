@@ -1,8 +1,17 @@
 {
-  "updated": "2026-11-23",
-  "updatedFull": "November 23, 2026",
+  "updated": "2026-11-25",
+  "updatedFull": "November 25, 2026",
   "distributionAsOf": "November 22, 2026",
   "rounds": [
+    {
+      "number": "455",
+      "date": "2026-11-25",
+      "dateFull": "November 25, 2026",
+      "name": "French-Language proficiency 2026-Version 2",
+      "label": "French-Language proficiency",
+      "size": 6000,
+      "crs": 401
+    },
     {
       "number": "454",
       "date": "2026-11-23",
@@ -173,15 +182,6 @@
       "label": "Canadian Experience Class",
       "size": 1000,
       "crs": 523
-    },
-    {
-      "number": "435",
-      "date": "2026-08-17",
-      "dateFull": "August 17, 2026",
-      "name": "Provincial Nominee Program",
-      "label": "Provincial Nominee Program",
-      "size": 442,
-      "crs": 760
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 238692,
   "ytd": {
     "year": 2026,
-    "rounds": 66,
-    "invitations": 151408,
+    "rounds": 67,
+    "invitations": 157408,
     "categories": 9
   }
 }
