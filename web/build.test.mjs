@@ -37,6 +37,7 @@ const ROUTES = [
   ['/express-entry-process', 'express-entry-process'],
   ['/express-entry-changes-2026', 'express-entry-changes-2026'],
   ['/express-entry-2026-review', 'express-entry-2026-review'],
+  ['/express-entry-category-rounds', 'express-entry-category-rounds'],
   ['/about', 'about'],
   ['/privacy', 'privacy'],
   ['/terms', 'terms'],
