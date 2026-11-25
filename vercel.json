@@ -31,7 +31,7 @@
   ],
   "headers": [
     {
-      "source": "/:page(|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|express-entry-changes-2026|express-entry-2026-review|about|privacy|terms)",
+      "source": "/:page(|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|express-entry-changes-2026|express-entry-2026-review|express-entry-category-rounds|about|privacy|terms)",
       "headers": [
         {
           "key": "Vary",
@@ -40,7 +40,7 @@
       ]
     },
     {
-      "source": "/:page(index|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|express-entry-changes-2026|express-entry-2026-review|about|privacy|terms).md",
+      "source": "/:page(index|crs-calculator|fsw-calculator|bc-pnp-calculator|sinp-calculator|draws|analytics|checklists|processing-times|timeline|features|guides|crs-points|improve-crs-score|language-tests-clb|fsw-67-points|express-entry-draws|express-entry-process|express-entry-changes-2026|express-entry-2026-review|express-entry-category-rounds|about|privacy|terms).md",
       "headers": [
         {
           "key": "Content-Type",
