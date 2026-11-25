@@ -238,11 +238,6 @@ const en = {
     pointAor: 'AOR month alerts',
     pointLook: 'Themes and fonts',
     ctaShort: 'Try Pro free for 7 days',
-    active: 'ACTIVE',
-    monthlyPlan: 'Monthly plan',
-    yearlyPlan: 'Yearly plan',
-    renewsOn: 'Renews {{date}}',
-    endsOn: 'Ends {{date}}',
   },
 
   community: {

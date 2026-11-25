@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Linking, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
 import Toast from 'react-native-toast-message';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,7 +26,7 @@ import { usePushPrefs, type PushPrefs } from '@/hooks/useDrawNotifications';
 import { useTimelineStore } from '@/store/timelineStore';
 import { sharedAorMonth } from '@/features/community/model';
 import { FONT_OPTIONS, loadAppFont, type AppFont } from '@/theme/fonts';
-import { MANAGE_SUBSCRIPTIONS_URL, restorePro, useIsPro, useProStore } from '@/store/proStore';
+import { useIsPro, useProStore } from '@/store/proStore';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { summarizeProfile } from '../utils/profileSummary';
 
@@ -119,11 +119,6 @@ function makeStyles(c: Colors, accent: string) {
     proList:    { flexDirection: 'row', flexWrap: 'wrap', rowGap: 6, columnGap: spacing.md },
     proPoint:   { flexDirection: 'row', alignItems: 'center', gap: 6, width: '46%' },
     proPointTxt: { color: c.textPrimary, fontSize: typography.sm, fontWeight: typography.medium, flexShrink: 1 },
-    activePill: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-    activePillTxt: { color: palette.success, fontSize: 11, fontWeight: '800', letterSpacing: 0.4 },
-    proActions: { flexDirection: 'row', gap: spacing.sm },
-    proAction:  { flex: 1, alignItems: 'center', borderRadius: borderRadius.md, borderWidth: 1, paddingVertical: 10 },
-    proActionTxt: { fontSize: typography.sm, fontWeight: typography.bold },
     proCta:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, borderRadius: borderRadius.md, paddingVertical: 11 },
     proCtaTxt:  { color: '#fff', fontSize: typography.base, fontWeight: typography.bold },
     groupLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.bold, letterSpacing: 0.8, textTransform: 'uppercase', marginTop: spacing.sm, marginBottom: spacing.xs, paddingHorizontal: spacing.xs },
@@ -160,21 +155,6 @@ export default function ProfileScreen() {
   const isPro = useIsPro();
   const proPaid = useProStore((st) => st.active);
   const proTrialEnds = useProStore((st) => st.trialEnds);
-  const { productId: proProduct, expires: proExpires, willRenew: proRenews } = useProStore();
-  const [restoring, setRestoring] = useState(false);
-  const restore = async () => {
-    setRestoring(true);
-    const r = await restorePro();
-    setRestoring(false);
-    Toast.show(r === 'restored' ? { type: 'success', text1: t('pro.restored') }
-      : r === 'none' ? { type: 'info', text1: t('pro.nothingToRestore') }
-      : { type: 'error', text1: t('pro.restoreFailed') });
-  };
-  const proDate = proExpires ? new Date(proExpires).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric', year: 'numeric' }) : null;
-  const proPlanLine = [
-    proProduct ? t(proProduct.includes('year') ? 'pro.yearlyPlan' : 'pro.monthlyPlan') : null,
-    proDate ? t(proRenews ? 'pro.renewsOn' : 'pro.endsOn', { date: proDate }) : null,
-  ].filter(Boolean).join(' · ');
   const proTrialDays = !proPaid && proTrialEnds ? Math.max(0, Math.ceil((proTrialEnds - Date.now()) / 86_400_000)) : 0;
   const goPro = () => navigation.navigate('Pro');
   const pushPrefs = usePushPrefs((st) => st.prefs);
@@ -241,33 +221,6 @@ export default function ProfileScreen() {
             <Ionicons name="arrow-forward" size={16} color="#fff" />
           </View>
         </TouchableOpacity>
-      )}
-
-      {proPaid && (
-        <View style={[styles.proCard, { backgroundColor: accent + '10', borderColor: accent + '55' }]}>
-          <View style={styles.proHead}>
-            <View style={[styles.alertIcon, { backgroundColor: accent }]}>
-              <MaterialCommunityIcons name="crown" size={20} color="#fff" />
-            </View>
-            <View style={styles.notifText}>
-              <Text style={styles.proTitle}>{t('pro.activeHeadline')}</Text>
-              <Text style={styles.hint}>{proPlanLine}</Text>
-            </View>
-            <View style={[styles.activePill, { backgroundColor: palette.success + '22' }]}>
-              <Text style={styles.activePillTxt}>{t('pro.active')}</Text>
-            </View>
-          </View>
-          <View style={styles.proActions}>
-            <TouchableOpacity ph-label="profile-pro-manage" onPress={() => { void Linking.openURL(MANAGE_SUBSCRIPTIONS_URL); }}
-              style={[styles.proAction, { borderColor: accent }]} accessibilityRole="button">
-              <Text style={[styles.proActionTxt, { color: accent }]}>{t('pro.manage')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity ph-label="profile-pro-restore" onPress={() => { void restore(); }} disabled={restoring}
-              style={[styles.proAction, { borderColor: colors.border }]} accessibilityRole="button">
-              <Text style={[styles.proActionTxt, { color: colors.textSecondary }]}>{t('pro.restore')}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
       )}
 
       {/* ── CRS Score (compact) ── */}

@@ -244,11 +244,6 @@ const fr: TranslationKeys = {
     pointAor: 'Alertes mois d’AR',
     pointLook: 'Thèmes et polices',
     ctaShort: 'Essayer Pro gratuitement 7 jours',
-    active: 'ACTIF',
-    monthlyPlan: 'Forfait mensuel',
-    yearlyPlan: 'Forfait annuel',
-    renewsOn: 'Renouvelé le {{date}}',
-    endsOn: 'Prend fin le {{date}}',
   },
 
   community: {

@@ -13,10 +13,10 @@ describe('Pro', () => {
   });
 
   it('reads the pro entitlement from RevenueCat customer info', () => {
-    expect(proFrom({ entitlements: { active: {} } })).toEqual({ active: false, expires: null, productId: null, willRenew: false });
-    expect(proFrom({ entitlements: { active: { pro: { expirationDate: '2027-01-01T00:00:00Z', productIdentifier: 'crspulse_pro_monthly', willRenew: true } } } }))
-      .toEqual({ active: true, expires: Date.parse('2027-01-01T00:00:00Z'), productId: 'crspulse_pro_monthly', willRenew: true });
-    expect(proFrom({ entitlements: { active: { pro: { expirationDate: null } } } })).toEqual({ active: true, expires: null, productId: null, willRenew: false });
+    expect(proFrom({ entitlements: { active: {} } })).toEqual({ active: false, expires: null });
+    expect(proFrom({ entitlements: { active: { pro: { expirationDate: '2027-01-01T00:00:00Z' } } } }))
+      .toEqual({ active: true, expires: Date.parse('2027-01-01T00:00:00Z') });
+    expect(proFrom({ entitlements: { active: { pro: { expirationDate: null } } } })).toEqual({ active: true, expires: null });
   });
 
   it('starts the 7-day trial on the first load and keeps that start', async () => {

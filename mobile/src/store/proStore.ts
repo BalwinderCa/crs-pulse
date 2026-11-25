@@ -25,36 +25,16 @@ function purchases(): Purchases | null {
   return rc;
 }
 
-type Entitlement = { expirationDate: string | null; productIdentifier?: string; willRenew?: boolean };
-type Entitlements = { active: Record<string, Entitlement | undefined> };
-export type ProInfo = { active: boolean; expires: number | null; productId: string | null; willRenew: boolean };
+type Entitlements = { active: Record<string, { expirationDate: string | null } | undefined> };
 
 /** Pro is active when the entitlement is; `expires` is null for a lifetime unlock. */
-export function proFrom(info: { entitlements: Entitlements }): ProInfo {
+export function proFrom(info: { entitlements: Entitlements }): { active: boolean; expires: number | null } {
   const e = info.entitlements.active[PRO_ENTITLEMENT];
-  if (!e) return { active: false, expires: null, productId: null, willRenew: false };
-  return { active: true, expires: e.expirationDate ? Date.parse(e.expirationDate) : null,
-    productId: e.productIdentifier ?? null, willRenew: e.willRenew ?? false };
+  if (!e) return { active: false, expires: null };
+  return { active: true, expires: e.expirationDate ? Date.parse(e.expirationDate) : null };
 }
 
-/** Where a subscriber manages or cancels their plan. */
-export const MANAGE_SUBSCRIPTIONS_URL = Platform.OS === 'ios'
-  ? 'https://apps.apple.com/account/subscriptions'
-  : 'https://play.google.com/store/account/subscriptions';
-
-/** Restores purchases from the store account; the listener then updates the store. */
-export async function restorePro(): Promise<'restored' | 'none' | 'failed' | 'unavailable'> {
-  const P = purchases();
-  if (!P) return 'unavailable';
-  try {
-    const info = await P.restorePurchases();
-    return info.entitlements.active[PRO_ENTITLEMENT] ? 'restored' : 'none';
-  } catch {
-    return 'failed';
-  }
-}
-
-type ProStore = Omit<ProInfo, 'active'> & {
+type ProStore = {
   /** A paid (or store-trial) Pro entitlement. */
   active: boolean;
   /** When the free in-app trial ends (ms). */
@@ -70,9 +50,6 @@ export const purchasesAvailable = (): boolean => !!purchases();
 
 export const useProStore = create<ProStore>(() => ({
   active: false,
-  expires: null,
-  productId: null,
-  willRenew: false,
   trialEnds: null,
   userId: null,
   loaded: false,
@@ -88,15 +65,14 @@ async function loadOnce(): Promise<void> {
     // Cached first, so the launch ad and the look are right before the network answers.
     try {
       const [cached, start] = await AsyncStorage.multiGet([STORAGE_KEYS.PRO_STATE, STORAGE_KEYS.PRO_TRIAL_START]);
-      const c = cached?.[1] ? (JSON.parse(cached[1]) as Partial<ProInfo>) : null;
+      const c = cached?.[1] ? (JSON.parse(cached[1]) as { active?: boolean; expires?: number | null }) : null;
       let s = Number(start?.[1]);
       if (!Number.isFinite(s) || s <= 0) {
         s = Date.now();
         await AsyncStorage.setItem(STORAGE_KEYS.PRO_TRIAL_START, String(s));
       }
       const stillValid = !!c?.active && (c.expires == null || c.expires > Date.now());
-      set({ active: stillValid, trialEnds: s + PRO_TRIAL_MS, expires: c?.expires ?? null,
-        productId: c?.productId ?? null, willRenew: !!c?.willRenew });
+      set({ active: stillValid, trialEnds: s + PRO_TRIAL_MS });
     } catch {}
     set({ loaded: true });
   }
@@ -108,7 +84,7 @@ async function loadOnce(): Promise<void> {
       P.configure({ apiKey: rcKey()! });
       const apply = (info: { entitlements: Entitlements }) => {
         const pro = proFrom(info);
-        set(pro);
+        set({ active: pro.active });
         void AsyncStorage.setItem(STORAGE_KEYS.PRO_STATE, JSON.stringify(pro)).catch(() => {});
       };
       P.addCustomerInfoUpdateListener(apply);
