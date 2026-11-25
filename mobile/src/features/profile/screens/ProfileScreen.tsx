@@ -63,18 +63,19 @@ function makeStyles(c: Colors, accent: string) {
     hint:         { color: c.textSecondary, fontSize: typography.sm, lineHeight: 20 },
 
     // Score hero
-    scoreHero:  { alignItems: 'center', paddingVertical: spacing.md, gap: spacing.xs },
-    scoreNum:   { fontSize: 60, fontWeight: typography.black, letterSpacing: -2, lineHeight: 68 },
-    scoreLabel: { color: c.textMuted, fontSize: typography.xs, fontWeight: typography.semibold, letterSpacing: 0.8, textTransform: 'uppercase' },
+    scoreRow:   { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+    scoreRight: { alignItems: 'flex-end', gap: 4 },
+    scoreNum:   { fontSize: 30, fontWeight: typography.black, letterSpacing: -0.5, lineHeight: 34 },
+    scoreLabel: { color: c.textMuted, fontSize: typography.xs, marginTop: 2 },
     catBadge: {
-      paddingHorizontal: spacing.md,
-      paddingVertical:   spacing.xs,
+      paddingHorizontal: spacing.sm,
+      paddingVertical:   2,
       borderRadius:      borderRadius.md,
       borderWidth:       0.3,
       borderColor:       c.border,
       backgroundColor:   c.surfaceSecondary,
     },
-    catText: { fontSize: typography.sm, fontWeight: typography.bold },
+    catText: { fontSize: typography.xs, fontWeight: typography.bold },
 
     // Notification row
     notifRow:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.base },
@@ -162,24 +163,23 @@ export default function ProfileScreen() {
 
   return (
     <ScreenWrapper scrollable keyboardAvoiding header={<AppHeader title={t('profile.title')} />}>
-      {/* ── CRS Score Hero ── */}
+      {/* ── CRS Score (compact) ── */}
       <Card style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('profile.crsScore')}</Text>
-        <View style={styles.scoreHero}>
-          <Text style={[styles.scoreNum, { color: scoreColor }]}>
-            {scoreReady ? score : '—'}
-          </Text>
-          <Text style={styles.scoreLabel}>{t('profile.comprehensiveRanking')}</Text>
-          {cat && (
-            <View style={styles.catBadge}>
-              <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
-            </View>
-          )}
+        <View style={styles.scoreRow}>
+          <View style={styles.notifText}>
+            <Text style={styles.notifLabel}>{t('profile.crsScore')}</Text>
+            <Text style={styles.scoreLabel}>{t('profile.comprehensiveRanking')}</Text>
+          </View>
+          <View style={styles.scoreRight}>
+            <Text style={[styles.scoreNum, { color: scoreColor }]}>{scoreReady ? score : '—'}</Text>
+            {cat && (
+              <View style={styles.catBadge}>
+                <Text style={[styles.catText, { color: accent }]}>{cat}</Text>
+              </View>
+            )}
+          </View>
         </View>
-
-        {!scoreReady && (
-          <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>
-        )}
+        {!scoreReady && <Text style={styles.hint}>{t('profile.enterScoreHint')}</Text>}
       </Card>
 
       {/* ── My Profile (details live on their own screen) ── */}

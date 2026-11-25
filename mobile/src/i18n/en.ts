@@ -701,6 +701,7 @@ const en = {
     goBack: 'Go back',
     goBackFrom: 'Go back from {{title}}',
     openMenu: 'Open menu',
+    menu: 'Menu',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     openAnalytics: 'Open analytics',

@@ -97,12 +97,12 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
               )}
             </TouchableOpacity>
             <Text style={[s.titleText, { color: c.textMuted }]} numberOfLines={1}>
-              {title}
+              {t('common.menu')}
             </Text>
           </View>
 
           <View style={s.brandCenter}>
-            <Logo size={20} />
+            <Logo size={15} />
           </View>
 
           <View style={s.sideRight}>

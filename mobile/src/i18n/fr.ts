@@ -712,6 +712,7 @@ const fr: TranslationKeys = {
     goBack: 'Retour',
     goBackFrom: 'Retour depuis {{title}}',
     openMenu: 'Ouvrir le menu',
+    menu: 'Menu',
     showPassword: 'Afficher le mot de passe',
     hidePassword: 'Masquer le mot de passe',
     openAnalytics: 'Ouvrir les analyses',
