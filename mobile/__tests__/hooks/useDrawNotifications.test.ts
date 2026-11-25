@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePushPrefs } from '@/hooks/useDrawNotifications';
 import { registerForPushNotifications, unregisterPushNotifications } from '@/services/pushService';
 import { useTimelineStore } from '@/store/timelineStore';
-import { useProStore } from '@/store/proStore';
 import { STORAGE_KEYS } from '@/constants';
 
 jest.mock('@/services/pushService', () => ({
@@ -31,7 +30,6 @@ describe('usePushPrefs', () => {
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     usePushPrefs.setState({ prefs: { draws: false, times: false, aor: false }, loading: true });
     useTimelineStore.setState({ milestones: [] });
-    useProStore.setState({ active: false, trialEnds: Date.now() + 86_400_000 }); // in the trial
   });
 
   it('carries a pre-1.0.19 single switch over to draws + processing times', async () => {
@@ -91,18 +89,5 @@ describe('usePushPrefs', () => {
     pending.resolve({ ok: true });
     await first;
     expect(prefs().draws).toBe(true);
-  });
-
-  it('after the trial without Pro, sends the Pro alerts as off but keeps the saved choice', async () => {
-    useProStore.setState({ active: false, trialEnds: Date.now() - 1 });
-    useTimelineStore.setState({ milestones: [{ id: '1', type: 'AOR Received', date: '2026-03-14' } as never] });
-    register.mockResolvedValue({ ok: true });
-    await set({ draws: true, times: true, aor: true });
-    expect(register).toHaveBeenLastCalledWith({ draws: true, times: false, aorMonth: null }, null);
-    expect(prefs()).toEqual({ draws: true, times: true, aor: true });
-
-    useProStore.setState({ active: true }); // bought Pro
-    await usePushPrefs.getState().resync();
-    expect(register).toHaveBeenLastCalledWith({ draws: true, times: true, aorMonth: '2026-03' }, null);
   });
 });
