@@ -1,8 +1,17 @@
 {
-  "updated": "2026-11-25",
-  "updatedFull": "November 25, 2026",
+  "updated": "2026-11-26",
+  "updatedFull": "November 26, 2026",
   "distributionAsOf": "November 22, 2026",
   "rounds": [
+    {
+      "number": "456",
+      "date": "2026-11-26",
+      "dateFull": "November 26, 2026",
+      "name": "STEM occupations, 2026-Version 3",
+      "label": "STEM occupations",
+      "size": 600,
+      "crs": 547
+    },
     {
       "number": "455",
       "date": "2026-11-25",
@@ -173,15 +182,6 @@
       "label": "French-Language proficiency",
       "size": 5000,
       "crs": 382
-    },
-    {
-      "number": "436",
-      "date": "2026-08-18",
-      "dateFull": "August 18, 2026",
-      "name": "Canadian Experience Class",
-      "label": "Canadian Experience Class",
-      "size": 1000,
-      "crs": 523
     }
   ],
   "pool": [
@@ -217,8 +217,8 @@
   "poolTotal": 238692,
   "ytd": {
     "year": 2026,
-    "rounds": 67,
-    "invitations": 157408,
-    "categories": 9
+    "rounds": 68,
+    "invitations": 158008,
+    "categories": 10
   }
 }
