@@ -120,13 +120,37 @@ three commits were reverted on main and the work lives on branch `feature/pro`. 
 check (version `ae3edc19`; the unused `REVENUECAT_SECRET` secret is still set). 1.0.19 also adds red dots
 for new Community activity (Timeline tab + Community sub-tab) and a one-time Settings dot (`6302b51`).
 iOS **build 77** (EAS `7b7685cb`, tag `ios-build-1.0.19-b2`, from `6302b51`) was opened on a device, then
-**submitted for review on 2026-11-25** with manual release, no phased release (Waiting for Review). The
+**submitted for review on 2026-11-25** with manual release, no phased release. The
 same day: What's New (en + fr-CA) and review notes for Community; age rating answered UGC Yes, Social
 Media No (stays 4+), Shared Location No, Dating No; the App Privacy label gained Other User Content and
-User ID (App Functionality, not linked, no tracking), published immediately. Android **versionCode 35**
-(EAS `32e392de`) went to Alpha without the dots; nobody has opened it. Before Android 1.0.19 goes to
-Production: build versionCode 36 from main, open it on a device, and update Play Data safety and the
-content rating (UGC yes, users interacting no).
+User ID (App Functionality, not linked, no tracking), published immediately. **iOS 1.0.19 is live**
+(App Store lookup: released 2026-11-26 04:16 UTC), so Community is live on iOS; OTAs from main now reach
+1.0.19 iOS installs. PostHog's 1.0.19 users before that date (5 iOS, from 2026-11-19) are test devices.
+Android **versionCode 35** (EAS `32e392de`, from `c17cd2e`) went to Alpha without the dots. **versionCode
+36** (EAS `faf54679`, from `a357632`: the same app code as iOS build 77) replaced it in Alpha on
+2026-11-25 03:48 (Play time), full rollout to testers; as of 2026-11-26 no device had reported it in
+PostHog. **Android Production is still 1.0.17 (versionCode 34)**, so Android has no Community yet. Play
+Console names the app "CRS Tracker: Score & Draws" and shows its last publish on 2026-11-25, so the title
+change appears to have been accepted. A started but unsubmitted Content Rating questionnaire is waiting
+in Publishing overview (sent 2026-11-28, below).
+
+**2026-11-28: first 1.0.19 update, and Android 1.0.19 sent to Production.** Commit `938d959` (pushed):
+a **COPR** milestone (🎉; order is now … ADR, Final Decision, Portal 1, Portal 2, COPR), the new Community
+card, no "Other" preselection in the feed, a Draws tab dot, and tapped pushes opening their screen. The
+worker was deployed first (version `0eab77ee`, previous `ae3edc19`), then the update was published (group
+`224cb7b4`, iOS and Android, runtime 1.0.19). It arrived on build 36 from Play on a Galaxy S23 (new cards
+and COPR seen, live Community data); not checked on a physical iPhone by Claude, and no real push tap has
+been tested on either platform. Android **versionCode 36 → Production** (full rollout, all targeted
+countries, notes in en-GB, fr-CA, fr-FR) was **sent for review on 2026-11-28 together with the content
+rating**; only warning: no deobfuscation file. Play's quick checks were still running at that point, and
+managed publishing is off, so it goes live on approval. The public Data safety page already listed "Other
+user-generated content"; "Name" is not declared (display names are random). The rating summary shows
+all-ages ratings with no descriptors; it doesn't show the individual answers.
+
+**Apply-update-on-first-launch is parked** on local branch `feature/ota-first-launch` (`0a0ba60`, not
+pushed): `otaService.applyUpdateAtLaunch` holds the splash up to 4 s and reloads into a new update. Unit
+tested only, never run on a release build. A slow update can miss the cap, partly because JS update calls
+queue behind the native startup download (from reading expo-updates, not measured).
 
 **Store status (as of 2026-10-23): both stores are live.**
 - **iOS 1.0.15 (build 68) is live.** Apple approved it on 2026-10-23 (email 23:42 UTC), it was
@@ -453,6 +477,16 @@ for Gradle 8.14) and more than the template's 512 MB metaspace, or KSP fails wit
 `OutOfMemoryError: Metaspace`. Delete the generated `mobile/android/` afterwards. Verify alignment with an ELF program-header check
 before assuming a build is compliant.
 
+**Local simulator and emulator testing (2026-11-28, Xcode 27.2).** `expo run:ios` fails to find the
+Simulator app (it's DeviceHub now); build with `xcodebuild … IPHONEOS_DEPLOYMENT_TARGET=15.1`. An app
+built with the iOS 27 SDK dies at launch ("UIScene life cycle is required"); for a simulator test only,
+`vtool -set-build-version iossim 15.1 26.0` on the binaries and an ad-hoc re-sign got it running. Moving
+store builds to Xcode 27 will need that sorted properly. If another project's Gradle holds
+`~/.gradle/caches/journal-1`, use a private `GRADLE_USER_HOME`. The Play-installed APKs don't run on an
+emulator (Play's protection shows "Check that Google Play is enabled"); test a local release build there,
+and the real Play build on a physical device. AVD `crspulse_test` exists for this. Delete the generated
+`mobile/ios/` and `mobile/android/` afterwards.
+
 **Android credentials are entirely remote — nothing store-related needs to be on disk.**
 Signing uses `credentialsSource: "remote"`: the JKS EAS holds (alias
 `bd121022349bbbb6c81fa86896c9f53d`) is the key Play has registered as the upload key
@@ -497,7 +531,7 @@ Stores in `src/store/`:
 | `processingTimesStore` | `LiveProcessingTimes` | IRCC processing times by category/type; 7-day cache with bundled fallback |
 | `eePoolStore` | `EePoolData` | Express Entry pool distribution + Immigration Levels Plan; 7-day cache with bundled fallback |
 
-These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge), separate from the draws store's push de-dup `LAST_SEEN_DRAW`. It also tracks the last processing-times `updated` label seen — `useProcessingTimesBadge()` turns that into the red dot on the header hamburger and the side-menu "Check Processing Times" row, cleared when `ProcessingTimesScreen` mounts.
+These stores are persisted via `zustand/middleware` + AsyncStorage. Profile store also exports a derived `crsScore` computed from `CalcInputs`. A feature-local `src/features/notifications/store/notificationsStore.ts` tracks the last draw number seen on the notifications page (drives the header bell badge and the Draws tab dot through `useHasUnseenDraw`; opening either Draws or Notifications clears both), separate from the draws store's push de-dup `LAST_SEEN_DRAW`. It also tracks the last processing-times `updated` label seen — `useProcessingTimesBadge()` turns that into the red dot on the header hamburger and the side-menu "Check Processing Times" row, cleared when `ProcessingTimesScreen` mounts.
 
 ### Feature Structure
 
@@ -538,6 +572,10 @@ Static reference data: `features/checklist/data/checklists.ts` (document checkli
 ### Theme System
 
 `src/theme/` exports `colors` (dark/light palettes with WCAG AA contrast ratios), `spacing`, `typography`, and `shadows`. Use the `useColors()` hook to get the current theme's color palette — never hardcode colors.
+
+A tapped push opens its screen (`navigation/pushNavigation.ts`, which holds a cold-start tap until the
+navigator is ready and never skips onboarding): `new_draw` → Draws tab, `processing_times` →
+`ProcessingTimes`, `community` → Timeline's Community sub-tab filtered to its `aor_month`.
 
 ### Push Worker (`workers/push/src/`)
 
@@ -659,8 +697,10 @@ https://claude.ai/artifact/NCoEvLxpQkU6rCT288xtbe (six layout options plus the e
 and day, and a full-width "Share with community" button, "Edit" once shared). **Community** is a paged
 `FlatList` (20 per page, pull to refresh) under one row of filter chips that open bottom sheets
 (`FilterSheet`): My month (your program + AOR month), Program, AOR month, Stage, and Sort (recently
-updated, longest waiting, furthest along). There is no "N people sharing" count. Each person is a
-white card (initial avatar, stage-coloured pill, big day count). The list reads through
+updated, longest waiting, furthest along). There is no "N people sharing" count. The feed starts on the
+user's shared program, except "Other", which shows all. Each person is a white card (`PersonCard`, chosen
+2026-11-28 from samples built into the dev app: avatar, name, program · AOR month, an n/6 stage pill, and
+the last three steps newest first with the days between them; a same-day gap is hidden). The list reads through
 `fetchCommunityPage(filters, cursor)` in `features/community/communityApi.ts`, shaped like the planned
 `GET /community?program=&aor=&stage=&sort=&cursor=&limit=` route (use a keyset cursor on
 `(updated_at, id)`); today it pages through `SAMPLE_TIMELINES` (8 hand-written + 72 seeded, all made
@@ -676,6 +716,10 @@ first step, the AOR month (always, decided 2026-11-15, so "My month" can find pe
 never the day, `sharedAorMonth`), plus every step's month/year, always shared since 2026-11-18 (the "Show month and year" switch was removed; a stored `showMonths` is ignored) (`toSharedSteps`). Notes, custom milestones, exact dates and
 future-dated steps are never included; tests in `__tests__/features/communityModel.test.ts` check
 it. Your card is rebuilt from the live timeline, so it always shows where you have reached.
+
+**COPR on the wire:** builds without the COPR type crash on an unknown step, so the worker returns `COPR`
+only to requests with `?copr=1` and sends it as `Final Decision` to everyone else. Any new milestone type
+needs the same guard, and the worker deployed (it rejects unknown types on `PUT`) before the app shares it.
 
 **Server (live 2026-11-18):** the push worker's `/community` routes on D1 `crs-pulse-community`
 (see `workers/push/src/community.ts`); `SAMPLE_TIMELINES` is only the fallback when no
