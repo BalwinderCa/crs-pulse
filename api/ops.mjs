@@ -157,7 +157,7 @@ details.card summary h2::before{content:'▸ ';color:var(--ink3)}details.card[op
 .btn.bad{color:var(--bad)}.btn:disabled{opacity:.5;cursor:default}
 .acts{display:flex;gap:6px;justify-content:flex-end}
 .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--raise);color:var(--ink2)}
-.pill.hid{background:var(--bad);color:var(--surface)}.pill.rep{background:var(--s4);color:#111}
+.pill.hid{background:var(--bad);color:var(--surface)}.pill.adm{background:var(--ink);color:var(--surface)}.pill.rep{background:var(--s4);color:#111}
 td small{display:block;color:var(--ink3);font-size:11.5px}
 tr.rep-row td{background:var(--raise)}
 .pager{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);color:var(--ink2);font-size:12.5px}
@@ -188,6 +188,23 @@ dialog::backdrop{background:rgba(15,15,14,.45)}
 .cm-f textarea{min-height:190px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
 .cm-f label.check{display:flex;gap:8px;align-items:center}.cm-f .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .cm-f .foot{display:flex;gap:8px;justify-content:flex-end}
+
+/* Community: one timeline in a popup, laid out like the app's timeline page */
+dialog.cv{width:min(620px,calc(100vw - 32px));max-height:min(86vh,900px);overflow:auto;overscroll-behavior:contain}
+.cv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.cv-body{display:grid;gap:8px}
+.cv-who{display:flex;align-items:center;gap:14px}.cv-who h2{font-size:17px}.cv-who>div{min-width:0}
+.cv-tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.cv-now{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.cv-now b{font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.cv-stage{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-weight:600;font-size:13px;background:color-mix(in srgb,var(--tone) 15%,transparent)}
+.cv-stage .ico,.cv-ic .ico{color:var(--tone)}
+.cv-steps{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.cv-step{display:grid;grid-template-columns:auto minmax(0,1fr) auto 72px;gap:12px;align-items:center;padding:10px 14px;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow)}
+.cv-step.last{border-color:var(--ink);font-weight:600}
+.cv-ic{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--tone) 15%,transparent);font-size:16px}
+.cv-gap{color:var(--ink3);font-size:12.5px;font-weight:400}
+.cv-day{text-align:right;font-variant-numeric:tabular-nums}
 
 /* Login */
 .login{max-width:380px;margin:12vh auto 0;padding:0 16px}
@@ -575,6 +592,7 @@ $('#app').innerHTML='<div id="cm"><div class="cm-bar"><input id="cm-q" type="sea
 '<button class="btn" data-act="clearf" id="cm-clearf" hidden>Clear filters</button></div>'+
 '<div id="cm-err" class="err" role="alert"></div>'+
 '<section class="card" id="cm-list"><div class="msg">Loading…</div></section></div>'+
+'<dialog id="cm-vw" class="cv" aria-labelledby="cv-name"></dialog>'+
 '<dialog id="cm-dlg" aria-labelledby="cm-dt"><h2 id="cm-dt">Edit timeline</h2><form class="cm-f" id="cm-form">'+
 '<div class="row2"><label>Display name<input name="alias" maxlength="30" placeholder="Generated if empty"></label>'+
 '<label>Avatar id<input name="avatar" placeholder="e.g. b32014"></label></div>'+
@@ -603,7 +621,35 @@ document.getElementById('cm-dlg').addEventListener('click',function(ev){if(ev.ta
 document.getElementById('cm-form').addEventListener('submit',cmSave);
 mpInit();
 document.getElementById('cm-form').addEventListener('input',function(ev){if(ev.target.name==='alias'||ev.target.name==='avatar')cmPreview()});
+var vw=document.getElementById('cm-vw');
+// The dialog's own padding counts as a click on it, so close only when the pointer is outside its box.
+vw.addEventListener('click',function(ev){var r=vw.getBoundingClientRect();
+if(ev.target.closest('[data-cv="close"]')||(ev.target===vw&&(ev.clientX<r.left||ev.clientX>r.right||ev.clientY<r.top||ev.clientY>r.bottom)))vw.close()});
 cmLoad()}
+// ---- One timeline in a popup, mirroring the app's CommunityTimelineScreen ----
+// Step types: [tone, icon]. Tones follow the app's stages: start, checks, passport, decision.
+var CV_ICONS={mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',up:'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+doc:'<path d="M6 3h8l4 4v14H6z"/><path d="M9 12h6M9 16h6"/>',shield:'<path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="m9 12 2 2 4-4"/>',
+med:'<path d="M3 12h4l3-7 4 14 3-7h4"/>',card:'<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M14 10h4M14 14h4"/>',
+send:'<path d="M21 3 3 10l7 3 3 7z"/>',check:'<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/>'};
+var CV_STEPS={'ITA':['s1','mail'],'Application Submitted':['s1','up'],'AOR Received':['s1','doc'],'Biometrics Requested':['s3','shield'],'Biometrics Completed':['s3','shield'],
+'Medical Requested':['s3','med'],'Medical Passed':['s3','med'],'ADR':['s2','doc'],'Passport Requested':['s4','card'],'Passport Submitted':['s4','send'],'Passport Collected':['s4','send'],
+'Final Decision':['bad','check'],'Portal 1':['bad','globe'],'Portal 2':['bad','globe'],'COPR':['bad','🎉']};
+function cvIcon(type){var m=CV_STEPS[type]||['s1','doc'];return CV_ICONS[m[1]]?'<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">'+CV_ICONS[m[1]]+'</svg>':'<span aria-hidden="true">'+m[1]+'</span>'}
+function cvTone(type){return '--tone:var(--'+(CV_STEPS[type]||['s1'])[0]+')'}
+function cvMonth(m,long){var p=String(m||'').split('-');return p.length<2?'':new Date(+p[0],+p[1]-1,1).toLocaleDateString('en-CA',{month:long?'long':'short',year:'numeric'})}
+function cvOpen(t){var d=document.getElementById('cm-vw');d.innerHTML=cvHtml(t);d.showModal();d.scrollTop=0}
+function cvHtml(t){var name=t.alias||'Anonymous',steps=t.steps,last=steps[steps.length-1],first=steps[0]&&steps[0].month;
+var ago=Math.max(0,Math.floor((Date.now()-t.updatedAt)/86400000));
+var sub=(CM_PROGRAM_LABELS[t.program]||t.program)+(first?' · Started '+cvMonth(first,true):'')+(t.aorMonth?' · AOR '+cvMonth(t.aorMonth):'');
+return '<div class="cv-body"><div class="cv-head"><div class="cv-who">'+buddySvg(t.avatar,name,56)+'<div><h2 id="cv-name">'+esc(name)+'</h2><div class="sub">'+esc(sub)+'</div>'+
+'<div class="cv-tags">'+cmBy(t)+(t.hidden?'<span class="pill hid">Hidden</span>':'<span class="pill">Visible</span>')+
+(t.reports?'<span class="pill rep">'+t.reports+' report'+(t.reports===1?'':'s')+'</span>':'')+
+'<span class="sub">Updated '+(ago===0?'today':ago===1?'1 day ago':ago+' days ago')+'</span></div></div></div><button type="button" class="btn" data-cv="close">Close</button></div>'+
+(last?'<div class="cv-now"><span class="cv-stage" style="'+cvTone(last.type)+'">'+cvIcon(last.type)+esc(last.type)+'</span><b>Day '+last.day+'</b></div>':'')+
+'<ol class="cv-steps">'+steps.map(function(x,i){var d=i?x.day-steps[i-1].day:0,gap=i?'+'+d+(d===1?' day':' days'):(x.month?cvMonth(x.month):'Start');
+return '<li class="cv-step'+(i===steps.length-1?' last':'')+'"><span class="cv-ic" style="'+cvTone(x.type)+'">'+cvIcon(x.type)+'</span><span>'+esc(x.type)+'</span><span class="cv-gap">'+esc(gap)+'</span><span class="cv-day">Day '+x.day+'</span></li>'}).join('')+'</ol></div>'}
+function cmBy(t){return t.byAdmin?'<span class="pill adm">Admin</span>':'<span class="pill">User</span>'}
 function cmFiltered(){return !!(CM.f.program||CM.f.aor||CM.f.stage)}
 // AOR options come from the list response; the current choice stays even when nothing matches it any more.
 function cmAorOptions(months){var sel=document.querySelector('#cm-filters [data-f="aor"]');if(!sel)return;var cur=CM.f.aor,ms=months.slice();
@@ -623,12 +669,13 @@ return '<tr data-id="'+t.id+'"><td><div class="who">'+buddySvg(t.avatar,t.alias|
 '<td>'+esc(CM_STAGES[t.stage]||'–')+'<small>'+esc(last?last.type:'')+' · day '+t.lastDay+'</small></td>'+
 '<td>'+cmDate(t.updatedAt)+'</td>'+
 '<td class="num">'+(t.reports?'<button class="btn" data-act="reports">'+t.reports+'</button>':'0')+'</td>'+
+'<td>'+cmBy(t)+'</td>'+
 '<td>'+(t.hidden?'<span class="pill hid">Hidden</span>':'<span class="pill">Visible</span>')+'</td>'+
-'<td><div class="acts"><button class="btn" data-act="edit">Edit</button>'+
+'<td><div class="acts"><button class="btn" data-act="view">View</button><button class="btn" data-act="edit">Edit</button>'+
 '<button class="btn" data-act="'+(t.hidden?'unhide':'hide')+'">'+(t.hidden?'Unhide':'Hide')+'</button>'+
 '<button class="btn bad" data-act="del">Delete</button></div></td></tr>'}).join('');
 var end=Math.min(d.offset+d.items.length,d.total);
-el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Stage</th><th>Updated</th><th class="num">Reports</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
+el.innerHTML='<table><thead><tr><th>Name</th><th>Program</th><th>AOR</th><th>Stage</th><th>Updated</th><th class="num">Reports</th><th>Shared by</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>'+
 cmPager(d,end);csEnhance(el)}
 // Numbered pages: first, last, and one either side of the current one, with … for the gaps.
 function cmPageList(cur,last){var out=[],i;for(i=1;i<=last;i++){if(i===1||i===last||Math.abs(i-cur)<=1)out.push(i);else if(out[out.length-1]!=='…')out.push('…')}return out}
@@ -645,13 +692,14 @@ function cmClick(ev){var b=ev.target.closest('button[data-act]');if(!b||b.disabl
 if(act==='new')return cmOpen(null);
 if(act==='clearf'){CM.f={program:'',aor:'',stage:'',sort:CM.f.sort};CM.offset=0;document.querySelectorAll('#cm-filters select').forEach(function(s){s.value=CM.f[s.dataset.f];csSync(s)});return cmLoad()}
 if(act==='page'){CM.offset=(Math.max(1,+b.dataset.p)-1)*CM.limit;cmLoad().then(function(){var l=document.getElementById('cm-list');if(l)l.scrollIntoView({block:'start',behavior:'smooth'})});return}
+if(act==='view')return cvOpen(t);
 if(act==='edit')return cmOpen(t);
 if(act==='hide'||act==='unhide'){b.disabled=true;return cmApi('PATCH','id='+id,{hidden:act==='hide'}).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})}
 if(act==='del')return cmConfirm({title:'Delete this timeline?',body:'It disappears from the app. If someone shared it, they will see it as no longer shared. This cannot be undone.',ok:'Delete timeline',who:t})
 .then(function(yes){if(!yes)return;b.disabled=true;return cmApi('DELETE','id='+id).then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})});
 if(act==='reports'){var nx=tr.nextElementSibling;if(nx&&nx.classList.contains('rep-row')){nx.remove();return}
 return cmApi('GET','id='+id+'&reports=1').then(function(list){var r=document.createElement('tr');r.className='rep-row';
-r.innerHTML='<td colspan="8"><b>Reports</b> '+list.map(function(x){return '<span class="pill rep">'+esc(x.reason)+'</span> <small style="display:inline">'+cmDate(x.createdAt)+'</small>'}).join(' · ')+
+r.innerHTML='<td colspan="9"><b>Reports</b> '+list.map(function(x){return '<span class="pill rep">'+esc(x.reason)+'</span> <small style="display:inline">'+cmDate(x.createdAt)+'</small>'}).join(' · ')+
 ' <span class="acts" style="display:inline-flex;margin-left:12px"><button class="btn" data-act="dismiss" data-for="'+id+'">Dismiss reports</button></span></td>';tr.after(r)}).catch(function(e){cmErr(e.message)})}
 if(act==='dismiss'){var fid=b.dataset.for;return cmConfirm({title:'Dismiss these reports?',body:'The reports are cleared. This does not un-hide the timeline.',ok:'Dismiss reports',who:cmFind(fid)})
 .then(function(yes){if(!yes)return;b.disabled=true;return cmApi('DELETE','id='+fid+'&reports=1').then(cmLoad).catch(function(e){cmErr(e.message);b.disabled=false})})}}
