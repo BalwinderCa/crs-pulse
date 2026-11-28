@@ -18,6 +18,7 @@ export type MilestoneType =
   | 'Portal 1'
   | 'Portal 2'
   | 'Final Decision'
+  | 'COPR'
   | 'Custom';
 
 export type Milestone = {

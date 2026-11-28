@@ -300,3 +300,16 @@ test('admin list pages by limit and offset', async () => {
   const seen = new Set([...(await page('limit=3')).items, ...(await page('limit=3&offset=3')).items, ...(await page('limit=3&offset=6')).items].map((t: any) => t.id));
   assert.equal(seen.size, 7);
 });
+
+test('COPR reaches only app builds that ask for it; older ones see a Final Decision', async () => {
+  const db = makeDb();
+  const put = await call(db, 'PUT', '/community/me', {
+    key: KEY_A, body: timeline({ steps: [{ type: 'ITA', day: 0 }, { type: 'COPR', day: 200 }] }),
+  });
+  assert.equal(put.status, 200);
+  const types = (t: any) => t.steps.map((s: any) => s.type);
+  for (const [qs, last] of [['', 'Final Decision'], ['?copr=1', 'COPR']] as const) {
+    assert.deepEqual(types((await call(db, 'GET', `/community${qs}`)).body.items[0]), ['ITA', last]);
+    assert.deepEqual(types((await call(db, 'GET', `/community/${put.body.id}${qs}`)).body), ['ITA', last]);
+  }
+});

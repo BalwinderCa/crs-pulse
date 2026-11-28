@@ -91,6 +91,7 @@ const STOP_OF: Partial<Record<MilestoneType, Stop>> = {
   'Portal 1': 'decision',
   'Portal 2': 'decision',
   'Final Decision': 'decision',
+  'COPR': 'decision',
 };
 
 export const stopOf = (type: MilestoneType): Stop | undefined => STOP_OF[type];

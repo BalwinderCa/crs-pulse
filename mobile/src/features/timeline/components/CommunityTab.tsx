@@ -34,8 +34,11 @@ const PREVIEW: { icon: React.ComponentProps<typeof Ionicons>['name']; color: str
  * waitlist is kept for a staged launch but no release build reaches it today.
  * Dev builds show the feed so it can be worked on.
  */
-export function CommunityTab({ contentContainerStyle }: { contentContainerStyle?: StyleProp<ViewStyle> }) {
-  if (communityVisible()) return <CommunityFeed contentContainerStyle={contentContainerStyle} />;
+export function CommunityTab({ contentContainerStyle, fromAlert }: {
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  fromAlert?: { aorMonth: string | null; at: number } | undefined;
+}) {
+  if (communityVisible()) return <CommunityFeed contentContainerStyle={contentContainerStyle} fromAlert={fromAlert} />;
   return (
     <ScrollView contentContainerStyle={contentContainerStyle} showsVerticalScrollIndicator={false}>
       <CommunityWaitlist />

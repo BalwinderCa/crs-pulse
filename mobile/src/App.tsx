@@ -37,6 +37,7 @@ LogBox.ignoreLogs([
 if (__DEV__) LogBox.ignoreAllLogs();
 
 import RootNavigator from '@/navigation/RootNavigator';
+import { openFromPush } from '@/navigation/pushNavigation';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useTabBarLayout } from '@/hooks/useTabBarLayout';
@@ -77,6 +78,7 @@ function AppInner() {
       onProcessingTimes: () => {
         useProcessingTimesStore.getState().load(true).catch(() => {});
       },
+      onOpen: openFromPush,
     });
   }, []);
 

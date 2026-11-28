@@ -5,7 +5,13 @@ import type { MilestoneType } from '@/store/timelineStore';
 
 // ─── Milestone metadata ───────────────────────────────────────────────────────
 
-export type Meta = { icon: React.ComponentProps<typeof Ionicons>['name']; color: string; labelKey: string };
+export type Meta = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  color: string;
+  labelKey: string;
+  /** Shown instead of `icon` (see MilestoneIcon). */
+  emoji?: string;
+};
 
 export const MILESTONE_META: Record<MilestoneType, Meta> = {
   'ITA':                   { icon: 'mail-open',         color: palette.info, labelKey: 'milestoneTypes.ita' },
@@ -19,9 +25,10 @@ export const MILESTONE_META: Record<MilestoneType, Meta> = {
   'Passport Submitted':    { icon: 'send',              color: palette.info, labelKey: 'milestoneTypes.passportSubmitted' },
   'Passport Collected':    { icon: 'airplane',          color: palette.success, labelKey: 'milestoneTypes.passportCollected' },
   'ADR':                   { icon: 'document-attach',   color: palette.orange, labelKey: 'milestoneTypes.adr' },
+  'Final Decision':        { icon: 'checkmark-done-circle', color: palette.danger, labelKey: 'milestoneTypes.finalDecision' },
   'Portal 1':              { icon: 'log-in',            color: palette.purple, labelKey: 'milestoneTypes.portal1' },
   'Portal 2':              { icon: 'globe',             color: palette.purpleDeep, labelKey: 'milestoneTypes.portal2' },
-  'Final Decision':        { icon: 'trophy',            color: palette.danger, labelKey: 'milestoneTypes.finalDecision' },
+  'COPR':                  { icon: 'trophy',            color: palette.success, labelKey: 'milestoneTypes.copr', emoji: '🎉' },
   'Custom':                { icon: 'pencil',            color: palette.gray300, labelKey: 'timeline.custom' },
 };
 
@@ -30,6 +37,7 @@ export const MILESTONE_TYPES: MilestoneType[] = [
   'Biometrics Requested', 'Biometrics Completed',
   'Medical Requested', 'Medical Passed',
   'Passport Requested', 'Passport Submitted', 'Passport Collected',
-  'ADR', 'Portal 1', 'Portal 2',
-  'Final Decision', 'Custom',
+  'ADR', 'Final Decision',
+  'Portal 1', 'Portal 2', 'COPR',
+  'Custom',
 ];

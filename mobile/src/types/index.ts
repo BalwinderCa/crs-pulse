@@ -113,7 +113,8 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Dashboard: undefined;
-  Timeline:  undefined;
+  /** `community`: open that sub-tab filtered to an AOR month (from a tapped alert). */
+  Timeline:  { community: { aorMonth: string | null; at: number } } | undefined;
   Draws:     undefined;
   Analytics: undefined;
   Settings:  undefined;

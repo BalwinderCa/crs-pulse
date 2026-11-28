@@ -128,7 +128,7 @@ export async function fetchCommunityPage(
   limit = PAGE_SIZE,
 ): Promise<CommunityPage> {
   if (serverUrl()) {
-    const q = new URLSearchParams({ sort: filters.sort, limit: String(limit) });
+    const q = new URLSearchParams({ sort: filters.sort, limit: String(limit), copr: '1' });
     if (filters.program !== 'all') q.set('program', filters.program);
     if (filters.aorMonth) q.set('aor', filters.aorMonth);
     if (filters.stage) q.set('stage', filters.stage);
@@ -147,7 +147,7 @@ export async function fetchCommunityPage(
 /** GET /community/:id → SharedTimeline, or 404 (null) once it's unshared. */
 export async function fetchCommunityTimeline(id: string): Promise<SharedTimeline | null> {
   if (serverUrl()) {
-    const [t, owner] = await Promise.all([call<SharedTimeline>(`/community/${encodeURIComponent(id)}`), getOwner()]);
+    const [t, owner] = await Promise.all([call<SharedTimeline>(`/community/${encodeURIComponent(id)}?copr=1`), getOwner()]);
     return t && markMine(t, owner);
   }
   await latency();

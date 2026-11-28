@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Logo } from '@/components/common/Logo';
 import { SideMenu } from '@/features/dashboard/components/SideMenu';
 import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
+import { useHasUnseenDraw } from '@/features/notifications/useHasUnseenDraw';
 import { useProcessingTimesBadge } from '@/hooks/useProcessingTimesBadge';
 import { useDrawsStore } from '@/store/drawsStore';
 import { spacing, typography } from '@/theme';
@@ -48,8 +49,7 @@ export function AppHeader({ title, variant = 'tab', onBackPress, right }: Props)
     }
   }, [loaded, seenDraw, latestDraw, markSeen]);
 
-  const hasUnseen =
-    loaded && seenDraw !== null && !!latestDraw && latestDraw.draw_number > seenDraw;
+  const hasUnseen = useHasUnseenDraw();
 
   return (
     <View

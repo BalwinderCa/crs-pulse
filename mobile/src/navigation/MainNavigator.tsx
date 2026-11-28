@@ -13,6 +13,7 @@ import {
   useCommunityHasNew,
   useSettingsHasNew,
 } from '@/features/community/communityBadgeStore';
+import { useHasUnseenDraw } from '@/features/notifications/useHasUnseenDraw';
 
 import HomeScreen from '@/features/home/screens/HomeScreen';
 import TimelineScreen from '@/features/timeline/screens/TimelineScreen';
@@ -39,6 +40,7 @@ export default function MainNavigator() {
   const { t } = useTranslation();
   const communityNew = useCommunityHasNew();
   const settingsNew = useSettingsHasNew();
+  const drawNew = useHasUnseenDraw();
 
   // Red dots: check the Community feed at launch and on each return to the app (RootNavigator loads what was seen).
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function MainNavigator() {
   const DOTS: Partial<Record<keyof MainTabParamList, boolean>> = {
     Timeline: communityNew,
     Settings: settingsNew,
+    Draws: drawNew,
   };
 
   const TAB_LABELS: Record<keyof MainTabParamList, string> = {

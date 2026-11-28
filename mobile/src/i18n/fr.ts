@@ -238,6 +238,7 @@ const fr: TranslationKeys = {
     programOther: 'Autre',
     anonymous: 'Candidat anonyme',
     dayN: 'Jour {{n}}',
+    gapDays: '+{{n}} j', // [REVIEW]
     stageOf: 'Étape {{n}} sur {{total}}',
     plusDays: '+{{n}} jours',
     edit: 'Modifier',
@@ -1028,6 +1029,7 @@ const fr: TranslationKeys = {
     portal1: 'Portail 1',
     portal2: 'Portail 2',
     finalDecision: 'Décision finale',
+    copr: 'CRP', // [REVIEW]
   },
 
   misc: {

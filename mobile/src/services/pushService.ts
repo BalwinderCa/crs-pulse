@@ -7,6 +7,7 @@ import { STORAGE_KEYS } from '@/constants';
 import { resolveEasProjectId } from '@/utils/easConfig';
 import { recordPositiveMoment } from '@/services/reviewPrompt';
 import { track } from '@/services/analyticsService';
+import type { PushTarget } from '@/navigation/pushNavigation';
 
 function getPushUrl(): string | null {
   const url = process.env.EXPO_PUBLIC_PUSH_URL?.replace(/\/$/, '');
@@ -135,7 +136,20 @@ export async function unregisterPushNotifications(): Promise<boolean> {
 export type PushHandlers = {
   onNewDraw: () => void;
   onProcessingTimes: () => void;
+  /** The user tapped the alert: show the screen it is about. */
+  onOpen?: (target: PushTarget) => void;
 };
+
+/** The screen a tapped push leads to, or null for pushes with no screen of their own. */
+function targetOf(data: Record<string, unknown> | null | undefined): PushTarget | null {
+  if (data?.type === 'new_draw') return { screen: 'Draws' };
+  if (data?.type === 'processing_times') return { screen: 'ProcessingTimes' };
+  if (data?.type === 'community') {
+    const month = data.aor_month;
+    return { screen: 'Community', aorMonth: typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : null };
+  }
+  return null;
+}
 
 /**
  * Routes an incoming push to the store that has to refetch. Both listeners and
@@ -157,12 +171,12 @@ type TapResponse = {
 };
 
 /**
- * Records a tap on a push as `push_opened`. Only the push type and the public
+ * Handles a tap on a push: opens its screen and records `push_opened`. Only the push type and the public
  * draw number are sent. `seen` holds identifiers already counted, because on a
  * cold start both the listener and getLastNotificationResponseAsync can
  * deliver the same tap.
  */
-function trackOpened(response: TapResponse, seen: Set<string>): void {
+function handleOpened(response: TapResponse, seen: Set<string>, handlers: PushHandlers): void {
   if (response.actionIdentifier && response.actionIdentifier !== DEFAULT_ACTION) return;
   const id = response.notification.request.identifier;
   if (id) {
@@ -170,6 +184,8 @@ function trackOpened(response: TapResponse, seen: Set<string>): void {
     seen.add(id);
   }
   const data = response.notification.request.content.data ?? {};
+  const target = targetOf(data);
+  if (target) handlers.onOpen?.(target);
   const type = (KNOWN_TYPES as readonly unknown[]).includes(data.type)
     ? (data.type as (typeof KNOWN_TYPES)[number])
     : 'other';
@@ -190,7 +206,7 @@ export function setupPushListeners(handlers: PushHandlers): () => void {
   });
 
   const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
-    trackOpened(response, seen);
+    handleOpened(response, seen, handlers);
     dispatch(response.notification.request.content.data?.type, handlers);
   });
 
@@ -201,7 +217,7 @@ export function setupPushListeners(handlers: PushHandlers): () => void {
   Notifications.getLastNotificationResponseAsync()
     .then(async (response) => {
       if (cancelled || !response) return;
-      trackOpened(response, seen);
+      handleOpened(response, seen, handlers);
       dispatch(response.notification.request.content.data?.type, handlers);
       await Notifications.clearLastNotificationResponseAsync().catch(() => {});
     })

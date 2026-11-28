@@ -1,8 +1,9 @@
 import type { Milestone } from '@/store/timelineStore';
 import {
   communityVisible, programFromTypeId, reachedIndex, sharedAorMonth, toSharedSteps, typicalPace, type SharedTimeline,
-  randomAlias,
+  randomAlias, stopOf,
 } from '@/features/community/model';
+import { MILESTONE_TYPES } from '@/features/timeline/milestoneMeta';
 
 const m = (type: Milestone['type'], date: string, extra: Partial<Milestone> = {}): Milestone =>
   ({ id: `${type}-${date}`, type, date, note: '', ...extra });
@@ -71,5 +72,21 @@ describe('randomAlias', () => {
       expect(a).toMatch(/^[A-Z][a-z]+[A-Z][a-z]+[2689]{4}$/);
       expect(a.length).toBeLessThanOrEqual(24); // the name field's maxLength
     }
+  });
+});
+
+describe('COPR milestone', () => {
+  it('is listed last, after Final Decision and the two portals', () => {
+    expect(MILESTONE_TYPES.slice(-5)).toEqual(['Final Decision', 'Portal 1', 'Portal 2', 'COPR', 'Custom']);
+  });
+
+  it('is shared and counts as the decision stop', () => {
+    const steps = toSharedSteps(
+      [{ id: '1', type: 'COPR', date: '2026-10-01', note: 'private' }],
+      false,
+      new Date(2026, 10, 1),
+    );
+    expect(steps).toEqual([{ type: 'COPR', day: 0 }]);
+    expect(stopOf('COPR')).toBe('decision');
   });
 });

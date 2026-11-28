@@ -120,4 +120,32 @@ describe('setupPushListeners routing', () => {
       expect(track).not.toHaveBeenCalled();
     });
   });
+
+  describe('opening the screen', () => {
+    const tap = (data: Record<string, unknown>, identifier: string) => ({ notification: { request: { identifier, content: { data } } } });
+
+    it('sends each tapped push to its screen', () => {
+      const onOpen = jest.fn();
+      setupPushListeners({ ...handlers, onOpen });
+      response!(tap({ type: 'new_draw', draw_number: '450' }, 'a'));
+      response!(tap({ type: 'processing_times' }, 'b'));
+      response!(tap({ type: 'community', aor_month: '2026-05' }, 'c'));
+      response!(tap({ type: 'app_update' }, 'd'));
+      expect(onOpen.mock.calls).toEqual([
+        [{ screen: 'Draws' }],
+        [{ screen: 'ProcessingTimes' }],
+        [{ screen: 'Community', aorMonth: '2026-05' }],
+      ]);
+    });
+
+    it('opens once for a cold start, and never for a foreground delivery', async () => {
+      const onOpen = jest.fn();
+      lastResponse = tap({ type: 'new_draw' }, 'same');
+      setupPushListeners({ ...handlers, onOpen });
+      received!(tap({ type: 'new_draw' }, 'x').notification);
+      response!(tap({ type: 'new_draw' }, 'same'));
+      await flush();
+      expect(onOpen).toHaveBeenCalledTimes(1);
+    });
+  });
 });

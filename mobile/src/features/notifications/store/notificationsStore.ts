@@ -6,7 +6,8 @@ import { STORAGE_KEYS } from '@/constants';
  * Tracks what the user has already SEEN, so the app can badge what's new:
  *  • `seenDraw`       — latest draw number seen on the notifications page
  *    (separate from LAST_SEEN_DRAW, which the draws store syncs on every fetch
- *    for push de-duplication). Drives the bell badge in the app header.
+ *    for push de-duplication). Also marked by the Draws tab. Drives the bell and
+ *    Draws tab dots (useHasUnseenDraw).
  *  • `seenProcessing` — IRCC processing-times `updated` label seen on the
  *    processing-times page. Drives the hamburger + menu-row badge.
  */

@@ -34,12 +34,20 @@ import { FilterSheet, type SheetOption } from './FilterSheet';
 
 type SheetKey = 'program' | 'aor' | 'stage' | 'sort';
 
+// The last alert tap already applied: switching sub-tabs remounts the feed, which
+// must not bring that month's filter back.
+let appliedAlert = 0;
+
 /**
  * The Community list: a row of filter chips (each opens a bottom sheet), then
  * one card per shared timeline, loaded a page at a time as the user scrolls.
  * The user's own Share card lives on My timeline (MyShareCard).
  */
-export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle?: StyleProp<ViewStyle> }) {
+export function CommunityFeed({ contentContainerStyle, fromAlert }: {
+  contentContainerStyle?: StyleProp<ViewStyle>;
+  /** Set when a tapped alert opened the feed: show everyone from that AOR month. */
+  fromAlert?: { aorMonth: string | null; at: number } | undefined;
+}) {
   const c = useColors();
   const accent = useAccentColor();
   const { t, i18n } = useTranslation();
@@ -60,9 +68,18 @@ export function CommunityFeed({ contentContainerStyle }: { contentContainerStyle
   const locale = i18n.language?.startsWith('fr') ? fr : enUS;
   const monthLabel = (m: string) => format(parseISO(`${m}-01`), 'MMM yyyy', { locale });
 
-  // Start on the user's own program once their sharing settings load.
+  // Declared first so it wins over the own-program default below.
   useEffect(() => {
-    if (settings && !touched.current) setFilters((f) => ({ ...f, program: settings.program }));
+    if (!fromAlert || fromAlert.at === appliedAlert) return;
+    appliedAlert = fromAlert.at;
+    touched.current = true;
+    setFilters({ ...DEFAULT_FILTERS, aorMonth: fromAlert.aorMonth });
+  }, [fromAlert]);
+
+  // Start on the user's own program once their sharing settings load. "Other" is a
+  // mix of unrelated applications (and the default with none tracked), so it shows all.
+  useEffect(() => {
+    if (settings && !touched.current) setFilters((f) => ({ ...f, program: settings.program === 'other' ? 'all' : settings.program }));
   }, [settings]);
 
   const set = (patch: Partial<CommunityFilters>) => { touched.current = true; setFilters((f) => ({ ...f, ...patch })); };

@@ -28,9 +28,11 @@ import { CommunityTab } from '../components/CommunityTab';
 import { MyShareCard, ShareWithCommunityButton } from '@/features/community/components/MyShareCard';
 import { communityVisible } from '@/features/community/model';
 import { useCommunityBadgeStore, useCommunityHasNew } from '@/features/community/communityBadgeStore';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useRoute, type RouteProp } from '@react-navigation/native';
+import type { MainTabParamList } from '@/types';
 
 import { MILESTONE_META, MILESTONE_TYPES } from '../milestoneMeta';
+import { MilestoneIcon } from '../components/MilestoneIcon';
 
 // Community (tabs, Share card) only in dev until it goes live.
 const SHOW_COMMUNITY = communityVisible();
@@ -67,7 +69,7 @@ function MilestoneCard({ item, onEdit }: { item: Milestone; onEdit: () => void; 
       <View style={[s.cardIcon, { backgroundColor: meta.color + '20' }]}>
         {item.type === 'Custom' && item.customEmoji
           ? <Text style={s.cardEmoji}>{item.customEmoji}</Text>
-          : <Ionicons name={meta.icon} size={22} color={meta.color} />}
+          : <MilestoneIcon meta={meta} size={22} color={meta.color} />}
       </View>
       <View style={s.cardMid}>
         <Text style={[s.cardTitle, { color: c.textPrimary }]}>{label}</Text>
@@ -221,7 +223,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
             onPress={() => setPickingType(true)}
           >
             <View style={[s.typeIcon, { backgroundColor: meta.color + '20' }]}>
-              <Ionicons name={meta.icon} size={20} color={meta.color} />
+              <MilestoneIcon meta={meta} size={20} color={meta.color} />
             </View>
             <Text style={[s.fieldVal, { color: c.textPrimary, flex: 1 }]}>
               {type === 'Custom' && customLabel ? customLabel : t(MILESTONE_META[type]?.labelKey ?? type)}
@@ -348,7 +350,7 @@ function AddMilestoneModal({ visible, onClose, editing }: {
                       onPress={() => { setType(mt); setPickingType(false); }}
                     >
                       <View style={[s.typeIconSm, { backgroundColor: m.color + '20' }]}>
-                        <Ionicons name={m.icon} size={18} color={m.color} />
+                        <MilestoneIcon meta={m} size={18} color={m.color} />
                       </View>
                       <Text style={[s.typeRowTxt, { color: selected ? accent : c.textPrimary },
                         selected && { fontWeight: typography.bold }]}>{t(m.labelKey)}</Text>
@@ -403,6 +405,12 @@ export default function TimelineScreen() {
 
   useEffect(() => { load(); }, [load]);
 
+  // A tapped "your AOR month" alert opens Community on that month.
+  const fromAlert = useRoute<RouteProp<MainTabParamList, 'Timeline'>>().params?.community;
+  useEffect(() => {
+    if (fromAlert) setTab('community');
+  }, [fromAlert]);
+
   // Red dot on Community (and the Timeline tab): looking at the feed clears it, and
   // opening the tab re-checks so the dot doesn't come back for what's on screen now.
   const communityNew = useCommunityHasNew();
@@ -452,7 +460,7 @@ export default function TimelineScreen() {
       </View>}
 
       {SHOW_COMMUNITY && tab === 'community' ? (
-        <CommunityTab contentContainerStyle={listStyle} />
+        <CommunityTab contentContainerStyle={listStyle} fromAlert={fromAlert} />
       ) : milestones.length === 0 ? (
         <ScrollView contentContainerStyle={s.empty} showsVerticalScrollIndicator={false}>
           <View style={[s.emptyIcon, { backgroundColor: accent + '18' }]}>

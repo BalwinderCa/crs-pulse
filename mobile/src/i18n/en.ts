@@ -230,6 +230,7 @@ const en = {
     programOther: 'Other',
     anonymous: 'Anonymous applicant',
     dayN: 'Day {{n}}',
+    gapDays: '+{{n}}d',
     stageOf: 'Stage {{n}} of {{total}}',
     plusDays: '+{{n}} days',
     edit: 'Edit',
@@ -1022,6 +1023,7 @@ const en = {
     portal1: 'Portal 1',
     portal2: 'Portal 2',
     finalDecision: 'Final Decision',
+    copr: 'COPR',
   },
 
   misc: {

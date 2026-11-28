@@ -41,7 +41,7 @@ describe('community api (server)', () => {
     fetchMock.mockReturnValueOnce(reply(200, { items: [{ id: 'me' }, { id: 'other' }], nextCursor: null }));
     const page = await fetchCommunityPage({ ...DEFAULT_FILTERS, program: 'cec', stage: 'ppr' }, null);
     expect(page.items.map((t) => !!t.isMine)).toEqual([true, false]);
-    expect(fetchMock.mock.calls[0][0]).toBe(`${URL}/community?sort=recent&limit=20&program=cec&stage=ppr`);
+    expect(fetchMock.mock.calls[0][0]).toBe(`${URL}/community?sort=recent&limit=20&copr=1&program=cec&stage=ppr`);
   });
 
   it('keeps the key when stop sharing fails, and forgets it once the server confirms', async () => {

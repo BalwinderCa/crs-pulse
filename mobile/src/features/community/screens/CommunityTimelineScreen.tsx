@@ -13,6 +13,7 @@ import { useColors } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
+import { MilestoneIcon } from '@/features/timeline/components/MilestoneIcon';
 import type { RootStackParamList } from '@/types';
 import { STOPS, currentStep, reachedIndex, stopOf, type SharedTimeline } from '../model';
 import { useCommunity, useCommunitySummary, useSharedTimeline } from '../useCommunity';
@@ -135,7 +136,7 @@ export default function CommunityTimelineScreen() {
               <View style={[s.divider, { backgroundColor: c.border }]} />
               <View style={s.status}>
                 <View style={[s.stagePill, { backgroundColor: nowTone?.tint ?? c.surfacePrimary }]}>
-                  <Ionicons name={MILESTONE_META[view.now.type].icon} size={14} color={nowTone?.ink ?? c.textPrimary} />
+                  <MilestoneIcon meta={MILESTONE_META[view.now.type]} size={14} color={nowTone?.ink ?? c.textPrimary} />
                   <Text style={[s.stageTxt, { color: nowTone?.ink ?? c.textPrimary }]} numberOfLines={1}>
                     {t(MILESTONE_META[view.now.type].labelKey)}
                   </Text>
@@ -166,7 +167,7 @@ export default function CommunityTimelineScreen() {
             <View key={`${step.type}-${i}`}
               style={[s.step, { backgroundColor: c.surfaceCard, borderColor: last ? accent : c.surfaceCard }]}>
               <View style={[s.stepIcon, { backgroundColor: st.tint }]}>
-                <Ionicons name={meta.icon} size={16} color={st.ink} />
+                <MilestoneIcon meta={meta} size={16} color={st.ink} />
               </View>
               <Text style={[s.stepLabel, { color: c.textPrimary }, last && s.bold]} numberOfLines={1}>{t(meta.labelKey)}</Text>
               <Text style={[s.stepGap, { color: c.textMuted }]}>{gap}</Text>

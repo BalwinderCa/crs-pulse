@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
 import { useTranslation } from 'react-i18next';
@@ -18,6 +18,10 @@ import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
 import type { Colors } from '@/theme/colors';
 import type { DrawFilter } from '@/types';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { useIsFocused } from '@react-navigation/native';
+import { useDrawsStore } from '@/store/drawsStore';
+import { useNotificationsStore } from '@/features/notifications/store/notificationsStore';
+import { useHasUnseenDraw } from '@/features/notifications/useHasUnseenDraw';
 
 function makeStyles(c: Colors, accent: string) {
   return StyleSheet.create({
@@ -49,6 +53,15 @@ export default function DrawsScreen() {
   const styles = makeStyles(colors, accent);
   const { t } = useTranslation();
   const { draws, isLoading, isRefreshing, isError, error, refetch } = useDraws({ filter: activeFilter });
+
+  // Looking at Draws counts as seeing the newest draw: clears this tab's dot and the bell's.
+  const focused = useIsFocused();
+  const unseen = useHasUnseenDraw();
+  const latestNumber = useDrawsStore((s) => s.draws[0]?.draw_number);
+  const markSeen = useNotificationsStore((s) => s.markSeen);
+  useEffect(() => {
+    if (focused && unseen && latestNumber !== undefined) void markSeen(latestNumber);
+  }, [focused, unseen, latestNumber, markSeen]);
 
   const filterLabel = (value: string): string => {
     if (value === 'last_month') return t('draws.filterLastMonth');

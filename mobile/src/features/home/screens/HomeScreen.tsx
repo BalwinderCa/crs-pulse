@@ -72,14 +72,16 @@ export default function HomeScreen() {
     ? (lastMilestone.type === 'Custom' ? (lastMilestone.customLabel ?? 'Custom') : lastMilestone.type)
     : null;
 
-  // A logged Final Decision (and a COPR custom milestone) end the estimate: once
+  // A logged Final Decision or COPR ends the estimate: once
   // IRCC has decided, the card reports what happened instead of predicting it.
   const decision = useMemo(() => {
     const finals = milestones.filter((m) => m.type === 'Final Decision');
     const final = finals.length ? finals[finals.length - 1] : null;
-    const coprs = milestones.filter((m) => m.type === 'Custom' && /copr/i.test(m.customLabel ?? ''));
+    // Custom "COPR" entries are how it was logged before COPR had its own type.
+    const coprs = milestones.filter((m) => m.type === 'COPR' || (m.type === 'Custom' && /copr/i.test(m.customLabel ?? '')));
     const copr = coprs.length ? coprs[coprs.length - 1] : null;
-    return final ? { date: parseISO(final.date), copr: copr ? parseISO(copr.date) : null } : null;
+    const decided = final ?? (copr?.type === 'COPR' ? copr : null);
+    return decided ? { date: parseISO(decided.date), copr: copr ? parseISO(copr.date) : null } : null;
   }, [milestones]);
 
   // Tracked application → progress vs typical IRCC processing time
@@ -235,7 +237,9 @@ export default function HomeScreen() {
 
               {tracked.decided ? (
                 <View style={[s.overdueRow, { backgroundColor: palette.success + '14' }]}>
-                  <Ionicons name="checkmark-circle" size={15} color={palette.success} />
+                  {tracked.copr
+                    ? <Text style={s.coprEmoji}>🎉</Text>
+                    : <Ionicons name="checkmark-circle" size={15} color={palette.success} />}
                   <Text style={[s.overdueText, { color: palette.success }]}>
                     {tracked.copr
                       ? t('home.coprReceived', { date: format(tracked.copr, 'MMM d, yyyy', { locale: dateLocale }) })
@@ -486,6 +490,7 @@ const s = StyleSheet.create({
 
   overdueRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.xs,
                  borderRadius: borderRadius.md, padding: spacing.sm, marginTop: spacing.xs },
+  coprEmoji:   { fontSize: typography.sm, lineHeight: 17 },
   overdueText: { flex: 1, fontSize: typography.xs, lineHeight: 17, fontWeight: typography.semibold },
   nextBtn:     { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: spacing.sm,
                  paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderRadius: borderRadius.md, borderWidth: 1 },

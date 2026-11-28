@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/common/AppText';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Circle } from 'react-native-svg';
 import { format, parseISO } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 import { spacing, typography, borderRadius } from '@/theme';
 import { useColors, useResolvedScheme } from '@/hooks/useColors';
 import { useAccentColor } from '@/hooks/useAccentColor';
 import { MILESTONE_META } from '@/features/timeline/milestoneMeta';
+import { MilestoneIcon } from '@/features/timeline/components/MilestoneIcon';
 import type { MilestoneType } from '@/store/timelineStore';
 import { BuddyAvatar, isBuddyId } from './BuddyAvatar';
 import { PROGRAMS, STOPS, currentStep, reachedIndex, stopOf, type ProgramId, type SharedTimeline } from '../model';
@@ -68,9 +68,8 @@ export function Avatar({ alias, avatar, size = 42 }: { alias: string; avatar?: s
 }
 
 /**
- * One shared timeline as a card: the avatar inside a ring of one segment per stage
- * (ITA → Decision, coloured up to the stage reached), the name, the latest step and program · AOR month, and the
- * day reached with the stage count.
+ * One shared timeline as a card: who it is, how many stages they have reached, and
+ * their last three steps (newest first) with the days each one took to arrive.
  */
 export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; onPress?: () => void }) {
   const c = useColors();
@@ -78,70 +77,76 @@ export function PersonCard({ timeline, onPress }: { timeline: SharedTimeline; on
   const programLabel = useProgramLabel();
   const tone = useStageTone();
   const now = currentStep(timeline);
-  const reached = reachedIndex(timeline);
   const alias = timeline.alias || t('community.anonymous');
-  const st = now ? tone(now.type) : undefined;
   const aor = timeline.aorMonth
     ? t('community.aorIn', { month: format(parseISO(`${timeline.aorMonth}-01`), 'MMM yyyy', { locale: i18n.language?.startsWith('fr') ? fr : enUS }) })
     : null;
   const meta = [programLabel(timeline.program), aor].filter(Boolean).join(' · ');
-  const stepLabel = now ? t(MILESTONE_META[now.type].labelKey) : '';
-  const stages = reached + 1;
-  const label = [alias, stepLabel, now ? t('community.dayN', { n: now.day }) : '', meta,
-    stages > 0 ? t('community.stageOf', { n: stages, total: STOPS.length }) : ''].filter(Boolean).join(', ');
+  const stages = reachedIndex(timeline) + 1;
+  const recent = timeline.steps
+    .map((step, i) => ({ ...step, gap: i > 0 ? step.day - timeline.steps[i - 1]!.day : null }))
+    .slice(-3).reverse();
+  const label = [alias, meta, stages > 0 ? t('community.stageOf', { n: stages, total: STOPS.length }) : '',
+    ...recent.map((step) => `${t(MILESTONE_META[step.type].labelKey)} ${t('community.dayN', { n: step.day })}`)]
+    .filter(Boolean).join(', ');
 
   return (
     <TouchableOpacity ph-label="community-row" activeOpacity={0.8} onPress={onPress} disabled={!onPress}
       style={[s.card, { backgroundColor: c.surfaceCard }]} accessibilityRole={onPress ? 'button' : undefined}
       accessible accessibilityLabel={label} accessibilityHint={onPress ? t('community.openTimelineHint') : undefined}>
       <View style={s.row}>
-      <View style={s.ring}>
-        <Svg width={RING} height={RING} style={StyleSheet.absoluteFill}>
-          {/* One arc per stage with a small gap between, filled up to the stage reached. */}
-          {STOPS.map((_, i) => (
-            <Circle key={i} cx={RING / 2} cy={RING / 2} r={RING_R} strokeWidth={3} fill="none"
-              stroke={st && i < stages ? st.ink : c.border}
-              strokeDasharray={`${SEG_LEN} ${RING_C - SEG_LEN}`}
-              transform={`rotate(${-90 + i * SEG_DEG + GAP_DEG / 2} ${RING / 2} ${RING / 2})`} />
-          ))}
-        </Svg>
-        <Avatar alias={alias} avatar={timeline.avatar} size={44} />
-      </View>
-      <View style={s.mid}>
-        <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
-        {now && st && <Text style={[s.step, { color: st.ink }]} numberOfLines={1}>{stepLabel}</Text>}
-        <Text style={[s.meta, { color: c.textMuted }]} numberOfLines={1}>{meta}</Text>
-      </View>
-      {now && (
-        <View style={s.right}>
-          <Text style={[s.day, { color: c.textPrimary }]}>{t('community.dayN', { n: now.day })}</Text>
-          {stages > 0 && <Text style={[s.stages, { color: c.textMuted }]}>{stages}/{STOPS.length}</Text>}
+        <Avatar alias={alias} avatar={timeline.avatar} size={40} />
+        <View style={s.mid}>
+          <Text style={[s.name, { color: c.textPrimary }]} numberOfLines={1}>{alias}</Text>
+          <Text style={[s.meta, { color: c.textMuted }]} numberOfLines={1}>{meta}</Text>
         </View>
-      )}
+        {now && stages > 0 && (
+          <View style={[s.pill, { backgroundColor: tone(now.type).tint }]}>
+            <Text style={[s.stages, { color: tone(now.type).ink }]}>{stages}/{STOPS.length}</Text>
+          </View>
+        )}
+      </View>
+      <View>
+        {recent.map((step, i) => {
+          const stepMeta = MILESTONE_META[step.type];
+          const st = tone(step.type);
+          const ink = i === 0 ? c.textPrimary : c.textMuted;
+          return (
+            <View key={`${step.type}-${step.day}-${i}`} style={s.step}>
+              {i < recent.length - 1 && <View style={[s.thread, { backgroundColor: c.border }]} />}
+              <View style={[s.stepIcon, { backgroundColor: st.tint }]}>
+                <MilestoneIcon meta={stepMeta} size={13} color={st.ink} />
+              </View>
+              <Text style={[s.stepLabel, { color: ink }, i === 0 && s.bold]} numberOfLines={1}>{t(stepMeta.labelKey)}</Text>
+              {!!step.gap && (
+                <View style={[s.pill, { backgroundColor: c.surfacePrimary }]}>
+                  <Text style={[s.meta, { color: c.textSecondary }]}>{t('community.gapDays', { n: step.gap })}</Text>
+                </View>
+              )}
+              <Text style={[s.day, { color: ink }]}>{t('community.dayN', { n: step.day })}</Text>
+            </View>
+          );
+        })}
       </View>
     </TouchableOpacity>
   );
 }
 
-const RING = 62;
-const RING_R = 27;
-const RING_C = 2 * Math.PI * RING_R;
-const SEG_DEG = 360 / STOPS.length;
-const GAP_DEG = 6;
-const SEG_LEN = RING_C * (SEG_DEG - GAP_DEG) / 360;
-
 const s = StyleSheet.create({
   avatar: { alignItems: 'center', justifyContent: 'center' },
   avatarTxt: { fontWeight: typography.bold },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  card: { borderRadius: borderRadius.md, paddingVertical: 12, paddingHorizontal: 14,
+  card: { borderRadius: borderRadius.lg, padding: 14, gap: spacing.md,
           shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
-  ring: { width: RING, height: RING, alignItems: 'center', justifyContent: 'center' },
   mid: { flex: 1, minWidth: 0 },
   name: { fontSize: typography.base, fontWeight: typography.semibold },
-  step: { fontSize: typography.sm, fontWeight: typography.semibold, marginTop: 2 },
-  meta: { fontSize: typography.xs, fontWeight: typography.medium, marginTop: 2 },
-  right: { alignItems: 'flex-end' },
-  day: { fontSize: 18, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  stages: { fontSize: typography.xs, fontWeight: typography.medium, marginTop: 2, fontVariant: ['tabular-nums'] },
+  meta: { fontSize: typography.xs, fontWeight: typography.medium },
+  pill: { borderRadius: borderRadius.full, paddingHorizontal: 8, paddingVertical: 2 },
+  stages: { fontSize: typography.sm, fontWeight: typography.bold, fontVariant: ['tabular-nums'] },
+  step: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 4 },
+  thread: { position: 'absolute', left: 11, top: 26, height: 12, width: 2 },
+  stepIcon: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  stepLabel: { flex: 1, fontSize: typography.sm, fontWeight: typography.medium },
+  bold: { fontWeight: typography.bold },
+  day: { fontSize: typography.xs, fontWeight: typography.medium, minWidth: 54, textAlign: 'right', fontVariant: ['tabular-nums'] },
 });

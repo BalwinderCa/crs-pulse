@@ -2,7 +2,7 @@
  * Community timelines (D1 binding COMMUNITY_DB). Routes, all behind the app's
  * PUSH_API_SECRET bearer:
  *
- *   GET    /community?program=&aor=&stage=&sort=&cursor=&limit=  → { items, nextCursor }
+ *   GET    /community?program=&aor=&stage=&sort=&cursor=&limit=&copr=1  → { items, nextCursor }
  *   GET    /community/summary?program=cec                        → [{ stop, day, n }]
  *   GET    /community/:id                                        → SharedTimeline | 404
  *   PUT    /community/me     (X-Community-Key: device key)       → { id, key }
@@ -22,7 +22,7 @@ const STOP_OF: Record<string, (typeof STOPS)[number] | null> = {
   'Biometrics Requested': 'bio', 'Biometrics Completed': 'bio',
   'Medical Requested': 'medical', 'Medical Passed': 'medical',
   'Passport Requested': 'ppr', 'Passport Submitted': 'ppr', 'Passport Collected': 'ppr',
-  'Portal 1': 'decision', 'Portal 2': 'decision', 'Final Decision': 'decision',
+  'Portal 1': 'decision', 'Portal 2': 'decision', 'Final Decision': 'decision', 'COPR': 'decision',
   'ADR': null,
 };
 const SORTS = ['recent', 'longest', 'furthest'] as const;
@@ -116,10 +116,15 @@ export function typicalPace(all: Step[][]): { stop: string; day: number; n: numb
   });
 }
 
-const toTimeline = (r: Row, now: number) => {
+// App builds without the COPR milestone crash on a type they don't know, so only
+// builds that ask with ?copr=1 get it; the rest see it as a Final Decision.
+const stepsFor = (steps: Step[], copr: boolean): Step[] =>
+  copr ? steps : steps.map((s) => (s.type === 'COPR' ? { ...s, type: 'Final Decision' } : s));
+
+const toTimeline = (r: Row, now: number, copr: boolean) => {
   const t: Record<string, unknown> = {
     id: r.id, alias: r.alias, program: r.program,
-    steps: JSON.parse(r.steps) as Step[],
+    steps: stepsFor(JSON.parse(r.steps) as Step[], copr),
     updatedDaysAgo: Math.max(0, Math.floor((now - r.updated_at) / DAY_MS)),
   };
   if (r.aor_month) t.aorMonth = r.aor_month;
@@ -168,7 +173,7 @@ export async function listPage(db: D1Database, q: URLSearchParams, now = Date.no
   const more = results.length > limit;
   const last = rows[rows.length - 1];
   const nextCursor = !more || !last ? null : sort === 'recent' ? `${last.updated_at}:${last.id}` : String(offset + limit);
-  return { items: rows.map((r) => toTimeline(r, now)), nextCursor };
+  return { items: rows.map((r) => toTimeline(r, now, q.get('copr') === '1')), nextCursor };
 }
 
 /** Handles /community routes; returns null for any other path. */
@@ -268,7 +273,7 @@ export async function handleCommunity(
 
   if (sub && !sub.includes('/') && sub !== 'me' && sub !== 'summary' && request.method === 'GET') {
     const row = await db.prepare('SELECT * FROM community_timelines WHERE id = ? AND hidden = 0').bind(sub).first<Row>();
-    return row ? json(toTimeline(row, Date.now())) : json({ message: 'Not found' }, 404);
+    return row ? json(toTimeline(row, Date.now(), url.searchParams.get('copr') === '1')) : json({ message: 'Not found' }, 404);
   }
 
   return json({ message: 'Not found' }, 404);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import i18n from '@/i18n';
-import { NavigationContainer, useNavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as ExpoSplash from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -12,6 +12,7 @@ import { loadAppFont } from '@/theme/fonts';
 import { usePushPrefs } from '@/hooks/useDrawNotifications';
 import { useDrawsStore } from '@/store/drawsStore';
 import MainNavigator from './MainNavigator';
+import { navigationRef, flushPendingPush } from './pushNavigation';
 import FaqScreen from '@/features/faq/screens/FaqScreen';
 import ReportIssueScreen from '@/features/support/screens/ReportIssueScreen';
 import MyProfileScreen from '@/features/profile/screens/MyProfileScreen';
@@ -54,7 +55,6 @@ export default function RootNavigator() {
   const [onboardingSeen, setOnboardingSeen] = useState<boolean | null>(null);
   const scheme = useResolvedScheme();
   const syncedLang = useRef<string | null>(null);
-  const navigationRef = useNavigationContainerRef<RootStackParamList>();
 
   useEffect(() => {
     loadDraws().catch(() => {});
@@ -142,7 +142,10 @@ export default function RootNavigator() {
   return (
     <NavigationContainer
       ref={navigationRef}
-      onReady={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
+      onReady={() => {
+        trackScreen(navigationRef.getCurrentRoute()?.name);
+        flushPendingPush();
+      }}
       onStateChange={() => trackScreen(navigationRef.getCurrentRoute()?.name)}
     >
       {/* Android defaults to light status-bar icons whatever the theme, so the
